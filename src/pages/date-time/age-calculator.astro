@@ -1,0 +1,64 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Age Calculator",
+  description: "Free age calculator. Calculate age in years, months, and days from a birth date.",
+  href: "/date-time/age-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Age Calculator — MinimalDev"
+  description="Free age calculator. Calculate age in years, months, and days from a birth date."
+  canonicalPath="/date-time/age-calculator/"
+  h1="Age Calculator"
+  intro="Calculate age in years, months, and days. Optionally choose a reference date."
+>
+  <div slot="tool" data-tool="age-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="age_dob">Date of birth</label>
+        <input id="age_dob" type="date" />
+      </div>
+      <div class="field">
+        <label for="age_ref">Reference date (optional)</label>
+        <input id="age_ref" type="date" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="age_clear">Clear</button>
+      </div>
+
+      <div class="result" id="age_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Age is calculated by comparing year, month, and day values and borrowing days/months when needed.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>DOB 2000-01-01 → Age depends on today’s date.</li>
+      <li>DOB 1995-10-10 to 2026-02-24 → returns years/months/days.</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Why can results differ from other sites?</strong> Some sites use different rounding or inclusive rules.</li>
+      <li><strong>Does it handle leap years?</strong> Yes, because it uses real calendar dates.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/">Date & Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

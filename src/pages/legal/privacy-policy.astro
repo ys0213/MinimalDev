@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const updated = "2026-02-24";
+---
+
+<BaseLayout
+  title="Privacy Policy — MinimalDev"
+  description="Privacy Policy for MinimalDev. Learn what data we collect and how we use it."
+  canonicalPath="/legal/privacy-policy/"
+>
+  <div class="container">
+    <h1 class="page-title">Privacy Policy</h1>
+    <p class="note">Last updated: {updated}</p>
+
+    <section class="section">
+      <h2>Overview</h2>
+      <p class="lead">
+        MinimalDev provides free online utility tools. This policy explains what information may be processed when you use the site.
+      </p>
+      <p class="note">
+        For most tools, calculations run in your browser. We do not require accounts or logins.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Information we collect</h2>
+      <ul>
+        <li><strong>Non-personal technical data:</strong> basic browser/device information may be collected by analytics or advertising services (if enabled).</li>
+        <li><strong>Tool inputs:</strong> values you enter into tools are processed in your browser and are not intentionally transmitted to our servers.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Cookies and advertising</h2>
+      <p class="note">
+        We may display ads through Google AdSense. Third-party vendors, including Google, may use cookies or similar identifiers to serve ads based on prior visits to this or other websites.
+      </p>
+      <ul>
+        <li>You can manage ad personalization in your Google Ads settings.</li>
+        <li>You can also adjust cookie settings in your browser.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Analytics</h2>
+      <p class="note">
+        If analytics are enabled, they may collect aggregated usage data (pages visited, approximate location, device type). We aim to avoid collecting sensitive personal data.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Data retention</h2>
+      <p class="note">
+        Any aggregated analytics or advertising data retention is managed by the respective service providers. MinimalDev does not maintain a user database.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Children’s privacy</h2>
+      <p class="note">
+        MinimalDev is not intended for children under 13. We do not knowingly collect personal information from children.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Contact</h2>
+      <p class="note">
+        Questions about this policy? Contact us via the <a href="/legal/contact/">Contact</a> page.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

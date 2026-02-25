@@ -1,0 +1,58 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/utility/";
+
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
+  .sort(
+    (a, b) =>
+      (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
+  );
+---
+
+<BaseLayout
+  title="Utility Tools — MinimalDev"
+  description="Free utility tools like random generators, password tools, and UUID helpers."
+  canonicalPath="/utility/"
+>
+  <div class="container">
+    <h1 class="page-title">Utility Tools</h1>
+    <p class="lead">
+      Generators and simple utilities. Fast and privacy-friendly.
+    </p>
+
+    {tools.length ? (
+      <div class="grid">
+        {tools.map((t) => (
+          <section class="card">
+            <h2>{t.title}</h2>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="note">No tools found in this category yet.</p>
+    )}
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        <li><strong>Do tools store data?</strong> No. They run in your browser.</li>
+        <li><strong>Are results secure?</strong> Security tools use browser crypto APIs.</li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

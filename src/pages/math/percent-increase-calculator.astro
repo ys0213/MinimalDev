@@ -1,0 +1,65 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Percent Increase Calculator",
+  description: "Free percent increase calculator. Find the percentage increase from an old value to a new value.",
+  href: "/math/percent-increase-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Percent Increase Calculator — MinimalDev"
+  description="Free percent increase calculator. Find the percentage increase from an old value to a new value."
+  canonicalPath="/math/percent-increase-calculator/"
+  h1="Percent Increase Calculator"
+  intro="Calculate percentage increase between two values. Useful for price increases, growth rate, and comparisons."
+>
+  <div slot="tool" data-tool="percent-increase-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="pi_old">Old value</label>
+        <input id="pi_old" type="number" inputmode="decimal" placeholder="e.g., 80" />
+      </div>
+      <div class="field">
+        <label for="pi_new">New value</label>
+        <input id="pi_new" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pi_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pi_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pi_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note"><strong>Formula:</strong> ((new − old) ÷ old) × 100</p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Old 80 → New 100: increase = 25%</li>
+      <li>Old 50 → New 60: increase = 20%</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>What if old value is 0?</strong> Percent increase is undefined when dividing by 0.</li>
+      <li><strong>Can the result be negative?</strong> If new is less than old, use the percent decrease tool instead.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

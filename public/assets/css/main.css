@@ -1,0 +1,374 @@
+/* MinimalDev Tools - main.css */
+/* Mobile-first, fast, minimal, AdSense-friendly */
+
+:root{
+  --bg: #0b1220;
+  --panel: #0f1a2e;
+  --text: #e7eefc;
+  --muted: #b7c3da;
+  --border: rgba(255,255,255,0.12);
+  --link: #9ac2ff;
+  --accent: #5aa2ff;
+
+  --radius: 14px;
+  --shadow: 0 10px 25px rgba(0,0,0,0.25);
+  --max: 980px;
+}
+
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(90,162,255,0.25), transparent 60%),
+              radial-gradient(900px 500px at 90% 20%, rgba(154,194,255,0.18), transparent 60%),
+              var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+a{ color: var(--link); text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+.container{
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.skip-link{
+  position:absolute;
+  left:-999px;
+  top:auto;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+}
+.skip-link:focus{
+  left:16px; top:16px;
+  width:auto; height:auto;
+  padding:10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  z-index: 9999;
+}
+
+.site-header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(11,18,32,0.6);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 14px 0;
+  gap: 12px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-weight: 750;
+  letter-spacing: 0.2px;
+  color: var(--text);
+}
+.brand svg{
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+.brand small{
+  display:block;
+  font-weight: 550;
+  color: var(--muted);
+  letter-spacing: 0;
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.nav{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.nav a{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+}
+.nav a:hover{
+  border-color: var(--border);
+  background: rgba(255,255,255,0.04);
+  text-decoration: none;
+}
+.nav a[aria-current="page"]{
+  border-color: rgba(90,162,255,0.45);
+  background: rgba(90,162,255,0.12);
+}
+
+/* Page shell */
+.main{
+  padding: 22px 0 40px;
+}
+
+.page-title{
+  margin: 10px 0 6px;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+}
+.lead{
+  margin: 0 0 18px;
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+/* Cards & grid */
+.grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 740px){
+  .grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 980px){
+  .grid{ grid-template-columns: repeat(3, 1fr); }
+}
+
+.card{
+  background: rgba(15,26,46,0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+.card h2{
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.card p{
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.card .btn{
+  width: 100%;
+  padding-top: 8px;
+}
+
+/* Buttons & inputs */
+.btn{
+  appearance:none;
+  border: 1px solid rgba(90,162,255,0.45);
+  background: rgba(90,162,255,0.18);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease, background 0.15s ease;
+}
+.btn:hover{ background: rgba(90,162,255,0.26); }
+.btn:active{ transform: translateY(1px); }
+.btn.secondary{
+  border-color: var(--border);
+  background: rgba(255,255,255,0.06);
+  font-weight: 650;
+}
+
+.form{
+  display:grid;
+  gap: 10px;
+}
+.field{
+  display:grid;
+  gap: 6px;
+}
+label{
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 650;
+}
+input, select, textarea{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+  color: var(--text);
+  outline: none;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: rgba(154,194,255,0.6);
+}
+
+.result{
+  min-height: 48px; /* CLS 방지 */
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.18);
+  color: var(--text);
+  background: rgba(0,0,0,0.12);
+}
+
+/* Content sections */
+.section{
+  margin-top: 18px;
+}
+.section h2{
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+.section ul{
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+.note{
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Footer */
+.site-footer{
+  border-top: 1px solid var(--border);
+  padding: 22px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.footer-inner{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-links{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.footer-links a{ color: var(--muted); }
+.footer-links a:hover{ color: var(--text); text-decoration: none; }
+
+/* Utility */
+.badge{
+  display:inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ===== Header: mobile friendly ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+}
+
+/* 좌우 여백 확보 (로고가 화면에 딱 붙는 문제 해결) */
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px; /* ← 모바일에서 체감 큼 */
+}
+
+/* brand 줄바꿈/크기 */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+/* 로고가 너무 크면 모바일에서 존재감 과해짐 */
+.brand img {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+}
+
+/* 브랜드 텍스트가 너무 길면 wrap */
+.brand > div {
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.brand small {
+  display: block;
+  opacity: 0.85;
+  font-size: 12px;
+}
+
+/* 네비 기본 */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.nav a {
+  white-space: nowrap;
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* ===== Mobile breakpoint ===== */
+@media (max-width: 520px) {
+  /* 헤더가 너무 커지는 걸 막기 위해 레이아웃을 안정적으로 분리 */
+  .header-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  /* 브랜드 라인: 한 줄 고정 + 여백 */
+  .brand {
+    justify-content: flex-start;
+  }
+
+  /* 네비: 2줄(혹은 3줄) 그리드로 고정 → 예쁘게 정렬되고 헤더 높이 예측 가능 */
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nav a {
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+}
+
+/* ===== Slightly smaller phones ===== */
+@media (max-width: 360px) {
+  .nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

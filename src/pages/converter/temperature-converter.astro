@@ -1,0 +1,81 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Temperature Converter",
+  description: "Free temperature converter for Celsius, Fahrenheit, and Kelvin. Fast and mobile-first.",
+  href: "/converter/temperature-converter/",
+  order: 30,
+};
+---
+
+<ToolLayout
+  title="Temperature Converter — MinimalDev"
+  description="Free temperature converter for Celsius, Fahrenheit, and Kelvin. Fast and mobile-first."
+  canonicalPath="/converter/temperature-converter/"
+  h1="Temperature Converter"
+  intro="Convert Celsius, Fahrenheit, and Kelvin instantly with live updates."
+>
+  <div slot="tool" data-tool="temperature-converter">
+    <div class="form">
+      <div class="field">
+        <label for="tc_value">Value</label>
+        <input id="tc_value" type="number" inputmode="decimal" placeholder="e.g., 36.6" />
+      </div>
+
+      <div class="field">
+        <label for="tc_from_unit">From</label>
+        <select id="tc_from_unit">
+          <option value="c" selected>Celsius (°C)</option>
+          <option value="f">Fahrenheit (°F)</option>
+          <option value="k">Kelvin (K)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="tc_to_unit">To</label>
+        <select id="tc_to_unit">
+          <option value="c">Celsius (°C)</option>
+          <option value="f" selected>Fahrenheit (°F)</option>
+          <option value="k">Kelvin (K)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="tc_swap">Swap</button>
+        <button class="btn secondary" type="button" id="tc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tc_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Temperature is converted by translating the input into Celsius first, then converting to the target unit.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>0°C = 32°F = 273.15 K</li>
+      <li>100°C = 212°F = 373.15 K</li>
+      <li>98.6°F ≈ 37°C</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Why are formulas different from other converters?</strong> Temperature uses offsets, not only ratios.</li>
+      <li><strong>Can I enter negative values?</strong> Yes (e.g., -10°C).</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length-converter/">Length Converter</a></li>
+      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/">Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>

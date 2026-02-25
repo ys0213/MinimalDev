@@ -1,0 +1,77 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "BMI Calculator",
+  description: "Free BMI calculator using metric or imperial units. Get BMI and a simple category label.",
+  href: "/health/bmi-calculator/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="BMI Calculator — MinimalDev"
+  description="Free BMI calculator using metric or imperial units. Get BMI and a simple category label."
+  canonicalPath="/health/bmi-calculator/"
+  h1="BMI Calculator"
+  intro="Calculate Body Mass Index using metric (cm/kg) or imperial (in/lb) units. Informational only."
+>
+  <div slot="tool" data-tool="bmi-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="bmi_unit">Units</label>
+        <select id="bmi_unit">
+          <option value="metric" selected>Metric (cm, kg)</option>
+          <option value="imperial">Imperial (in, lb)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="bmi_height">Height</label>
+        <input id="bmi_height" type="number" inputmode="decimal" placeholder="Height (cm)" />
+      </div>
+
+      <div class="field">
+        <label for="bmi_weight">Weight</label>
+        <input id="bmi_weight" type="number" inputmode="decimal" placeholder="Weight (kg)" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="bmi_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bmi_result">Result will appear here.</div>
+      <p class="note" style="margin-top:8px;">
+        This tool is for informational purposes and not medical advice.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Metric:</strong> BMI = weight(kg) ÷ height(m)²<br />
+      <strong>Imperial:</strong> BMI = (weight(lb) ÷ height(in)²) × 703
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>170 cm, 65 kg → BMI ≈ 22.49</li>
+      <li>70 in, 160 lb → BMI ≈ 22.96</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is BMI always accurate?</strong> It’s a simple screening metric; it may not reflect body composition.</li>
+      <li><strong>Does this tool store my data?</strong> No. It runs locally in your browser.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/water-intake-calculator/">Water Intake Calculator</a></li>
+      <li><a href="/health/">Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>

@@ -1,0 +1,64 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Days Between Dates",
+  description: "Free days between dates calculator. Find the number of days between two dates instantly.",
+  href: "/date-time/days-between-dates/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="Days Between Dates — MinimalDev"
+  description="Free days between dates calculator. Find the number of days between two dates instantly."
+  canonicalPath="/date-time/days-between-dates/"
+  h1="Days Between Dates"
+  intro="Calculate how many days are between two dates. Useful for planning, deadlines, and scheduling."
+>
+  <div slot="tool" data-tool="days-between-dates">
+    <div class="form">
+      <div class="field">
+        <label for="dbd_a">Start date</label>
+        <input id="dbd_a" type="date" />
+      </div>
+      <div class="field">
+        <label for="dbd_b">End date</label>
+        <input id="dbd_b" type="date" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="dbd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dbd_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      We calculate the absolute difference between the two dates (midnight UTC) and convert it into days.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-01 to 2026-01-31 = 30 days</li>
+      <li>2026-02-01 to 2026-02-15 = 14 days</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Does order matter?</strong> No. The calculator uses the absolute difference.</li>
+      <li><strong>Does it include the start date?</strong> This tool returns the difference in days between dates.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/age-calculator/">Age Calculator</a></li>
+      <li><a href="/date-time/">Date & Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

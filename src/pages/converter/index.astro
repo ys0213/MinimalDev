@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/converter/";
+
+// pages 전체에서 tool export 있는 것만 모은 뒤, href로 카테고리 필터
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY) // 허브 자체 제외
+  .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+---
+
+<BaseLayout
+  title="Converters — MinimalDev"
+  description="Free unit converters for length, weight, temperature, and more."
+  canonicalPath="/converter/"
+>
+  <div class="container">
+    <h1 class="page-title">Converters</h1>
+
+    {tools.length ? (
+      <div class="grid">
+        {tools.map((t) => (
+          <section class="card">
+            <h2>{t.title}</h2>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="note">No tools found in this category yet.</p>
+    )}
+  </div>
+</BaseLayout>

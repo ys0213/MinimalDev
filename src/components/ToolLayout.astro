@@ -1,0 +1,74 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const {
+  title,
+  description,
+  canonicalPath,
+  h1,
+  intro,
+} = Astro.props;
+
+function getCategory(path) {
+  if (!path) return "UtilitiesApplication";
+  if (path.startsWith("/health/")) return "HealthApplication";
+  if (path.startsWith("/math/")) return "EducationalApplication";
+  if (path.startsWith("/converter/")) return "UtilitiesApplication";
+  if (path.startsWith("/utility/")) return "UtilitiesApplication";
+  if (path.startsWith("/date-time/")) return "UtilitiesApplication";
+  return "UtilitiesApplication";
+}
+
+const webAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": h1,
+  "applicationCategory": getCategory(canonicalPath),
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalPath={canonicalPath}
+>
+	<script
+	  slot="head"
+	  type="application/ld+json"
+	  set:html={JSON.stringify(webAppSchema)}
+	></script>
+  <div class="container">
+    <h1 class="page-title">{h1}</h1>
+    <p class="lead">{intro}</p>
+
+    <section class="card">
+      <slot name="tool" />
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <slot name="how" />
+    </section>
+
+    <section class="section">
+      <h2>Examples</h2>
+      <slot name="examples" />
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <slot name="faq" />
+    </section>
+
+    <section class="section">
+      <h2>Related tools</h2>
+      <slot name="related" />
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,58 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/math/";
+
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
+  .sort(
+    (a, b) =>
+      (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
+  );
+---
+
+<BaseLayout
+  title="Math Tools — MinimalDev"
+  description="Free online math tools including percent calculators, margin, and markup."
+  canonicalPath="/math/"
+>
+  <div class="container">
+    <h1 class="page-title">Math Tools</h1>
+    <p class="lead">
+      Practical calculators for percent, pricing, and everyday math.
+    </p>
+
+    {tools.length ? (
+      <div class="grid">
+        {tools.map((t) => (
+          <section class="card">
+            <h2>{t.title}</h2>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="note">No tools found in this category yet.</p>
+    )}
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        <li><strong>Do I need an account?</strong> No. Tools run locally in your browser.</li>
+        <li><strong>Are results exact?</strong> Standard formulas are used.</li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,59 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/date-time/";
+
+// date-time 폴더 기준으로 pages 전체(상위 포함)에서 tool export 있는 파일을 모음
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY) // 허브 자체 제외
+  .sort(
+    (a, b) =>
+      (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
+  );
+---
+
+<BaseLayout
+  title="Date & Time Tools — MinimalDev"
+  description="Free date and time calculators: days between dates, age calculator, work days, and more."
+  canonicalPath="/date-time/"
+>
+  <div class="container">
+    <h1 class="page-title">Date & Time Tools</h1>
+    <p class="lead">
+      Date difference, time calculations, and planning helpers. Fast, simple, and mobile-first.
+    </p>
+
+    {tools.length ? (
+      <div class="grid">
+        {tools.map((t) => (
+          <section class="card">
+            <h2>{t.title}</h2>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="note">No tools found in this category yet.</p>
+    )}
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        <li><strong>Do tools include time zones?</strong> Tools use your device locale unless stated otherwise.</li>
+        <li><strong>Are holidays excluded?</strong> Work days exclude weekends; holiday calendars may be added later.</li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

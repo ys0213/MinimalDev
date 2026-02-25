@@ -1,0 +1,47 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+const {
+  title = "MinimalDev — Free Online Utility Tools",
+  description = "Fast, free online calculators and utility tools.",
+  canonicalPath = "/",
+} = Astro.props;
+
+const canonical = `https://minimaldev.com${canonicalPath}`;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <meta name="robots" content="index,follow" />
+
+  <link rel="stylesheet" href="/assets/css/main.css" />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "MinimalDev",
+    "url": "https://minimaldev.com/"
+  })}></script>
+  <slot name="head" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <Header />
+
+  <main id="main" class="main">
+    <slot />
+  </main>
+
+  <Footer />
+
+  <script defer src="/assets/js/main.js"></script>
+</body>
+</html>

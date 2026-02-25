@@ -1,17 +1,54 @@
 ---
-
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+  title="MinimalDev — Free Online Utility Tools"
+  description="Fast, free online calculators and utility tools. Mobile-first and easy to use."
+  canonicalPath="/"
+>
+  <div class="container">
+    <section class="card" style="padding:18px;">
+      <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+        <div style="min-width:220px;">
+          <h1 class="page-title" style="margin:0 0 6px;">Free Online Utility Tools</h1>
+          <p class="lead" style="margin:0;">
+            Fast calculators and converters. One tool per page, mobile-first, easy to bookmark.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+        <a class="btn" href="/math/">Start with Math</a>
+        <a class="btn secondary" href="/converter/">Browse Converters</a>
+        <a class="btn secondary" href="/legal/privacy-policy.html">Privacy</a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Start here</h2>
+      <div class="grid">
+        <section class="card">
+          <span class="badge">Math</span>
+          <h2>Percent Calculator</h2>
+          <p>Percent of a number, increase/decrease, and percentage change.</p>
+          <a class="btn" href="/math/percent-calculator/">Open</a>
+        </section>
+
+        <section class="card">
+          <span class="badge">Date-Time</span>
+          <h2>Days Between Dates</h2>
+          <p>Calculate the number of days between two dates.</p>
+          <a class="btn" href="/date-time/days-between-dates/">Open</a>
+        </section>
+
+        <section class="card">
+          <span class="badge">Converter</span>
+          <h2>Length Converter</h2>
+          <p>Convert meters, kilometers, miles, feet, inches, and more.</p>
+          <a class="btn" href="/converter/length-converter/">Open</a>
+        </section>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

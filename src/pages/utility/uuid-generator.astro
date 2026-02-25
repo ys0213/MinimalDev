@@ -1,0 +1,60 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "UUID Generator",
+  description: "Free UUID v4 generator using secure browser APIs. Copy UUIDs instantly.",
+  href: "/utility/uuid-generator/",
+  order: 30,
+};
+---
+
+<ToolLayout
+  title="UUID Generator — MinimalDev"
+  description="Free UUID v4 generator using secure browser APIs. Copy UUIDs instantly."
+  canonicalPath="/utility/uuid-generator/"
+  h1="UUID Generator"
+  intro="Generate UUID v4 values instantly using secure browser randomness. Copy with one click."
+>
+  <div slot="tool" data-tool="uuid-generator">
+    <div class="form">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="uuid_generate">Generate</button>
+        <button class="btn secondary" type="button" id="uuid_copy">Copy</button>
+      </div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="uuid_result">UUID</label>
+        <input id="uuid_result" type="text" readonly />
+      </div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      UUID v4 is generated using the browser’s cryptographic APIs (randomUUID / getRandomValues).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Use UUIDs as unique IDs in databases or test data.</li>
+      <li>Generate multiple UUIDs for development quickly.</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is UUID v4 “secure”?</strong> It’s random enough for most development uses.</li>
+      <li><strong>Does this tool store my UUID?</strong> No. It runs locally.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/random-number-generator/">Random Number Generator</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

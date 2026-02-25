@@ -1,0 +1,85 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Weight Converter",
+  description: "Free weight converter for mg, g, kg, oz, and lb. Fast and easy to use.",
+  href: "/converter/weight-converter/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Weight Converter — MinimalDev"
+  description="Free weight converter for mg, g, kg, oz, and lb. Fast and easy to use."
+  canonicalPath="/converter/weight-converter/"
+  h1="Weight Converter"
+  intro="Convert common weight units instantly. Supports metric and imperial units with live updates."
+>
+  <div slot="tool" data-tool="weight-converter">
+    <div class="form">
+      <div class="field">
+        <label for="wc_value">Value</label>
+        <input id="wc_value" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+      </div>
+
+      <div class="field">
+        <label for="wc_from_unit">From</label>
+        <select id="wc_from_unit">
+          <option value="mg">Milligram (mg)</option>
+          <option value="g">Gram (g)</option>
+          <option value="kg" selected>Kilogram (kg)</option>
+          <option value="oz">Ounce (oz)</option>
+          <option value="lb">Pound (lb)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="wc_to_unit">To</label>
+        <select id="wc_to_unit">
+          <option value="mg">Milligram (mg)</option>
+          <option value="g" selected>Gram (g)</option>
+          <option value="kg">Kilogram (kg)</option>
+          <option value="oz">Ounce (oz)</option>
+          <option value="lb">Pound (lb)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="wc_swap">Swap</button>
+        <button class="btn secondary" type="button" id="wc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="wc_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This converter uses kilograms as a base unit. The input is converted to kilograms, then converted to the target unit.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>1 kg = 1000 g</li>
+      <li>1 lb ≈ 0.45359237 kg</li>
+      <li>1 oz ≈ 28.349523125 g</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Does this support decimals?</strong> Yes, you can enter decimal values.</li>
+      <li><strong>Is this accurate?</strong> Yes, it uses standard conversion constants.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length-converter/">Length Converter</a></li>
+      <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
+      <li><a href="/converter/">Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>

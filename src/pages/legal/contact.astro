@@ -1,0 +1,65 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const user = "minimaldev.contact";
+const domain = "gmail.com";
+---
+
+<BaseLayout
+  title="Contact — MinimalDev"
+  description="Contact MinimalDev for feedback, bug reports, or tool suggestions."
+  canonicalPath="/legal/contact/"
+>
+  <div class="container">
+    <h1 class="page-title">Contact</h1>
+
+    <section class="section">
+      <p class="lead">
+        If you have suggestions, feature requests, or found a bug, feel free to reach out.
+      </p>
+    </section>
+
+    <section class="section card">
+      <h2>Email</h2>
+
+      <p id="emailText" class="note"></p>
+
+      <button class="btn secondary" type="button" id="copyEmail">
+        Copy email address
+      </button>
+
+      <p class="note" style="margin-top:8px;">
+        We aim to respond within a few business days.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Please include</h2>
+      <ul>
+        <li>The tool name and page URL</li>
+        <li>A short description of the issue or suggestion</li>
+        <li>Your browser and device (if reporting a bug)</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    const user = "minimaldev.contact";
+    const domain = "gmail.com";
+    const email = user + "@" + domain;
+
+    const el = document.getElementById("emailText");
+    if (el) el.textContent = email;
+
+    const btn = document.getElementById("copyEmail");
+    if (btn) {
+      btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(email);
+        btn.textContent = "Copied!";
+        setTimeout(() => {
+          btn.textContent = "Copy email address";
+        }, 2000);
+      });
+    }
+  </script>
+</BaseLayout>

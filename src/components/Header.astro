@@ -1,0 +1,30 @@
+---
+const path = Astro.url.pathname;
+const isActive = (href) => (path === href || path.startsWith(href));
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      <img
+        src="/assets/img/logo-512.png"
+        alt="MinimalDev"
+        width="28"
+        height="28"
+        style="border-radius:8px; display:block;"
+      />
+      <div>
+        MinimalDev
+        <small>Free Online Utility Tools</small>
+      </div>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a href="/math/" aria-current={isActive("/math/") ? "page" : undefined}>Math</a>
+      <a href="/converter/" aria-current={isActive("/converter/") ? "page" : undefined}>Converter</a>
+      <a href="/date-time/" aria-current={isActive("/date-time/") ? "page" : undefined}>Date-Time</a>
+      <a href="/health/" aria-current={isActive("/health/") ? "page" : undefined}>Health</a>
+      <a href="/utility/" aria-current={isActive("/utility/") ? "page" : undefined}>Utility</a>
+    </nav>
+  </div>
+</header>

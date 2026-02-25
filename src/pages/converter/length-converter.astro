@@ -1,0 +1,91 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Length Converter",
+  description: "Free length converter for mm, cm, meters, km, inches, feet, yards, and miles. Fast and mobile-first.",
+  href: "/converter/length-converter/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="Length Converter — MinimalDev"
+  description="Free length converter for mm, cm, meters, km, inches, feet, yards, and miles. Fast and mobile-first."
+  canonicalPath="/converter/length-converter/"
+  h1="Length Converter"
+  intro="Convert common length units instantly. Supports metric and imperial units with live updates."
+>
+  <div slot="tool" data-tool="length-converter">
+    <div class="form">
+      <div class="field">
+        <label for="lc_value">Value</label>
+        <input id="lc_value" type="number" inputmode="decimal" placeholder="e.g., 10" />
+      </div>
+
+      <div class="field">
+        <label for="lc_from_unit">From</label>
+        <select id="lc_from_unit">
+          <option value="mm">Millimeter (mm)</option>
+          <option value="cm">Centimeter (cm)</option>
+          <option value="m" selected>Meter (m)</option>
+          <option value="km">Kilometer (km)</option>
+          <option value="in">Inch (in)</option>
+          <option value="ft">Foot (ft)</option>
+          <option value="yd">Yard (yd)</option>
+          <option value="mi">Mile (mi)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="lc_to_unit">To</label>
+        <select id="lc_to_unit">
+          <option value="mm">Millimeter (mm)</option>
+          <option value="cm">Centimeter (cm)</option>
+          <option value="m">Meter (m)</option>
+          <option value="km" selected>Kilometer (km)</option>
+          <option value="in">Inch (in)</option>
+          <option value="ft">Foot (ft)</option>
+          <option value="yd">Yard (yd)</option>
+          <option value="mi">Mile (mi)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="lc_swap">Swap</button>
+        <button class="btn secondary" type="button" id="lc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="lc_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This converter uses meters as a base unit. The input is converted to meters, then converted to the target unit.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>1 km = 1000 m</li>
+      <li>12 in = 1 ft</li>
+      <li>1 mi ≈ 1.609344 km</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Does this support decimals?</strong> Yes, you can enter decimal values.</li>
+      <li><strong>Is this accurate?</strong> Yes, it uses standard conversion constants.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
+      <li><a href="/converter/">Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>

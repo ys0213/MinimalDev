@@ -1,0 +1,65 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Percentage Change Calculator",
+  description: "Free percentage change calculator. Find percent change from one value to another.",
+  href: "/math/percentage-change-calculator/",
+  order: 40,
+};
+---
+
+<ToolLayout
+  title="Percentage Change Calculator — MinimalDev"
+  description="Free percentage change calculator. Find percent change from one value to another."
+  canonicalPath="/math/percentage-change-calculator/"
+  h1="Percentage Change Calculator"
+  intro="Calculate percentage change between two values. Shows increase, decrease, or no change."
+>
+  <div slot="tool" data-tool="percentage-change-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="pch_from">From value</label>
+        <input id="pch_from" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+      <div class="field">
+        <label for="pch_to">To value</label>
+        <input id="pch_to" type="number" inputmode="decimal" placeholder="e.g., 85" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pch_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pch_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pch_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note"><strong>Formula:</strong> ((to − from) ÷ from) × 100</p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>From 100 → To 85: change = −15%</li>
+      <li>From 50 → To 60: change = +20%</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Why can’t “from value” be 0?</strong> The formula divides by the starting value.</li>
+      <li><strong>Is negative change okay?</strong> Yes, it indicates a decrease.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
+      <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
