@@ -13,8 +13,11 @@ const canonical = `https://minimaldev.com${canonicalPath}`;
 // ✅ base 경로 ("/MinimalDev/" 같은 값)
 const BASE: string = import.meta.env.BASE_URL;
 // ✅ "/assets/..." 같은 경로를 base 붙여서 만드는 헬퍼
-const withBase = (p: string): string =>
-  `${BASE}${String(p).replace(/^\//, "")}`;
+const withBase = (p: string): string => {
+  const base = BASE.endsWith("/") ? BASE : `${BASE}/`;
+  const path = String(p).replace(/^\//, "");
+  return `${base}${path}`;
+};
 ---
 
 <!doctype html>
