@@ -9,7 +9,7 @@ const {
   intro,
 } = Astro.props;
 
-function getCategory(path) {
+function getCategory(path: string | undefined): string {
   if (!path) return "UtilitiesApplication";
   if (path.startsWith("/health/")) return "HealthApplication";
   if (path.startsWith("/math/")) return "EducationalApplication";

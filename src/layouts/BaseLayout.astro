@@ -9,6 +9,12 @@ const {
 } = Astro.props;
 
 const canonical = `https://minimaldev.com${canonicalPath}`;
+
+// ✅ base 경로 ("/MinimalDev/" 같은 값)
+const BASE: string = import.meta.env.BASE_URL;
+// ✅ "/assets/..." 같은 경로를 base 붙여서 만드는 헬퍼
+const withBase = (p: string): string =>
+  `${BASE}${String(p).replace(/^\//, "")}`;
 ---
 
 <!doctype html>
@@ -21,7 +27,7 @@ const canonical = `https://minimaldev.com${canonicalPath}`;
   <link rel="canonical" href={canonical} />
   <meta name="robots" content="index,follow" />
 
-  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href={withBase("/assets/css/main.css")} />
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
@@ -42,6 +48,6 @@ const canonical = `https://minimaldev.com${canonicalPath}`;
 
   <Footer />
 
-  <script defer src="/assets/js/main.js"></script>
+  <script defer src={withBase("/assets/js/main.js")}></script>
 </body>
 </html>
