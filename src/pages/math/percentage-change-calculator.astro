@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Percentage Change Calculator",
-  description: "Free percentage change calculator. Find percent change from one value to another.",
+  description: "Calculate percentage change between two numbers. Find percent increase or decrease instantly.",
   href: "/math/percentage-change-calculator/",
   order: 40,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Percentage Change Calculator — MinimalDev"
-  description="Free percentage change calculator. Find percent change from one value to another."
+  description="Free percentage change calculator. Find percent increase or decrease between two values instantly."
   canonicalPath="/math/percentage-change-calculator/"
   h1="Percentage Change Calculator"
-  intro="Calculate percentage change between two values. Shows increase, decrease, or no change."
+  intro="Calculate percentage change between two numbers. The result shows whether the value increased or decreased."
 >
   <div slot="tool" data-tool="percentage-change-calculator">
     <div class="form">
@@ -22,6 +22,7 @@ export const tool = {
         <label for="pch_from">From value</label>
         <input id="pch_from" type="number" inputmode="decimal" placeholder="e.g., 100" />
       </div>
+
       <div class="field">
         <label for="pch_to">To value</label>
         <input id="pch_to" type="number" inputmode="decimal" placeholder="e.g., 85" />
@@ -33,24 +34,45 @@ export const tool = {
       </div>
 
       <div class="result" id="pch_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        All calculations run locally in your browser. No data is stored or transmitted.
+      </p>
     </div>
   </div>
 
   <div slot="how">
-    <p class="note"><strong>Formula:</strong> ((to − from) ÷ from) × 100</p>
+    <p class="note">
+      <strong>Percent change formula:</strong> ((to − from) ÷ from) × 100
+    </p>
+
+    <ul>
+      <li>If the result is positive → percentage increase</li>
+      <li>If the result is negative → percentage decrease</li>
+      <li>If the result is 0 → no change</li>
+    </ul>
+
+    <p class="note">
+      Percent change measures relative difference compared to the starting value.
+    </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>From 100 → To 85: change = −15%</li>
-      <li>From 50 → To 60: change = +20%</li>
+      <li><strong>From 100 → To 85</strong> → −15% (decrease)</li>
+      <li><strong>From 50 → To 60</strong> → +20% (increase)</li>
+      <li><strong>Revenue 10,000 → 12,500</strong> → +25%</li>
+      <li><strong>Price 200 → 150</strong> → −25%</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Why can’t “from value” be 0?</strong> The formula divides by the starting value.</li>
-      <li><strong>Is negative change okay?</strong> Yes, it indicates a decrease.</li>
+      <li><strong>What is percentage change?</strong> It measures how much a value increases or decreases relative to its original value.</li>
+      <li><strong>Why can’t “from value” be 0?</strong> The formula divides by the starting value, so 0 makes the calculation undefined.</li>
+      <li><strong>Is this the same as percent difference?</strong> Not exactly. Percent difference compares two values without choosing a starting point.</li>
+      <li><strong>Can the result be negative?</strong> Yes. A negative result indicates a decrease.</li>
+      <li><strong>Is this calculation accurate?</strong> Yes. It uses the standard mathematical formula.</li>
     </ul>
   </div>
 

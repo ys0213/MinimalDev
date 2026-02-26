@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Weight Converter",
-  description: "Free weight converter for mg, g, kg, oz, and lb. Fast and easy to use.",
+  description: "Convert kg, lb, g, mg, and oz instantly (kg to lb, lb to kg, g to oz).",
   href: "/converter/weight-converter/",
   order: 20,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Weight Converter — MinimalDev"
-  description="Free weight converter for mg, g, kg, oz, and lb. Fast and easy to use."
+  description="Free weight converter for mg, g, kg, oz, and lb. Convert kg to lb, lb to kg, g to oz and more with instant results."
   canonicalPath="/converter/weight-converter/"
   h1="Weight Converter"
-  intro="Convert common weight units instantly. Supports metric and imperial units with live updates."
+  intro="Convert weight units instantly between metric and imperial measurements. Supports common conversions like kg to lb and lb to kg."
 >
   <div slot="tool" data-tool="weight-converter">
     <div class="form">
@@ -51,27 +51,40 @@ export const tool = {
       </div>
 
       <div class="result" id="wc_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      This converter uses kilograms as a base unit. The input is converted to kilograms, then converted to the target unit.
+      This converter uses kilograms as a base unit. Your input is converted to kilograms first, then converted to the target unit.
+      Standard constants are used (for example: 1 lb = 0.45359237 kg exactly; 1 oz = 28.349523125 g).
     </p>
+    <ul>
+      <li><strong>Supported units:</strong> mg, g, kg, oz, lb</li>
+      <li><strong>Common searches:</strong> kg to lb, lb to kg, g to oz, oz to g</li>
+      <li><strong>Rounding:</strong> displayed values may be rounded for readability</li>
+    </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>1 kg = 1000 g</li>
-      <li>1 lb ≈ 0.45359237 kg</li>
-      <li>1 oz ≈ 28.349523125 g</li>
+      <li><strong>70 kg</strong> ≈ <strong>154.3236 lb</strong> (approx.)</li>
+      <li><strong>150 lb</strong> ≈ <strong>68.0389 kg</strong> (approx.)</li>
+      <li><strong>500 g</strong> ≈ <strong>17.63698 oz</strong> (approx.)</li>
+      <li><strong>1 kg</strong> = <strong>1000 g</strong> (exact)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Does this support decimals?</strong> Yes, you can enter decimal values.</li>
-      <li><strong>Is this accurate?</strong> Yes, it uses standard conversion constants.</li>
+      <li><strong>Does it support decimals?</strong> Yes. Decimal input and output are supported.</li>
+      <li><strong>How accurate is it?</strong> It uses standard conversion constants (e.g., 1 lb = 0.45359237 kg).</li>
+      <li><strong>Why do I see “approx.”?</strong> Some conversions produce long decimals, so the display is rounded.</li>
+      <li><strong>Does this tool store my data?</strong> No. Everything runs locally in your browser.</li>
     </ul>
   </div>
 

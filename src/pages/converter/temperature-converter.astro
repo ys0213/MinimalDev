@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Temperature Converter",
-  description: "Free temperature converter for Celsius, Fahrenheit, and Kelvin. Fast and mobile-first.",
+  description: "Convert Celsius, Fahrenheit, and Kelvin instantly (C to F, F to C, C to K).",
   href: "/converter/temperature-converter/",
   order: 30,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Temperature Converter — MinimalDev"
-  description="Free temperature converter for Celsius, Fahrenheit, and Kelvin. Fast and mobile-first."
+  description="Free temperature converter for Celsius (°C), Fahrenheit (°F), and Kelvin (K). Convert C to F, F to C, and more with instant results."
   canonicalPath="/converter/temperature-converter/"
   h1="Temperature Converter"
-  intro="Convert Celsius, Fahrenheit, and Kelvin instantly with live updates."
+  intro="Convert Celsius, Fahrenheit, and Kelvin instantly. Supports common conversions like C to F and F to C with live updates."
 >
   <div slot="tool" data-tool="temperature-converter">
     <div class="form">
@@ -47,27 +47,46 @@ export const tool = {
       </div>
 
       <div class="result" id="tc_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Temperature is converted by translating the input into Celsius first, then converting to the target unit.
+      Temperature conversion uses both a <strong>scale</strong> and an <strong>offset</strong> (unlike length/weight converters that are ratio-only).
+      This tool converts through Celsius as an intermediate step when needed.
+    </p>
+
+    <ul>
+      <li><strong>C → F:</strong> (°C × 9/5) + 32</li>
+      <li><strong>F → C:</strong> (°F − 32) × 5/9</li>
+      <li><strong>C → K:</strong> °C + 273.15</li>
+      <li><strong>K → C:</strong> K − 273.15</li>
+    </ul>
+
+    <p class="note">
+      Displayed values may be rounded for readability, especially for repeating decimals.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>0°C = 32°F = 273.15 K</li>
-      <li>100°C = 212°F = 373.15 K</li>
-      <li>98.6°F ≈ 37°C</li>
+      <li><strong>0°C</strong> = <strong>32°F</strong> = <strong>273.15 K</strong></li>
+      <li><strong>100°C</strong> = <strong>212°F</strong> = <strong>373.15 K</strong></li>
+      <li><strong>98.6°F</strong> ≈ <strong>37°C</strong> (approx.)</li>
+      <li><strong>300 K</strong> ≈ <strong>26.85°C</strong> (approx.)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Why are formulas different from other converters?</strong> Temperature uses offsets, not only ratios.</li>
-      <li><strong>Can I enter negative values?</strong> Yes (e.g., -10°C).</li>
+      <li><strong>Why is temperature conversion different?</strong> Temperature uses offsets (like +32 or +273.15), not only ratios.</li>
+      <li><strong>Can I enter negative values?</strong> Yes. Example: −10°C converts correctly.</li>
+      <li><strong>Why do I see “approx.”?</strong> Some results have long decimals, so the display is rounded.</li>
+      <li><strong>Does this tool save my inputs?</strong> No. Everything runs locally in your browser.</li>
     </ul>
   </div>
 

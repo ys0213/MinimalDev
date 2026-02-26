@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Random Number Generator",
-  description: "Free random number generator with custom min/max and count. Generate integers quickly.",
+  description: "Free random integer generator. Pick random numbers with custom min, max, and count instantly.",
   href: "/utility/random-number-generator/",
   order: 10,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Random Number Generator — MinimalDev"
-  description="Free random number generator with custom min/max and count. Generate integers quickly."
+  description="Free random number generator (random integer generator). Set min, max, and count to pick random numbers instantly."
   canonicalPath="/utility/random-number-generator/"
   h1="Random Number Generator"
-  intro="Generate random integers quickly. Set min, max, and how many numbers you want."
+  intro="Generate random integers quickly. Choose a minimum, maximum, and how many numbers you want (great for dice rolls, raffles, and quick picks)."
 >
   <div slot="tool" data-tool="random-number-generator">
     <div class="form">
@@ -22,10 +22,12 @@ export const tool = {
         <label for="rng_min">Min</label>
         <input id="rng_min" type="number" inputmode="numeric" placeholder="e.g., 1" />
       </div>
+
       <div class="field">
         <label for="rng_max">Max</label>
         <input id="rng_max" type="number" inputmode="numeric" placeholder="e.g., 100" />
       </div>
+
       <div class="field">
         <label for="rng_count">Count</label>
         <input id="rng_count" type="number" inputmode="numeric" value="1" min="1" max="100" />
@@ -37,26 +39,46 @@ export const tool = {
       </div>
 
       <div class="result" id="rng_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Privacy: runs locally in your browser. No inputs or results are stored.
+      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      This tool uses JavaScript’s built-in random function to generate integers in an inclusive range.
+      This tool generates random integers within an <strong>inclusive</strong> range: from <code>min</code> to <code>max</code>.
+      If you request multiple numbers, it repeats the random draw for the selected count.
+    </p>
+
+    <ul>
+      <li><strong>Range:</strong> inclusive (min and max can both appear)</li>
+      <li><strong>Duplicates:</strong> allowed (numbers can repeat)</li>
+      <li><strong>Use cases:</strong> dice rolls, raffle picks, quick random choices</li>
+    </ul>
+
+    <p class="note">
+      For security-sensitive randomness (passwords, tokens), use <a href="/utility/password-generator/">Password Generator</a> or
+      <a href="/utility/uuid-generator/">UUID Generator</a>.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Min 1, Max 6, Count 10 → simulates dice rolls</li>
-      <li>Min 100, Max 999, Count 1 → generates a 3-digit number</li>
+      <li><strong>Dice roller:</strong> Min 1, Max 6, Count 10 → simulates dice rolls</li>
+      <li><strong>Pick a 3-digit number:</strong> Min 100, Max 999, Count 1</li>
+      <li><strong>Raffle pick:</strong> Min 1, Max 500, Count 3 → pick 3 winners (duplicates possible)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
       <li><strong>Is this cryptographically secure?</strong> No. For security, use the password/UUID tools.</li>
-      <li><strong>Does it allow duplicates?</strong> Yes, duplicates are possible.</li>
+      <li><strong>Are min and max included?</strong> Yes, the range is inclusive.</li>
+      <li><strong>Can numbers repeat?</strong> Yes. Duplicates are possible.</li>
+      <li><strong>What if min is greater than max?</strong> Swap the values or enter a valid range (min ≤ max).</li>
+      <li><strong>Does this work offline?</strong> Once the page is loaded, it runs in your browser.</li>
     </ul>
   </div>
 

@@ -2,19 +2,19 @@
 import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
-  title: "Percent Increase Calculator",
-  description: "Free percent increase calculator. Find the percentage increase from an old value to a new value.",
+  title: "Percentage Increase Calculator",
+  description: "Free percentage increase calculator. Calculate percent increase between two values instantly.",
   href: "/math/percent-increase-calculator/",
   order: 20,
 };
 ---
 
 <ToolLayout
-  title="Percent Increase Calculator — MinimalDev"
-  description="Free percent increase calculator. Find the percentage increase from an old value to a new value."
+  title="Percentage Increase Calculator — MinimalDev"
+  description="Free percentage increase calculator. Find the percent increase from an old value to a new value instantly."
   canonicalPath="/math/percent-increase-calculator/"
-  h1="Percent Increase Calculator"
-  intro="Calculate percentage increase between two values. Useful for price increases, growth rate, and comparisons."
+  h1="Percentage Increase Calculator"
+  intro="Calculate percentage increase between two numbers. Useful for price increases, growth rates, salary raises, and comparisons."
 >
   <div slot="tool" data-tool="percent-increase-calculator">
     <div class="form">
@@ -22,6 +22,7 @@ export const tool = {
         <label for="pi_old">Old value</label>
         <input id="pi_old" type="number" inputmode="decimal" placeholder="e.g., 80" />
       </div>
+
       <div class="field">
         <label for="pi_new">New value</label>
         <input id="pi_new" type="number" inputmode="decimal" placeholder="e.g., 100" />
@@ -33,24 +34,42 @@ export const tool = {
       </div>
 
       <div class="result" id="pi_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        All calculations run locally in your browser. No data is stored.
+      </p>
     </div>
   </div>
 
   <div slot="how">
-    <p class="note"><strong>Formula:</strong> ((new − old) ÷ old) × 100</p>
+    <p class="note">
+      <strong>Percentage increase formula:</strong>
+      ((new − old) ÷ old) × 100
+    </p>
+
+    <ul>
+      <li><strong>Step 1:</strong> Subtract the old value from the new value.</li>
+      <li><strong>Step 2:</strong> Divide the difference by the old value.</li>
+      <li><strong>Step 3:</strong> Multiply by 100 to get the percentage.</li>
+    </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Old 80 → New 100: increase = 25%</li>
-      <li>Old 50 → New 60: increase = 20%</li>
+      <li><strong>Old 80 → New 100</strong> → Increase = 25%</li>
+      <li><strong>Old 50 → New 60</strong> → Increase = 20%</li>
+      <li><strong>Salary 40,000 → 44,000</strong> → Increase = 10%</li>
+      <li><strong>Price 120 → 150</strong> → Increase = 25%</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What if old value is 0?</strong> Percent increase is undefined when dividing by 0.</li>
-      <li><strong>Can the result be negative?</strong> If new is less than old, use the percent decrease tool instead.</li>
+      <li><strong>What if the old value is 0?</strong> Percentage increase is undefined because division by zero is not possible.</li>
+      <li><strong>Can the result be negative?</strong> If the new value is smaller than the old value, the result represents a decrease.</li>
+      <li><strong>Is this the same as percentage change?</strong> Percentage change can represent either increase or decrease.</li>
+      <li><strong>Why is my result very large?</strong> When the old value is small, even small differences can create large percentage increases.</li>
+      <li><strong>Is this accurate?</strong> Yes. It uses the standard mathematical formula.</li>
     </ul>
   </div>
 

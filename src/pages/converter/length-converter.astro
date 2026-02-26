@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Length Converter",
-  description: "Free length converter for mm, cm, meters, km, inches, feet, yards, and miles. Fast and mobile-first.",
+  description: "Convert mm, cm, m, km, in, ft, yd, and mi instantly. Fast and mobile-first.",
   href: "/converter/length-converter/",
   order: 10,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Length Converter — MinimalDev"
-  description="Free length converter for mm, cm, meters, km, inches, feet, yards, and miles. Fast and mobile-first."
+  description="Free length converter for mm, cm, meters, km, inches, feet, yards, and miles. Instant results with standard conversion constants."
   canonicalPath="/converter/length-converter/"
   h1="Length Converter"
-  intro="Convert common length units instantly. Supports metric and imperial units with live updates."
+  intro="Convert length units instantly between metric and imperial measurements. Results update live as you type."
 >
   <div slot="tool" data-tool="length-converter">
     <div class="form">
@@ -57,27 +57,40 @@ export const tool = {
       </div>
 
       <div class="result" id="lc_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No data is sent to a server.
+      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      This converter uses meters as a base unit. The input is converted to meters, then converted to the target unit.
+      This tool converts through a base unit (meter). Your input is first converted to meters, then converted to the target unit.
+      Standard exact definitions are used where applicable (for example: 1 inch = 0.0254 m, 1 mile = 1609.344 m).
     </p>
+    <ul>
+      <li><strong>Supported units:</strong> mm, cm, m, km, in, ft, yd, mi</li>
+      <li><strong>Decimals:</strong> supported (e.g., 2.54 cm)</li>
+      <li><strong>Rounding:</strong> displayed values may be rounded for readability</li>
+    </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>1 km = 1000 m</li>
-      <li>12 in = 1 ft</li>
-      <li>1 mi ≈ 1.609344 km</li>
+      <li><strong>10 km</strong> → <strong>6.213712 mi</strong> (approx.)</li>
+      <li><strong>180 cm</strong> → <strong>5.905512 ft</strong> (approx.)</li>
+      <li><strong>12 in</strong> → <strong>30.48 cm</strong> (exact)</li>
+      <li><strong>1 mi</strong> → <strong>1.609344 km</strong> (exact)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Does this support decimals?</strong> Yes, you can enter decimal values.</li>
-      <li><strong>Is this accurate?</strong> Yes, it uses standard conversion constants.</li>
+      <li><strong>Does it support decimals?</strong> Yes. You can enter decimal values and get decimal results.</li>
+      <li><strong>How accurate is it?</strong> It uses standard conversion constants (e.g., inch and mile have exact meter definitions).</li>
+      <li><strong>Why do I see “approx.”?</strong> Some conversions produce repeating decimals, so the display is rounded.</li>
+      <li><strong>Does this store my inputs?</strong> No. Everything runs locally in your browser.</li>
     </ul>
   </div>
 

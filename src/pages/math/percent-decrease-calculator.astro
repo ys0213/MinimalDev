@@ -2,19 +2,19 @@
 import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
-  title: "Percent Decrease Calculator",
-  description: "Free percent decrease calculator. Find the percentage decrease from an old value to a new value.",
+  title: "Percentage Decrease Calculator",
+  description: "Free percentage decrease calculator. Calculate percent decrease between two values instantly.",
   href: "/math/percent-decrease-calculator/",
   order: 30,
 };
 ---
 
 <ToolLayout
-  title="Percent Decrease Calculator — MinimalDev"
-  description="Free percent decrease calculator. Find the percentage decrease from an old value to a new value."
+  title="Percentage Decrease Calculator — MinimalDev"
+  description="Free percentage decrease calculator. Find percent decrease from an old value to a new value instantly."
   canonicalPath="/math/percent-decrease-calculator/"
-  h1="Percent Decrease Calculator"
-  intro="Calculate percentage decrease between two values. Useful for discounts, drops, and reductions."
+  h1="Percentage Decrease Calculator"
+  intro="Calculate percentage decrease between two numbers. Useful for discounts, price drops, reductions, and comparisons."
 >
   <div slot="tool" data-tool="percent-decrease-calculator">
     <div class="form">
@@ -22,6 +22,7 @@ export const tool = {
         <label for="pd_old">Old value</label>
         <input id="pd_old" type="number" inputmode="decimal" placeholder="e.g., 120" />
       </div>
+
       <div class="field">
         <label for="pd_new">New value</label>
         <input id="pd_new" type="number" inputmode="decimal" placeholder="e.g., 90" />
@@ -33,24 +34,41 @@ export const tool = {
       </div>
 
       <div class="result" id="pd_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        All calculations run locally in your browser. No data is stored.
+      </p>
     </div>
   </div>
 
   <div slot="how">
-    <p class="note"><strong>Formula:</strong> ((old − new) ÷ old) × 100</p>
+    <p class="note">
+      <strong>Percentage decrease formula:</strong> ((old − new) ÷ old) × 100
+    </p>
+
+    <ul>
+      <li><strong>Step 1:</strong> Subtract the new value from the old value.</li>
+      <li><strong>Step 2:</strong> Divide the difference by the old value.</li>
+      <li><strong>Step 3:</strong> Multiply by 100 to get the percentage decrease.</li>
+    </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Old 120 → New 90: decrease = 25%</li>
-      <li>Old 200 → New 150: decrease = 25%</li>
+      <li><strong>Old 120 → New 90</strong> → Decrease = 25%</li>
+      <li><strong>Old 200 → New 150</strong> → Decrease = 25%</li>
+      <li><strong>Price 80 → 60</strong> → Decrease = 25%</li>
+      <li><strong>Stock 50 → 40</strong> → Decrease = 20%</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What if old value is 0?</strong> Percent decrease is undefined when dividing by 0.</li>
-      <li><strong>What if new is larger than old?</strong> Use the percent increase tool instead.</li>
+      <li><strong>What is percentage decrease?</strong> It measures how much a value has decreased relative to its original value.</li>
+      <li><strong>What if the old value is 0?</strong> The calculation is undefined because division by zero is not possible.</li>
+      <li><strong>What if the new value is larger than the old value?</strong> That represents an increase, not a decrease.</li>
+      <li><strong>Is this used for discounts?</strong> Yes. It can calculate discount percentages and price reductions.</li>
+      <li><strong>Is this accurate?</strong> Yes. It uses the standard mathematical formula.</li>
     </ul>
   </div>
 

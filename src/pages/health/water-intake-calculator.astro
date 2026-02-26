@@ -3,7 +3,7 @@ import ToolLayout from "../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Water Intake Calculator",
-  description: "Free water intake calculator to estimate daily water needs based on weight and activity.",
+  description: "Estimate daily water intake based on weight and activity. Free hydration guideline tool (liters and cups).",
   href: "/health/water-intake-calculator/",
   order: 20,
 };
@@ -11,10 +11,10 @@ export const tool = {
 
 <ToolLayout
   title="Water Intake Calculator — MinimalDev"
-  description="Free water intake calculator to estimate daily water needs based on weight and activity."
+  description="Free water intake calculator to estimate how much water you should drink per day based on weight and activity level. Shows liters and approximate cups."
   canonicalPath="/health/water-intake-calculator/"
   h1="Water Intake Calculator"
-  intro="Estimate daily water intake using a simple guideline based on weight and activity level."
+  intro="Estimate daily water intake using a simple guideline based on body weight and activity. Results are a general reference, not medical advice."
 >
   <div slot="tool" data-tool="water-intake-calculator">
     <div class="form">
@@ -45,30 +45,49 @@ export const tool = {
       </div>
 
       <div class="result" id="wi_result">Result will appear here.</div>
+
       <p class="note" style="margin-top:8px;">
-        This is a general estimate. Needs vary by climate, health, and activity.
+        Informational estimate only. Your needs may vary based on climate, diet, health conditions, and exercise.
+      </p>
+
+      <p class="note" style="margin-top:6px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Guideline used: ~35 ml per kg body weight, plus a small adjustment for higher activity.
-      Output is shown in liters and approximate cups.
+      This tool uses a simple hydration guideline based on body weight, then applies a small adjustment for higher activity.
+      The base estimate is approximately <strong>35 ml per kg</strong> of body weight per day (a commonly used rule-of-thumb).
+    </p>
+
+    <ul>
+      <li><strong>Base estimate:</strong> weight(kg) × 35 ml</li>
+      <li><strong>Activity adjustment:</strong> adds a small amount for moderate/high activity</li>
+      <li><strong>Cups:</strong> shown as an approximation using <strong>1 cup ≈ 240 ml</strong></li>
+    </ul>
+
+    <p class="note">
+      This is not a medical recommendation. If you have kidney/heart conditions, are pregnant, or have specific medical needs, consult a professional.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>70 kg, low activity → about 2.45 L</li>
-      <li>70 kg, high activity → higher estimate with adjustment</li>
+      <li><strong>70 kg, low activity</strong> → about <strong>2.45 L</strong> (≈ 10 cups)</li>
+      <li><strong>70 kg, moderate activity</strong> → higher estimate with adjustment</li>
+      <li><strong>150 lb, low activity</strong> → roughly <strong>2.4 L</strong> (approx.)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Is this a medical recommendation?</strong> No. It’s an informational guideline.</li>
-      <li><strong>Why show cups?</strong> It’s a simple approximate measure (~240 ml per cup).</li>
+      <li><strong>How much water should I drink per day?</strong> Many people use weight-based guidelines, but needs vary widely.</li>
+      <li><strong>Is this a medical recommendation?</strong> No. It’s an informational estimate based on a rule-of-thumb.</li>
+      <li><strong>Does coffee/tea count as water?</strong> Fluids contribute, but individual tolerance to caffeine varies.</li>
+      <li><strong>Why show cups?</strong> It helps quick planning. Cups are approximate (1 cup ≈ 240 ml).</li>
+      <li><strong>Is my data stored?</strong> No. The calculation runs locally in your browser.</li>
     </ul>
   </div>
 
