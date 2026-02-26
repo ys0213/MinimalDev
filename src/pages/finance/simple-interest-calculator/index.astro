@@ -1,0 +1,108 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Simple Interest Calculator",
+  description:
+    "Free simple interest calculator. Calculate interest and final amount from principal, rate, and time.",
+  href: "/finance/simple-interest-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Simple Interest Calculator — MinimalDev"
+  description="Calculate simple interest and total amount. Useful for basic loans and short-term interest estimates."
+  canonicalPath="/finance/simple-interest-calculator/"
+  h1="Simple Interest Calculator"
+  intro="Calculate simple interest using principal, annual rate, and time."
+>
+  <div slot="tool" data-tool="simple-interest-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="si_principal">Principal</label>
+        <input id="si_principal" type="number" inputmode="decimal" placeholder="e.g., 5000" />
+      </div>
+
+      <div class="field">
+        <label for="si_rate">Annual Interest Rate (%)</label>
+        <input id="si_rate" type="number" inputmode="decimal" placeholder="e.g., 6" />
+      </div>
+
+      <div class="field">
+        <label for="si_years">Time (years)</label>
+        <input id="si_years" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="si_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="si_clear">Clear</button>
+      </div>
+
+      <div class="result" id="si_result" style="margin-top:12px;">Result will appear here.</div>
+
+      <p class="note" style="margin-top:10px;">
+        Simple interest does not compound. For compounding, use the compound interest tool.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula:</strong> Interest = P × r × t<br/>
+      Total = P + Interest<br/>
+      Where P is principal, r is annual rate (decimal), and t is time in years.
+    </p>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const pEl = document.getElementById("si_principal");
+  const rEl = document.getElementById("si_rate");
+  const tEl = document.getElementById("si_years");
+  const calcBtn = document.getElementById("si_calc");
+  const clearBtn = document.getElementById("si_clear");
+  const resultEl = document.getElementById("si_result");
+  if (!pEl || !rEl || !tEl || !calcBtn || !clearBtn || !resultEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const P = parseFloat(pEl.value);
+    const rate = (parseFloat(rEl.value) || 0) / 100;
+    const years = parseFloat(tEl.value);
+
+    if (!isFinite(P) || P <= 0 || !isFinite(rate) || rate < 0 || !isFinite(years) || years <= 0) {
+      resultEl.innerHTML = "Please enter valid values.";
+      return;
+    }
+
+    const interest = P * rate * years;
+    const total = P + interest;
+
+    resultEl.innerHTML =
+      "<strong>Interest:</strong> " + money(interest) + "<br/>" +
+      "<strong>Total Amount:</strong> " + money(total);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    pEl.value = "";
+    rEl.value = "";
+    tEl.value = "";
+    resultEl.innerHTML = "Result will appear here.";
+  });
+});
+</script>

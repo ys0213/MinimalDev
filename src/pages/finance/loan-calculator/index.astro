@@ -1,0 +1,171 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Loan Calculator",
+  description:
+    "Free loan calculator with amortization schedule. Calculate monthly payment, total interest, and full payment schedule instantly.",
+  href: "/finance/loan-calculator/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="Loan Calculator with Amortization Schedule — MinimalDev"
+  description="Free loan calculator. Estimate monthly payment, total interest, and view full amortization schedule instantly."
+  canonicalPath="/finance/loan-calculator/"
+  h1="Loan Calculator"
+  intro="Calculate monthly loan payments, total interest, and view a full amortization schedule."
+>
+  <div slot="tool">
+    <div class="form">
+
+      <div class="field">
+        <label for="loan_amount">Loan Amount</label>
+        <input id="loan_amount" type="number" placeholder="10000" />
+      </div>
+
+      <div class="field">
+        <label for="loan_rate">Annual Interest Rate (%)</label>
+        <input id="loan_rate" type="number" placeholder="5" />
+      </div>
+
+      <div class="field">
+        <label for="loan_years">Loan Term (Years)</label>
+        <input id="loan_years" type="number" placeholder="5" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="loan_calc" class="btn" type="button">Calculate</button>
+        <button id="loan_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="loan_summary" class="result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:20px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Payment</th>
+              <th>Principal</th>
+              <th>Interest</th>
+              <th>Remaining Balance</th>
+            </tr>
+          </thead>
+          <tbody id="loan_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Results are for informational purposes only.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula:</strong>
+      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+    </p>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li>Does this include taxes? No.</li>
+      <li>What is amortization? It shows how each payment is split over time.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/mortgage-calculator/">Mortgage Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const amountEl = document.getElementById("loan_amount");
+  const rateEl = document.getElementById("loan_rate");
+  const yearsEl = document.getElementById("loan_years");
+  const calcBtn = document.getElementById("loan_calc");
+  const clearBtn = document.getElementById("loan_clear");
+  const summaryEl = document.getElementById("loan_summary");
+  const tbodyEl = document.getElementById("loan_tbody");
+
+  if (!amountEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+
+    const P = parseFloat(amountEl.value);
+    const annual = parseFloat(rateEl.value) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    if (!P || !annual || !years) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      return;
+    }
+
+    const n = years * 12;
+    const r = annual / 12;
+
+    const M = r === 0
+      ? P / n
+      : P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+
+    const totalPayment = M * n;
+    const totalInterest = totalPayment - P;
+
+    summaryEl.innerHTML =
+      "<strong>Monthly Payment:</strong> " + money(M) + "<br>" +
+      "<strong>Total Interest:</strong> " + money(totalInterest) + "<br>" +
+      "<strong>Total Payment:</strong> " + money(totalPayment);
+
+    let balance = P;
+    tbodyEl.innerHTML = "";
+
+    for (let i = 1; i <= n; i++) {
+      const interest = balance * r;
+      const principal = M - interest;
+      balance -= principal;
+
+      if (balance < 0) balance = 0;
+
+      const row =
+        "<tr>" +
+        "<td>" + i + "</td>" +
+        "<td>" + money(M) + "</td>" +
+        "<td>" + money(principal) + "</td>" +
+        "<td>" + money(interest) + "</td>" +
+        "<td>" + money(balance) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+
+});
+</script>

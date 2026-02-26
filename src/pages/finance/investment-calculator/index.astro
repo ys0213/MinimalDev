@@ -1,0 +1,155 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Investment Calculator",
+  description:
+    "Free investment calculator with monthly contributions. Estimate future value, total contributions, and investment gains.",
+  href: "/finance/investment-calculator/",
+  order: 50,
+};
+---
+
+<ToolLayout
+  title="Investment Calculator — MinimalDev"
+  description="Estimate investment growth with monthly contributions and annual return. View year-by-year results."
+  canonicalPath="/finance/investment-calculator/"
+  h1="Investment Calculator"
+  intro="Estimate future value of an investment with optional monthly contributions and annual return."
+>
+  <div slot="tool">
+    <div class="form">
+
+      <div class="field">
+        <label for="iv_start">Initial Amount</label>
+        <input id="iv_start" type="number" placeholder="5000" />
+      </div>
+
+      <div class="field">
+        <label for="iv_monthly">Monthly Contribution</label>
+        <input id="iv_monthly" type="number" placeholder="300" />
+      </div>
+
+      <div class="field">
+        <label for="iv_return">Expected Annual Return (%)</label>
+        <input id="iv_return" type="number" placeholder="7" />
+      </div>
+
+      <div class="field">
+        <label for="iv_years">Years</label>
+        <input id="iv_years" type="number" placeholder="20" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="iv_calc" class="btn" type="button">Calculate</button>
+        <button id="iv_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="iv_summary" class="result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:20px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Value</th>
+              <th>Contributions</th>
+              <th>Gain</th>
+            </tr>
+          </thead>
+          <tbody id="iv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Estimates only. Market returns are not guaranteed.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
+      <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("iv_start");
+  const monthlyEl = document.getElementById("iv_monthly");
+  const returnEl = document.getElementById("iv_return");
+  const yearsEl = document.getElementById("iv_years");
+  const calcBtn = document.getElementById("iv_calc");
+  const clearBtn = document.getElementById("iv_clear");
+  const summaryEl = document.getElementById("iv_summary");
+  const tbodyEl = document.getElementById("iv_tbody");
+
+  if (!startEl || !monthlyEl || !returnEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    let value = parseFloat(startEl.value);
+    const monthly = parseFloat(monthlyEl.value);
+    const annual = parseFloat(returnEl.value) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    if (!isFinite(value) || value < 0 || !isFinite(monthly) || monthly < 0 || !isFinite(annual) || annual < 0 || !isFinite(years) || years <= 0) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const r = annual / 12;
+    let contributions = value;
+
+    tbodyEl.innerHTML = "";
+
+    for (let y = 1; y <= years; y++) {
+      for (let m = 1; m <= 12; m++) {
+        const interest = r === 0 ? 0 : value * r;
+        value += interest;
+
+        value += monthly;
+        contributions += monthly;
+      }
+
+      const gain = value - contributions;
+
+      const row =
+        "<tr>" +
+          "<td>" + y + "</td>" +
+          "<td>" + money(value) + "</td>" +
+          "<td>" + money(contributions) + "</td>" +
+          "<td>" + money(gain) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+
+    summaryEl.innerHTML =
+      "<strong>Final Value:</strong> " + money(value) + "<br>" +
+      "<strong>Total Contributions:</strong> " + money(contributions) + "<br>" +
+      "<strong>Total Gain:</strong> " + money(value - contributions);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    monthlyEl.value = "";
+    returnEl.value = "";
+    yearsEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+});
+</script>

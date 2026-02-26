@@ -1,0 +1,105 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/finance/";
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
+  .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const loanTools = tools.filter(t =>
+  /loan|mortgage|emi|apr/i.test(t.title)
+);
+
+const investmentTools = tools.filter(t =>
+  /compound|investment|savings|simple|inflation/i.test(t.title)
+);
+
+const businessTools = tools.filter(t =>
+  /break/i.test(t.title)
+);
+---
+
+<BaseLayout
+  title="Finance Calculators — Loan, Mortgage, APR, Investment Tools"
+  description="Free finance calculators including loan calculator, mortgage calculator, APR calculator, EMI, compound interest, savings, and more."
+  canonicalPath="/finance/"
+>
+  <div class="container">
+
+    <h1 class="page-title">Finance Calculators</h1>
+    <p class="lead">
+      Professional finance calculators for loans, mortgages, interest, investments, and break-even analysis.
+    </p>
+
+    {/* Featured Section */}
+    <section class="section">
+      <h2>Popular Calculators</h2>
+      <div class="grid">
+        {tools.slice(0, 6).map((t) => (
+          <section class="card">
+            <h3>{t.title}</h3>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Loan & Borrowing Tools</h2>
+      <div class="grid">
+        {loanTools.map((t) => (
+          <section class="card">
+            <h3>{t.title}</h3>
+            <a class="btn secondary" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Investment & Interest Tools</h2>
+      <div class="grid">
+        {investmentTools.map((t) => (
+          <section class="card">
+            <h3>{t.title}</h3>
+            <a class="btn secondary" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Business & Analysis Tools</h2>
+      <div class="grid">
+        {businessTools.map((t) => (
+          <section class="card">
+            <h3>{t.title}</h3>
+            <a class="btn secondary" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>About These Finance Calculators</h2>
+      <p class="note">
+        These tools provide fast, mobile-friendly calculations for personal finance,
+        mortgage payments, APR estimation, investment growth, simple interest,
+        compound interest, EMI, and break-even analysis.
+      </p>
+    </section>
+
+  </div>
+</BaseLayout>

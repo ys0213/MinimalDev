@@ -1,0 +1,110 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Discount Calculator",
+  description: "Free discount calculator. Find final price, discount amount, and savings percentage instantly.",
+  href: "/math/discount-calculator/",
+  order: 70,
+};
+---
+
+<ToolLayout
+  title="Discount Calculator — MinimalDev"
+  description="Free discount calculator. Enter original price and discount percent to get final price and savings."
+  canonicalPath="/math/discount-calculator/"
+  h1="Discount Calculator"
+  intro="Calculate discounted price and savings from an original price and discount percentage."
+>
+  <div slot="tool" data-tool="discount-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="dc_price">Original price</label>
+        <input id="dc_price" type="number" inputmode="decimal" placeholder="e.g., 120" />
+      </div>
+
+      <div class="field">
+        <label for="dc_discount">Discount (%)</label>
+        <input id="dc_discount" type="number" inputmode="decimal" placeholder="e.g., 25" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="dc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dc_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Discount amount</strong> = price × (discount ÷ 100)<br/>
+      <strong>Final price</strong> = price − discount amount
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$120 with 25% off → save $30 → pay $90</li>
+      <li>$80 with 7.5% off → save $6 → pay $74</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Can discount be over 100%?</strong> No. A discount above 100% would make price negative.</li>
+      <li><strong>What about two discounts (stacking)?</strong> Apply sequentially (e.g., 20% then 10%) for accurate results.</li>
+      <li><strong>Does this include sales tax?</strong> No. Use a sales tax calculator to add/remove tax.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sales-tax-calculator/">Sales Tax Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const priceEl = document.getElementById("dc_price");
+  const discEl = document.getElementById("dc_discount");
+  const calcBtn = document.getElementById("dc_calc");
+  const clearBtn = document.getElementById("dc_clear");
+  const outEl = document.getElementById("dc_result");
+
+  if (!priceEl || !discEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const price = parseFloat(priceEl.value);
+    const disc = parseFloat(discEl.value);
+
+    if (!isFinite(price) || price < 0 || !isFinite(disc) || disc < 0 || disc > 100) {
+      outEl.textContent = "Please enter a valid price and discount (0–100).";
+      return;
+    }
+
+    const save = price * (disc / 100);
+    const final = price - save;
+
+    outEl.innerHTML =
+      "<strong>Final price:</strong> " + money(final) + "<br/>" +
+      "<strong>You save:</strong> " + money(save) + " (" + disc + "%)";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    priceEl.value = "";
+    discEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

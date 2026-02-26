@@ -1,0 +1,167 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Compound Interest Calculator",
+  description:
+    "Free compound interest calculator with optional monthly contribution. Estimate investment growth over time.",
+  href: "/finance/compound-interest-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Compound Interest Calculator — MinimalDev"
+  description="Calculate compound interest with optional monthly contributions. View total value and interest growth over time."
+  canonicalPath="/finance/compound-interest-calculator/"
+  h1="Compound Interest Calculator"
+  intro="Estimate how your investment grows with compound interest and optional monthly contributions."
+>
+  <div slot="tool">
+    <div class="form">
+
+      <div class="field">
+        <label for="ci_principal">Initial Investment</label>
+        <input id="ci_principal" type="number" placeholder="10000" />
+      </div>
+
+      <div class="field">
+        <label for="ci_rate">Annual Interest Rate (%)</label>
+        <input id="ci_rate" type="number" placeholder="7" />
+      </div>
+
+      <div class="field">
+        <label for="ci_years">Investment Period (Years)</label>
+        <input id="ci_years" type="number" placeholder="10" />
+      </div>
+
+      <div class="field">
+        <label for="ci_monthly">Monthly Contribution (Optional)</label>
+        <input id="ci_monthly" type="number" placeholder="200" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="ci_calc" class="btn" type="button">Calculate</button>
+        <button id="ci_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="ci_summary" class="result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:20px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Total Value</th>
+              <th>Total Contributions</th>
+              <th>Total Interest</th>
+            </tr>
+          </thead>
+          <tbody id="ci_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Results are estimates and for informational purposes only.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Compound interest formula:<br/>
+      A = P(1 + r/n)^(nt)<br/>
+      When adding monthly contributions, future value is calculated per period.
+    </p>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const PEl = document.getElementById("ci_principal");
+  const rateEl = document.getElementById("ci_rate");
+  const yearsEl = document.getElementById("ci_years");
+  const monthlyEl = document.getElementById("ci_monthly");
+  const calcBtn = document.getElementById("ci_calc");
+  const clearBtn = document.getElementById("ci_clear");
+  const summaryEl = document.getElementById("ci_summary");
+  const tbodyEl = document.getElementById("ci_tbody");
+
+  if (!PEl || !rateEl || !yearsEl || !monthlyEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+
+    let P = parseFloat(PEl.value);
+    const annual = parseFloat(rateEl.value) / 100;
+    const years = parseFloat(yearsEl.value);
+    const monthlyContribution = parseFloat(monthlyEl.value) || 0;
+
+    if (!P || !annual || !years) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      return;
+    }
+
+    const r = annual;
+    const totalMonths = years * 12;
+
+    tbodyEl.innerHTML = "";
+    let totalContribution = P;
+    let totalInterest = 0;
+
+    for (let year = 1; year <= years; year++) {
+
+      for (let m = 1; m <= 12; m++) {
+        P = P * (1 + r/12) + monthlyContribution;
+        totalContribution += monthlyContribution;
+      }
+
+      totalInterest = P - totalContribution;
+
+      const row =
+        "<tr>" +
+        "<td>" + year + "</td>" +
+        "<td>" + money(P) + "</td>" +
+        "<td>" + money(totalContribution) + "</td>" +
+        "<td>" + money(totalInterest) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+
+    summaryEl.innerHTML =
+      "<strong>Final Value:</strong> " + money(P) + "<br>" +
+      "<strong>Total Contributions:</strong> " + money(totalContribution) + "<br>" +
+      "<strong>Total Interest Earned:</strong> " + money(totalInterest);
+
+  });
+
+  clearBtn.addEventListener("click", function () {
+    PEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    monthlyEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+
+});
+</script>

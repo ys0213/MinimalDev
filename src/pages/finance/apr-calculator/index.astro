@@ -1,0 +1,159 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "APR Calculator",
+  description:
+    "Free APR calculator with fees. Estimate effective annual rate from interest rate, fees, and loan term.",
+  href: "/finance/apr-calculator/",
+  order: 70,
+};
+---
+
+<ToolLayout
+  title="APR Calculator — MinimalDev"
+  description="Estimate APR (effective annual cost) from interest rate, loan fees, amount, and term."
+  canonicalPath="/finance/apr-calculator/"
+  h1="APR Calculator"
+  intro="Estimate APR by including upfront fees in the effective cost of borrowing."
+>
+  <div slot="tool" data-tool="apr-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="apr_amount">Loan Amount</label>
+        <input id="apr_amount" type="number" inputmode="decimal" placeholder="e.g., 10000" />
+      </div>
+
+      <div class="field">
+        <label for="apr_rate">Nominal Annual Interest Rate (%)</label>
+        <input id="apr_rate" type="number" inputmode="decimal" placeholder="e.g., 8" />
+      </div>
+
+      <div class="field">
+        <label for="apr_years">Term (years)</label>
+        <input id="apr_years" type="number" inputmode="numeric" placeholder="e.g., 3" />
+      </div>
+
+      <div class="field">
+        <label for="apr_fees">Upfront Fees (origination, etc.)</label>
+        <input id="apr_fees" type="number" inputmode="decimal" placeholder="e.g., 200" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="apr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="apr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="apr_result" style="margin-top:12px;">Result will appear here.</div>
+
+      <p class="note" style="margin-top:10px;">
+        APR here is an estimate using a simplified cash-flow approach (fees reduce net disbursed amount).
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      We compute the monthly payment using the nominal rate, then estimate the APR as the
+      annualized rate that makes the present value of payments equal to the net amount received
+      (loan amount minus fees).
+    </p>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is this the same as lender APR?</strong> It’s a close estimate, but real APR can include additional costs.</li>
+      <li><strong>What if fees are financed?</strong> This tool assumes fees reduce net proceeds (paid upfront).</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/mortgage-calculator/">Mortgage Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const amountEl = document.getElementById("apr_amount");
+  const rateEl = document.getElementById("apr_rate");
+  const yearsEl = document.getElementById("apr_years");
+  const feesEl = document.getElementById("apr_fees");
+  const calcBtn = document.getElementById("apr_calc");
+  const clearBtn = document.getElementById("apr_clear");
+  const resultEl = document.getElementById("apr_result");
+  if (!amountEl || !rateEl || !yearsEl || !feesEl || !calcBtn || !clearBtn || !resultEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  function payment(P, r, n) {
+    if (r === 0) return P / n;
+    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  // Solve for monthly rate i such that PV(payments, i) = netProceeds
+  // PV = M * (1 - (1+i)^-n) / i
+  function solveAprMonthlyRate(M, n, net) {
+    if (M <= 0 || n <= 0 || net <= 0) return NaN;
+
+    let lo = 0.0;
+    let hi = 1.0; // 100% monthly upper bound (very high but safe)
+    for (let k = 0; k < 100; k++) {
+      const mid = (lo + hi) / 2;
+      const pv = mid === 0 ? M * n : M * (1 - Math.pow(1 + mid, -n)) / mid;
+      if (pv > net) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const amount = parseFloat(amountEl.value);
+    const nominal = (parseFloat(rateEl.value) || 0) / 100;
+    const years = parseFloat(yearsEl.value);
+    const fees = parseFloat(feesEl.value) || 0;
+
+    if (!isFinite(amount) || amount <= 0 || !isFinite(nominal) || nominal < 0 || !isFinite(years) || years <= 0 || fees < 0) {
+      resultEl.innerHTML = "Please enter valid values.";
+      return;
+    }
+
+    const n = Math.round(years * 12);
+    const r = nominal / 12;
+
+    const M = payment(amount, r, n);
+    const net = amount - fees;
+
+    if (net <= 0) {
+      resultEl.innerHTML = "Fees cannot be equal to or greater than the loan amount.";
+      return;
+    }
+
+    const aprMonthly = solveAprMonthlyRate(M, n, net);
+    const aprEffective = Math.pow(1 + aprMonthly, 12) - 1;
+
+    const totalPay = M * n;
+    const totalInterest = totalPay - amount;
+
+    resultEl.innerHTML =
+      "<strong>Monthly Payment (nominal):</strong> " + money(M) + "<br/>" +
+      "<strong>Total Interest (nominal):</strong> " + money(totalInterest) + "<br/>" +
+      "<strong>Net Proceeds (amount − fees):</strong> " + money(net) + "<br/>" +
+      "<strong>Estimated APR (effective):</strong> " + (aprEffective * 100).toFixed(2) + "%";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    feesEl.value = "";
+    resultEl.innerHTML = "Result will appear here.";
+  });
+});
+</script>

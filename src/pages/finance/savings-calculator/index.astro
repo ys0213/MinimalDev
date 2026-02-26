@@ -1,0 +1,155 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Savings Calculator",
+  description:
+    "Free savings calculator. Estimate how much you’ll save over time with monthly deposits and interest.",
+  href: "/finance/savings-calculator/",
+  order: 40,
+};
+---
+
+<ToolLayout
+  title="Savings Calculator — MinimalDev"
+  description="Calculate savings growth with monthly deposits and interest. See balances by year."
+  canonicalPath="/finance/savings-calculator/"
+  h1="Savings Calculator"
+  intro="Estimate savings growth with monthly deposits and optional annual interest."
+>
+  <div slot="tool">
+    <div class="form">
+
+      <div class="field">
+        <label for="sv_start">Starting Balance</label>
+        <input id="sv_start" type="number" placeholder="1000" />
+      </div>
+
+      <div class="field">
+        <label for="sv_monthly">Monthly Deposit</label>
+        <input id="sv_monthly" type="number" placeholder="200" />
+      </div>
+
+      <div class="field">
+        <label for="sv_rate">Annual Interest Rate (%) (Optional)</label>
+        <input id="sv_rate" type="number" placeholder="3" />
+      </div>
+
+      <div class="field">
+        <label for="sv_years">Years</label>
+        <input id="sv_years" type="number" placeholder="10" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="sv_calc" class="btn" type="button">Calculate</button>
+        <button id="sv_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="sv_summary" class="result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:20px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Balance</th>
+              <th>Total Deposits</th>
+              <th>Interest Earned</th>
+            </tr>
+          </thead>
+          <tbody id="sv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Estimates only. Actual yields vary by account.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("sv_start");
+  const monthlyEl = document.getElementById("sv_monthly");
+  const rateEl = document.getElementById("sv_rate");
+  const yearsEl = document.getElementById("sv_years");
+  const calcBtn = document.getElementById("sv_calc");
+  const clearBtn = document.getElementById("sv_clear");
+  const summaryEl = document.getElementById("sv_summary");
+  const tbodyEl = document.getElementById("sv_tbody");
+
+  if (!startEl || !monthlyEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    let balance = parseFloat(startEl.value);
+    const monthly = parseFloat(monthlyEl.value);
+    const annual = (parseFloat(rateEl.value) || 0) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    if (!isFinite(balance) || balance < 0 || !isFinite(monthly) || monthly < 0 || !isFinite(years) || years <= 0) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const r = annual / 12;
+    let deposits = balance;
+    let interestEarned = 0;
+
+    tbodyEl.innerHTML = "";
+
+    for (let y = 1; y <= years; y++) {
+      for (let m = 1; m <= 12; m++) {
+        const interest = r === 0 ? 0 : balance * r;
+        balance += interest;
+        interestEarned += interest;
+
+        balance += monthly;
+        deposits += monthly;
+      }
+
+      const row =
+        "<tr>" +
+          "<td>" + y + "</td>" +
+          "<td>" + money(balance) + "</td>" +
+          "<td>" + money(deposits) + "</td>" +
+          "<td>" + money(interestEarned) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+
+    summaryEl.innerHTML =
+      "<strong>Final Balance:</strong> " + money(balance) + "<br>" +
+      "<strong>Total Deposits:</strong> " + money(deposits) + "<br>" +
+      "<strong>Total Interest Earned:</strong> " + money(interestEarned);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    monthlyEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+});
+</script>

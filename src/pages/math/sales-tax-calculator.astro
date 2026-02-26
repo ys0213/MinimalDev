@@ -1,0 +1,132 @@
+---
+import ToolLayout from "../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sales Tax Calculator",
+  description: "Free sales tax calculator. Add or remove sales tax and see subtotal, tax, and total instantly.",
+  href: "/math/sales-tax-calculator/",
+  order: 60,
+};
+---
+
+<ToolLayout
+  title="Sales Tax Calculator — MinimalDev"
+  description="Free sales tax calculator. Add tax to a price or remove tax from a total. Shows subtotal, tax amount, and final total."
+  canonicalPath="/math/sales-tax-calculator/"
+  h1="Sales Tax Calculator"
+  intro="Calculate sales tax quickly. Add tax to a price or remove tax from a total (pre-tax amount)."
+>
+  <div slot="tool" data-tool="sales-tax-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="st_mode">Mode</label>
+        <select id="st_mode">
+          <option value="add" selected>Add tax (price → total)</option>
+          <option value="remove">Remove tax (total → price)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="st_amount">Amount</label>
+        <input id="st_amount" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+
+      <div class="field">
+        <label for="st_rate">Tax rate (%)</label>
+        <input id="st_rate" type="number" inputmode="decimal" placeholder="e.g., 8.25" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="st_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="st_clear">Clear</button>
+      </div>
+
+      <div class="result" id="st_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Add tax:</strong> tax = price × rate, total = price + tax<br/>
+      <strong>Remove tax:</strong> price = total ÷ (1 + rate), tax = total − price
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Add: $100 at 8% → tax $8 → total $108</li>
+      <li>Remove: $108 at 8% → price $100 → tax $8</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is this VAT?</strong> Not exactly. VAT is often included in the listed price; use a VAT calculator for that workflow.</li>
+      <li><strong>Why remove-tax uses division?</strong> Because the tax is embedded in the total.</li>
+      <li><strong>Does this round like retailers?</strong> We show standard rounding; receipts may round per-line item.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/discount-calculator/">Discount Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/tip-calculator/">Tip Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("st_mode");
+  const amountEl = document.getElementById("st_amount");
+  const rateEl = document.getElementById("st_rate");
+  const calcBtn = document.getElementById("st_calc");
+  const clearBtn = document.getElementById("st_clear");
+  const outEl = document.getElementById("st_result");
+
+  if (!modeEl || !amountEl || !rateEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const mode = modeEl.value;
+    const amt = parseFloat(amountEl.value);
+    const ratePct = parseFloat(rateEl.value);
+
+    if (!isFinite(amt) || amt < 0 || !isFinite(ratePct) || ratePct < 0) {
+      outEl.textContent = "Please enter valid amount and tax rate.";
+      return;
+    }
+
+    const r = ratePct / 100;
+
+    let price, tax, total;
+
+    if (mode === "add") {
+      price = amt;
+      tax = price * r;
+      total = price + tax;
+    } else {
+      total = amt;
+      price = total / (1 + r);
+      tax = total - price;
+    }
+
+    outEl.innerHTML =
+      "<strong>Price (pre-tax):</strong> " + money(price) + "<br/>" +
+      "<strong>Tax:</strong> " + money(tax) + "<br/>" +
+      "<strong>Total:</strong> " + money(total);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

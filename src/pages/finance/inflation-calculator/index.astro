@@ -1,0 +1,123 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Inflation Calculator",
+  description:
+    "Free inflation calculator. Convert past prices to today’s value using an annual inflation rate and time period.",
+  href: "/finance/inflation-calculator/",
+  order: 60,
+};
+---
+
+<ToolLayout
+  title="Inflation Calculator — MinimalDev"
+  description="Calculate how inflation changes purchasing power over time. Convert a past amount to its future value."
+  canonicalPath="/finance/inflation-calculator/"
+  h1="Inflation Calculator"
+  intro="Estimate how an amount changes over time using an annual inflation rate."
+>
+  <div slot="tool" data-tool="inflation-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="inf_amount">Amount</label>
+        <input id="inf_amount" type="number" inputmode="decimal" placeholder="e.g., 1000" />
+      </div>
+
+      <div class="field">
+        <label for="inf_rate">Annual Inflation Rate (%)</label>
+        <input id="inf_rate" type="number" inputmode="decimal" placeholder="e.g., 3" />
+      </div>
+
+      <div class="field">
+        <label for="inf_years">Years</label>
+        <input id="inf_years" type="number" inputmode="numeric" placeholder="e.g., 10" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="inf_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="inf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="inf_result" style="margin-top:12px;">Result will appear here.</div>
+
+      <p class="note" style="margin-top:10px;">
+        This is a simplified estimate using a constant annual rate.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula:</strong> future value = amount × (1 + rate)<sup>years</sup><br/>
+      For example, 3% inflation for 10 years multiplies prices by (1.03)<sup>10</sup>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$1,000 at 3% for 10 years → about $1,343.92</li>
+      <li>$500 at 2% for 5 years → about $552.04</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is this CPI-accurate?</strong> No. It uses a constant rate you provide.</li>
+      <li><strong>What if inflation changes yearly?</strong> Use average rate or compute year-by-year externally.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const amountEl = document.getElementById("inf_amount");
+  const rateEl = document.getElementById("inf_rate");
+  const yearsEl = document.getElementById("inf_years");
+  const calcBtn = document.getElementById("inf_calc");
+  const clearBtn = document.getElementById("inf_clear");
+  const resultEl = document.getElementById("inf_result");
+  if (!amountEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !resultEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const amount = parseFloat(amountEl.value);
+    const rate = (parseFloat(rateEl.value) || 0) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    if (!isFinite(amount) || amount <= 0 || !isFinite(rate) || rate < 0 || !isFinite(years) || years <= 0) {
+      resultEl.innerHTML = "Please enter valid values.";
+      return;
+    }
+
+    const factor = Math.pow(1 + rate, years);
+    const future = amount * factor;
+    const increase = future - amount;
+
+    resultEl.innerHTML =
+      "<strong>Future Value:</strong> " + money(future) + "<br/>" +
+      "<strong>Increase:</strong> " + money(increase) + "<br/>" +
+      "<strong>Multiplier:</strong> ×" + factor.toFixed(4);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    resultEl.innerHTML = "Result will appear here.";
+  });
+});
+</script>

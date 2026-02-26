@@ -1,0 +1,202 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Mortgage Calculator",
+  description:
+    "Free mortgage calculator with taxes and insurance options. Estimate monthly payment, total interest, and amortization schedule.",
+  href: "/finance/mortgage-calculator/",
+  order: 30,
+};
+---
+
+<ToolLayout
+  title="Mortgage Calculator — MinimalDev"
+  description="Calculate mortgage payments with optional property tax and insurance. View monthly breakdown and amortization schedule."
+  canonicalPath="/finance/mortgage-calculator/"
+  h1="Mortgage Calculator"
+  intro="Estimate monthly mortgage payments with principal & interest, plus optional property tax and insurance."
+>
+  <div slot="tool">
+    <div class="form">
+
+      <div class="field">
+        <label for="mg_home_price">Home Price</label>
+        <input id="mg_home_price" type="number" placeholder="300000" />
+      </div>
+
+      <div class="field">
+        <label for="mg_down_payment">Down Payment</label>
+        <input id="mg_down_payment" type="number" placeholder="60000" />
+      </div>
+
+      <div class="field">
+        <label for="mg_rate">Annual Interest Rate (%)</label>
+        <input id="mg_rate" type="number" placeholder="6" />
+      </div>
+
+      <div class="field">
+        <label for="mg_years">Loan Term (Years)</label>
+        <input id="mg_years" type="number" placeholder="30" />
+      </div>
+
+      <div class="field">
+        <label for="mg_tax">Annual Property Tax (Optional)</label>
+        <input id="mg_tax" type="number" placeholder="3600" />
+      </div>
+
+      <div class="field">
+        <label for="mg_ins">Annual Home Insurance (Optional)</label>
+        <input id="mg_ins" type="number" placeholder="1200" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="mg_calc" class="btn" type="button">Calculate</button>
+        <button id="mg_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="mg_summary" class="result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:20px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>P&amp;I</th>
+              <th>Tax</th>
+              <th>Insurance</th>
+              <th>Total</th>
+              <th>Principal</th>
+              <th>Interest</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody id="mg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Estimates only. Taxes/insurance vary by location and policy.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Principal &amp; interest is computed using standard amortization.
+      Taxes and insurance are divided into monthly amounts and added to the total.
+    </p>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const homeEl = document.getElementById("mg_home_price");
+  const downEl = document.getElementById("mg_down_payment");
+  const rateEl = document.getElementById("mg_rate");
+  const yearsEl = document.getElementById("mg_years");
+  const taxEl = document.getElementById("mg_tax");
+  const insEl = document.getElementById("mg_ins");
+  const calcBtn = document.getElementById("mg_calc");
+  const clearBtn = document.getElementById("mg_clear");
+  const summaryEl = document.getElementById("mg_summary");
+  const tbodyEl = document.getElementById("mg_tbody");
+
+  if (!homeEl || !downEl || !rateEl || !yearsEl || !taxEl || !insEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  function payment(P, r, n) {
+    if (r === 0) return P / n;
+    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const home = parseFloat(homeEl.value);
+    const down = parseFloat(downEl.value) || 0;
+    const annual = parseFloat(rateEl.value) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    const annualTax = parseFloat(taxEl.value) || 0;
+    const annualIns = parseFloat(insEl.value) || 0;
+
+    if (!isFinite(home) || home <= 0 || !isFinite(annual) || annual < 0 || !isFinite(years) || years <= 0) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const loan = Math.max(0, home - down);
+    const n = Math.round(years * 12);
+    const r = annual / 12;
+
+    const pi = payment(loan, r, n);
+    const taxM = annualTax / 12;
+    const insM = annualIns / 12;
+    const totalM = pi + taxM + insM;
+
+    const totalPaid = totalM * n;
+    const totalPI = pi * n;
+    const totalInterest = totalPI - loan;
+
+    summaryEl.innerHTML =
+      "<strong>Loan Amount:</strong> " + money(loan) + "<br>" +
+      "<strong>Monthly Payment (P&amp;I):</strong> " + money(pi) + "<br>" +
+      "<strong>Monthly Tax:</strong> " + money(taxM) + "<br>" +
+      "<strong>Monthly Insurance:</strong> " + money(insM) + "<br>" +
+      "<strong>Total Monthly Payment:</strong> " + money(totalM) + "<br>" +
+      "<strong>Total Interest (P&amp;I):</strong> " + money(totalInterest) + "<br>" +
+      "<strong>Total Paid (incl. tax/ins):</strong> " + money(totalPaid);
+
+    let balance = loan;
+    tbodyEl.innerHTML = "";
+
+    for (let i = 1; i <= n; i++) {
+      const interest = r === 0 ? 0 : balance * r;
+      const principal = pi - interest;
+      balance -= principal;
+      if (balance < 0) balance = 0;
+
+      const row =
+        "<tr>" +
+          "<td>" + i + "</td>" +
+          "<td>" + money(pi) + "</td>" +
+          "<td>" + money(taxM) + "</td>" +
+          "<td>" + money(insM) + "</td>" +
+          "<td>" + money(totalM) + "</td>" +
+          "<td>" + money(principal) + "</td>" +
+          "<td>" + money(interest) + "</td>" +
+          "<td>" + money(balance) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    homeEl.value = "";
+    downEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    taxEl.value = "";
+    insEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+});
+</script>
