@@ -3,21 +3,57 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Retirement Calculator",
-  description: "Estimate retirement savings at a target age based on current savings, contributions, and expected return.",
+  description:
+    "Estimate retirement savings at a target age using current savings, monthly contributions, and expected return (optional inflation adjustment).",
   href: "/finance/retirement-calculator/",
   order: 40,
 };
+
+const faq = [
+  {
+    q: "Is this retirement estimate accurate?",
+    a: "It’s a simplified projection using constant monthly compounding, constant contributions, and a constant annual return. Real-world returns can vary.",
+  },
+  {
+    q: "What does the inflation option do?",
+    a: "Inflation adjustment converts the future balance into today’s purchasing power using a constant annual inflation rate you enter.",
+  },
+  {
+    q: "Does this include taxes or employer match?",
+    a: "No. Taxes, account rules, and employer matching can materially change outcomes. Add employer match into your monthly contribution if you want a rough estimate.",
+  },
+  {
+    q: "Why can results differ from other calculators?",
+    a: "Different tools may assume different compounding frequency, contribution timing, fees, or return models.",
+  },
+  {
+    q: "Are returns guaranteed?",
+    a: "No. This tool is informational only and does not predict market performance.",
+  },
+];
 ---
 
 <ToolLayout
   title="Retirement Calculator — MinimalDev"
-  description="Estimate retirement savings at a target age using contributions and expected annual return. Informational only."
+  description="Estimate retirement savings at a target age using monthly contributions and expected annual return. Optional inflation adjustment."
   canonicalPath="/finance/retirement-calculator/"
   h1="Retirement Calculator"
-  intro="Estimate how much you may have at retirement based on savings, monthly contributions, and expected return."
+  intro="Estimate how much you may have at retirement based on current savings, monthly contributions, and an expected return rate."
+  faq={faq}
 >
   <div slot="tool" data-tool="retirement-calculator">
     <div class="form">
+      <div class="field">
+        <label for="ret_currency">Currency (display only)</label>
+        <select id="ret_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
       <div class="field">
         <label for="ret_age_now">Current age</label>
         <input id="ret_age_now" type="number" inputmode="numeric" placeholder="e.g., 30" />
@@ -46,6 +82,9 @@ export const tool = {
       <div class="field">
         <label for="ret_inflation">Inflation (optional, %)</label>
         <input id="ret_inflation" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+        <p class="note" style="margin-top:6px;">
+          If provided, we also show the inflation-adjusted value (today’s purchasing power).
+        </p>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -53,40 +92,54 @@ export const tool = {
         <button class="btn secondary" type="button" id="ret_clear">Clear</button>
       </div>
 
-      <div class="result" id="ret_result">Result will appear here.</div>
+      <div class="result" id="ret_result" style="margin-top:12px;">Result will appear here.</div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Returns are not guaranteed and may vary significantly.
+        Informational only. Returns are not guaranteed and actual outcomes can differ significantly.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Monthly compounding estimate with constant return and contributions. Inflation adjustment shows today’s dollars (optional).
+      This calculator projects your retirement balance using monthly compounding:
+      each month the balance grows by the monthly return, then your monthly contribution is added.
+    </p>
+
+    <p class="note">
+      The expected annual return is converted to a monthly rate (annual ÷ 12) for a simple projection.
+      If you enter inflation, we discount the projected balance back into today’s dollars using a constant annual inflation rate.
+    </p>
+
+    <p class="note">
+      This tool does not include taxes, fees, employer match, or changes in contribution level over time.
+      Use it as a planning estimate, not a guarantee.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Age 30 → 65, $25k now, $500/mo, 6% return → estimated retirement balance</li>
-      <li>Add inflation to view value in today’s dollars</li>
+      <li>Age 30 → 65, $25,000 now, $500/mo, 6% return → projected retirement balance</li>
+      <li>Add 2.5% inflation → see the same balance in today’s purchasing power</li>
+      <li>Set monthly contribution to 0 → growth-only projection</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Is this accurate?</strong> It’s a simplified estimate using constant returns and contributions.</li>
-      <li><strong>What about taxes?</strong> Not included. Account type and taxes can change results.</li>
-      <li><strong>Why show inflation?</strong> To compare future money to purchasing power today.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
       <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
-      <li><a href="/finance/annuity-calculator/">Annuity Calculator</a></li>
+      <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
@@ -95,6 +148,7 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const ccyEl = document.getElementById("ret_currency");
   const ageNowEl = document.getElementById("ret_age_now");
   const ageTargetEl = document.getElementById("ret_age_target");
   const curEl = document.getElementById("ret_current");
@@ -104,57 +158,93 @@ document.addEventListener("DOMContentLoaded", function () {
   const calcBtn = document.getElementById("ret_calc");
   const clearBtn = document.getElementById("ret_clear");
   const outEl = document.getElementById("ret_result");
-  if (!ageNowEl || !ageTargetEl || !curEl || !moEl || !rEl || !infEl || !calcBtn || !clearBtn || !outEl) return;
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  if (!ccyEl || !ageNowEl || !ageTargetEl || !curEl || !moEl || !rEl || !infEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function reset() {
+    outEl.textContent = "Result will appear here.";
   }
 
   calcBtn.addEventListener("click", function () {
-    const ageNow = parseFloat(ageNowEl.value);
-    const ageTarget = parseFloat(ageTargetEl.value);
-    const current = parseFloat(curEl.value);
-    const monthly = parseFloat(moEl.value);
-    const annual = (parseFloat(rEl.value) || 0) / 100;
-    const infl = (parseFloat(infEl.value) || 0) / 100;
+    const ccy = String(ccyEl.value || "USD");
 
-    if (!isFinite(ageNow) || !isFinite(ageTarget) || ageTarget <= ageNow ||
-        !isFinite(current) || current < 0 || !isFinite(monthly) || monthly < 0 ||
-        !isFinite(annual) || annual < 0 || !isFinite(infl) || infl < 0) {
+    const ageNow = toNum(ageNowEl.value);
+    const ageTarget = toNum(ageTargetEl.value);
+
+    const current = toNum(curEl.value);
+    const monthly = toNum(moEl.value);
+
+    const annual = (toNum(rEl.value) || 0) / 100;
+    const infl = (toNum(infEl.value) || 0) / 100;
+
+    if (!isFinite(ageNow) || ageNow < 0 ||
+        !isFinite(ageTarget) || ageTarget <= ageNow ||
+        !isFinite(current) || current < 0 ||
+        !isFinite(monthly) || monthly < 0 ||
+        !isFinite(annual) || annual < 0 ||
+        !isFinite(infl) || infl < 0) {
       outEl.textContent = "Please enter valid values.";
       return;
     }
 
     const months = Math.round((ageTarget - ageNow) * 12);
+    if (months <= 0) {
+      outEl.textContent = "Retirement age must be greater than current age.";
+      return;
+    }
+
     const r = annual / 12;
 
     let bal = current;
+    let contrib = current;
+
     for (let i = 1; i <= months; i++) {
       bal = bal * (1 + r) + monthly;
+      contrib += monthly;
     }
 
-    let real = bal;
+    const gain = bal - contrib;
+
+    let real = NaN;
     if (infl > 0) {
-      const realFactor = Math.pow(1 + infl, (months / 12));
-      real = bal / realFactor;
+      const factor = Math.pow(1 + infl, months / 12);
+      real = bal / factor;
     }
 
     outEl.innerHTML =
-      "<strong>Estimated balance at age " + ageTarget + ":</strong> " + money(bal) + "<br/>" +
+      "<strong>Estimated balance at age " + ageTarget + ":</strong> " + money(bal, ccy) + "<br/>" +
+      "<strong>Total contributions:</strong> " + money(contrib, ccy) + "<br/>" +
+      "<strong>Estimated growth:</strong> " + money(gain, ccy) + "<br/>" +
       (infl > 0
-        ? "<strong>In today’s dollars (inflation-adjusted):</strong> " + money(real)
-        : "<span class='note'>Add inflation to see value in today’s dollars.</span>");
+        ? "<strong>Inflation-adjusted (today’s dollars):</strong> " + money(real, ccy)
+        : "<span class='note'>Tip: add inflation to view the result in today’s purchasing power.</span>");
   });
 
   clearBtn.addEventListener("click", function () {
+    ccyEl.value = "USD";
     ageNowEl.value = "";
     ageTargetEl.value = "";
     curEl.value = "";
     moEl.value = "";
     rEl.value = "";
     infEl.value = "";
-    outEl.textContent = "Result will appear here.";
+    reset();
   });
+
+  reset();
 });
 </script>

@@ -3,18 +3,43 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Lease vs Buy Calculator",
-  description: "Compare total cost of leasing vs buying a car over a term. Informational estimate for decision-making.",
+  description:
+    "Compare estimated total cost of leasing vs buying a car over the same term. Includes loan payment estimate and resale value impact.",
   href: "/finance/lease-vs-buy-calculator/",
   order: 70,
 };
+
+const faq = [
+  {
+    q: "What does this lease vs buy calculator compare?",
+    a: "It compares estimated out-of-pocket cost of leasing versus buying over the same term. Buying includes down payment + loan payments minus your estimated resale value. Leasing includes due-at-signing + monthly lease payments.",
+  },
+  {
+    q: "Does this include taxes, insurance, maintenance, or mileage fees?",
+    a: "No. Those costs vary widely. For a rough comparison, you can add expected taxes/fees into the car price (buy) or due-at-signing (lease).",
+  },
+  {
+    q: "How important is resale value?",
+    a: "Very. Resale value is often the biggest driver of the buy-side result. Try a few resale values to understand best/worst cases.",
+  },
+  {
+    q: "Is APR the same as interest rate?",
+    a: "APR is an annualized borrowing cost that may include certain fees. For a cleaner comparison, use the lender’s published APR.",
+  },
+  {
+    q: "Is this a precise financial recommendation?",
+    a: "No. It’s a simplified model for quick decision support. Consider total ownership costs and your driving habits.",
+  },
+];
 ---
 
 <ToolLayout
   title="Lease vs Buy Calculator — MinimalDev"
-  description="Compare estimated total cost of leasing vs buying over a chosen term. Simplified principal & interest model."
+  description="Compare estimated total cost of leasing vs buying a car. Includes loan payment estimate and resale value sensitivity."
   canonicalPath="/finance/lease-vs-buy-calculator/"
   h1="Lease vs Buy Calculator"
-  intro="Compare estimated total cost of leasing vs buying over the same term. Simplified model for quick decisions."
+  intro="Compare estimated total cost of leasing vs buying over the same term. Simple, fast, decision-oriented."
+  faq={faq}
 >
   <div slot="tool" data-tool="lease-vs-buy-calculator">
     <div class="form">
@@ -24,31 +49,53 @@ export const tool = {
         <label for="lvb_price">Car price</label>
         <input id="lvb_price" type="number" inputmode="decimal" placeholder="e.g., 30000" />
       </div>
+
       <div class="field">
         <label for="lvb_down">Down payment (optional)</label>
         <input id="lvb_down" type="number" inputmode="decimal" placeholder="e.g., 3000" />
       </div>
+
       <div class="field">
         <label for="lvb_apr">Loan APR (%)</label>
         <input id="lvb_apr" type="number" inputmode="decimal" placeholder="e.g., 6.5" />
       </div>
+
       <div class="field">
         <label for="lvb_term">Term (months)</label>
         <input id="lvb_term" type="number" inputmode="numeric" placeholder="e.g., 36" />
       </div>
+
       <div class="field">
         <label for="lvb_resale">Estimated resale value after term</label>
         <input id="lvb_resale" type="number" inputmode="decimal" placeholder="e.g., 21000" />
       </div>
 
       <h2 style="margin:16px 0 10px;">Lease</h2>
+
       <div class="field">
         <label for="lvb_lease_monthly">Lease monthly payment</label>
         <input id="lvb_lease_monthly" type="number" inputmode="decimal" placeholder="e.g., 350" />
       </div>
+
       <div class="field">
         <label for="lvb_lease_due">Due at signing (optional)</label>
         <input id="lvb_lease_due" type="number" inputmode="decimal" placeholder="e.g., 2000" />
+      </div>
+
+      <div class="field">
+        <label for="lvb_currency">Currency (display only)</label>
+        <select id="lvb_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="lvb_max_months">Max months (safety cap)</label>
+        <input id="lvb_max_months" type="number" inputmode="numeric" value="120" min="12" max="240" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -66,31 +113,35 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      Buy total cost ≈ down + (monthly payment × term) − resale value<br/>
-      Lease total cost ≈ due at signing + (lease monthly × term)
+      This calculator compares cash outflows over the same term:
+      <strong>Buy</strong> = down payment + total loan payments − estimated resale value.
+      <strong>Lease</strong> = due at signing + total lease payments.
+    </p>
+
+    <p class="note">
+      The buy scenario estimates a monthly loan payment using standard amortization from the financed amount
+      (price − down payment). Resale value is user-provided because it depends on mileage, condition, and market pricing.
+    </p>
+
+    <p class="note">
+      For a more realistic comparison, add expected one-time fees/taxes into the <em>car price</em> (buy) and/or
+      <em>due at signing</em> (lease). Then test multiple resale values to see how sensitive the result is.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Compare a 36-month lease vs a 36-month loan plus estimated resale value</li>
-      <li>Adjust resale value to test sensitivity</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is resale value guaranteed?</strong> No, it’s an estimate and can change with market conditions.</li>
-      <li><strong>Does buy include remaining balance?</strong> This simplified model assumes you pay monthly for the term.</li>
-      <li><strong>What about taxes/fees?</strong> Not included. Add them into price or due-at-signing for a rough estimate.</li>
+      <li>Compare a 36-month lease vs a 36-month loan with an estimated resale value.</li>
+      <li>Increase resale value to see when buying becomes cheaper (or vice versa).</li>
+      <li>Try 0 down payment vs higher down payment and see payment/total cost changes.</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
-      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/break-even-calculator/">Break-even Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
@@ -106,55 +157,93 @@ document.addEventListener("DOMContentLoaded", function () {
   const resaleEl = document.getElementById("lvb_resale");
   const leaseMoEl = document.getElementById("lvb_lease_monthly");
   const leaseDueEl = document.getElementById("lvb_lease_due");
+  const ccyEl = document.getElementById("lvb_currency");
+  const maxEl = document.getElementById("lvb_max_months");
   const calcBtn = document.getElementById("lvb_calc");
   const clearBtn = document.getElementById("lvb_clear");
   const outEl = document.getElementById("lvb_result");
-  if (!priceEl || !downEl || !aprEl || !termEl || !resaleEl || !leaseMoEl || !leaseDueEl || !calcBtn || !clearBtn || !outEl) return;
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  if (!priceEl || !downEl || !aprEl || !termEl || !resaleEl || !leaseMoEl || !leaseDueEl || !ccyEl || !maxEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(v, lo, hi, fallback) {
+    const n = parseInt(String(v), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
   }
 
   function payment(P, annualPct, months) {
-    const r = (annualPct / 100) / 12;
     const n = months;
     if (n <= 0) return NaN;
+    const r = (annualPct / 100) / 12;
     if (r === 0) return P / n;
     return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   }
 
-  calcBtn.addEventListener("click", function () {
-    const price = parseFloat(priceEl.value);
-    const down = parseFloat(downEl.value) || 0;
-    const apr = parseFloat(aprEl.value);
-    const term = parseInt(termEl.value, 10);
-    const resale = parseFloat(resaleEl.value);
-    const leaseMo = parseFloat(leaseMoEl.value);
-    const leaseDue = parseFloat(leaseDueEl.value) || 0;
+  function reset() {
+    outEl.textContent = "Result will appear here.";
+  }
 
-    if (!isFinite(price) || price <= 0 || down < 0 || down > price || !isFinite(apr) || apr < 0 || !isFinite(term) || term <= 0 ||
-        !isFinite(resale) || resale < 0 || !isFinite(leaseMo) || leaseMo < 0 || leaseDue < 0) {
-      outEl.textContent = "Please enter valid values.";
+  calcBtn.addEventListener("click", function () {
+    const price = toNum(priceEl.value);
+    const down = toNum(downEl.value || "0");
+    const apr = toNum(aprEl.value);
+    const term = clampInt(termEl.value, 1, 600, 0);
+    const resale = toNum(resaleEl.value);
+    const leaseMo = toNum(leaseMoEl.value);
+    const leaseDue = toNum(leaseDueEl.value || "0");
+    const ccy = String(ccyEl.value || "USD");
+    const maxMonths = clampInt(maxEl.value, 12, 240, 120);
+
+    if (!isFinite(price) || price <= 0) { outEl.textContent = "Please enter a valid car price."; return; }
+    if (!isFinite(down) || down < 0 || down > price) { outEl.textContent = "Down payment must be between 0 and the car price."; return; }
+    if (!isFinite(apr) || apr < 0) { outEl.textContent = "Please enter a valid APR (0 or more)."; return; }
+    if (!isFinite(term) || term <= 0) { outEl.textContent = "Please enter a valid term in months (> 0)."; return; }
+    if (term > maxMonths) {
+      outEl.innerHTML =
+        "Term is larger than the safety cap.<br/>" +
+        "<span class='note'>Increase Max months or reduce Term.</span>";
       return;
     }
+    if (!isFinite(resale) || resale < 0 || resale > price * 2) { outEl.textContent = "Please enter a valid resale value."; return; }
+    if (!isFinite(leaseMo) || leaseMo < 0) { outEl.textContent = "Please enter a valid lease monthly payment (0 or more)."; return; }
+    if (!isFinite(leaseDue) || leaseDue < 0) { outEl.textContent = "Please enter a valid due-at-signing (0 or more)."; return; }
 
-    const loanPrincipal = price - down;
-    const buyMonthly = payment(loanPrincipal, apr, term);
-    if (!isFinite(buyMonthly)) { outEl.textContent = "Could not compute loan payment."; return; }
+    const financed = price - down;
+    const buyMonthly = payment(financed, apr, term);
+    if (!isFinite(buyMonthly)) { outEl.textContent = "Could not compute loan payment with the provided inputs."; return; }
 
+    // Simplified totals
     const buyPaid = down + (buyMonthly * term);
     const buyNet = buyPaid - resale;
 
     const leaseNet = leaseDue + (leaseMo * term);
-    const diff = leaseNet - buyNet;
+
+    const diff = leaseNet - buyNet; // + => lease costs more than buy
+
+    const winner = diff > 0 ? "Buying is estimated to cost less." : (diff < 0 ? "Leasing is estimated to cost less." : "They are estimated to cost the same.");
+    const diffAbs = Math.abs(diff);
 
     outEl.innerHTML =
-      "<strong>Buy monthly (est):</strong> " + money(buyMonthly) + "<br/>" +
-      "<strong>Buy total cost (est):</strong> " + money(buyNet) + "<br/>" +
-      "<strong>Lease total cost (est):</strong> " + money(leaseNet) + "<br/>" +
-      "<strong>Lease − Buy:</strong> " + money(diff) + "<br/>" +
-      "<span class='note'>" + (diff > 0 ? "Leasing is estimated to cost more." : "Leasing is estimated to cost less.") + "</span>";
+      "<strong>Estimated buy monthly:</strong> " + money(buyMonthly, ccy) + "<br/>" +
+      "<strong>Buy total cost (est):</strong> " + money(buyNet, ccy) + "<br/>" +
+      "<strong>Lease total cost (est):</strong> " + money(leaseNet, ccy) + "<br/>" +
+      "<strong>Difference:</strong> " + money(diffAbs, ccy) + " (" + (diff > 0 ? "lease higher" : diff < 0 ? "buy higher" : "tie") + ")<br/>" +
+      "<span class='note'>" + winner + "</span><br/>" +
+      "<span class='note'>Tip: resale value drives the buy result—try a few values.</span>";
   });
 
   clearBtn.addEventListener("click", function () {
@@ -165,7 +254,9 @@ document.addEventListener("DOMContentLoaded", function () {
     resaleEl.value = "";
     leaseMoEl.value = "";
     leaseDueEl.value = "";
-    outEl.textContent = "Result will appear here.";
+    ccyEl.value = "USD";
+    maxEl.value = "120";
+    reset();
   });
 });
 </script>

@@ -4,34 +4,64 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Break-even Calculator",
   description:
-    "Free break-even calculator. Find break-even units and revenue using fixed costs, price, and variable cost per unit.",
+    "Calculate break-even point in units and revenue using fixed costs, price per unit, and variable cost per unit.",
   href: "/finance/break-even-calculator/",
   order: 80,
 };
+
+const faq = [
+  {
+    q: "What is a break-even point?",
+    a: "Break-even is where total revenue equals total costs. Profit is $0 at break-even, and profit becomes positive after selling more than the break-even volume.",
+  },
+  {
+    q: "What is contribution margin?",
+    a: "Contribution margin is price per unit minus variable cost per unit. It represents how much each unit contributes to covering fixed costs and profit.",
+  },
+  {
+    q: "What if variable cost is higher than price?",
+    a: "Then contribution margin is zero or negative, meaning you cannot break even under those unit economics unless you change price, costs, or structure.",
+  },
+  {
+    q: "Does this include taxes, shipping, or discounts?",
+    a: "No. Add those items into variable cost per unit or adjust price per unit before calculating.",
+  },
+  {
+    q: "Is rounding to whole units important?",
+    a: "Yes. In real sales you can’t usually sell fractional units, so we show both an exact number and a rounded-up whole-unit estimate.",
+  },
+];
 ---
 
 <ToolLayout
   title="Break-even Calculator — MinimalDev"
-  description="Calculate break-even point in units and revenue from fixed cost, price, and variable cost per unit."
+  description="Calculate break-even point in units and revenue using fixed costs, price per unit, and variable cost per unit."
   canonicalPath="/finance/break-even-calculator/"
   h1="Break-even Calculator"
-  intro="Calculate how many units you need to sell to cover costs and reach break-even."
+  intro="Calculate how many units you need to sell to cover your fixed costs and reach break-even. Includes break-even revenue and contribution margin."
+  faq={faq}
 >
   <div slot="tool" data-tool="break-even-calculator">
     <div class="form">
       <div class="field">
-        <label for="be_fixed">Fixed Costs</label>
+        <label for="be_fixed">Fixed costs</label>
         <input id="be_fixed" type="number" inputmode="decimal" placeholder="e.g., 5000" />
+        <p class="note" style="margin-top:6px;">
+          Fixed costs don’t change with sales volume (rent, salaries, software subscriptions, etc.).
+        </p>
       </div>
 
       <div class="field">
-        <label for="be_price">Price per Unit</label>
+        <label for="be_price">Price per unit</label>
         <input id="be_price" type="number" inputmode="decimal" placeholder="e.g., 25" />
       </div>
 
       <div class="field">
-        <label for="be_var">Variable Cost per Unit</label>
+        <label for="be_var">Variable cost per unit</label>
         <input id="be_var" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        <p class="note" style="margin-top:6px;">
+          Variable costs change with volume (COGS, processing fees, packaging, fulfillment, etc.).
+        </p>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -42,39 +72,42 @@ export const tool = {
       <div class="result" id="be_result" style="margin-top:12px;">Result will appear here.</div>
 
       <p class="note" style="margin-top:10px;">
-        Break-even assumes constant unit economics (no tiered pricing, discounts, or scale effects).
+        Informational only. Assumes constant price and costs (no tiered pricing, discounts, or economies of scale).
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Contribution margin = price − variable cost.<br/>
-      Break-even units = fixed costs ÷ contribution margin.<br/>
-      Break-even revenue = break-even units × price.
+      The break-even point is based on <strong>contribution margin</strong>:
+      each unit sold covers variable cost first, and the remaining amount covers fixed costs.
+    </p>
+
+    <p class="note">
+      <strong>Contribution margin:</strong> CM = Price − Variable cost<br />
+      <strong>Break-even units:</strong> Fixed costs ÷ CM<br />
+      <strong>Break-even revenue:</strong> Break-even units × Price
+    </p>
+
+    <p class="note">
+      If CM ≤ 0, break-even is not achievable with the current price/cost structure.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Fixed $5,000, price $25, variable $10 → break-even ≈ 334 units</li>
+      <li>Fixed $5,000, price $25, variable $10 → break-even ≈ 333.33 units (≈ 334 units)</li>
       <li>Fixed $1,200, price $15, variable $9 → break-even ≈ 200 units</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>What if variable cost is higher than price?</strong> You can’t break even with negative margin.</li>
-      <li><strong>Does this include taxes?</strong> No. Add tax impact to costs or pricing separately.</li>
+      <li>Price $10, variable $10 → CM = $0 → break-even not possible</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
-      <li><a href="/finance/refinance-calculator/">Refinance Calculator</a></li>
-      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/net-present-value-calculator/">Net Present Value Calculator</a></li>
+      <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
+      <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -90,42 +123,64 @@ document.addEventListener("DOMContentLoaded", function () {
   const resultEl = document.getElementById("be_result");
   if (!fixedEl || !priceEl || !varEl || !calcBtn || !clearBtn || !resultEl) return;
 
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
   function money(v) {
+    if (!isFinite(v)) return "$0.00";
     return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
 
-  calcBtn.addEventListener("click", function () {
-    const fixed = parseFloat(fixedEl.value);
-    const price = parseFloat(priceEl.value);
-    const variable = parseFloat(varEl.value);
+  function num(v) {
+    if (!isFinite(v)) return "0";
+    return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
 
-    if (!isFinite(fixed) || fixed < 0 || !isFinite(price) || price <= 0 || !isFinite(variable) || variable < 0) {
-      resultEl.innerHTML = "Please enter valid values.";
+  calcBtn.addEventListener("click", function () {
+    const fixed = toNum(fixedEl.value);
+    const price = toNum(priceEl.value);
+    const variable = toNum(varEl.value);
+
+    if (!isFinite(fixed) || fixed < 0) {
+      resultEl.textContent = "Please enter a valid fixed cost (>= 0).";
+      return;
+    }
+    if (!isFinite(price) || price <= 0) {
+      resultEl.textContent = "Please enter a valid price per unit (> 0).";
+      return;
+    }
+    if (!isFinite(variable) || variable < 0) {
+      resultEl.textContent = "Please enter a valid variable cost per unit (>= 0).";
       return;
     }
 
     const margin = price - variable;
-    if (margin <= 0) {
-      resultEl.innerHTML = "Contribution margin must be positive (price must be greater than variable cost).";
+
+    if (!(margin > 0)) {
+      resultEl.textContent =
+        "Contribution margin must be positive (price must be greater than variable cost).";
       return;
     }
 
-    const units = fixed / margin;
-    const unitsCeil = Math.ceil(units);
-    const revenue = units * price;
-    const revenueCeil = unitsCeil * price;
+    const unitsExact = fixed / margin;
+    const unitsRoundedUp = Math.ceil(unitsExact);
+
+    const revenueExact = unitsExact * price;
+    const revenueRoundedUp = unitsRoundedUp * price;
 
     resultEl.innerHTML =
-      "<strong>Contribution Margin:</strong> " + money(margin) + " per unit<br/>" +
-      "<strong>Break-even Units:</strong> " + units.toFixed(2) + " (≈ " + unitsCeil + " units)<br/>" +
-      "<strong>Break-even Revenue:</strong> " + money(revenue) + " (≈ " + money(revenueCeil) + ")";
+      "<strong>Contribution margin:</strong> " + money(margin) + " per unit<br/>" +
+      "<strong>Break-even units:</strong> " + num(unitsExact) + " (≈ " + unitsRoundedUp.toLocaleString() + " units)<br/>" +
+      "<strong>Break-even revenue:</strong> " + money(revenueExact) + " (≈ " + money(revenueRoundedUp) + ")";
   });
 
   clearBtn.addEventListener("click", function () {
     fixedEl.value = "";
     priceEl.value = "";
     varEl.value = "";
-    resultEl.innerHTML = "Result will appear here.";
+    resultEl.textContent = "Result will appear here.";
   });
 });
 </script>

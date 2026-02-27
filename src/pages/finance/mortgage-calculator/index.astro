@@ -4,10 +4,33 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Mortgage Calculator",
   description:
-    "Free mortgage calculator with taxes and insurance options. Estimate monthly payment, total interest, and amortization schedule.",
+    "Free mortgage calculator with optional property tax and insurance. Estimate monthly payment, total interest, and amortization schedule.",
   href: "/finance/mortgage-calculator/",
   order: 30,
 };
+
+const faq = [
+  {
+    q: "Does this mortgage calculator include taxes and insurance?",
+    a: "Yes—optionally. Property tax and homeowners insurance are entered as annual amounts, converted to monthly, and added to the total payment. Principal & interest (P&I) are calculated separately.",
+  },
+  {
+    q: "Is this the same as a lender’s monthly payment?",
+    a: "It’s a planning estimate. Lenders may include escrow rules, PMI/HOA, fees, rounding conventions, and day-count methods that can change the final payment.",
+  },
+  {
+    q: "What is the difference between P&I and total payment?",
+    a: "P&I is the loan payment based on amortization. Total payment adds monthly tax and insurance estimates (and would also include items like HOA/PMI if you add them separately).",
+  },
+  {
+    q: "What if my down payment is larger than the home price?",
+    a: "Then the loan amount becomes $0, and the schedule is effectively empty. This tool expects down payment to be between 0 and home price.",
+  },
+  {
+    q: "Does this include PMI or HOA?",
+    a: "No. If you want a rough total payment, you can manually add those monthly costs to tax/insurance fields (or add separate inputs later).",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,39 +38,55 @@ export const tool = {
   description="Calculate mortgage payments with optional property tax and insurance. View monthly breakdown and amortization schedule."
   canonicalPath="/finance/mortgage-calculator/"
   h1="Mortgage Calculator"
-  intro="Estimate monthly mortgage payments with principal & interest, plus optional property tax and insurance."
+  intro="Estimate monthly mortgage payments: principal & interest (P&I) plus optional property tax and homeowners insurance."
+  faq={faq}
 >
-  <div slot="tool">
+  <div slot="tool" data-tool="mortgage-calculator">
     <div class="form">
-
       <div class="field">
-        <label for="mg_home_price">Home Price</label>
-        <input id="mg_home_price" type="number" placeholder="300000" />
+        <label for="mg_home_price">Home price</label>
+        <input id="mg_home_price" type="number" inputmode="decimal" placeholder="e.g., 300000" />
       </div>
 
       <div class="field">
-        <label for="mg_down_payment">Down Payment</label>
-        <input id="mg_down_payment" type="number" placeholder="60000" />
+        <label for="mg_down_payment">Down payment</label>
+        <input id="mg_down_payment" type="number" inputmode="decimal" placeholder="e.g., 60000" />
       </div>
 
       <div class="field">
-        <label for="mg_rate">Annual Interest Rate (%)</label>
-        <input id="mg_rate" type="number" placeholder="6" />
+        <label for="mg_rate">Annual interest rate (APR %)</label>
+        <input id="mg_rate" type="number" inputmode="decimal" placeholder="e.g., 6" />
       </div>
 
       <div class="field">
-        <label for="mg_years">Loan Term (Years)</label>
-        <input id="mg_years" type="number" placeholder="30" />
+        <label for="mg_years">Loan term (years)</label>
+        <input id="mg_years" type="number" inputmode="decimal" placeholder="e.g., 30" />
       </div>
 
       <div class="field">
-        <label for="mg_tax">Annual Property Tax (Optional)</label>
-        <input id="mg_tax" type="number" placeholder="3600" />
+        <label for="mg_tax">Annual property tax (optional)</label>
+        <input id="mg_tax" type="number" inputmode="decimal" placeholder="e.g., 3600" />
       </div>
 
       <div class="field">
-        <label for="mg_ins">Annual Home Insurance (Optional)</label>
-        <input id="mg_ins" type="number" placeholder="1200" />
+        <label for="mg_ins">Annual homeowners insurance (optional)</label>
+        <input id="mg_ins" type="number" inputmode="decimal" placeholder="e.g., 1200" />
+      </div>
+
+      <div class="field">
+        <label for="mg_currency">Currency (display only)</label>
+        <select id="mg_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mg_max_months">Max months (safety cap)</label>
+        <input id="mg_max_months" type="number" inputmode="numeric" value="600" min="12" max="1200" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -59,8 +98,8 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <div style="margin-top:20px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+      <div style="margin-top:18px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr>
               <th>Month</th>
@@ -78,17 +117,48 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Estimates only. Taxes/insurance vary by location and policy.
+        Informational estimate only. Actual escrow, PMI/HOA, fees, and rounding may change lender results.
       </p>
-
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Principal &amp; interest is computed using standard amortization.
-      Taxes and insurance are divided into monthly amounts and added to the total.
+      This tool calculates a standard fixed-rate mortgage payment (principal &amp; interest) using amortization.
+      Optional annual property tax and insurance are divided by 12 and added to the monthly total.
     </p>
+
+    <p class="note">
+      Monthly P&amp;I payment formula:
+      <br />
+      <strong>M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)</strong>
+      <br />
+      Where <strong>P</strong> is loan amount (home price − down payment),
+      <strong>r</strong> is monthly rate (APR/12), and <strong>n</strong> is number of months.
+    </p>
+
+    <p class="note">
+      The amortization schedule shows how interest typically declines over time as the balance decreases,
+      while the principal portion increases.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$300,000 home, $60,000 down, 6% for 30 years → view P&amp;I + tax/insurance breakdown</li>
+      <li>Set tax/insurance to 0 to see pure principal &amp; interest payment</li>
+      <li>Compare different down payments to see how loan amount affects interest cost</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
+    </ul>
   </div>
 
   <div slot="related">
@@ -110,78 +180,122 @@ document.addEventListener("DOMContentLoaded", function () {
   const yearsEl = document.getElementById("mg_years");
   const taxEl = document.getElementById("mg_tax");
   const insEl = document.getElementById("mg_ins");
+  const ccyEl = document.getElementById("mg_currency");
+  const maxEl = document.getElementById("mg_max_months");
   const calcBtn = document.getElementById("mg_calc");
   const clearBtn = document.getElementById("mg_clear");
   const summaryEl = document.getElementById("mg_summary");
   const tbodyEl = document.getElementById("mg_tbody");
 
-  if (!homeEl || !downEl || !rateEl || !yearsEl || !taxEl || !insEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+  if (!homeEl || !downEl || !rateEl || !yearsEl || !taxEl || !insEl || !ccyEl || !maxEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
-  function money(v) {
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(v, lo, hi, fallback) {
+    const n = parseInt(String(v), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
   }
 
   function payment(P, r, n) {
+    if (n <= 0) return NaN;
     if (r === 0) return P / n;
     return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   }
 
+  function reset() {
+    summaryEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  }
+
   calcBtn.addEventListener("click", function () {
-    const home = parseFloat(homeEl.value);
-    const down = parseFloat(downEl.value) || 0;
-    const annual = parseFloat(rateEl.value) / 100;
-    const years = parseFloat(yearsEl.value);
+    const home = toNum(homeEl.value);
+    const down = toNum(downEl.value);
+    const annual = toNum(rateEl.value) / 100;
+    const years = toNum(yearsEl.value);
+    const annualTax = toNum(taxEl.value);
+    const annualIns = toNum(insEl.value);
+    const ccy = String(ccyEl.value || "USD");
+    const maxMonths = clampInt(maxEl.value, 12, 1200, 600);
 
-    const annualTax = parseFloat(taxEl.value) || 0;
-    const annualIns = parseFloat(insEl.value) || 0;
+    const downSafe = isFinite(down) ? down : 0;
+    const taxSafe = isFinite(annualTax) ? annualTax : 0;
+    const insSafe = isFinite(annualIns) ? annualIns : 0;
 
-    if (!isFinite(home) || home <= 0 || !isFinite(annual) || annual < 0 || !isFinite(years) || years <= 0) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    if (!isFinite(home) || home <= 0) { summaryEl.textContent = "Please enter a valid home price."; tbodyEl.innerHTML = ""; return; }
+    if (!isFinite(annual) || annual < 0) { summaryEl.textContent = "Please enter a valid APR (0 or more)."; tbodyEl.innerHTML = ""; return; }
+    if (!isFinite(years) || years <= 0) { summaryEl.textContent = "Please enter a valid term in years (> 0)."; tbodyEl.innerHTML = ""; return; }
+    if (downSafe < 0 || downSafe > home) { summaryEl.textContent = "Down payment must be between 0 and the home price."; tbodyEl.innerHTML = ""; return; }
+    if (taxSafe < 0 || insSafe < 0) { summaryEl.textContent = "Tax and insurance must be 0 or more."; tbodyEl.innerHTML = ""; return; }
+
+    const loan = home - downSafe;
+    const n = Math.round(years * 12);
+    if (n <= 0) { summaryEl.textContent = "Term is too small."; tbodyEl.innerHTML = ""; return; }
+    if (n > maxMonths) {
+      summaryEl.innerHTML =
+        "Term exceeds the safety cap.<br/>" +
+        "<span class='note'>Reduce years or increase Max months.</span>";
       tbodyEl.innerHTML = "";
       return;
     }
 
-    const loan = Math.max(0, home - down);
-    const n = Math.round(years * 12);
     const r = annual / 12;
-
     const pi = payment(loan, r, n);
-    const taxM = annualTax / 12;
-    const insM = annualIns / 12;
+    if (!isFinite(pi)) { summaryEl.textContent = "Could not compute payment with the provided inputs."; tbodyEl.innerHTML = ""; return; }
+
+    const taxM = taxSafe / 12;
+    const insM = insSafe / 12;
     const totalM = pi + taxM + insM;
 
-    const totalPaid = totalM * n;
     const totalPI = pi * n;
     const totalInterest = totalPI - loan;
+    const totalPaid = totalM * n;
 
     summaryEl.innerHTML =
-      "<strong>Loan Amount:</strong> " + money(loan) + "<br>" +
-      "<strong>Monthly Payment (P&amp;I):</strong> " + money(pi) + "<br>" +
-      "<strong>Monthly Tax:</strong> " + money(taxM) + "<br>" +
-      "<strong>Monthly Insurance:</strong> " + money(insM) + "<br>" +
-      "<strong>Total Monthly Payment:</strong> " + money(totalM) + "<br>" +
-      "<strong>Total Interest (P&amp;I):</strong> " + money(totalInterest) + "<br>" +
-      "<strong>Total Paid (incl. tax/ins):</strong> " + money(totalPaid);
+      "<strong>Loan amount:</strong> " + money(loan, ccy) + "<br/>" +
+      "<strong>Monthly P&amp;I:</strong> " + money(pi, ccy) + "<br/>" +
+      "<strong>Monthly tax:</strong> " + money(taxM, ccy) + "<br/>" +
+      "<strong>Monthly insurance:</strong> " + money(insM, ccy) + "<br/>" +
+      "<strong>Total monthly payment:</strong> " + money(totalM, ccy) + "<br/>" +
+      "<strong>Total interest (P&amp;I):</strong> " + money(totalInterest, ccy) + "<br/>" +
+      "<strong>Total paid (incl. tax/ins):</strong> " + money(totalPaid, ccy) +
+      "<br/><span class='note'>Taxes/insurance are estimates; escrow and PMI/HOA not included.</span>";
 
     let balance = loan;
     tbodyEl.innerHTML = "";
 
     for (let i = 1; i <= n; i++) {
       const interest = r === 0 ? 0 : balance * r;
-      const principal = pi - interest;
-      balance -= principal;
+      let principal = pi - interest;
+
+      // final-month guard
+      if (principal > balance) principal = balance;
+
+      balance = balance - principal;
       if (balance < 0) balance = 0;
 
       const row =
         "<tr>" +
           "<td>" + i + "</td>" +
-          "<td>" + money(pi) + "</td>" +
-          "<td>" + money(taxM) + "</td>" +
-          "<td>" + money(insM) + "</td>" +
-          "<td>" + money(totalM) + "</td>" +
-          "<td>" + money(principal) + "</td>" +
-          "<td>" + money(interest) + "</td>" +
-          "<td>" + money(balance) + "</td>" +
+          "<td>" + money(pi, ccy) + "</td>" +
+          "<td>" + money(taxM, ccy) + "</td>" +
+          "<td>" + money(insM, ccy) + "</td>" +
+          "<td>" + money(totalM, ccy) + "</td>" +
+          "<td>" + money(principal, ccy) + "</td>" +
+          "<td>" + money(interest, ccy) + "</td>" +
+          "<td>" + money(balance, ccy) + "</td>" +
         "</tr>";
 
       tbodyEl.insertAdjacentHTML("beforeend", row);
@@ -195,8 +309,11 @@ document.addEventListener("DOMContentLoaded", function () {
     yearsEl.value = "";
     taxEl.value = "";
     insEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
-    tbodyEl.innerHTML = "";
+    ccyEl.value = "USD";
+    maxEl.value = "600";
+    reset();
   });
+
+  reset();
 });
 </script>

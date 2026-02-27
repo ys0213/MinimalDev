@@ -4,18 +4,42 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Inflation Calculator",
   description:
-    "Free inflation calculator. Convert past prices to today’s value using an annual inflation rate and time period.",
+    "Free inflation calculator. Convert amounts across time using an annual inflation rate. Shows future value and real (inflation-adjusted) value.",
   href: "/finance/inflation-calculator/",
   order: 60,
 };
+
+const faq = [
+  {
+    q: "What does an inflation calculator do?",
+    a: "It estimates how prices or purchasing power change over time using an annual inflation rate. You can convert a current amount to a future (inflated) amount, or compute the real value in today’s dollars.",
+  },
+  {
+    q: "Is this CPI-accurate?",
+    a: "No. This tool uses a constant annual rate that you provide. Official CPI-based results vary by country, category, and time period.",
+  },
+  {
+    q: "What is the difference between nominal and real value?",
+    a: "Nominal value includes inflation (future dollars). Real value adjusts for inflation (today’s purchasing power).",
+  },
+  {
+    q: "What if inflation changes each year?",
+    a: "This tool assumes a constant rate. If rates vary, you can approximate with an average rate or calculate year-by-year externally.",
+  },
+  {
+    q: "Can inflation be negative?",
+    a: "Yes. Negative inflation (deflation) can be modeled by entering a negative rate. Results are still an estimate.",
+  },
+];
 ---
 
 <ToolLayout
   title="Inflation Calculator — MinimalDev"
-  description="Calculate how inflation changes purchasing power over time. Convert a past amount to its future value."
+  description="Calculate how inflation changes purchasing power over time. Convert an amount to future value, or compute real value in today’s dollars."
   canonicalPath="/finance/inflation-calculator/"
   h1="Inflation Calculator"
-  intro="Estimate how an amount changes over time using an annual inflation rate."
+  intro="Estimate how an amount changes over time using an annual inflation rate. Includes nominal (future) value, real value, and a yearly breakdown."
+  faq={faq}
 >
   <div slot="tool" data-tool="inflation-calculator">
     <div class="form">
@@ -25,13 +49,43 @@ export const tool = {
       </div>
 
       <div class="field">
-        <label for="inf_rate">Annual Inflation Rate (%)</label>
+        <label for="inf_rate">Annual inflation rate (%)</label>
         <input id="inf_rate" type="number" inputmode="decimal" placeholder="e.g., 3" />
+        <p class="note" style="margin-top:6px;">
+          Use negative values to model deflation (e.g., −1).
+        </p>
       </div>
 
       <div class="field">
         <label for="inf_years">Years</label>
-        <input id="inf_years" type="number" inputmode="numeric" placeholder="e.g., 10" />
+        <input id="inf_years" type="number" inputmode="decimal" placeholder="e.g., 10" />
+      </div>
+
+      <div class="field">
+        <label for="inf_mode">What do you want to calculate?</label>
+        <select id="inf_mode">
+          <option value="future" selected>Future value (nominal)</option>
+          <option value="real">Real value (inflation-adjusted back to today)</option>
+        </select>
+        <p class="note" style="margin-top:6px;">
+          Future value answers “how much will it cost later?”. Real value answers “what is a future amount worth today?”.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="inf_currency">Currency (display only)</label>
+        <select id="inf_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="inf_max_years">Max years (safety cap)</label>
+        <input id="inf_max_years" type="number" inputmode="numeric" value="100" min="1" max="300" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -41,38 +95,59 @@ export const tool = {
 
       <div class="result" id="inf_result" style="margin-top:12px;">Result will appear here.</div>
 
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Multiplier</th>
+              <th>Nominal value</th>
+              <th>Real value (today)</th>
+            </tr>
+          </thead>
+          <tbody id="inf_tbody"></tbody>
+        </table>
+      </div>
+
       <p class="note" style="margin-top:10px;">
-        This is a simplified estimate using a constant annual rate.
+        Informational only. This is a simplified estimate using a constant annual rate.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      <strong>Formula:</strong> future value = amount × (1 + rate)<sup>years</sup><br/>
-      For example, 3% inflation for 10 years multiplies prices by (1.03)<sup>10</sup>.
+      Inflation is typically modeled as compounding over time. With a constant annual rate <strong>r</strong> and a time horizon
+      of <strong>t</strong> years, the multiplier is <strong>(1 + r)<sup>t</sup></strong>.
+      A 3% annual inflation rate for 10 years increases the price level by roughly <strong>(1.03)<sup>10</sup></strong>.
+    </p>
+
+    <p class="note">
+      <strong>Future value (nominal)</strong> estimates the amount in future dollars:
+      <strong>FV = amount × (1 + r)<sup>t</sup></strong>.
+      This is useful for budgeting and “what will it cost later?” questions.
+    </p>
+
+    <p class="note">
+      <strong>Real value</strong> discounts an amount back to today’s purchasing power:
+      <strong>Real = amount ÷ (1 + r)<sup>t</sup></strong>.
+      This helps compare money across time on an apples-to-apples basis.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>$1,000 at 3% for 10 years → about $1,343.92</li>
-      <li>$500 at 2% for 5 years → about $552.04</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is this CPI-accurate?</strong> No. It uses a constant rate you provide.</li>
-      <li><strong>What if inflation changes yearly?</strong> Use average rate or compute year-by-year externally.</li>
+      <li>$1,000 at 3% for 10 years → future value ≈ $1,343.92</li>
+      <li>$1,000 at 3% for 10 years → real value today of $1,000 in 10 years ≈ $744.09</li>
+      <li>Try 0% to see baseline behavior (no inflation impact)</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/finance/retirement-calculator/">Retirement Calculator</a></li>
-      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
       <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/retirement-calculator/">Retirement Calculator</a></li>
       <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
@@ -84,40 +159,117 @@ document.addEventListener("DOMContentLoaded", function () {
   const amountEl = document.getElementById("inf_amount");
   const rateEl = document.getElementById("inf_rate");
   const yearsEl = document.getElementById("inf_years");
+  const modeEl = document.getElementById("inf_mode");
+  const currencyEl = document.getElementById("inf_currency");
+  const maxYearsEl = document.getElementById("inf_max_years");
   const calcBtn = document.getElementById("inf_calc");
   const clearBtn = document.getElementById("inf_clear");
   const resultEl = document.getElementById("inf_result");
-  if (!amountEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !resultEl) return;
+  const tbodyEl = document.getElementById("inf_tbody");
 
-  function money(v) {
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  if (!amountEl || !rateEl || !yearsEl || !modeEl || !currencyEl || !maxYearsEl || !calcBtn || !clearBtn || !resultEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(x, lo, hi, fallback) {
+    const n = parseInt(String(x), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      // fallback if currency unsupported in runtime
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
   }
 
   calcBtn.addEventListener("click", function () {
-    const amount = parseFloat(amountEl.value);
-    const rate = (parseFloat(rateEl.value) || 0) / 100;
-    const years = parseFloat(yearsEl.value);
+    const amount = toNum(amountEl.value);
+    const ratePct = toNum(rateEl.value);
+    const years = toNum(yearsEl.value);
+    const mode = String(modeEl.value || "future");
+    const ccy = String(currencyEl.value || "USD");
+    const maxYears = clampInt(maxYearsEl.value, 1, 300, 100);
 
-    if (!isFinite(amount) || amount <= 0 || !isFinite(rate) || rate < 0 || !isFinite(years) || years <= 0) {
-      resultEl.innerHTML = "Please enter valid values.";
+    if (!isFinite(amount) || amount <= 0) {
+      resultEl.textContent = "Please enter a valid amount (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(ratePct)) {
+      resultEl.textContent = "Please enter a valid inflation rate (can be negative).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(years) || years <= 0) {
+      resultEl.textContent = "Please enter a valid number of years (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (years > maxYears) {
+      resultEl.innerHTML =
+        "Years is larger than the safety cap.<br/>" +
+        "<span class='note'>Increase Max years or reduce Years.</span>";
+      tbodyEl.innerHTML = "";
       return;
     }
 
-    const factor = Math.pow(1 + rate, years);
-    const future = amount * factor;
-    const increase = future - amount;
+    const r = ratePct / 100;
+    const yInt = Math.max(1, Math.round(years));
 
-    resultEl.innerHTML =
-      "<strong>Future Value:</strong> " + money(future) + "<br/>" +
-      "<strong>Increase:</strong> " + money(increase) + "<br/>" +
-      "<strong>Multiplier:</strong> ×" + factor.toFixed(4);
+    tbodyEl.innerHTML = "";
+
+    // summary at final horizon (use exact years as entered, not rounded)
+    const factorExact = Math.pow(1 + r, years);
+    const futureExact = amount * factorExact;
+    const realExact = amount / factorExact;
+    const increaseExact = futureExact - amount;
+
+    if (mode === "future") {
+      resultEl.innerHTML =
+        "<strong>Future value (nominal):</strong> " + money(futureExact, ccy) + "<br/>" +
+        "<strong>Increase:</strong> " + money(increaseExact, ccy) + "<br/>" +
+        "<strong>Multiplier:</strong> ×" + factorExact.toFixed(6);
+    } else {
+      resultEl.innerHTML =
+        "<strong>Real value (today):</strong> " + money(realExact, ccy) + "<br/>" +
+        "<strong>Discount factor:</strong> ÷" + factorExact.toFixed(6) + "<br/>" +
+        "<strong>Implied loss of purchasing power:</strong> " + money(amount - realExact, ccy);
+    }
+
+    // yearly table (rounded to whole years for readability)
+    for (let yr = 1; yr <= yInt; yr++) {
+      const factor = Math.pow(1 + r, yr);
+      const future = amount * factor;
+      const real = amount / factor;
+
+      const row =
+        "<tr>" +
+          "<td>" + yr + "</td>" +
+          "<td>×" + factor.toFixed(6) + "</td>" +
+          "<td>" + money(future, ccy) + "</td>" +
+          "<td>" + money(real, ccy) + "</td>" +
+        "</tr>";
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
   });
 
   clearBtn.addEventListener("click", function () {
     amountEl.value = "";
     rateEl.value = "";
     yearsEl.value = "";
-    resultEl.innerHTML = "Result will appear here.";
+    modeEl.value = "future";
+    currencyEl.value = "USD";
+    maxYearsEl.value = "100";
+    resultEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   });
 });
 </script>

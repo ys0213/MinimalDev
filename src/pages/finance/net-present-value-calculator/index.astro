@@ -3,35 +3,73 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Net Present Value (NPV) Calculator",
-  description: "Calculate NPV from an initial investment, discount rate, and a series of cash flows.",
+  description:
+    "Calculate NPV from an initial investment, discount rate, and a series of cash flows. Includes present value breakdown and decision guidance.",
   href: "/finance/net-present-value-calculator/",
   order: 50,
 };
+
+const faq = [
+  {
+    q: "What is NPV (Net Present Value)?",
+    a: "NPV is the present value of future cash flows minus the initial investment. A positive NPV suggests the project exceeds the required return (discount rate).",
+  },
+  {
+    q: "What discount rate should I use?",
+    a: "Use your required return, cost of capital, hurdle rate, or an opportunity cost rate. Higher discount rates reduce present value of future cash flows.",
+  },
+  {
+    q: "Do cash flows have to be yearly?",
+    a: "This calculator assumes cash flows occur once per year (end of each year). If your cash flows are monthly/quarterly, convert them to annual equivalents or use a period-based model.",
+  },
+  {
+    q: "Should the initial investment be negative?",
+    a: "Typically yes (cash outflow). Example: -10000 for an upfront cost. If you enter a positive number, NPV will increase by that amount.",
+  },
+  {
+    q: "Does this include taxes and inflation?",
+    a: "No. Use after-tax cash flows if you want after-tax NPV, and consider a discount rate consistent with nominal vs real cash flows.",
+  },
+];
 ---
 
 <ToolLayout
   title="NPV Calculator — MinimalDev"
-  description="Calculate Net Present Value (NPV) from an initial investment and annual cash flows."
+  description="Calculate Net Present Value (NPV) from an initial investment and annual cash flows. Includes PV breakdown and quick interpretation."
   canonicalPath="/finance/net-present-value-calculator/"
   h1="NPV Calculator"
-  intro="Compute NPV using a discount rate and yearly cash flows. Useful for simple investment comparisons."
+  intro="Compute NPV from an initial investment, discount rate, and annual cash flows. Useful for simple project and investment comparisons."
+  faq={faq}
 >
   <div slot="tool" data-tool="npv-calculator">
     <div class="form">
       <div class="field">
-        <label for="npv_initial">Initial investment (negative)</label>
+        <label for="npv_currency">Currency (display only)</label>
+        <select id="npv_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="npv_initial">Initial investment</label>
         <input id="npv_initial" type="number" inputmode="decimal" placeholder="e.g., -10000" />
+        <p class="note" style="margin-top:6px;">Tip: upfront cost is usually negative (cash outflow).</p>
       </div>
 
       <div class="field">
         <label for="npv_rate">Discount rate (%)</label>
         <input id="npv_rate" type="number" inputmode="decimal" placeholder="e.g., 8" />
+        <p class="note" style="margin-top:6px;">Annual discount rate (required return / hurdle rate).</p>
       </div>
 
       <div class="field">
-        <label for="npv_flows">Annual cash flows (comma-separated)</label>
-        <input id="npv_flows" type="text" placeholder="e.g., 3000,3000,3000,3000" />
-        <p class="note" style="margin-top:6px;">Year 1, Year 2, ... (use negative values if needed)</p>
+        <label for="npv_flows">Annual cash flows (Year 1, Year 2, ...)</label>
+        <input id="npv_flows" type="text" inputmode="text" placeholder="e.g., 3000, 3000, 3000, 3000" />
+        <p class="note" style="margin-top:6px;">Comma-separated. Use negative values if needed.</p>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -39,28 +77,65 @@ export const tool = {
         <button class="btn secondary" type="button" id="npv_clear">Clear</button>
       </div>
 
-      <div class="result" id="npv_result">Result will appear here.</div>
+      <div class="result" id="npv_result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Cash Flow</th>
+              <th>Discount Factor</th>
+              <th>Present Value</th>
+            </tr>
+          </thead>
+          <tbody id="npv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational estimate only. Assumes end-of-year cash flows and constant annual discount rate.
+      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      NPV = Σ( CF_t / (1+r)^t ) + initialInvestment
+      Net Present Value (NPV) converts future cash flows into today’s value using a discount rate.
+      You can use it to compare projects or investments on a like-for-like basis.
+    </p>
+
+    <p class="note">
+      The calculation assumes each cash flow occurs at the end of a year:
+      <br />
+      <strong>NPV = Initial + Σ (CF<sub>t</sub> / (1 + r)<sup>t</sup>)</strong>
+      <br />
+      where <strong>r</strong> is the annual discount rate and <strong>t</strong> is year number.
+    </p>
+
+    <p class="note">
+      Interpretation (rule of thumb): <strong>NPV &gt; 0</strong> suggests returns exceed the discount rate,
+      while <strong>NPV &lt; 0</strong> suggests the opposite. Always validate assumptions (timing, risk, taxes).
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>-10,000 initial, 8% rate, cash flows 3,000×4 → compute NPV</li>
-      <li>Positive NPV generally indicates value above the discount rate</li>
+      <li><strong>Initial:</strong> -10,000, <strong>Rate:</strong> 8%, <strong>Flows:</strong> 3,000,3,000,3,000,3,000 → compute NPV</li>
+      <li>Try a higher discount rate to see how NPV falls as required return increases</li>
+      <li>Include a negative cash flow in later years for maintenance or reinvestment</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What is discount rate?</strong> A required return used to convert future cash flows into present value.</li>
-      <li><strong>Do cash flows have to be yearly?</strong> This page assumes yearly spacing for simplicity.</li>
-      <li><strong>Does this include taxes?</strong> No. Use after-tax cash flows if needed.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
@@ -77,52 +152,106 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const ccyEl = document.getElementById("npv_currency");
   const initEl = document.getElementById("npv_initial");
   const rateEl = document.getElementById("npv_rate");
   const flowsEl = document.getElementById("npv_flows");
   const calcBtn = document.getElementById("npv_calc");
   const clearBtn = document.getElementById("npv_clear");
   const outEl = document.getElementById("npv_result");
-  if (!initEl || !rateEl || !flowsEl || !calcBtn || !clearBtn || !outEl) return;
+  const tbodyEl = document.getElementById("npv_tbody");
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  if (!ccyEl || !initEl || !rateEl || !flowsEl || !calcBtn || !clearBtn || !outEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function parseFlows(raw) {
+    const parts = String(raw || "")
+      .split(/[,\n]/g)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const flows = [];
+    for (let i = 0; i < parts.length; i++) {
+      const v = toNum(parts[i]);
+      if (!isFinite(v)) return { ok: false, flows: [], bad: parts[i] };
+      flows.push(v);
+    }
+    return { ok: flows.length > 0, flows, bad: "" };
+  }
+
+  function reset() {
+    outEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   }
 
   calcBtn.addEventListener("click", function () {
-    const initial = parseFloat(initEl.value);
-    const r = (parseFloat(rateEl.value) || 0) / 100;
-    const raw = String(flowsEl.value || "").trim();
+    const ccy = String(ccyEl.value || "USD");
+    const initial = toNum(initEl.value);
+    const r = toNum(rateEl.value) / 100;
+    const parsed = parseFlows(flowsEl.value);
 
-    if (!isFinite(initial) || !isFinite(r) || r < 0 || !raw) {
-      outEl.textContent = "Please enter valid values and cash flows.";
+    if (!isFinite(initial)) { outEl.textContent = "Please enter a valid initial investment."; tbodyEl.innerHTML = ""; return; }
+    if (!isFinite(r) || r < 0) { outEl.textContent = "Please enter a valid discount rate (0 or more)."; tbodyEl.innerHTML = ""; return; }
+    if (!parsed.ok) {
+      outEl.innerHTML =
+        "Please enter valid cash flows like: <strong>3000, 3000, 3000</strong>.<br/>" +
+        (parsed.bad ? "<span class='note'>Invalid value: " + String(parsed.bad) + "</span>" : "");
+      tbodyEl.innerHTML = "";
       return;
     }
 
-    const flows = raw.split(",").map(s => parseFloat(s.trim())).filter(v => isFinite(v));
-    if (!flows.length) {
-      outEl.textContent = "Please enter cash flows like: 3000,3000,3000";
-      return;
-    }
+    const flows = parsed.flows;
 
     let pv = 0;
+    tbodyEl.innerHTML = "";
+
     for (let i = 0; i < flows.length; i++) {
       const t = i + 1;
-      pv += flows[i] / Math.pow(1 + r, t);
+      const df = 1 / Math.pow(1 + r, t);
+      const pvT = flows[i] * df;
+      pv += pvT;
+
+      const row =
+        "<tr>" +
+          "<td>" + t + "</td>" +
+          "<td>" + money(flows[i], ccy) + "</td>" +
+          "<td>" + df.toFixed(6) + "</td>" +
+          "<td>" + money(pvT, ccy) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
     }
+
     const npv = initial + pv;
+    const verdict = npv > 0 ? "Positive NPV (above the discount rate)." : (npv < 0 ? "Negative NPV (below the discount rate)." : "Zero NPV (approximately equal to the discount rate).");
 
     outEl.innerHTML =
-      "<strong>NPV:</strong> " + money(npv) + "<br/>" +
-      "<span class='note'>Present value of cash flows: " + money(pv) + "</span>";
+      "<strong>NPV:</strong> " + money(npv, ccy) + "<br/>" +
+      "<strong>Present value of cash flows:</strong> " + money(pv, ccy) + "<br/>" +
+      "<span class='note'>" + verdict + "</span>";
   });
 
   clearBtn.addEventListener("click", function () {
+    ccyEl.value = "USD";
     initEl.value = "";
     rateEl.value = "";
     flowsEl.value = "";
-    outEl.textContent = "Result will appear here.";
+    reset();
   });
+
+  reset();
 });
 </script>

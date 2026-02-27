@@ -7,6 +7,25 @@ export const tool = {
   href: "/converter/temperature-converter/",
   order: 30,
 };
+
+const faq = [
+  {
+    q: "Why is temperature conversion different from other unit converters?",
+    a: "Temperature scales include offsets (such as +32 or +273.15) in addition to ratios. Unlike length or weight, you cannot convert using multiplication alone.",
+  },
+  {
+    q: "Can I enter negative values?",
+    a: "Yes. Negative temperatures such as −10°C or −40°F are handled correctly.",
+  },
+  {
+    q: "Why do I sometimes see rounding?",
+    a: "Some conversions produce long repeating decimals. The tool rounds results for readability while still using standard formulas.",
+  },
+  {
+    q: "Does this tool store or transmit my data?",
+    a: "No. All calculations run locally in your browser. No values are stored or sent to a server.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +34,7 @@ export const tool = {
   canonicalPath="/converter/temperature-converter/"
   h1="Temperature Converter"
   intro="Convert Celsius, Fahrenheit, and Kelvin instantly. Supports common conversions like C to F and F to C with live updates."
+  faq={faq}
 >
   <div slot="tool" data-tool="temperature-converter">
     <div class="form">
@@ -56,8 +76,15 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      Temperature conversion uses both a <strong>scale</strong> and an <strong>offset</strong> (unlike length/weight converters that are ratio-only).
-      This tool converts through Celsius as an intermediate step when needed.
+      Temperature conversion differs from most unit converters because it involves both a scale and an offset.
+      For example, converting from Celsius to Fahrenheit requires multiplying and adding 32,
+      while converting to Kelvin requires adding 273.15.
+    </p>
+
+    <p class="note">
+      This tool converts values through Celsius internally when needed.
+      It supports exact formulas for C ↔ F and C ↔ K conversions,
+      ensuring mathematically correct results.
     </p>
 
     <ul>
@@ -68,7 +95,7 @@ export const tool = {
     </ul>
 
     <p class="note">
-      Displayed values may be rounded for readability, especially for repeating decimals.
+      If a result contains many decimal places, it is rounded for display clarity.
     </p>
   </div>
 
@@ -76,17 +103,8 @@ export const tool = {
     <ul>
       <li><strong>0°C</strong> = <strong>32°F</strong> = <strong>273.15 K</strong></li>
       <li><strong>100°C</strong> = <strong>212°F</strong> = <strong>373.15 K</strong></li>
-      <li><strong>98.6°F</strong> ≈ <strong>37°C</strong> (approx.)</li>
-      <li><strong>300 K</strong> ≈ <strong>26.85°C</strong> (approx.)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Why is temperature conversion different?</strong> Temperature uses offsets (like +32 or +273.15), not only ratios.</li>
-      <li><strong>Can I enter negative values?</strong> Yes. Example: −10°C converts correctly.</li>
-      <li><strong>Why do I see “approx.”?</strong> Some results have long decimals, so the display is rounded.</li>
-      <li><strong>Does this tool save my inputs?</strong> No. Everything runs locally in your browser.</li>
+      <li><strong>98.6°F</strong> ≈ <strong>37°C</strong></li>
+      <li><strong>300 K</strong> ≈ <strong>26.85°C</strong></li>
     </ul>
   </div>
 
@@ -94,7 +112,85 @@ export const tool = {
     <ul>
       <li><a href="/converter/length-converter/">Length Converter</a></li>
       <li><a href="/converter/weight-converter/">Weight Converter</a></li>
-      <li><a href="/converter/">Converters</a></li>
+      <li><a href="/converter/">All Converters</a></li>
     </ul>
   </div>
 </ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("tc_value");
+  const fromEl = document.getElementById("tc_from_unit");
+  const toEl = document.getElementById("tc_to_unit");
+  const swapBtn = document.getElementById("tc_swap");
+  const clearBtn = document.getElementById("tc_clear");
+  const resultEl = document.getElementById("tc_result");
+
+  if (!valueEl || !fromEl || !toEl || !swapBtn || !clearBtn || !resultEl) return;
+
+  function isFiniteNumber(x) {
+    return typeof x === "number" && isFinite(x);
+  }
+
+  function fmt(n) {
+    if (!isFiniteNumber(n)) return "";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 6 });
+  }
+
+  function toCelsius(val, unit) {
+    if (unit === "c") return val;
+    if (unit === "f") return (val - 32) * 5 / 9;
+    if (unit === "k") return val - 273.15;
+    return val;
+  }
+
+  function fromCelsius(val, unit) {
+    if (unit === "c") return val;
+    if (unit === "f") return (val * 9 / 5) + 32;
+    if (unit === "k") return val + 273.15;
+    return val;
+  }
+
+  function calc() {
+    const raw = parseFloat(valueEl.value);
+    const from = fromEl.value;
+    const to = toEl.value;
+
+    if (!isFiniteNumber(raw)) {
+      resultEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const c = toCelsius(raw, from);
+    const out = fromCelsius(c, to);
+
+    const primary = fmt(out);
+    const approx = String(primary) !== String(out) ? " (approx.)" : "";
+
+    resultEl.innerHTML =
+      "<strong>" + primary + " " + to.toUpperCase() + "</strong>" + approx +
+      "<div class='note' style='margin-top:6px;'>" +
+      fmt(raw) + " " + from.toUpperCase() +
+      " = " + primary + " " + to.toUpperCase() +
+      "</div>";
+  }
+
+  valueEl.addEventListener("input", calc);
+  fromEl.addEventListener("change", calc);
+  toEl.addEventListener("change", calc);
+
+  swapBtn.addEventListener("click", function () {
+    const temp = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = temp;
+    calc();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    valueEl.value = "";
+    resultEl.textContent = "Result will appear here.";
+  });
+
+  calc();
+});
+</script>

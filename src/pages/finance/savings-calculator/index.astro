@@ -4,40 +4,77 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Savings Calculator",
   description:
-    "Free savings calculator. Estimate how much you’ll save over time with monthly deposits and interest.",
+    "Estimate savings growth over time with monthly deposits and optional interest. See year-by-year balances, deposits, and interest earned.",
   href: "/finance/savings-calculator/",
   order: 40,
 };
+
+const faq = [
+  {
+    q: "Is the interest compounded monthly?",
+    a: "Yes. This tool applies the annual rate as a monthly rate (annual ÷ 12) and compounds month by month for a simple estimate.",
+  },
+  {
+    q: "Does it model APY exactly like banks do?",
+    a: "Not exactly. Banks may use daily compounding, different posting schedules, and fees. Use this as an estimate.",
+  },
+  {
+    q: "What if the interest rate is 0%?",
+    a: "Then the balance grows only from deposits. The interest earned will be 0.",
+  },
+  {
+    q: "Are taxes and fees included?",
+    a: "No. Taxes, account fees, and tiered rates are not included.",
+  },
+  {
+    q: "How should I treat irregular deposits?",
+    a: "Convert your average deposit into a monthly amount for a rough projection.",
+  },
+];
 ---
 
 <ToolLayout
   title="Savings Calculator — MinimalDev"
-  description="Calculate savings growth with monthly deposits and interest. See balances by year."
+  description="Estimate savings growth with monthly deposits and optional interest. View balances by year with total deposits and interest earned."
   canonicalPath="/finance/savings-calculator/"
   h1="Savings Calculator"
-  intro="Estimate savings growth with monthly deposits and optional annual interest."
+  intro="Estimate how your savings balance could grow with monthly deposits and an optional annual interest rate."
+  faq={faq}
 >
-  <div slot="tool">
+  <div slot="tool" data-tool="savings-calculator">
     <div class="form">
-
       <div class="field">
-        <label for="sv_start">Starting Balance</label>
-        <input id="sv_start" type="number" placeholder="1000" />
+        <label for="sv_currency">Currency (display only)</label>
+        <select id="sv_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
       </div>
 
       <div class="field">
-        <label for="sv_monthly">Monthly Deposit</label>
-        <input id="sv_monthly" type="number" placeholder="200" />
+        <label for="sv_start">Starting balance</label>
+        <input id="sv_start" type="number" inputmode="decimal" placeholder="e.g., 1000" />
       </div>
 
       <div class="field">
-        <label for="sv_rate">Annual Interest Rate (%) (Optional)</label>
-        <input id="sv_rate" type="number" placeholder="3" />
+        <label for="sv_monthly">Monthly deposit</label>
+        <input id="sv_monthly" type="number" inputmode="decimal" placeholder="e.g., 200" />
+      </div>
+
+      <div class="field">
+        <label for="sv_rate">Annual interest rate (%) (optional)</label>
+        <input id="sv_rate" type="number" inputmode="decimal" placeholder="e.g., 3" />
+        <p class="note" style="margin-top:6px;">
+          Use your expected average annual rate. This is a simplified projection.
+        </p>
       </div>
 
       <div class="field">
         <label for="sv_years">Years</label>
-        <input id="sv_years" type="number" placeholder="10" />
+        <input id="sv_years" type="number" inputmode="decimal" placeholder="e.g., 10" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -64,17 +101,50 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Estimates only. Actual yields vary by account.
+        Estimates only. Actual yields vary by account, compounding method, and fees.
       </p>
-
     </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator applies a simple monthly compounding model. Each month:
+      (1) interest is applied to the current balance, then (2) your monthly deposit is added.
+    </p>
+
+    <p class="note">
+      The annual interest rate is converted to a monthly rate by dividing by 12.
+      This is common for quick projections, but real accounts may compound daily or use APY rules.
+    </p>
+
+    <p class="note">
+      Use the year-by-year table to sanity-check your plan and to compare different deposit amounts or rates.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$1,000 start, $200/mo, 3% for 10 years → estimate final balance and total interest</li>
+      <li>Set interest to 0% → deposit-only savings projection</li>
+      <li>Increase monthly deposit to compare how much faster you reach a target balance</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
+    </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
-      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
       <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
       <li><a href="/finance/retirement-calculator/">Retirement Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
@@ -83,6 +153,7 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const ccyEl = document.getElementById("sv_currency");
   const startEl = document.getElementById("sv_start");
   const monthlyEl = document.getElementById("sv_monthly");
   const rateEl = document.getElementById("sv_rate");
@@ -92,32 +163,57 @@ document.addEventListener("DOMContentLoaded", function () {
   const summaryEl = document.getElementById("sv_summary");
   const tbodyEl = document.getElementById("sv_tbody");
 
-  if (!startEl || !monthlyEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+  if (!ccyEl || !startEl || !monthlyEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
-  function money(v) {
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function reset() {
+    summaryEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   }
 
   calcBtn.addEventListener("click", function () {
-    let balance = parseFloat(startEl.value);
-    const monthly = parseFloat(monthlyEl.value);
-    const annual = (parseFloat(rateEl.value) || 0) / 100;
-    const years = parseFloat(yearsEl.value);
+    const ccy = String(ccyEl.value || "USD");
 
-    if (!isFinite(balance) || balance < 0 || !isFinite(monthly) || monthly < 0 || !isFinite(years) || years <= 0) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    let balance = toNum(startEl.value);
+    const monthly = toNum(monthlyEl.value);
+    const annual = (toNum(rateEl.value) || 0) / 100;
+    const yearsRaw = toNum(yearsEl.value);
+
+    if (!isFinite(balance) || balance < 0 ||
+        !isFinite(monthly) || monthly < 0 ||
+        !isFinite(annual) || annual < 0 ||
+        !isFinite(yearsRaw) || yearsRaw <= 0) {
+      summaryEl.textContent = "Please enter valid values.";
       tbodyEl.innerHTML = "";
       return;
     }
 
+    // allow decimals, but show a sensible table by years (rounded down for full years)
+    const fullYears = Math.floor(yearsRaw);
+    const remainingMonths = Math.round((yearsRaw - fullYears) * 12);
+
     const r = annual / 12;
+
     let deposits = balance;
     let interestEarned = 0;
 
     tbodyEl.innerHTML = "";
 
-    for (let y = 1; y <= years; y++) {
-      for (let m = 1; m <= 12; m++) {
+    function stepMonths(monthCount) {
+      for (let m = 1; m <= monthCount; m++) {
         const interest = r === 0 ? 0 : balance * r;
         balance += interest;
         interestEarned += interest;
@@ -125,31 +221,52 @@ document.addEventListener("DOMContentLoaded", function () {
         balance += monthly;
         deposits += monthly;
       }
+    }
+
+    for (let y = 1; y <= fullYears; y++) {
+      stepMonths(12);
 
       const row =
         "<tr>" +
           "<td>" + y + "</td>" +
-          "<td>" + money(balance) + "</td>" +
-          "<td>" + money(deposits) + "</td>" +
-          "<td>" + money(interestEarned) + "</td>" +
+          "<td>" + money(balance, ccy) + "</td>" +
+          "<td>" + money(deposits, ccy) + "</td>" +
+          "<td>" + money(interestEarned, ccy) + "</td>" +
+        "</tr>";
+
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+
+    if (remainingMonths > 0) {
+      stepMonths(remainingMonths);
+
+      const label = (fullYears + remainingMonths / 12).toFixed(2);
+      const row =
+        "<tr>" +
+          "<td>" + label + "</td>" +
+          "<td>" + money(balance, ccy) + "</td>" +
+          "<td>" + money(deposits, ccy) + "</td>" +
+          "<td>" + money(interestEarned, ccy) + "</td>" +
         "</tr>";
 
       tbodyEl.insertAdjacentHTML("beforeend", row);
     }
 
     summaryEl.innerHTML =
-      "<strong>Final Balance:</strong> " + money(balance) + "<br>" +
-      "<strong>Total Deposits:</strong> " + money(deposits) + "<br>" +
-      "<strong>Total Interest Earned:</strong> " + money(interestEarned);
+      "<strong>Final balance:</strong> " + money(balance, ccy) + "<br/>" +
+      "<strong>Total deposits:</strong> " + money(deposits, ccy) + "<br/>" +
+      "<strong>Interest earned:</strong> " + money(interestEarned, ccy);
   });
 
   clearBtn.addEventListener("click", function () {
+    ccyEl.value = "USD";
     startEl.value = "";
     monthlyEl.value = "";
     rateEl.value = "";
     yearsEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
-    tbodyEl.innerHTML = "";
+    reset();
   });
+
+  reset();
 });
 </script>

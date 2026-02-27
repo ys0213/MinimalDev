@@ -7,6 +7,29 @@ export const tool = {
   href: "/date-time/age-calculator/",
   order: 20,
 };
+
+const faq = [
+  {
+    q: "Is this age calculator accurate?",
+    a: "Yes. It uses real calendar date logic (year/month/day) and correctly handles leap years.",
+  },
+  {
+    q: "Why can results differ from other age calculators?",
+    a: "Some calculators round months, count inclusively, or use different rules for partial months/days.",
+  },
+  {
+    q: "Can I calculate my age on a future or past date?",
+    a: "Yes. Set a reference date to calculate age at any date.",
+  },
+  {
+    q: "Does this include time of day?",
+    a: "No. It calculates using calendar dates only (not hours/minutes).",
+  },
+  {
+    q: "Is my birth date stored anywhere?",
+    a: "No. All calculations run locally in your browser. No personal data is stored or sent to a server.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,7 @@ export const tool = {
   canonicalPath="/date-time/age-calculator/"
   h1="Age Calculator"
   intro="Calculate your exact age in years, months, and days from your date of birth. Optionally choose a reference date to find age at a specific time."
+  faq={faq}
 >
   <div slot="tool" data-tool="age-calculator">
     <div class="form">
@@ -35,39 +59,36 @@ export const tool = {
       <div class="result" id="age_result">Result will appear here.</div>
 
       <p class="note" style="margin-top:8px;">
-        Your dates are processed locally in your browser. No personal information is stored.
+        Privacy: calculations run locally in your browser. No personal information is stored or transmitted.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      The calculator compares the year, month, and day between the birth date and the reference date.
-      If the current month or day is earlier than the birth date, the calculation borrows from the previous month or year.
+      This calculator finds an <strong>exact calendar breakdown</strong> by comparing the birth date to a reference date
+      and “borrowing” months/days when needed. This is closer to how people describe age in real life (years, months, days),
+      rather than approximating using a fixed number of days per month.
+    </p>
+
+    <p class="note">
+      Leap years are handled automatically because the calculation is based on real dates.
+      If you provide a reference date, you can calculate age at a specific moment (past or future).
+      If no reference date is provided, the tool uses <strong>today</strong>.
     </p>
 
     <ul>
-      <li><strong>Leap years:</strong> Automatically handled.</li>
-      <li><strong>Exact breakdown:</strong> Returns years, months, and days.</li>
-      <li><strong>Optional reference date:</strong> Calculate age at any past or future date.</li>
+      <li><strong>Exact breakdown:</strong> years + months + days</li>
+      <li><strong>Optional reference date:</strong> age at any date</li>
+      <li><strong>Extra insights:</strong> total days lived, next birthday countdown</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>How old am I if I was born on 2000-01-01?</strong> → Depends on today's date.</li>
-      <li><strong>Age from 1995-10-10 to 2026-02-24</strong> → 30 years, 4 months, 14 days</li>
-      <li><strong>Born on Feb 29?</strong> → Leap years are handled correctly.</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is this calculator accurate?</strong> Yes. It uses real calendar date logic, including leap years.</li>
-      <li><strong>Why might other sites show a different result?</strong> Some calculators round months or count inclusively.</li>
-      <li><strong>Can I calculate future age?</strong> Yes. Choose a future reference date.</li>
-      <li><strong>Does this include time of day?</strong> No. It calculates based on calendar dates only.</li>
-      <li><strong>Is my birth date stored?</strong> No. All calculations happen locally in your browser.</li>
+      <li><strong>DOB 2000-01-01</strong> → age depends on today (or chosen reference date).</li>
+      <li><strong>DOB 1995-10-10, reference 2026-02-24</strong> → 30 years, 4 months, 14 days (example).</li>
+      <li><strong>Born on Feb 29</strong> → leap years are handled correctly.</li>
     </ul>
   </div>
 
@@ -75,7 +96,159 @@ export const tool = {
     <ul>
       <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
       <li><a href="/date-time/work-days-calculator/">Work Days Calculator</a></li>
-      <li><a href="/date-time/">Date & Time Tools</a></li>
+      <li><a href="/date-time/">All Date & Time Tools</a></li>
     </ul>
   </div>
 </ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dobEl = document.getElementById("age_dob");
+  const refEl = document.getElementById("age_ref");
+  const clearBtn = document.getElementById("age_clear");
+  const resultEl = document.getElementById("age_result");
+  if (!dobEl || !refEl || !clearBtn || !resultEl) return;
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+
+  // Use local date (not UTC) to match user expectations for "today".
+  function toYMD(d) {
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+
+  function parseDateInput(v) {
+    // "YYYY-MM-DD" -> local date
+    if (!v) return null;
+    const parts = v.split("-");
+    if (parts.length !== 3) return null;
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const day = Number(parts[2]);
+    if (!isFinite(y) || !isFinite(m) || !isFinite(day)) return null;
+    const d = new Date(y, m - 1, day);
+    // validate (avoid JS date overflow)
+    if (d.getFullYear() !== y || d.getMonth() !== (m - 1) || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function daysInMonth(y, mIndex) {
+    // mIndex: 0..11
+    return new Date(y, mIndex + 1, 0).getDate();
+  }
+
+  function diffYMD(fromDate, toDate) {
+    // expects fromDate <= toDate
+    let y = toDate.getFullYear() - fromDate.getFullYear();
+    let m = toDate.getMonth() - fromDate.getMonth();
+    let d = toDate.getDate() - fromDate.getDate();
+
+    if (d < 0) {
+      // borrow 1 month
+      m -= 1;
+      const prevMonthIndex = (toDate.getMonth() - 1 + 12) % 12;
+      const prevMonthYear = prevMonthIndex === 11 ? toDate.getFullYear() - 1 : toDate.getFullYear();
+      d += daysInMonth(prevMonthYear, prevMonthIndex);
+    }
+
+    if (m < 0) {
+      y -= 1;
+      m += 12;
+    }
+
+    return { years: y, months: m, days: d };
+  }
+
+  function dayDiffInclusiveStart(a, b) {
+    // total days difference, not inclusive, in local midnight terms
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+    const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+    return Math.round((b0 - a0) / msPerDay);
+  }
+
+  function nextBirthday(dob, ref) {
+    const y = ref.getFullYear();
+    const m = dob.getMonth();
+    const d = dob.getDate();
+
+    // handle Feb 29: in non-leap years, JS Date will roll to Mar 1 if we set Feb 29.
+    // We'll define birthday as Feb 28 for non-leap years (common convention), to be predictable.
+    function isLeapYear(year) {
+      return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    let candidateDay = d;
+    let candidateMonth = m;
+
+    if (m === 1 && d === 29 && !isLeapYear(y)) { // Feb index 1
+      candidateDay = 28;
+      candidateMonth = 1;
+    }
+
+    let next = new Date(y, candidateMonth, candidateDay);
+
+    const ref0 = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+    if (next < ref0) {
+      const y2 = y + 1;
+      candidateDay = d;
+      candidateMonth = m;
+      if (m === 1 && d === 29 && !isLeapYear(y2)) {
+        candidateDay = 28;
+        candidateMonth = 1;
+      }
+      next = new Date(y2, candidateMonth, candidateDay);
+    }
+
+    return next;
+  }
+
+  function render() {
+    const dob = parseDateInput(dobEl.value);
+    if (!dob) {
+      resultEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const ref = refEl.value ? parseDateInput(refEl.value) : new Date();
+    if (!ref) {
+      resultEl.textContent = "Please enter a valid reference date.";
+      return;
+    }
+
+    const dob0 = new Date(dob.getFullYear(), dob.getMonth(), dob.getDate());
+    const ref0 = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+
+    if (ref0 < dob0) {
+      resultEl.innerHTML =
+        "<strong>Reference date must be on or after the date of birth.</strong>";
+      return;
+    }
+
+    const ymd = diffYMD(dob0, ref0);
+    const totalDays = dayDiffInclusiveStart(dob0, ref0);
+    const nb = nextBirthday(dob0, ref0);
+    const daysToBirthday = dayDiffInclusiveStart(ref0, nb);
+
+    resultEl.innerHTML =
+      "<div><strong>Age:</strong> " + ymd.years + " years, " + ymd.months + " months, " + ymd.days + " days</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Reference date:</strong> " + toYMD(ref0) + "</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Total days since birth:</strong> " + totalDays.toLocaleString() + " days</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Next birthday:</strong> " + toYMD(nb) + " (" + daysToBirthday.toLocaleString() + " days)</div>";
+  }
+
+  // default reference date = today (empty field still means today, but this helps UX)
+  // Keep it blank by default to reflect "(optional)", but you can uncomment to prefill:
+  // refEl.value = toYMD(new Date());
+
+  dobEl.addEventListener("change", render);
+  refEl.addEventListener("change", render);
+
+  clearBtn.addEventListener("click", function () {
+    dobEl.value = "";
+    refEl.value = "";
+    resultEl.textContent = "Result will appear here.";
+  });
+
+  render();
+});
+</script>

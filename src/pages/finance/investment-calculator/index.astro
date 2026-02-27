@@ -4,40 +4,101 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Investment Calculator",
   description:
-    "Free investment calculator with monthly contributions. Estimate future value, total contributions, and investment gains.",
+    "Free investment calculator with contributions. Estimate future value, total contributions, and investment gains with a year-by-year table.",
   href: "/finance/investment-calculator/",
   order: 50,
 };
+
+const faq = [
+  {
+    q: "What does this investment calculator estimate?",
+    a: "It projects an investment balance over time using an assumed annual return rate and optional recurring contributions. It shows future value, total contributions, and estimated gains.",
+  },
+  {
+    q: "Are results guaranteed?",
+    a: "No. This is a mathematical projection with a constant rate assumption. Real markets fluctuate and returns can vary significantly.",
+  },
+  {
+    q: "Is compounding monthly or yearly?",
+    a: "This calculator compounds monthly by default because contributions are typically monthly. You can also switch to annual contributions.",
+  },
+  {
+    q: "What is the difference between contributions and gains?",
+    a: "Contributions are the cash you put in (initial + recurring). Gains are the projected growth above your contributions.",
+  },
+  {
+    q: "Does it include taxes, fees, or inflation?",
+    a: "No. This tool estimates gross growth only. For inflation adjustments, use the Inflation Calculator.",
+  },
+];
 ---
 
 <ToolLayout
   title="Investment Calculator — MinimalDev"
-  description="Estimate investment growth with monthly contributions and annual return. View year-by-year results."
+  description="Estimate investment growth with recurring contributions and an assumed return rate. Includes a year-by-year projection table."
   canonicalPath="/finance/investment-calculator/"
   h1="Investment Calculator"
-  intro="Estimate future value of an investment with optional monthly contributions and annual return."
+  intro="Project future value of an investment with monthly or annual contributions and an assumed annual return rate."
+  faq={faq}
 >
-  <div slot="tool">
+  <div slot="tool" data-tool="investment-calculator">
     <div class="form">
-
       <div class="field">
-        <label for="iv_start">Initial Amount</label>
-        <input id="iv_start" type="number" placeholder="5000" />
+        <label for="iv_start">Initial amount</label>
+        <input id="iv_start" type="number" inputmode="decimal" placeholder="e.g., 5000" />
       </div>
 
       <div class="field">
-        <label for="iv_monthly">Monthly Contribution</label>
-        <input id="iv_monthly" type="number" placeholder="300" />
+        <label for="iv_contrib_amount">Contribution amount (optional)</label>
+        <input id="iv_contrib_amount" type="number" inputmode="decimal" placeholder="e.g., 300" />
       </div>
 
       <div class="field">
-        <label for="iv_return">Expected Annual Return (%)</label>
-        <input id="iv_return" type="number" placeholder="7" />
+        <label for="iv_contrib_freq">Contribution frequency</label>
+        <select id="iv_contrib_freq">
+          <option value="monthly" selected>Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="iv_return">Expected annual return (%)</label>
+        <input id="iv_return" type="number" inputmode="decimal" placeholder="e.g., 7" />
+        <p class="note" style="margin-top:6px;">
+          Tip: long-term stock market averages are often quoted around 6–8% nominal, but it varies by period and market.
+        </p>
       </div>
 
       <div class="field">
         <label for="iv_years">Years</label>
-        <input id="iv_years" type="number" placeholder="20" />
+        <input id="iv_years" type="number" inputmode="decimal" placeholder="e.g., 20" />
+      </div>
+
+      <div class="field">
+        <label for="iv_timing">Contribution timing</label>
+        <select id="iv_timing">
+          <option value="end" selected>End of period</option>
+          <option value="begin">Beginning of period</option>
+        </select>
+        <p class="note" style="margin-top:6px;">
+          “Beginning” slightly increases the projection because money is invested for one extra period.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="iv_currency">Currency (display only)</label>
+        <select id="iv_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="iv_max_years">Max years (safety cap)</label>
+        <input id="iv_max_years" type="number" inputmode="numeric" value="80" min="1" max="120" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -49,14 +110,14 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <div style="margin-top:20px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr>
               <th>Year</th>
-              <th>Value</th>
-              <th>Contributions</th>
-              <th>Gain</th>
+              <th>End value</th>
+              <th>Total contributions</th>
+              <th>Estimated gain</th>
             </tr>
           </thead>
           <tbody id="iv_tbody"></tbody>
@@ -64,18 +125,43 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Estimates only. Market returns are not guaranteed.
+        Informational only. Projections assume a constant rate and do not include taxes, fees, or inflation.
       </p>
-
     </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses a <strong>monthly compounding</strong> model for monthly contributions, and an
+      <strong>annual compounding</strong> model for yearly contributions. The annual return is converted into a per-period
+      rate and applied repeatedly across periods.
+    </p>
+
+    <p class="note">
+      Results depend heavily on the return assumption. Small changes in the rate or duration can make large differences
+      due to compounding. Use the year-by-year table to sanity-check the growth path, not just the final number.
+    </p>
+
+    <p class="note">
+      If you want “growth only” (no new money), set contribution amount to 0. If you want to adjust purchasing power,
+      take the projected value and compare it with the Inflation Calculator.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$5,000 start + $300/month at 7% for 20 years → view final value and gain estimate</li>
+      <li>$10,000 start + $0/month at 6% for 10 years → growth-only scenario</li>
+      <li>Switch timing to “Beginning of period” to model contributions invested earlier</li>
+    </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
-      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/finance/net-present-value-calculator/">Net Present Value Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -84,72 +170,163 @@ export const tool = {
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const startEl = document.getElementById("iv_start");
-  const monthlyEl = document.getElementById("iv_monthly");
+  const contribEl = document.getElementById("iv_contrib_amount");
+  const freqEl = document.getElementById("iv_contrib_freq");
   const returnEl = document.getElementById("iv_return");
   const yearsEl = document.getElementById("iv_years");
+  const timingEl = document.getElementById("iv_timing");
+  const currencyEl = document.getElementById("iv_currency");
+  const maxYearsEl = document.getElementById("iv_max_years");
   const calcBtn = document.getElementById("iv_calc");
   const clearBtn = document.getElementById("iv_clear");
   const summaryEl = document.getElementById("iv_summary");
   const tbodyEl = document.getElementById("iv_tbody");
 
-  if (!startEl || !monthlyEl || !returnEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+  if (!startEl || !contribEl || !freqEl || !returnEl || !yearsEl || !timingEl || !currencyEl || !maxYearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
-  function money(v) {
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(x, lo, hi, fallback) {
+    const n = parseInt(String(x), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearOut() {
+    summaryEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   }
 
   calcBtn.addEventListener("click", function () {
-    let value = parseFloat(startEl.value);
-    const monthly = parseFloat(monthlyEl.value);
-    const annual = parseFloat(returnEl.value) / 100;
-    const years = parseFloat(yearsEl.value);
+    const start = toNum(startEl.value);
+    const contrib = toNum(contribEl.value || "0");
+    const freq = String(freqEl.value || "monthly");
+    const annual = toNum(returnEl.value) / 100;
+    const years = toNum(yearsEl.value);
+    const timing = String(timingEl.value || "end");
+    const ccy = String(currencyEl.value || "USD");
+    const maxYears = clampInt(maxYearsEl.value, 1, 120, 80);
 
-    if (!isFinite(value) || value < 0 || !isFinite(monthly) || monthly < 0 || !isFinite(annual) || annual < 0 || !isFinite(years) || years <= 0) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    if (!isFinite(start) || start < 0) {
+      summaryEl.textContent = "Please enter a valid initial amount (0 or more).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(contrib) || contrib < 0) {
+      summaryEl.textContent = "Please enter a valid contribution amount (0 or more).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(annual) || annual < 0) {
+      summaryEl.textContent = "Please enter a valid expected annual return (0 or more).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(years) || years <= 0) {
+      summaryEl.textContent = "Please enter a valid number of years (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (years > maxYears) {
+      summaryEl.innerHTML =
+        "Years is larger than the safety cap.<br/>" +
+        "<span class='note'>Increase Max years or reduce Years.</span>";
       tbodyEl.innerHTML = "";
       return;
     }
 
-    const r = annual / 12;
-    let contributions = value;
+    const yInt = Math.max(1, Math.round(years));
+    let value = start;
+    let totalContrib = start;
 
     tbodyEl.innerHTML = "";
 
-    for (let y = 1; y <= years; y++) {
-      for (let m = 1; m <= 12; m++) {
-        const interest = r === 0 ? 0 : value * r;
-        value += interest;
+    if (freq === "yearly") {
+      // Annual compounding
+      for (let y = 1; y <= yInt; y++) {
+        if (timing === "begin" && contrib > 0) {
+          value += contrib;
+          totalContrib += contrib;
+        }
 
-        value += monthly;
-        contributions += monthly;
+        value = value * (1 + annual);
+
+        if (timing === "end" && contrib > 0) {
+          value += contrib;
+          totalContrib += contrib;
+        }
+
+        const gain = value - totalContrib;
+
+        const row =
+          "<tr>" +
+            "<td>" + y + "</td>" +
+            "<td>" + money(value, ccy) + "</td>" +
+            "<td>" + money(totalContrib, ccy) + "</td>" +
+            "<td>" + money(gain, ccy) + "</td>" +
+          "</tr>";
+        tbodyEl.insertAdjacentHTML("beforeend", row);
       }
+    } else {
+      // Monthly compounding
+      const r = annual / 12;
+      for (let y = 1; y <= yInt; y++) {
+        for (let m = 1; m <= 12; m++) {
+          if (timing === "begin" && contrib > 0) {
+            value += contrib;
+            totalContrib += contrib;
+          }
 
-      const gain = value - contributions;
+          value = value * (1 + r);
 
-      const row =
-        "<tr>" +
-          "<td>" + y + "</td>" +
-          "<td>" + money(value) + "</td>" +
-          "<td>" + money(contributions) + "</td>" +
-          "<td>" + money(gain) + "</td>" +
-        "</tr>";
+          if (timing === "end" && contrib > 0) {
+            value += contrib;
+            totalContrib += contrib;
+          }
+        }
 
-      tbodyEl.insertAdjacentHTML("beforeend", row);
+        const gain = value - totalContrib;
+
+        const row =
+          "<tr>" +
+            "<td>" + y + "</td>" +
+            "<td>" + money(value, ccy) + "</td>" +
+            "<td>" + money(totalContrib, ccy) + "</td>" +
+            "<td>" + money(gain, ccy) + "</td>" +
+          "</tr>";
+        tbodyEl.insertAdjacentHTML("beforeend", row);
+      }
     }
 
+    const gainFinal = value - totalContrib;
     summaryEl.innerHTML =
-      "<strong>Final Value:</strong> " + money(value) + "<br>" +
-      "<strong>Total Contributions:</strong> " + money(contributions) + "<br>" +
-      "<strong>Total Gain:</strong> " + money(value - contributions);
+      "<strong>Final value:</strong> " + money(value, ccy) + "<br/>" +
+      "<strong>Total contributions:</strong> " + money(totalContrib, ccy) + "<br/>" +
+      "<strong>Estimated gain:</strong> " + money(gainFinal, ccy);
   });
 
   clearBtn.addEventListener("click", function () {
     startEl.value = "";
-    monthlyEl.value = "";
+    contribEl.value = "";
     returnEl.value = "";
     yearsEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
-    tbodyEl.innerHTML = "";
+    freqEl.value = "monthly";
+    timingEl.value = "end";
+    currencyEl.value = "USD";
+    maxYearsEl.value = "80";
+    clearOut();
   });
 });
 </script>

@@ -3,29 +3,60 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Car Loan Calculator",
-  description: "Free car loan calculator with amortization schedule. Estimate monthly payment, total interest, and payoff table.",
+  description:
+    "Calculate car loan monthly payment, total interest, and amortization schedule from loan amount, APR, and term.",
   href: "/finance/car-loan-calculator/",
   order: 15,
 };
+
+const faq = [
+  {
+    q: "Does this include taxes, registration, or dealer fees?",
+    a: "No. This calculator estimates principal and interest only. Add taxes/fees into the loan amount if you want them reflected in the payment.",
+  },
+  {
+    q: "Is APR the same as interest rate?",
+    a: "APR is the effective borrowing cost and may include fees. If your lender provides APR, use that value for the closest estimate.",
+  },
+  {
+    q: "What if my APR is 0%?",
+    a: "If APR is 0%, the monthly payment is simply loan amount divided by the number of months, and total interest is $0.",
+  },
+  {
+    q: "Why can my result differ from my lender’s quote?",
+    a: "Lenders can use different rounding rules, payment timing assumptions, or include additional fees. This tool is an estimate for planning.",
+  },
+  {
+    q: "What is an amortization schedule?",
+    a: "It’s a month-by-month table showing how each payment is split between interest and principal, and how the remaining balance declines over time.",
+  },
+];
 ---
 
 <ToolLayout
   title="Car Loan Calculator — MinimalDev"
-  description="Estimate car loan payment and view amortization schedule. Principal & interest only."
+  description="Estimate car loan monthly payment, total interest, and amortization schedule from loan amount, APR, and term."
   canonicalPath="/finance/car-loan-calculator/"
   h1="Car Loan Calculator"
-  intro="Calculate car loan payments and view a full amortization schedule (principal & interest)."
+  intro="Estimate your car loan monthly payment and view a full amortization schedule (principal & interest)."
+  faq={faq}
 >
   <div slot="tool" data-tool="car-loan-calculator">
     <div class="form">
       <div class="field">
         <label for="car_amount">Loan amount</label>
         <input id="car_amount" type="number" inputmode="decimal" placeholder="e.g., 25000" />
+        <p class="note" style="margin-top:6px;">
+          Tip: If you want taxes/fees included, add them into the loan amount (principal).
+        </p>
       </div>
 
       <div class="field">
         <label for="car_rate">APR (%)</label>
         <input id="car_rate" type="number" inputmode="decimal" placeholder="e.g., 6.5" />
+        <p class="note" style="margin-top:6px;">
+          Use the lender APR if available. APR may differ from the nominal rate when fees are involved.
+        </p>
       </div>
 
       <div class="field">
@@ -56,31 +87,42 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Taxes, registration, and fees are not included.
+        Informational only. Real loans may include fees, different rounding, or additional charges.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Monthly payment formula:<br/>
-      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+      This calculator uses standard amortized loan math (fixed monthly payment).
+      We compute the monthly interest rate from APR and then calculate the payment amount.
+    </p>
+
+    <p class="note">
+      <strong>Monthly payment formula:</strong><br/>
+      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)<br/>
+      Where P = loan amount, r = monthly rate, n = number of payments.
+    </p>
+
+    <p class="note">
+      The amortization schedule shows how interest typically decreases over time as the remaining balance gets smaller.
     </p>
   </div>
 
-  <div slot="faq">
+  <div slot="examples">
     <ul>
-      <li><strong>Does this include fees?</strong> No. It’s principal & interest only.</li>
-      <li><strong>Is APR the same as interest rate?</strong> APR may include fees; use lender’s APR if possible.</li>
+      <li>$25,000 at 6.5% APR for 60 months → payment estimate + schedule</li>
+      <li>$15,000 at 0% APR for 36 months → equal principal payments, $0 interest</li>
+      <li>Compare two offers by changing APR and term to see total interest difference</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
-      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
-      <li><a href="/finance/lease-vs-buy-calculator/">Lease vs Buy Calculator</a></li>
       <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/refinance-calculator/">Refinance Calculator</a></li>
+      <li><a href="/finance/lease-vs-buy-calculator/">Lease vs Buy Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -97,30 +139,54 @@ document.addEventListener("DOMContentLoaded", function () {
   const tbodyEl = document.getElementById("car_tbody");
   if (!amountEl || !rateEl || !monthsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
   function money(v) {
     if (!isFinite(v)) return "$0.00";
     return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
 
   function payment(P, r, n) {
-    if (n <= 0) return NaN;
+    if (!(n > 0)) return NaN;
     if (r === 0) return P / n;
-    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    const pow = Math.pow(1 + r, n);
+    return P * (r * pow) / (pow - 1);
   }
 
   calcBtn.addEventListener("click", function () {
-    const P = parseFloat(amountEl.value);
-    const annual = (parseFloat(rateEl.value) || 0) / 100;
-    const n = parseInt(monthsEl.value, 10);
+    const P = toNum(amountEl.value);
+    const apr = toNum(rateEl.value); // percent
+    const n = Math.round(toNum(monthsEl.value));
 
-    if (!isFinite(P) || P <= 0 || !isFinite(annual) || annual < 0 || !isFinite(n) || n <= 0) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    if (!isFinite(P) || P <= 0) {
+      summaryEl.textContent = "Please enter a valid loan amount (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(apr) || apr < 0) {
+      summaryEl.textContent = "Please enter a valid APR (>= 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(n) || n <= 0) {
+      summaryEl.textContent = "Please enter a valid term in months (> 0).";
       tbodyEl.innerHTML = "";
       return;
     }
 
+    const annual = apr / 100;
     const r = annual / 12;
+
     const M = payment(P, r, n);
+    if (!isFinite(M) || M <= 0) {
+      summaryEl.textContent = "Unable to calculate with the given values. Please check your inputs.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
     const totalPay = M * n;
     const totalInterest = totalPay - P;
 
@@ -135,7 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
     for (let i = 1; i <= n; i++) {
       const interest = r === 0 ? 0 : balance * r;
       const principal = M - interest;
-      balance -= principal;
+      balance = balance - principal;
       if (balance < 0) balance = 0;
 
       const row =
@@ -146,7 +212,10 @@ document.addEventListener("DOMContentLoaded", function () {
           "<td>" + money(interest) + "</td>" +
           "<td>" + money(balance) + "</td>" +
         "</tr>";
+
       tbodyEl.insertAdjacentHTML("beforeend", row);
+
+      if (balance === 0) break;
     }
   });
 
@@ -154,7 +223,7 @@ document.addEventListener("DOMContentLoaded", function () {
     amountEl.value = "";
     rateEl.value = "";
     monthsEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
+    summaryEl.textContent = "Result will appear here.";
     tbodyEl.innerHTML = "";
   });
 });

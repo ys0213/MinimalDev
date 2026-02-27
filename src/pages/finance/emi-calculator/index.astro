@@ -4,34 +4,69 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "EMI Calculator",
   description:
-    "Free EMI calculator with amortization schedule. Calculate Equated Monthly Installment for a loan quickly.",
+    "Free EMI calculator with amortization schedule. Calculate Equated Monthly Installment, total interest, and payoff table.",
   href: "/finance/emi-calculator/",
   order: 15,
 };
+
+const faq = [
+  {
+    q: "What is EMI?",
+    a: "EMI (Equated Monthly Installment) is the fixed monthly payment for a loan (principal + interest) assuming a constant interest rate and a fixed term.",
+  },
+  {
+    q: "Is EMI the same as monthly payment?",
+    a: "In most standard amortizing loans, EMI is simply the monthly payment amount. Lenders may vary rounding rules, which can slightly change the final payment.",
+  },
+  {
+    q: "What if the interest rate is 0%?",
+    a: "If the rate is 0%, the payment is principal divided by the number of months. The schedule will show interest as $0.00 each month.",
+  },
+  {
+    q: "Does this include fees, insurance, or taxes?",
+    a: "No. This calculator models principal and interest only. Fees and insurance can change the effective cost (APR) and total payment.",
+  },
+  {
+    q: "Why can the last payment differ?",
+    a: "Because of rounding and the remaining balance, the final payment may be slightly smaller to avoid paying more than the balance plus interest for that month.",
+  },
+];
 ---
 
 <ToolLayout
   title="EMI Calculator — MinimalDev"
-  description="Calculate EMI (monthly installment) and view amortization schedule. Principal & interest only."
+  description="Calculate EMI (Equated Monthly Installment), total interest, and view a full amortization schedule. Principal & interest only."
   canonicalPath="/finance/emi-calculator/"
   h1="EMI Calculator"
-  intro="Calculate EMI (Equated Monthly Installment) for a loan and view the amortization schedule."
+  intro="Calculate EMI (Equated Monthly Installment) for a loan and view the full amortization schedule month by month."
+  faq={faq}
 >
   <div slot="tool" data-tool="emi-calculator">
     <div class="form">
       <div class="field">
-        <label for="emi_amount">Loan Amount</label>
+        <label for="emi_amount">Loan amount</label>
         <input id="emi_amount" type="number" inputmode="decimal" placeholder="e.g., 500000" />
       </div>
 
       <div class="field">
-        <label for="emi_rate">Annual Interest Rate (%)</label>
+        <label for="emi_rate">Annual interest rate (%)</label>
         <input id="emi_rate" type="number" inputmode="decimal" placeholder="e.g., 9" />
+        <p class="note" style="margin-top:6px;">
+          Enter the nominal annual rate. This tool estimates using monthly rate = annual ÷ 12.
+        </p>
       </div>
 
       <div class="field">
         <label for="emi_months">Tenure (months)</label>
         <input id="emi_months" type="number" inputmode="numeric" placeholder="e.g., 60" />
+      </div>
+
+      <div class="field">
+        <label for="emi_max_months">Max months (safety cap)</label>
+        <input id="emi_max_months" type="number" inputmode="numeric" value="600" min="12" max="2000" />
+        <p class="note" style="margin-top:6px;">
+          Prevents extremely large tables. Should be ≥ tenure.
+        </p>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -41,8 +76,8 @@ export const tool = {
 
       <div class="result" id="emi_summary" style="margin-top:12px;">Result will appear here.</div>
 
-      <div style="margin-top:20px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr>
               <th>Month</th>
@@ -57,24 +92,47 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Lenders may use different rounding and fee structures.
+        Informational only. Lenders may use different rounding, compounding, fees, and due dates.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      EMI uses standard amortization (same formula as monthly loan payment).<br/>
-      <strong>Formula:</strong> M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+      EMI is computed using the standard amortization formula for a fixed-rate loan.
+      It assumes the interest rate and payment remain constant across the entire term.
     </p>
+
+    <p class="note">
+      Monthly interest is estimated as <strong>balance × (annualRate ÷ 12)</strong>.
+      Each payment covers interest first, and the remainder reduces principal. Over time the balance shrinks,
+      so the interest portion generally decreases while the principal portion increases.
+    </p>
+
+    <p class="note">
+      Use the amortization schedule to understand how much interest you pay early in the loan and how quickly the balance declines.
+      For fees and “true cost of borrowing,” compare with an APR calculation.
+    </p>
+
+    <p class="note">
+      <strong>Formula:</strong> M = P × (r(1+r)^n) ÷ ((1+r)^n − 1) (where r is monthly rate, n is number of months)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Loan 500,000 at 9% for 60 months → EMI and schedule estimate</li>
+      <li>Try 0% interest to see principal-only payments</li>
+      <li>Compare different tenures to see how total interest changes</li>
+    </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
-      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
       <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
+      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -85,69 +143,118 @@ document.addEventListener("DOMContentLoaded", function () {
   const amountEl = document.getElementById("emi_amount");
   const rateEl = document.getElementById("emi_rate");
   const monthsEl = document.getElementById("emi_months");
+  const maxEl = document.getElementById("emi_max_months");
   const calcBtn = document.getElementById("emi_calc");
   const clearBtn = document.getElementById("emi_clear");
   const summaryEl = document.getElementById("emi_summary");
   const tbodyEl = document.getElementById("emi_tbody");
-  if (!amountEl || !rateEl || !monthsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+  if (!amountEl || !rateEl || !monthsEl || !maxEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(x, lo, hi, fallback) {
+    const n = parseInt(String(x), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
 
   function money(v) {
+    if (!isFinite(v)) return "$0.00";
     return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
 
   function payment(P, r, n) {
+    if (n <= 0) return NaN;
     if (r === 0) return P / n;
-    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    const pow = Math.pow(1 + r, n);
+    return P * (r * pow) / (pow - 1);
   }
 
   calcBtn.addEventListener("click", function () {
-    const P = parseFloat(amountEl.value);
-    const annual = (parseFloat(rateEl.value) || 0) / 100;
-    const n = parseInt(monthsEl.value, 10);
+    const P = toNum(amountEl.value);
+    const annualPct = toNum(rateEl.value);
+    const n = clampInt(monthsEl.value, 1, 2000, NaN);
+    const maxMonths = clampInt(maxEl.value, 12, 2000, 600);
 
-    if (!isFinite(P) || P <= 0 || !isFinite(annual) || annual < 0 || !isFinite(n) || n <= 0) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    if (!isFinite(P) || P <= 0) {
+      summaryEl.textContent = "Please enter a valid loan amount (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(annualPct) || annualPct < 0) {
+      summaryEl.textContent = "Please enter a valid annual interest rate (>= 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(n) || n <= 0) {
+      summaryEl.textContent = "Please enter a valid tenure in months (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (n > maxMonths) {
+      summaryEl.innerHTML =
+        "Tenure is larger than the safety cap.<br/>" +
+        "<span class='note'>Increase Max months or reduce tenure.</span>";
       tbodyEl.innerHTML = "";
       return;
     }
 
+    const annual = annualPct / 100;
     const r = annual / 12;
+
     const M = payment(P, r, n);
-    const totalPay = M * n;
-    const totalInterest = totalPay - P;
+    if (!isFinite(M) || M <= 0) {
+      summaryEl.textContent = "Unable to calculate payment with the provided values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
 
-    summaryEl.innerHTML =
-      "<strong>EMI (Monthly Payment):</strong> " + money(M) + "<br/>" +
-      "<strong>Total Interest:</strong> " + money(totalInterest) + "<br/>" +
-      "<strong>Total Payment:</strong> " + money(totalPay);
-
+    // Build schedule (cap final payment to remaining balance + interest)
     let balance = P;
+    let totalInterest = 0;
+    let totalPaid = 0;
+
     tbodyEl.innerHTML = "";
 
     for (let i = 1; i <= n; i++) {
-      const interest = r === 0 ? 0 : balance * r;
-      const principal = M - interest;
-      balance -= principal;
+      const interest = (r === 0) ? 0 : balance * r;
+
+      const payThis = Math.min(M, balance + interest);
+      const interestThis = Math.min(interest, payThis);
+      const principalThis = payThis - interestThis;
+
+      totalInterest += interestThis;
+      totalPaid += payThis;
+
+      balance -= principalThis;
       if (balance < 0) balance = 0;
 
       const row =
         "<tr>" +
           "<td>" + i + "</td>" +
-          "<td>" + money(M) + "</td>" +
-          "<td>" + money(principal) + "</td>" +
-          "<td>" + money(interest) + "</td>" +
+          "<td>" + money(payThis) + "</td>" +
+          "<td>" + money(principalThis) + "</td>" +
+          "<td>" + money(interestThis) + "</td>" +
           "<td>" + money(balance) + "</td>" +
         "</tr>";
-
       tbodyEl.insertAdjacentHTML("beforeend", row);
     }
+
+    summaryEl.innerHTML =
+      "<strong>EMI (Monthly Payment):</strong> " + money(M) + "<br/>" +
+      "<strong>Total Interest:</strong> " + money(totalInterest) + "<br/>" +
+      "<strong>Total Payment:</strong> " + money(totalPaid);
   });
 
   clearBtn.addEventListener("click", function () {
     amountEl.value = "";
     rateEl.value = "";
     monthsEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
+    maxEl.value = "600";
+    summaryEl.textContent = "Result will appear here.";
     tbodyEl.innerHTML = "";
   });
 });

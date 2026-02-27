@@ -3,46 +3,87 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Refinance Calculator",
-  description: "Compare current vs new loan to estimate monthly savings, total interest, and break-even time with closing costs.",
+  description:
+    "Compare your current loan vs refinance scenario. Estimate monthly payment, total interest savings, and break-even time including closing costs.",
   href: "/finance/refinance-calculator/",
   order: 30,
 };
+
+const faq = [
+  {
+    q: "What is refinance break-even?",
+    a: "Break-even is the number of months required for monthly payment savings to recover refinance closing costs.",
+  },
+  {
+    q: "Does this include taxes and insurance?",
+    a: "No. This calculator compares principal and interest only. Taxes and insurance are typically unaffected by rate changes.",
+  },
+  {
+    q: "What about discount points?",
+    a: "Treat discount points as part of closing costs for a simplified break-even estimate.",
+  },
+  {
+    q: "Should I refinance if monthly payment increases?",
+    a: "Not necessarily. Some refinances shorten the term and reduce total interest even if the monthly payment increases.",
+  },
+  {
+    q: "Why can lender results differ?",
+    a: "Lenders may include fees, escrow adjustments, daily interest calculations, rounding rules, and other contractual terms.",
+  },
+];
 ---
 
 <ToolLayout
   title="Refinance Calculator — MinimalDev"
-  description="Compare current loan vs refinance scenario. Estimate monthly payment, interest savings, and break-even months."
+  description="Compare your current loan vs refinance scenario. Estimate monthly savings, total interest difference, and break-even months."
   canonicalPath="/finance/refinance-calculator/"
   h1="Refinance Calculator"
-  intro="Compare your current loan vs a new loan to estimate payment difference, interest savings, and break-even time."
+  intro="Compare your current loan with a refinance option to estimate payment changes, interest savings, and break-even time."
+  faq={faq}
 >
   <div slot="tool" data-tool="refinance-calculator">
     <div class="form">
-      <h2 style="margin:0 0 10px;">Current loan</h2>
+
+      <div class="field">
+        <label for="rf_currency">Currency (display only)</label>
+        <select id="rf_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <h2 style="margin:16px 0 10px;">Current loan</h2>
 
       <div class="field">
         <label for="rf_balance">Remaining balance</label>
         <input id="rf_balance" type="number" inputmode="decimal" placeholder="e.g., 240000" />
       </div>
+
       <div class="field">
         <label for="rf_rate_old">Interest rate (%)</label>
         <input id="rf_rate_old" type="number" inputmode="decimal" placeholder="e.g., 6.5" />
       </div>
+
       <div class="field">
         <label for="rf_years_left">Years remaining</label>
         <input id="rf_years_left" type="number" inputmode="decimal" placeholder="e.g., 25" />
       </div>
 
-      <h2 style="margin:16px 0 10px;">New loan</h2>
+      <h2 style="margin:20px 0 10px;">New loan</h2>
 
       <div class="field">
         <label for="rf_rate_new">New interest rate (%)</label>
         <input id="rf_rate_new" type="number" inputmode="decimal" placeholder="e.g., 5.25" />
       </div>
+
       <div class="field">
         <label for="rf_years_new">New term (years)</label>
         <input id="rf_years_new" type="number" inputmode="decimal" placeholder="e.g., 25" />
       </div>
+
       <div class="field">
         <label for="rf_closing">Closing costs (optional)</label>
         <input id="rf_closing" type="number" inputmode="decimal" placeholder="e.g., 3000" />
@@ -53,32 +94,42 @@ export const tool = {
         <button class="btn secondary" type="button" id="rf_clear">Clear</button>
       </div>
 
-      <div class="result" id="rf_result">Result will appear here.</div>
+      <div class="result" id="rf_result" style="margin-top:12px;">
+        Result will appear here.
+      </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Real refinance outcomes depend on fees, escrow, points, and lender terms.
+        Informational estimate only. Actual refinance terms depend on fees, points, escrow, and lender structure.
       </p>
+
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Uses standard monthly payment formula (principal + interest only) for both scenarios, then compares totals.
+      This calculator compares principal & interest (P&I) payments for your current loan versus a refinance option.
+      Both scenarios use standard monthly amortization.
     </p>
-  </div>
 
-  <div slot="examples">
-    <ul>
-      <li>$240,000 balance, 6.5% vs 5.25%, 25 years → compare savings</li>
-      <li>Add closing costs to estimate break-even months</li>
-    </ul>
+    <p class="note">
+      Monthly payment formula:
+      <br />
+      <strong>M = P × (r(1+r)<sup>n</sup>) ÷ ((1+r)<sup>n</sup> − 1)</strong>
+    </p>
+
+    <p class="note">
+      Break-even months = closing costs ÷ monthly savings.
+      If monthly savings are negative, refinance may not produce immediate payment savings.
+    </p>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What is break-even?</strong> Months needed for monthly savings to cover closing costs.</li>
-      <li><strong>Does this include taxes/insurance?</strong> No, principal & interest only.</li>
-      <li><strong>What about points?</strong> Treat points as part of closing costs for a rough estimate.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
@@ -95,6 +146,8 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+
+  const ccyEl = document.getElementById("rf_currency");
   const balEl = document.getElementById("rf_balance");
   const roEl = document.getElementById("rf_rate_old");
   const ylEl = document.getElementById("rf_years_left");
@@ -104,56 +157,78 @@ document.addEventListener("DOMContentLoaded", function () {
   const calcBtn = document.getElementById("rf_calc");
   const clearBtn = document.getElementById("rf_clear");
   const outEl = document.getElementById("rf_result");
-  if (!balEl || !roEl || !ylEl || !rnEl || !ynEl || !ccEl || !calcBtn || !clearBtn || !outEl) return;
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  if (!ccyEl || !balEl || !roEl || !ylEl || !rnEl || !ynEl || !ccEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
   }
 
-  function payment(P, annual, years) {
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function payment(P, rate, years) {
     const n = Math.round(years * 12);
-    const r = (annual / 100) / 12;
+    const r = (rate / 100) / 12;
     if (n <= 0) return NaN;
     if (r === 0) return P / n;
-    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    const pow = Math.pow(1 + r, n);
+    return P * (r * pow) / (pow - 1);
   }
 
-  function totalInterest(P, annual, years) {
+  function totalInterest(P, rate, years) {
     const n = Math.round(years * 12);
-    const r = (annual / 100) / 12;
-    const M = payment(P, annual, years);
+    const r = (rate / 100) / 12;
+    const M = payment(P, rate, years);
     if (!isFinite(M)) return NaN;
 
     let bal = P;
     let ti = 0;
+
     for (let i = 1; i <= n; i++) {
       const interest = r === 0 ? 0 : bal * r;
       const principal = M - interest;
       ti += interest;
       bal -= principal;
-      if (bal <= 0) break;
+      if (bal <= 0.0000001) break;
     }
+
     return ti;
   }
 
-  calcBtn.addEventListener("click", function () {
-    const P = parseFloat(balEl.value);
-    const oldRate = parseFloat(roEl.value);
-    const yearsLeft = parseFloat(ylEl.value);
-    const newRate = parseFloat(rnEl.value);
-    const yearsNew = parseFloat(ynEl.value);
-    const closing = parseFloat(ccEl.value) || 0;
+  function reset() {
+    outEl.textContent = "Result will appear here.";
+  }
 
-    if (!isFinite(P) || P <= 0 || !isFinite(oldRate) || oldRate < 0 || !isFinite(yearsLeft) || yearsLeft <= 0 ||
-        !isFinite(newRate) || newRate < 0 || !isFinite(yearsNew) || yearsNew <= 0 || closing < 0) {
+  calcBtn.addEventListener("click", function () {
+
+    const ccy = String(ccyEl.value || "USD");
+    const P = toNum(balEl.value);
+    const oldRate = toNum(roEl.value);
+    const yearsLeft = toNum(ylEl.value);
+    const newRate = toNum(rnEl.value);
+    const yearsNew = toNum(ynEl.value);
+    const closing = toNum(ccEl.value) || 0;
+
+    if (!isFinite(P) || P <= 0 ||
+        !isFinite(oldRate) || oldRate < 0 ||
+        !isFinite(yearsLeft) || yearsLeft <= 0 ||
+        !isFinite(newRate) || newRate < 0 ||
+        !isFinite(yearsNew) || yearsNew <= 0 ||
+        closing < 0) {
       outEl.textContent = "Please enter valid values.";
       return;
     }
 
     const M_old = payment(P, oldRate, yearsLeft);
     const M_new = payment(P, newRate, yearsNew);
-
     const I_old = totalInterest(P, oldRate, yearsLeft);
     const I_new = totalInterest(P, newRate, yearsNew);
 
@@ -164,29 +239,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const monthlyDiff = M_old - M_new;
     const interestDiff = I_old - I_new;
-    const breakeven = monthlyDiff > 0 && closing > 0 ? (closing / monthlyDiff) : null;
+    const breakeven = monthlyDiff > 0 && closing > 0
+      ? Math.ceil(closing / monthlyDiff)
+      : null;
 
     outEl.innerHTML =
-      "<strong>Current payment:</strong> " + money(M_old) + "<br/>" +
-      "<strong>New payment:</strong> " + money(M_new) + "<br/>" +
-      "<strong>Monthly difference:</strong> " + money(monthlyDiff) + "<br/>" +
-      "<strong>Interest difference (approx):</strong> " + money(interestDiff) + "<br/>" +
-      (closing > 0
-        ? "<strong>Closing costs:</strong> " + money(closing) + "<br/>"
-        : "") +
+      "<strong>Current monthly payment:</strong> " + money(M_old, ccy) + "<br/>" +
+      "<strong>New monthly payment:</strong> " + money(M_new, ccy) + "<br/>" +
+      "<strong>Monthly difference:</strong> " + money(monthlyDiff, ccy) + "<br/>" +
+      "<strong>Total interest difference:</strong> " + money(interestDiff, ccy) + "<br/>" +
+      (closing > 0 ? "<strong>Closing costs:</strong> " + money(closing, ccy) + "<br/>" : "") +
       (breakeven !== null
-        ? "<strong>Break-even:</strong> " + (Math.ceil(breakeven)).toLocaleString() + " months"
-        : "<span class='note'>Break-even needs positive monthly savings and closing costs.</span>");
+        ? "<strong>Break-even:</strong> " + breakeven.toLocaleString() + " months"
+        : "<span class='note'>Break-even requires positive monthly savings and closing costs.</span>");
   });
 
   clearBtn.addEventListener("click", function () {
+    ccyEl.value = "USD";
     balEl.value = "";
     roEl.value = "";
     ylEl.value = "";
     rnEl.value = "";
     ynEl.value = "";
     ccEl.value = "";
-    outEl.textContent = "Result will appear here.";
+    reset();
   });
+
+  reset();
 });
 </script>

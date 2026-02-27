@@ -3,18 +3,43 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Debt Payoff Calculator",
-  description: "Estimate payoff time and total interest for a debt balance with APR and monthly payment.",
+  description:
+    "Estimate debt payoff time and total interest using balance, APR, monthly payment, and optional extra payment. Includes a payoff schedule table.",
   href: "/finance/debt-payoff-calculator/",
   order: 25,
 };
+
+const faq = [
+  {
+    q: "Is this exact for all lenders?",
+    a: "It’s an estimate. Lenders may calculate interest using daily compounding, different billing cycles, or additional fees. This tool uses a simple monthly simulation for planning.",
+  },
+  {
+    q: "What if my payment is too small?",
+    a: "If your payment is less than or equal to the monthly interest, the balance won’t decrease. The calculator will warn you if payoff is not possible with the entered payment.",
+  },
+  {
+    q: "How is the extra payment applied?",
+    a: "Extra payment is added to the monthly payment and is assumed to go toward principal after interest for the month is covered, which usually reduces total interest and payoff time.",
+  },
+  {
+    q: "Why is the final payment different?",
+    a: "The final payment is capped so it won’t exceed the remaining balance plus that month’s interest.",
+  },
+  {
+    q: "Does this include fees or penalties?",
+    a: "No. It models principal + interest only. Fees, penalties, and promotional APR periods are not included.",
+  },
+];
 ---
 
 <ToolLayout
   title="Debt Payoff Calculator — MinimalDev"
-  description="Estimate how long to pay off a debt and total interest using APR and monthly payment."
+  description="Estimate payoff time and total interest for a debt balance using APR, monthly payment, and optional extra payment. Includes a month-by-month payoff schedule."
   canonicalPath="/finance/debt-payoff-calculator/"
   h1="Debt Payoff Calculator"
-  intro="Estimate payoff time and total interest for a single debt (credit line, personal debt, etc.)."
+  intro="Estimate how long it takes to pay off a single debt balance and how much total interest you’ll pay based on APR and monthly payment."
+  faq={faq}
 >
   <div slot="tool" data-tool="debt-payoff-calculator">
     <div class="form">
@@ -26,6 +51,9 @@ export const tool = {
       <div class="field">
         <label for="dp_apr">APR (%)</label>
         <input id="dp_apr" type="number" inputmode="decimal" placeholder="e.g., 12" />
+        <p class="note" style="margin-top:6px;">
+          This tool estimates using a monthly rate (APR ÷ 12). Actual interest may vary by lender.
+        </p>
       </div>
 
       <div class="field">
@@ -36,6 +64,17 @@ export const tool = {
       <div class="field">
         <label for="dp_extra">Extra payment (optional)</label>
         <input id="dp_extra" type="number" inputmode="decimal" placeholder="e.g., 50" />
+        <p class="note" style="margin-top:6px;">
+          Extra payment is added every month (simple scenario).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="dp_max_months">Max months (safety cap)</label>
+        <input id="dp_max_months" type="number" inputmode="numeric" value="600" min="12" max="2000" />
+        <p class="note" style="margin-top:6px;">
+          Limits the schedule size. If you hit the cap, increase payment or the cap.
+        </p>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -43,41 +82,61 @@ export const tool = {
         <button class="btn secondary" type="button" id="dp_clear">Clear</button>
       </div>
 
-      <div class="result" id="dp_summary">Result will appear here.</div>
+      <div class="result" id="dp_summary" style="margin-top:12px;">Result will appear here.</div>
+
+      <div style="margin-top:14px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Payment</th>
+              <th>Interest</th>
+              <th>Principal</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody id="dp_tbody"></tbody>
+        </table>
+      </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Interest may be compounded differently depending on lender rules.
+        Informational only. Fees, penalties, promo rates, and lender-specific interest rules are not included.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      Monthly simulation with optional extra payment applied to principal.
+      This debt payoff calculator estimates payoff time using a simple monthly simulation.
+      It assumes a fixed APR and fixed monthly payment (plus optional extra payment) for the entire payoff period.
+    </p>
+
+    <p class="note">
+      Each month, estimated interest is computed as <strong>balance × (APR / 12)</strong>.
+      Your payment is applied to interest first, then the remaining amount reduces principal.
+      As the balance decreases, monthly interest usually decreases too, helping you pay down principal faster.
+    </p>
+
+    <p class="note">
+      Use this tool to compare scenarios—like increasing your payment by $25–$100—or to evaluate whether lowering APR
+      (e.g., refinancing or consolidation) could reduce total interest.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>$12,000 at 12% APR, $300/mo → payoff estimate</li>
-      <li>Add $50 extra → see payoff time reduction</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>What if payment is too small?</strong> If payment ≤ monthly interest, balance won’t decrease.</li>
-      <li><strong>Does extra payment reduce interest?</strong> Yes, by lowering principal faster.</li>
-      <li><strong>Does this include fees?</strong> No, it models interest only.</li>
+      <li>$12,000 at 12% APR with $300/month → payoff estimate and total interest</li>
+      <li>Add $50 extra/month → compare payoff months and interest savings</li>
+      <li>If payoff is “not possible,” increase payment above monthly interest</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/credit-card-interest-calculator/">Credit Card Interest Calculator</a></li>
-      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
-      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
       <li><a href="/finance/refinance-calculator/">Refinance Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -89,43 +148,70 @@ document.addEventListener("DOMContentLoaded", function () {
   const aprEl = document.getElementById("dp_apr");
   const payEl = document.getElementById("dp_payment");
   const extraEl = document.getElementById("dp_extra");
+  const maxEl = document.getElementById("dp_max_months");
   const calcBtn = document.getElementById("dp_calc");
   const clearBtn = document.getElementById("dp_clear");
   const sumEl = document.getElementById("dp_summary");
-  if (!balEl || !aprEl || !payEl || !extraEl || !calcBtn || !clearBtn || !sumEl) return;
+  const tbodyEl = document.getElementById("dp_tbody");
+  if (!balEl || !aprEl || !payEl || !extraEl || !maxEl || !calcBtn || !clearBtn || !sumEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
 
   function money(v) {
     if (!isFinite(v)) return "$0.00";
     return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
 
-  calcBtn.addEventListener("click", function () {
-    const balance0 = parseFloat(balEl.value);
-    const apr = (parseFloat(aprEl.value) || 0) / 100;
-    const payment0 = parseFloat(payEl.value);
-    const extra = parseFloat(extraEl.value) || 0;
+  function clampInt(x, lo, hi, fallback) {
+    const n = parseInt(String(x), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
 
-    if (!isFinite(balance0) || balance0 <= 0 || !isFinite(apr) || apr < 0 || !isFinite(payment0) || payment0 <= 0 || extra < 0) {
-      sumEl.textContent = "Please enter valid values.";
+  calcBtn.addEventListener("click", function () {
+    const balance0 = toNum(balEl.value);
+    const aprPct = toNum(aprEl.value);
+    const paymentBase = toNum(payEl.value);
+    const extra = Math.max(0, toNum(extraEl.value) || 0);
+    const maxMonths = clampInt(maxEl.value, 12, 2000, 600);
+
+    if (!isFinite(balance0) || balance0 <= 0) {
+      sumEl.textContent = "Please enter a valid balance (> 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(aprPct) || aprPct < 0) {
+      sumEl.textContent = "Please enter a valid APR (>= 0).";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+    if (!isFinite(paymentBase) || paymentBase <= 0) {
+      sumEl.textContent = "Please enter a valid monthly payment (> 0).";
+      tbodyEl.innerHTML = "";
       return;
     }
 
+    const payment = paymentBase + extra;
+    const apr = aprPct / 100;
     const r = apr / 12;
-    const payment = payment0 + extra;
 
     let balance = balance0;
     let totalInterest = 0;
-    let months = 0;
+    let totalPaid = 0;
 
-    for (let m = 1; m <= 2000; m++) {
-      months = m;
-      const interest = r === 0 ? 0 : balance * r;
-      const principal = payment - interest;
+    tbodyEl.innerHTML = "";
 
-      if (principal <= 0) {
+    for (let m = 1; m <= maxMonths; m++) {
+      const interest = (r === 0) ? 0 : balance * r;
+
+      if (payment <= interest + 1e-12) {
         sumEl.innerHTML =
           "<strong>Not payable with this payment.</strong><br/>" +
-          "<span class='note'>Monthly payment must be greater than monthly interest.</span>";
+          "<span class='note'>Monthly payment must be greater than monthly interest (" + money(interest) + ").</span>";
+        tbodyEl.innerHTML = "";
         return;
       }
 
@@ -134,13 +220,24 @@ document.addEventListener("DOMContentLoaded", function () {
       const principalThis = payThis - interestThis;
 
       totalInterest += interestThis;
-      balance -= principalThis;
+      totalPaid += payThis;
+
+      balance = balance - principalThis;
       if (balance < 0) balance = 0;
 
+      const row =
+        "<tr>" +
+          "<td>" + m + "</td>" +
+          "<td>" + money(payThis) + "</td>" +
+          "<td>" + money(interestThis) + "</td>" +
+          "<td>" + money(principalThis) + "</td>" +
+          "<td>" + money(balance) + "</td>" +
+        "</tr>";
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+
       if (balance <= 0.0000001) {
-        const totalPaid = (months * payment) - (payment - payThis);
         sumEl.innerHTML =
-          "<strong>Payoff time:</strong> " + months + " months<br/>" +
+          "<strong>Payoff time:</strong> " + m + " months<br/>" +
           "<strong>Total interest:</strong> " + money(totalInterest) + "<br/>" +
           "<strong>Total paid:</strong> " + money(totalPaid);
         return;
@@ -149,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     sumEl.innerHTML =
       "<strong>Reached max months.</strong><br/>" +
-      "<span class='note'>Increase payment to finish within a reasonable time.</span>";
+      "<span class='note'>Increase payment or increase the max months cap.</span>";
   });
 
   clearBtn.addEventListener("click", function () {
@@ -157,7 +254,9 @@ document.addEventListener("DOMContentLoaded", function () {
     aprEl.value = "";
     payEl.value = "";
     extraEl.value = "";
+    maxEl.value = "600";
     sumEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   });
 });
 </script>

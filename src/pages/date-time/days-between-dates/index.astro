@@ -3,10 +3,34 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Days Between Dates",
-  description: "Calculate the number of days between two dates instantly. Date difference calculator for planning and deadlines.",
+  description:
+    "Calculate the number of days between two dates instantly. Date difference calculator for planning and deadlines.",
   href: "/date-time/days-between-dates/",
   order: 10,
 };
+
+const faq = [
+  {
+    q: "Does the order of dates matter?",
+    a: "You can use either order. The tool shows the signed difference (A→B) and also the absolute days.",
+  },
+  {
+    q: "Does this include the start date?",
+    a: "By default it shows the difference in calendar days between the two dates. You can enable “Include start date” to count both endpoints.",
+  },
+  {
+    q: "Does it handle leap years?",
+    a: "Yes. Because it uses real calendar dates, Feb 29 is handled automatically when applicable.",
+  },
+  {
+    q: "Is this a business days calculator?",
+    a: "No. This tool counts calendar days (including weekends and holidays). Use a work/business days tool for weekday-only counting.",
+  },
+  {
+    q: "Are my dates stored anywhere?",
+    a: "No. All calculations run locally in your browser. Nothing is stored or transmitted.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +39,7 @@ export const tool = {
   canonicalPath="/date-time/days-between-dates/"
   h1="Days Between Dates"
   intro="Calculate how many days are between two calendar dates. Useful for planning, deadlines, projects, and date tracking."
+  faq={faq}
 >
   <div slot="tool" data-tool="days-between-dates">
     <div class="form">
@@ -28,45 +53,49 @@ export const tool = {
         <input id="dbd_b" type="date" />
       </div>
 
+      <div class="field">
+        <label style="display:flex; gap:10px; align-items:center;">
+          <input id="dbd_inclusive" type="checkbox" />
+          Include start date (inclusive)
+        </label>
+      </div>
+
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button class="btn secondary" type="button" id="dbd_clear">Clear</button>
+        <button class="btn secondary" type="button" id="dbd_swap">Swap</button>
       </div>
 
       <div class="result" id="dbd_result">Result will appear here.</div>
 
       <p class="note" style="margin-top:8px;">
-        This tool runs entirely in your browser. No dates are stored or transmitted.
+        Privacy: calculations run entirely in your browser. No dates are stored or transmitted.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      The calculator finds the absolute difference between the two selected dates and converts it into days.
-      Dates are normalized to midnight (UTC) to ensure consistent results across time zones.
+      This calculator compares two <strong>calendar dates</strong> (not time-of-day). To match how people think about dates,
+      it normalizes both inputs to <strong>local midnight</strong> and then computes the day difference.
+    </p>
+
+    <p class="note">
+      You can optionally enable <strong>inclusive counting</strong> (counting both start and end dates). This is useful for
+      “How many days is my trip?” style questions where both endpoints are included.
     </p>
 
     <ul>
-      <li><strong>Leap years:</strong> Automatically handled.</li>
-      <li><strong>Time zones:</strong> Calculation is based on calendar dates, not time of day.</li>
-      <li><strong>Order does not matter:</strong> The result is always the positive difference.</li>
+      <li><strong>Leap years:</strong> handled automatically</li>
+      <li><strong>Signed + absolute:</strong> shows A→B direction and absolute days</li>
+      <li><strong>Extras:</strong> weeks (approx), months (approx), weekdays for each date</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>How many days between Jan 1 and Jan 31, 2026?</strong> → 30 days</li>
-      <li><strong>Days from Feb 1 to Feb 15, 2026?</strong> → 14 days</li>
-      <li><strong>Days between Mar 10, 2025 and Apr 1, 2025?</strong> → 22 days</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Does the order of dates matter?</strong> No. The calculator uses the absolute difference between the two dates.</li>
-      <li><strong>Does it include the start date?</strong> The result shows the difference in calendar days between the selected dates.</li>
-      <li><strong>Does it count leap years?</strong> Yes. February 29 is automatically included when applicable.</li>
-      <li><strong>Is this a business days calculator?</strong> No. This tool counts all calendar days, including weekends.</li>
+      <li><strong>2026-01-01 → 2026-01-31</strong> → 30 days (inclusive: 31)</li>
+      <li><strong>2026-02-01 → 2026-02-15</strong> → 14 days (inclusive: 15)</li>
+      <li><strong>2025-03-10 → 2025-04-01</strong> → 22 days (inclusive: 23)</li>
     </ul>
   </div>
 
@@ -74,7 +103,111 @@ export const tool = {
     <ul>
       <li><a href="/date-time/age-calculator/">Age Calculator</a></li>
       <li><a href="/date-time/work-days-calculator/">Work Days Calculator</a></li>
-      <li><a href="/date-time/">Date & Time Tools</a></li>
+      <li><a href="/date-time/">All Date & Time Tools</a></li>
     </ul>
   </div>
 </ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("dbd_a");
+  const bEl = document.getElementById("dbd_b");
+  const incEl = document.getElementById("dbd_inclusive");
+  const clearBtn = document.getElementById("dbd_clear");
+  const swapBtn = document.getElementById("dbd_swap");
+  const resultEl = document.getElementById("dbd_result");
+  if (!aEl || !bEl || !incEl || !clearBtn || !swapBtn || !resultEl) return;
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function toYMD(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+
+  function parseDateInput(v) {
+    if (!v) return null;
+    const parts = v.split("-");
+    if (parts.length !== 3) return null;
+    const y = Number(parts[0]);
+    const m = Number(parts[1]);
+    const day = Number(parts[2]);
+    if (!isFinite(y) || !isFinite(m) || !isFinite(day)) return null;
+    const d = new Date(y, m - 1, day); // local date
+    if (d.getFullYear() !== y || d.getMonth() !== (m - 1) || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function dayDiff(a, b) {
+    const a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+    const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+    return Math.round((b0 - a0) / MS_PER_DAY);
+  }
+
+  function fmtSigned(n) {
+    if (n === 0) return "0 days";
+    const abs = Math.abs(n);
+    return (n > 0 ? "+" : "−") + abs.toLocaleString() + " days";
+  }
+
+  function approxWeeks(days) {
+    const w = days / 7;
+    return (Math.round(w * 100) / 100).toLocaleString();
+  }
+
+  function approxMonths(days) {
+    // average month length ~ 30.436875 days (365.2425/12)
+    const m = days / 30.436875;
+    return (Math.round(m * 100) / 100).toLocaleString();
+  }
+
+  function render() {
+    const a = parseDateInput(aEl.value);
+    const b = parseDateInput(bEl.value);
+    if (!a || !b) {
+      resultEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const signed = dayDiff(a, b); // A -> B
+    const abs = Math.abs(signed);
+    const inclusive = incEl.checked ? abs + 1 : abs;
+
+    const aWeekday = WEEKDAYS[a.getDay()];
+    const bWeekday = WEEKDAYS[b.getDay()];
+
+    const directionText =
+      signed === 0 ? "Same date"
+      : signed > 0 ? "End date is after start date"
+      : "End date is before start date";
+
+    resultEl.innerHTML =
+      "<div><strong>Days between:</strong> " + inclusive.toLocaleString() + " day" + (inclusive === 1 ? "" : "s") +
+        (incEl.checked ? " (inclusive)" : "") + "</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>A → B (signed):</strong> " + fmtSigned(signed) + " <span style='opacity:.8;'>(" + directionText + ")</span></div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Start:</strong> " + toYMD(a) + " (" + aWeekday + ")</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>End:</strong> " + toYMD(b) + " (" + bWeekday + ")</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Approx weeks:</strong> " + approxWeeks(abs) + "</div>" +
+      "<div class='note' style='margin-top:6px;'><strong>Approx months:</strong> " + approxMonths(abs) + "</div>";
+  }
+
+  aEl.addEventListener("change", render);
+  bEl.addEventListener("change", render);
+  incEl.addEventListener("change", render);
+
+  swapBtn.addEventListener("click", function () {
+    const tmp = aEl.value;
+    aEl.value = bEl.value;
+    bEl.value = tmp;
+    render();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    aEl.value = "";
+    bEl.value = "";
+    incEl.checked = false;
+    resultEl.textContent = "Result will appear here.";
+  });
+
+  render();
+});
+</script>

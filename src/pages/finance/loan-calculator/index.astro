@@ -4,55 +4,94 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Loan Calculator",
   description:
-    "Free loan calculator with amortization schedule. Calculate monthly payment, total interest, and full payment schedule instantly.",
+    "Free loan calculator with amortization schedule. Estimate monthly payment, total interest, and view the full payoff table.",
   href: "/finance/loan-calculator/",
   order: 10,
 };
+
+const faq = [
+  {
+    q: "What does this loan calculator include?",
+    a: "It calculates principal-and-interest (P&I) only: monthly payment, total interest, total paid, and an amortization schedule. It does not include taxes, insurance, or lender-specific fees.",
+  },
+  {
+    q: "What is an amortization schedule?",
+    a: "An amortization schedule is a month-by-month table that shows how each payment is split into interest and principal, and how the remaining balance declines over time.",
+  },
+  {
+    q: "What happens if the interest rate is 0%?",
+    a: "If the rate is 0%, the monthly payment is simply loan amount divided by number of months, and total interest is $0.",
+  },
+  {
+    q: "Why might my lender’s numbers differ?",
+    a: "Lenders may use different rounding, payment timing conventions, fees, escrow, or day-count methods. This tool is a simplified estimate for planning.",
+  },
+  {
+    q: "Can I use this for car loans, personal loans, or mortgages?",
+    a: "Yes, as long as the loan behaves like a standard fixed-rate amortizing loan. For mortgages, the mortgage tool may add extra context, but the math is the same for P&I.",
+  },
+];
 ---
 
 <ToolLayout
   title="Loan Calculator with Amortization Schedule — MinimalDev"
-  description="Free loan calculator. Estimate monthly payment, total interest, and view full amortization schedule instantly."
+  description="Free loan calculator with amortization schedule. Estimate monthly payment, total interest, and total cost instantly."
   canonicalPath="/finance/loan-calculator/"
   h1="Loan Calculator"
   intro="Calculate monthly loan payments, total interest, and view a full amortization schedule."
+  faq={faq}
 >
-  <div slot="tool">
+  <div slot="tool" data-tool="loan-calculator">
     <div class="form">
-
       <div class="field">
-        <label for="loan_amount">Loan Amount</label>
-        <input id="loan_amount" type="number" placeholder="10000" />
+        <label for="loan_amount">Loan amount</label>
+        <input id="loan_amount" type="number" inputmode="decimal" placeholder="e.g., 10000" />
       </div>
 
       <div class="field">
-        <label for="loan_rate">Annual Interest Rate (%)</label>
-        <input id="loan_rate" type="number" placeholder="5" />
+        <label for="loan_rate">Annual interest rate (APR %)</label>
+        <input id="loan_rate" type="number" inputmode="decimal" placeholder="e.g., 5" />
       </div>
 
       <div class="field">
-        <label for="loan_years">Loan Term (Years)</label>
-        <input id="loan_years" type="number" placeholder="5" />
+        <label for="loan_years">Loan term (years)</label>
+        <input id="loan_years" type="number" inputmode="decimal" placeholder="e.g., 5" />
+      </div>
+
+      <div class="field">
+        <label for="loan_currency">Currency (display only)</label>
+        <select id="loan_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="loan_max_months">Max months (safety cap)</label>
+        <input id="loan_max_months" type="number" inputmode="numeric" value="600" min="12" max="1200" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="loan_calc" class="btn" type="button">Calculate</button>
-        <button id="loan_clear" class="btn secondary" type="button">Clear</button>
+        <button class="btn" type="button" id="loan_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="loan_clear">Clear</button>
       </div>
 
       <div id="loan_summary" class="result" style="margin-top:12px;">
         Result will appear here.
       </div>
 
-      <div style="margin-top:20px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+      <div style="margin-top:18px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr>
               <th>Month</th>
               <th>Payment</th>
               <th>Principal</th>
               <th>Interest</th>
-              <th>Remaining Balance</th>
+              <th>Balance</th>
             </tr>
           </thead>
           <tbody id="loan_tbody"></tbody>
@@ -60,112 +99,175 @@ export const tool = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Results are for informational purposes only.
+        Informational estimate only. Taxes, insurance, escrow, and lender fees are not included.
       </p>
-
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      <strong>Formula:</strong>
-      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+      This calculator assumes a standard fixed-rate amortizing loan (same payment every month).
+      It computes the monthly payment and then builds the schedule by applying monthly interest to the current balance.
     </p>
+
+    <p class="note">
+      Monthly payment formula (P&I):
+      <br />
+      <strong>M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)</strong>
+      <br />
+      Where <strong>P</strong> is loan amount, <strong>r</strong> is monthly rate (APR/12), and <strong>n</strong> is number of payments.
+      If APR is 0%, then <strong>M = P ÷ n</strong>.
+    </p>
+
+    <p class="note">
+      The amortization table shows how interest decreases over time as the balance shrinks,
+      while the principal portion of each payment grows.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$10,000 at 5% for 5 years → monthly payment ≈ $188.71</li>
+      <li>$25,000 at 6.5% for 5 years → estimate payment and total interest</li>
+      <li>0% APR loan → payment = loan amount ÷ months</li>
+    </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li>Does this include taxes? No.</li>
-      <li>What is amortization? It shows how each payment is split over time.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
-      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
       <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
       <li><a href="/finance/mortgage-calculator/">Mortgage Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
-
 </ToolLayout>
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
-
   const amountEl = document.getElementById("loan_amount");
   const rateEl = document.getElementById("loan_rate");
   const yearsEl = document.getElementById("loan_years");
+  const ccyEl = document.getElementById("loan_currency");
+  const maxEl = document.getElementById("loan_max_months");
   const calcBtn = document.getElementById("loan_calc");
   const clearBtn = document.getElementById("loan_clear");
   const summaryEl = document.getElementById("loan_summary");
   const tbodyEl = document.getElementById("loan_tbody");
 
-  if (!amountEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+  if (!amountEl || !rateEl || !yearsEl || !ccyEl || !maxEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
-  function money(v) {
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function clampInt(v, lo, hi, fallback) {
+    const n = parseInt(String(v), 10);
+    if (!isFinite(n)) return fallback;
+    return Math.max(lo, Math.min(hi, n));
+  }
+
+  function money(v, ccy) {
+    if (!isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function payment(P, r, n) {
+    if (n <= 0) return NaN;
+    if (r === 0) return P / n;
+    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function reset() {
+    summaryEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
   }
 
   calcBtn.addEventListener("click", function () {
+    const P = toNum(amountEl.value);
+    const annual = toNum(rateEl.value) / 100;
+    const years = toNum(yearsEl.value);
+    const ccy = String(ccyEl.value || "USD");
+    const maxMonths = clampInt(maxEl.value, 12, 1200, 600);
 
-    const P = parseFloat(amountEl.value);
-    const annual = parseFloat(rateEl.value) / 100;
-    const years = parseFloat(yearsEl.value);
+    if (!isFinite(P) || P <= 0) { summaryEl.textContent = "Please enter a valid loan amount."; tbodyEl.innerHTML = ""; return; }
+    if (!isFinite(annual) || annual < 0) { summaryEl.textContent = "Please enter a valid APR (0 or more)."; tbodyEl.innerHTML = ""; return; }
+    if (!isFinite(years) || years <= 0) { summaryEl.textContent = "Please enter a valid term in years (> 0)."; tbodyEl.innerHTML = ""; return; }
 
-    if (!P || !annual || !years) {
-      summaryEl.innerHTML = "Please enter valid values.";
+    const n = Math.round(years * 12);
+    if (n <= 0) { summaryEl.textContent = "Term is too small."; tbodyEl.innerHTML = ""; return; }
+    if (n > maxMonths) {
+      summaryEl.innerHTML =
+        "Term exceeds the safety cap.<br/>" +
+        "<span class='note'>Reduce years or increase Max months.</span>";
+      tbodyEl.innerHTML = "";
       return;
     }
 
-    const n = years * 12;
     const r = annual / 12;
+    const M = payment(P, r, n);
+    if (!isFinite(M)) { summaryEl.textContent = "Could not compute payment with the provided inputs."; tbodyEl.innerHTML = ""; return; }
 
-    const M = r === 0
-      ? P / n
-      : P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-
-    const totalPayment = M * n;
-    const totalInterest = totalPayment - P;
+    const totalPay = M * n;
+    const totalInterest = totalPay - P;
 
     summaryEl.innerHTML =
-      "<strong>Monthly Payment:</strong> " + money(M) + "<br>" +
-      "<strong>Total Interest:</strong> " + money(totalInterest) + "<br>" +
-      "<strong>Total Payment:</strong> " + money(totalPayment);
+      "<strong>Monthly payment:</strong> " + money(M, ccy) + "<br/>" +
+      "<strong>Total interest:</strong> " + money(totalInterest, ccy) + "<br/>" +
+      "<strong>Total paid:</strong> " + money(totalPay, ccy) + "<br/>" +
+      "<span class='note'>Principal & interest only. Fees/escrow not included.</span>";
 
     let balance = P;
     tbodyEl.innerHTML = "";
 
     for (let i = 1; i <= n; i++) {
-      const interest = balance * r;
-      const principal = M - interest;
-      balance -= principal;
+      const interest = r === 0 ? 0 : balance * r;
+      let principal = M - interest;
 
+      // Final payment guard (avoid negative due to rounding)
+      if (principal > balance) principal = balance;
+
+      balance = balance - principal;
       if (balance < 0) balance = 0;
 
       const row =
         "<tr>" +
-        "<td>" + i + "</td>" +
-        "<td>" + money(M) + "</td>" +
-        "<td>" + money(principal) + "</td>" +
-        "<td>" + money(interest) + "</td>" +
-        "<td>" + money(balance) + "</td>" +
+          "<td>" + i + "</td>" +
+          "<td>" + money(M, ccy) + "</td>" +
+          "<td>" + money(principal, ccy) + "</td>" +
+          "<td>" + money(interest, ccy) + "</td>" +
+          "<td>" + money(balance, ccy) + "</td>" +
         "</tr>";
 
       tbodyEl.insertAdjacentHTML("beforeend", row);
     }
-
   });
 
   clearBtn.addEventListener("click", function () {
     amountEl.value = "";
     rateEl.value = "";
     yearsEl.value = "";
-    summaryEl.innerHTML = "Result will appear here.";
-    tbodyEl.innerHTML = "";
+    ccyEl.value = "USD";
+    maxEl.value = "600";
+    reset();
   });
 
+  reset();
 });
 </script>
