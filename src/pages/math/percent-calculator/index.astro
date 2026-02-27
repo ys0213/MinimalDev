@@ -1,0 +1,81 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Percent Calculator",
+  description: "Calculate percent of a number (percentage). Useful for discounts, tax, tips, and quick math.",
+  href: "/math/percent-calculator/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="Percent Calculator — MinimalDev"
+  description="Free percent calculator to find the percentage of a number instantly. Useful for discounts, tax, tips, and everyday math."
+  canonicalPath="/math/percent-calculator/"
+  h1="Percent Calculator"
+  intro="Calculate the percent (percentage) of a number instantly. Common uses include discounts, tax, tips, and quick mental-math checks."
+>
+  <div slot="tool" data-tool="percent-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="pc_percent">Percent (%)</label>
+        <input id="pc_percent" type="number" inputmode="decimal" placeholder="e.g., 15" />
+      </div>
+
+      <div class="field">
+        <label for="pc_number">Number</label>
+        <input id="pc_number" type="number" inputmode="decimal" placeholder="e.g., 200" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pc_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula:</strong> result = (percent ÷ 100) × number
+    </p>
+    <ul>
+      <li><strong>Example (discount):</strong> 15% of 200 = 30 → 200 − 30 = 170 (15% off)</li>
+      <li><strong>Example (tip):</strong> 10% of 50 = 5 → tip = 5</li>
+      <li><strong>Example (tax):</strong> 8% of 120 = 9.6 → total = 129.6</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>15%</strong> of <strong>200</strong> = <strong>30</strong></li>
+      <li><strong>7.5%</strong> of <strong>80</strong> = <strong>6</strong></li>
+      <li><strong>20%</strong> of <strong>45</strong> = <strong>9</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>What does “percent of a number” mean?</strong> It means taking a portion of the number based on “per 100”.</li>
+      <li><strong>Can I use decimals?</strong> Yes. Percent and number can be decimals (e.g., 2.5% of 19.99).</li>
+      <li><strong>How do I calculate “percent off”?</strong> First compute the percent amount, then subtract it from the original price.</li>
+      <li><strong>Is this the same as percent increase?</strong> No. Increase/decrease compares an old value to a new value.</li>
+      <li><strong>Does this store my inputs?</strong> No. Everything runs locally in your browser.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
+      <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/">Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

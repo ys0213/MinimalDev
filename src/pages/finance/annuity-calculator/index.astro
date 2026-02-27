@@ -1,0 +1,151 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Annuity Calculator",
+  description: "Calculate present value or future value of an annuity using payment, rate, and number of periods.",
+  href: "/finance/annuity-calculator/",
+  order: 60,
+};
+---
+
+<ToolLayout
+  title="Annuity Calculator — MinimalDev"
+  description="Calculate present value (PV) or future value (FV) of an annuity. Supports ordinary annuity and annuity due."
+  canonicalPath="/finance/annuity-calculator/"
+  h1="Annuity Calculator"
+  intro="Compute PV or FV of an annuity using periodic payment, interest rate, and number of periods."
+>
+  <div slot="tool" data-tool="annuity-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="an_mode">Mode</label>
+        <select id="an_mode">
+          <option value="pv" selected>Present Value (PV)</option>
+          <option value="fv">Future Value (FV)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="an_type">Payment timing</label>
+        <select id="an_type">
+          <option value="ordinary" selected>Ordinary (end of period)</option>
+          <option value="due">Due (beginning of period)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="an_pmt">Payment per period</label>
+        <input id="an_pmt" type="number" inputmode="decimal" placeholder="e.g., 200" />
+      </div>
+
+      <div class="field">
+        <label for="an_rate">Rate per period (%)</label>
+        <input id="an_rate" type="number" inputmode="decimal" placeholder="e.g., 0.5" />
+        <p class="note" style="margin-top:6px;">Example: monthly rate 0.5% (not annual)</p>
+      </div>
+
+      <div class="field">
+        <label for="an_n">Number of periods</label>
+        <input id="an_n" type="number" inputmode="numeric" placeholder="e.g., 60" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="an_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="an_clear">Clear</button>
+      </div>
+
+      <div class="result" id="an_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Ordinary annuity:</strong><br/>
+      PV = PMT × (1 − (1+r)^−n) ÷ r<br/>
+      FV = PMT × ((1+r)^n − 1) ÷ r<br/>
+      <br/>
+      <strong>Annuity due:</strong> multiply by (1+r)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>PMT 200, r 0.5% per month, n 60 → PV/FV estimate</li>
+      <li>Switch to “Due” for payments at beginning of period</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is rate per period annual?</strong> No. Enter the rate per period (e.g., monthly).</li>
+      <li><strong>What’s the difference between ordinary and due?</strong> Due payments occur one period earlier, increasing PV/FV.</li>
+      <li><strong>Does this include taxes?</strong> No.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/retirement-calculator/">Retirement Calculator</a></li>
+      <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/net-present-value-calculator/">Net Present Value Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("an_mode");
+  const typeEl = document.getElementById("an_type");
+  const pmtEl = document.getElementById("an_pmt");
+  const rateEl = document.getElementById("an_rate");
+  const nEl = document.getElementById("an_n");
+  const calcBtn = document.getElementById("an_calc");
+  const clearBtn = document.getElementById("an_clear");
+  const outEl = document.getElementById("an_result");
+  if (!modeEl || !typeEl || !pmtEl || !rateEl || !nEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  function annuityPV(pmt, r, n) {
+    if (r === 0) return pmt * n;
+    return pmt * (1 - Math.pow(1 + r, -n)) / r;
+  }
+  function annuityFV(pmt, r, n) {
+    if (r === 0) return pmt * n;
+    return pmt * (Math.pow(1 + r, n) - 1) / r;
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const mode = modeEl.value;
+    const type = typeEl.value;
+    const pmt = parseFloat(pmtEl.value);
+    const r = (parseFloat(rateEl.value) || 0) / 100;
+    const n = parseInt(nEl.value, 10);
+
+    if (!isFinite(pmt) || pmt <= 0 || !isFinite(r) || r < 0 || !isFinite(n) || n <= 0) {
+      outEl.textContent = "Please enter valid values.";
+      return;
+    }
+
+    let val = mode === "pv" ? annuityPV(pmt, r, n) : annuityFV(pmt, r, n);
+    if (type === "due") val = val * (1 + r);
+
+    outEl.innerHTML =
+      "<strong>" + (mode === "pv" ? "Present Value (PV)" : "Future Value (FV)") + ":</strong> " + money(val) +
+      "<br/><span class='note'>Assumes equal payments and constant rate per period.</span>";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    pmtEl.value = "";
+    rateEl.value = "";
+    nEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

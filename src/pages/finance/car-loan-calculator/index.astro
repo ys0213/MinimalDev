@@ -2,47 +2,46 @@
 import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
-  title: "EMI Calculator",
-  description:
-    "Free EMI calculator with amortization schedule. Calculate Equated Monthly Installment for a loan quickly.",
-  href: "/finance/emi-calculator/",
+  title: "Car Loan Calculator",
+  description: "Free car loan calculator with amortization schedule. Estimate monthly payment, total interest, and payoff table.",
+  href: "/finance/car-loan-calculator/",
   order: 15,
 };
 ---
 
 <ToolLayout
-  title="EMI Calculator — MinimalDev"
-  description="Calculate EMI (monthly installment) and view amortization schedule. Principal & interest only."
-  canonicalPath="/finance/emi-calculator/"
-  h1="EMI Calculator"
-  intro="Calculate EMI (Equated Monthly Installment) for a loan and view the amortization schedule."
+  title="Car Loan Calculator — MinimalDev"
+  description="Estimate car loan payment and view amortization schedule. Principal & interest only."
+  canonicalPath="/finance/car-loan-calculator/"
+  h1="Car Loan Calculator"
+  intro="Calculate car loan payments and view a full amortization schedule (principal & interest)."
 >
-  <div slot="tool" data-tool="emi-calculator">
+  <div slot="tool" data-tool="car-loan-calculator">
     <div class="form">
       <div class="field">
-        <label for="emi_amount">Loan Amount</label>
-        <input id="emi_amount" type="number" inputmode="decimal" placeholder="e.g., 500000" />
+        <label for="car_amount">Loan amount</label>
+        <input id="car_amount" type="number" inputmode="decimal" placeholder="e.g., 25000" />
       </div>
 
       <div class="field">
-        <label for="emi_rate">Annual Interest Rate (%)</label>
-        <input id="emi_rate" type="number" inputmode="decimal" placeholder="e.g., 9" />
+        <label for="car_rate">APR (%)</label>
+        <input id="car_rate" type="number" inputmode="decimal" placeholder="e.g., 6.5" />
       </div>
 
       <div class="field">
-        <label for="emi_months">Tenure (months)</label>
-        <input id="emi_months" type="number" inputmode="numeric" placeholder="e.g., 60" />
+        <label for="car_months">Term (months)</label>
+        <input id="car_months" type="number" inputmode="numeric" placeholder="e.g., 60" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="btn" type="button" id="emi_calc">Calculate</button>
-        <button class="btn secondary" type="button" id="emi_clear">Clear</button>
+        <button class="btn" type="button" id="car_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="car_clear">Clear</button>
       </div>
 
-      <div class="result" id="emi_summary" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="car_summary" style="margin-top:12px;">Result will appear here.</div>
 
-      <div style="margin-top:20px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse;">
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr>
               <th>Month</th>
@@ -52,29 +51,36 @@ export const tool = {
               <th>Balance</th>
             </tr>
           </thead>
-          <tbody id="emi_tbody"></tbody>
+          <tbody id="car_tbody"></tbody>
         </table>
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Lenders may use different rounding and fee structures.
+        Informational only. Taxes, registration, and fees are not included.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      EMI uses standard amortization (same formula as monthly loan payment).<br/>
-      <strong>Formula:</strong> M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+      Monthly payment formula:<br/>
+      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
     </p>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Does this include fees?</strong> No. It’s principal & interest only.</li>
+      <li><strong>Is APR the same as interest rate?</strong> APR may include fees; use lender’s APR if possible.</li>
+    </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/lease-vs-buy-calculator/">Lease vs Buy Calculator</a></li>
       <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
-      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
-      <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -82,20 +88,22 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
-  const amountEl = document.getElementById("emi_amount");
-  const rateEl = document.getElementById("emi_rate");
-  const monthsEl = document.getElementById("emi_months");
-  const calcBtn = document.getElementById("emi_calc");
-  const clearBtn = document.getElementById("emi_clear");
-  const summaryEl = document.getElementById("emi_summary");
-  const tbodyEl = document.getElementById("emi_tbody");
+  const amountEl = document.getElementById("car_amount");
+  const rateEl = document.getElementById("car_rate");
+  const monthsEl = document.getElementById("car_months");
+  const calcBtn = document.getElementById("car_calc");
+  const clearBtn = document.getElementById("car_clear");
+  const summaryEl = document.getElementById("car_summary");
+  const tbodyEl = document.getElementById("car_tbody");
   if (!amountEl || !rateEl || !monthsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
 
   function money(v) {
+    if (!isFinite(v)) return "$0.00";
     return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
 
   function payment(P, r, n) {
+    if (n <= 0) return NaN;
     if (r === 0) return P / n;
     return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   }
@@ -117,9 +125,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalInterest = totalPay - P;
 
     summaryEl.innerHTML =
-      "<strong>EMI (Monthly Payment):</strong> " + money(M) + "<br/>" +
-      "<strong>Total Interest:</strong> " + money(totalInterest) + "<br/>" +
-      "<strong>Total Payment:</strong> " + money(totalPay);
+      "<strong>Monthly payment:</strong> " + money(M) + "<br/>" +
+      "<strong>Total interest:</strong> " + money(totalInterest) + "<br/>" +
+      "<strong>Total paid:</strong> " + money(totalPay);
 
     let balance = P;
     tbodyEl.innerHTML = "";
@@ -138,7 +146,6 @@ document.addEventListener("DOMContentLoaded", function () {
           "<td>" + money(interest) + "</td>" +
           "<td>" + money(balance) + "</td>" +
         "</tr>";
-
       tbodyEl.insertAdjacentHTML("beforeend", row);
     }
   });

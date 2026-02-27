@@ -1,0 +1,81 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Age Calculator",
+  description: "Free age calculator. Calculate exact age in years, months, and days from your date of birth.",
+  href: "/date-time/age-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Age Calculator — MinimalDev"
+  description="Free online age calculator. Find your exact age in years, months, and days from your date of birth."
+  canonicalPath="/date-time/age-calculator/"
+  h1="Age Calculator"
+  intro="Calculate your exact age in years, months, and days from your date of birth. Optionally choose a reference date to find age at a specific time."
+>
+  <div slot="tool" data-tool="age-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="age_dob">Date of birth</label>
+        <input id="age_dob" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="age_ref">Reference date (optional)</label>
+        <input id="age_ref" type="date" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="age_clear">Clear</button>
+      </div>
+
+      <div class="result" id="age_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:8px;">
+        Your dates are processed locally in your browser. No personal information is stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator compares the year, month, and day between the birth date and the reference date.
+      If the current month or day is earlier than the birth date, the calculation borrows from the previous month or year.
+    </p>
+
+    <ul>
+      <li><strong>Leap years:</strong> Automatically handled.</li>
+      <li><strong>Exact breakdown:</strong> Returns years, months, and days.</li>
+      <li><strong>Optional reference date:</strong> Calculate age at any past or future date.</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>How old am I if I was born on 2000-01-01?</strong> → Depends on today's date.</li>
+      <li><strong>Age from 1995-10-10 to 2026-02-24</strong> → 30 years, 4 months, 14 days</li>
+      <li><strong>Born on Feb 29?</strong> → Leap years are handled correctly.</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is this calculator accurate?</strong> Yes. It uses real calendar date logic, including leap years.</li>
+      <li><strong>Why might other sites show a different result?</strong> Some calculators round months or count inclusively.</li>
+      <li><strong>Can I calculate future age?</strong> Yes. Choose a future reference date.</li>
+      <li><strong>Does this include time of day?</strong> No. It calculates based on calendar dates only.</li>
+      <li><strong>Is my birth date stored?</strong> No. All calculations happen locally in your browser.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/work-days-calculator/">Work Days Calculator</a></li>
+      <li><a href="/date-time/">Date & Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

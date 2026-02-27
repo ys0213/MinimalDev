@@ -1,0 +1,111 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Reverse Percentage Calculator",
+  description: "Free reverse percentage calculator. Find what percent Y is of X instantly.",
+  href: "/math/reverse-percentage-calculator/",
+  order: 80,
+};
+---
+
+<ToolLayout
+  title="Reverse Percentage Calculator — MinimalDev"
+  description="Free reverse percentage calculator. Find what percent Y is of X (Y ÷ X × 100)."
+  canonicalPath="/math/reverse-percentage-calculator/"
+  h1="Reverse Percentage Calculator"
+  intro="Find what percent Y is of X. Useful for grading, progress, conversion rates, and comparisons."
+>
+  <div slot="tool" data-tool="reverse-percentage-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="rp_y">Y (part)</label>
+        <input id="rp_y" type="number" inputmode="decimal" placeholder="e.g., 45" />
+      </div>
+
+      <div class="field">
+        <label for="rp_x">X (whole)</label>
+        <input id="rp_x" type="number" inputmode="decimal" placeholder="e.g., 60" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="rp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rp_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula:</strong> percent = (Y ÷ X) × 100<br/>
+      Example: 45 out of 60 → (45/60)×100 = 75%
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>45 is what percent of 60? → 75%</li>
+      <li>18 is what percent of 200? → 9%</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>What if X is 0?</strong> Division by zero is undefined, so the result can’t be computed.</li>
+      <li><strong>Can the result exceed 100%?</strong> Yes, if Y is larger than X.</li>
+      <li><strong>Is this the same as “percent of a number”?</strong> It’s the reverse operation (solving for the percent).</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const yEl = document.getElementById("rp_y");
+  const xEl = document.getElementById("rp_x");
+  const calcBtn = document.getElementById("rp_calc");
+  const clearBtn = document.getElementById("rp_clear");
+  const outEl = document.getElementById("rp_result");
+
+  if (!yEl || !xEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function fmtPct(v) {
+    if (!isFinite(v)) return "0%";
+    // 너무 길게 안 나오게: 소수 2자리까지
+    const rounded = Math.round(v * 100) / 100;
+    return rounded.toLocaleString() + "%";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const y = parseFloat(yEl.value);
+    const x = parseFloat(xEl.value);
+
+    if (!isFinite(y) || !isFinite(x) || x === 0) {
+      outEl.textContent = "Please enter valid values (X cannot be 0).";
+      return;
+    }
+
+    const pct = (y / x) * 100;
+
+    outEl.innerHTML =
+      "<strong>Result:</strong> " + fmtPct(pct) + "<br/>" +
+      "<span class='note'>" + y + " is " + fmtPct(pct) + " of " + x + ".</span>";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    yEl.value = "";
+    xEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

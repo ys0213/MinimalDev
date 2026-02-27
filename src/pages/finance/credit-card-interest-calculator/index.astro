@@ -1,0 +1,191 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Credit Card Interest Calculator",
+  description: "Estimate payoff time and total interest for a credit card balance using APR and monthly payment.",
+  href: "/finance/credit-card-interest-calculator/",
+  order: 20,
+};
+---
+
+<ToolLayout
+  title="Credit Card Interest Calculator — MinimalDev"
+  description="Estimate payoff months and total interest for a credit card balance. Principal & interest only."
+  canonicalPath="/finance/credit-card-interest-calculator/"
+  h1="Credit Card Interest Calculator"
+  intro="Estimate how long it takes to pay off a credit card balance and how much interest you’ll pay."
+>
+  <div slot="tool" data-tool="credit-card-interest-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="cc_balance">Balance</label>
+        <input id="cc_balance" type="number" inputmode="decimal" placeholder="e.g., 3500" />
+      </div>
+
+      <div class="field">
+        <label for="cc_apr">APR (%)</label>
+        <input id="cc_apr" type="number" inputmode="decimal" placeholder="e.g., 19.99" />
+      </div>
+
+      <div class="field">
+        <label for="cc_payment">Monthly payment</label>
+        <input id="cc_payment" type="number" inputmode="decimal" placeholder="e.g., 150" />
+      </div>
+
+      <div class="field">
+        <label for="cc_max_months">Max months (safety)</label>
+        <input id="cc_max_months" type="number" inputmode="numeric" value="600" min="12" max="2000" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cc_summary">Result will appear here.</div>
+
+      <div style="margin-top:14px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Payment</th>
+              <th>Interest</th>
+              <th>Principal</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody id="cc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational only. Credit card interest can vary due to daily compounding and statement cycles.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses a simple monthly simulation:<br/>
+      monthlyRate = APR / 12<br/>
+      interest = balance × monthlyRate<br/>
+      principal = payment − interest
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$3,500 at 19.99% APR, $150/mo → estimate payoff time and interest</li>
+      <li>Increase payment to see how payoff time changes</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Why is this an estimate?</strong> Credit cards typically use daily compounding and statement timing.</li>
+      <li><strong>What if payment is too small?</strong> If payment ≤ interest, the balance won’t go down.</li>
+      <li><strong>Does this include fees?</strong> No. It models interest only.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/debt-payoff-calculator/">Debt Payoff Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const balEl = document.getElementById("cc_balance");
+  const aprEl = document.getElementById("cc_apr");
+  const payEl = document.getElementById("cc_payment");
+  const maxEl = document.getElementById("cc_max_months");
+  const calcBtn = document.getElementById("cc_calc");
+  const clearBtn = document.getElementById("cc_clear");
+  const sumEl = document.getElementById("cc_summary");
+  const tbodyEl = document.getElementById("cc_tbody");
+  if (!balEl || !aprEl || !payEl || !maxEl || !calcBtn || !clearBtn || !sumEl || !tbodyEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const balance0 = parseFloat(balEl.value);
+    const apr = (parseFloat(aprEl.value) || 0) / 100;
+    const payment = parseFloat(payEl.value);
+    const maxMonths = Math.max(12, Math.min(2000, parseInt(maxEl.value, 10) || 600));
+
+    if (!isFinite(balance0) || balance0 <= 0 || !isFinite(apr) || apr < 0 || !isFinite(payment) || payment <= 0) {
+      sumEl.textContent = "Please enter valid values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const r = apr / 12;
+    let balance = balance0;
+    let totalInterest = 0;
+    tbodyEl.innerHTML = "";
+
+    for (let m = 1; m <= maxMonths; m++) {
+      const interest = r === 0 ? 0 : balance * r;
+      const principal = payment - interest;
+
+      if (principal <= 0) {
+        sumEl.innerHTML =
+          "<strong>Not payable with this payment.</strong><br/>" +
+          "<span class='note'>Monthly payment must be greater than monthly interest.</span>";
+        tbodyEl.innerHTML = "";
+        return;
+      }
+
+      const payThis = Math.min(payment, balance + interest);
+      const interestThis = Math.min(interest, payThis);
+      const principalThis = payThis - interestThis;
+
+      totalInterest += interestThis;
+      balance = balance - principalThis;
+      if (balance < 0) balance = 0;
+
+      const row =
+        "<tr>" +
+          "<td>" + m + "</td>" +
+          "<td>" + money(payThis) + "</td>" +
+          "<td>" + money(interestThis) + "</td>" +
+          "<td>" + money(principalThis) + "</td>" +
+          "<td>" + money(balance) + "</td>" +
+        "</tr>";
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+
+      if (balance <= 0.0000001) {
+        const totalPaid = (m * payment) - (payment - payThis);
+        sumEl.innerHTML =
+          "<strong>Payoff time:</strong> " + m + " months<br/>" +
+          "<strong>Total interest:</strong> " + money(totalInterest) + "<br/>" +
+          "<strong>Total paid:</strong> " + money(totalPaid);
+        return;
+      }
+    }
+
+    sumEl.innerHTML =
+      "<strong>Reached max months.</strong><br/>" +
+      "<span class='note'>Increase payment or increase max months.</span>";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    balEl.value = "";
+    aprEl.value = "";
+    payEl.value = "";
+    sumEl.textContent = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+});
+</script>

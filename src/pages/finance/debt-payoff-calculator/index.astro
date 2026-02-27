@@ -1,0 +1,163 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Debt Payoff Calculator",
+  description: "Estimate payoff time and total interest for a debt balance with APR and monthly payment.",
+  href: "/finance/debt-payoff-calculator/",
+  order: 25,
+};
+---
+
+<ToolLayout
+  title="Debt Payoff Calculator — MinimalDev"
+  description="Estimate how long to pay off a debt and total interest using APR and monthly payment."
+  canonicalPath="/finance/debt-payoff-calculator/"
+  h1="Debt Payoff Calculator"
+  intro="Estimate payoff time and total interest for a single debt (credit line, personal debt, etc.)."
+>
+  <div slot="tool" data-tool="debt-payoff-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="dp_balance">Balance</label>
+        <input id="dp_balance" type="number" inputmode="decimal" placeholder="e.g., 12000" />
+      </div>
+
+      <div class="field">
+        <label for="dp_apr">APR (%)</label>
+        <input id="dp_apr" type="number" inputmode="decimal" placeholder="e.g., 12" />
+      </div>
+
+      <div class="field">
+        <label for="dp_payment">Monthly payment</label>
+        <input id="dp_payment" type="number" inputmode="decimal" placeholder="e.g., 300" />
+      </div>
+
+      <div class="field">
+        <label for="dp_extra">Extra payment (optional)</label>
+        <input id="dp_extra" type="number" inputmode="decimal" placeholder="e.g., 50" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="dp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dp_summary">Result will appear here.</div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational only. Interest may be compounded differently depending on lender rules.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Monthly simulation with optional extra payment applied to principal.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$12,000 at 12% APR, $300/mo → payoff estimate</li>
+      <li>Add $50 extra → see payoff time reduction</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>What if payment is too small?</strong> If payment ≤ monthly interest, balance won’t decrease.</li>
+      <li><strong>Does extra payment reduce interest?</strong> Yes, by lowering principal faster.</li>
+      <li><strong>Does this include fees?</strong> No, it models interest only.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/credit-card-interest-calculator/">Credit Card Interest Calculator</a></li>
+      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/refinance-calculator/">Refinance Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const balEl = document.getElementById("dp_balance");
+  const aprEl = document.getElementById("dp_apr");
+  const payEl = document.getElementById("dp_payment");
+  const extraEl = document.getElementById("dp_extra");
+  const calcBtn = document.getElementById("dp_calc");
+  const clearBtn = document.getElementById("dp_clear");
+  const sumEl = document.getElementById("dp_summary");
+  if (!balEl || !aprEl || !payEl || !extraEl || !calcBtn || !clearBtn || !sumEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const balance0 = parseFloat(balEl.value);
+    const apr = (parseFloat(aprEl.value) || 0) / 100;
+    const payment0 = parseFloat(payEl.value);
+    const extra = parseFloat(extraEl.value) || 0;
+
+    if (!isFinite(balance0) || balance0 <= 0 || !isFinite(apr) || apr < 0 || !isFinite(payment0) || payment0 <= 0 || extra < 0) {
+      sumEl.textContent = "Please enter valid values.";
+      return;
+    }
+
+    const r = apr / 12;
+    const payment = payment0 + extra;
+
+    let balance = balance0;
+    let totalInterest = 0;
+    let months = 0;
+
+    for (let m = 1; m <= 2000; m++) {
+      months = m;
+      const interest = r === 0 ? 0 : balance * r;
+      const principal = payment - interest;
+
+      if (principal <= 0) {
+        sumEl.innerHTML =
+          "<strong>Not payable with this payment.</strong><br/>" +
+          "<span class='note'>Monthly payment must be greater than monthly interest.</span>";
+        return;
+      }
+
+      const payThis = Math.min(payment, balance + interest);
+      const interestThis = Math.min(interest, payThis);
+      const principalThis = payThis - interestThis;
+
+      totalInterest += interestThis;
+      balance -= principalThis;
+      if (balance < 0) balance = 0;
+
+      if (balance <= 0.0000001) {
+        const totalPaid = (months * payment) - (payment - payThis);
+        sumEl.innerHTML =
+          "<strong>Payoff time:</strong> " + months + " months<br/>" +
+          "<strong>Total interest:</strong> " + money(totalInterest) + "<br/>" +
+          "<strong>Total paid:</strong> " + money(totalPaid);
+        return;
+      }
+    }
+
+    sumEl.innerHTML =
+      "<strong>Reached max months.</strong><br/>" +
+      "<span class='note'>Increase payment to finish within a reasonable time.</span>";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    balEl.value = "";
+    aprEl.value = "";
+    payEl.value = "";
+    extraEl.value = "";
+    sumEl.textContent = "Result will appear here.";
+  });
+});
+</script>

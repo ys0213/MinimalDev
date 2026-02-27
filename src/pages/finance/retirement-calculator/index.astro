@@ -1,0 +1,160 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Retirement Calculator",
+  description: "Estimate retirement savings at a target age based on current savings, contributions, and expected return.",
+  href: "/finance/retirement-calculator/",
+  order: 40,
+};
+---
+
+<ToolLayout
+  title="Retirement Calculator — MinimalDev"
+  description="Estimate retirement savings at a target age using contributions and expected annual return. Informational only."
+  canonicalPath="/finance/retirement-calculator/"
+  h1="Retirement Calculator"
+  intro="Estimate how much you may have at retirement based on savings, monthly contributions, and expected return."
+>
+  <div slot="tool" data-tool="retirement-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="ret_age_now">Current age</label>
+        <input id="ret_age_now" type="number" inputmode="numeric" placeholder="e.g., 30" />
+      </div>
+
+      <div class="field">
+        <label for="ret_age_target">Retirement age</label>
+        <input id="ret_age_target" type="number" inputmode="numeric" placeholder="e.g., 65" />
+      </div>
+
+      <div class="field">
+        <label for="ret_current">Current savings</label>
+        <input id="ret_current" type="number" inputmode="decimal" placeholder="e.g., 25000" />
+      </div>
+
+      <div class="field">
+        <label for="ret_monthly">Monthly contribution</label>
+        <input id="ret_monthly" type="number" inputmode="decimal" placeholder="e.g., 500" />
+      </div>
+
+      <div class="field">
+        <label for="ret_return">Expected annual return (%)</label>
+        <input id="ret_return" type="number" inputmode="decimal" placeholder="e.g., 6" />
+      </div>
+
+      <div class="field">
+        <label for="ret_inflation">Inflation (optional, %)</label>
+        <input id="ret_inflation" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ret_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ret_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ret_result">Result will appear here.</div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational only. Returns are not guaranteed and may vary significantly.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Monthly compounding estimate with constant return and contributions. Inflation adjustment shows today’s dollars (optional).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Age 30 → 65, $25k now, $500/mo, 6% return → estimated retirement balance</li>
+      <li>Add inflation to view value in today’s dollars</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is this accurate?</strong> It’s a simplified estimate using constant returns and contributions.</li>
+      <li><strong>What about taxes?</strong> Not included. Account type and taxes can change results.</li>
+      <li><strong>Why show inflation?</strong> To compare future money to purchasing power today.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/annuity-calculator/">Annuity Calculator</a></li>
+      <li><a href="/finance/inflation-calculator/">Inflation Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ageNowEl = document.getElementById("ret_age_now");
+  const ageTargetEl = document.getElementById("ret_age_target");
+  const curEl = document.getElementById("ret_current");
+  const moEl = document.getElementById("ret_monthly");
+  const rEl = document.getElementById("ret_return");
+  const infEl = document.getElementById("ret_inflation");
+  const calcBtn = document.getElementById("ret_calc");
+  const clearBtn = document.getElementById("ret_clear");
+  const outEl = document.getElementById("ret_result");
+  if (!ageNowEl || !ageTargetEl || !curEl || !moEl || !rEl || !infEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const ageNow = parseFloat(ageNowEl.value);
+    const ageTarget = parseFloat(ageTargetEl.value);
+    const current = parseFloat(curEl.value);
+    const monthly = parseFloat(moEl.value);
+    const annual = (parseFloat(rEl.value) || 0) / 100;
+    const infl = (parseFloat(infEl.value) || 0) / 100;
+
+    if (!isFinite(ageNow) || !isFinite(ageTarget) || ageTarget <= ageNow ||
+        !isFinite(current) || current < 0 || !isFinite(monthly) || monthly < 0 ||
+        !isFinite(annual) || annual < 0 || !isFinite(infl) || infl < 0) {
+      outEl.textContent = "Please enter valid values.";
+      return;
+    }
+
+    const months = Math.round((ageTarget - ageNow) * 12);
+    const r = annual / 12;
+
+    let bal = current;
+    for (let i = 1; i <= months; i++) {
+      bal = bal * (1 + r) + monthly;
+    }
+
+    let real = bal;
+    if (infl > 0) {
+      const realFactor = Math.pow(1 + infl, (months / 12));
+      real = bal / realFactor;
+    }
+
+    outEl.innerHTML =
+      "<strong>Estimated balance at age " + ageTarget + ":</strong> " + money(bal) + "<br/>" +
+      (infl > 0
+        ? "<strong>In today’s dollars (inflation-adjusted):</strong> " + money(real)
+        : "<span class='note'>Add inflation to see value in today’s dollars.</span>");
+  });
+
+  clearBtn.addEventListener("click", function () {
+    ageNowEl.value = "";
+    ageTargetEl.value = "";
+    curEl.value = "";
+    moEl.value = "";
+    rEl.value = "";
+    infEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

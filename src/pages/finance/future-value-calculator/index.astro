@@ -1,0 +1,133 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Future Value Calculator",
+  description: "Calculate future value from present value, contribution, rate, and time with monthly compounding.",
+  href: "/finance/future-value-calculator/",
+  order: 55,
+};
+---
+
+<ToolLayout
+  title="Future Value Calculator — MinimalDev"
+  description="Calculate future value from a starting amount, monthly contribution, annual rate, and years (monthly compounding)."
+  canonicalPath="/finance/future-value-calculator/"
+  h1="Future Value Calculator"
+  intro="Estimate future value using a starting balance, monthly contributions, and an annual return rate."
+>
+  <div slot="tool" data-tool="future-value-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="fv_pv">Starting amount (present value)</label>
+        <input id="fv_pv" type="number" inputmode="decimal" placeholder="e.g., 10000" />
+      </div>
+
+      <div class="field">
+        <label for="fv_pmt">Monthly contribution (optional)</label>
+        <input id="fv_pmt" type="number" inputmode="decimal" placeholder="e.g., 200" />
+      </div>
+
+      <div class="field">
+        <label for="fv_rate">Annual rate (%)</label>
+        <input id="fv_rate" type="number" inputmode="decimal" placeholder="e.g., 6" />
+      </div>
+
+      <div class="field">
+        <label for="fv_years">Years</label>
+        <input id="fv_years" type="number" inputmode="decimal" placeholder="e.g., 10" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fv_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="fv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fv_result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Monthly compounding simulation with optional monthly contributions.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$10,000 + $200/mo at 6% for 10 years → future value estimate</li>
+      <li>Set monthly contribution to 0 to calculate growth only</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Is compounding monthly?</strong> Yes, this tool compounds monthly for simplicity.</li>
+      <li><strong>Are returns guaranteed?</strong> No. This is a projection.</li>
+      <li><strong>Does it include taxes?</strong> No.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
+      <li><a href="/finance/net-present-value-calculator/">Net Present Value Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const pvEl = document.getElementById("fv_pv");
+  const pmtEl = document.getElementById("fv_pmt");
+  const rEl = document.getElementById("fv_rate");
+  const yEl = document.getElementById("fv_years");
+  const calcBtn = document.getElementById("fv_calc");
+  const clearBtn = document.getElementById("fv_clear");
+  const outEl = document.getElementById("fv_result");
+  if (!pvEl || !pmtEl || !rEl || !yEl || !calcBtn || !clearBtn || !outEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const pv = parseFloat(pvEl.value) || 0;
+    const pmt = parseFloat(pmtEl.value) || 0;
+    const annual = (parseFloat(rEl.value) || 0) / 100;
+    const years = parseFloat(yEl.value);
+
+    if (!isFinite(years) || years <= 0 || !isFinite(annual) || annual < 0 || pv < 0 || pmt < 0) {
+      outEl.textContent = "Please enter valid values.";
+      return;
+    }
+
+    const months = Math.round(years * 12);
+    const r = annual / 12;
+
+    let bal = pv;
+    let contrib = 0;
+    for (let i = 1; i <= months; i++) {
+      bal = bal * (1 + r) + pmt;
+      contrib += pmt;
+    }
+
+    outEl.innerHTML =
+      "<strong>Future value:</strong> " + money(bal) + "<br/>" +
+      "<strong>Total contributions:</strong> " + money(contrib) + "<br/>" +
+      "<strong>Estimated growth:</strong> " + money(bal - (pv + contrib));
+  });
+
+  clearBtn.addEventListener("click", function () {
+    pvEl.value = "";
+    pmtEl.value = "";
+    rEl.value = "";
+    yEl.value = "";
+    outEl.textContent = "Result will appear here.";
+  });
+});
+</script>

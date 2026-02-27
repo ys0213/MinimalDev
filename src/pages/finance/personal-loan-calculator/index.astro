@@ -1,0 +1,163 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Personal Loan Calculator",
+  description: "Free personal loan calculator with amortization schedule. Estimate monthly payment, total interest, and total cost.",
+  href: "/finance/personal-loan-calculator/",
+  order: 10,
+};
+---
+
+<ToolLayout
+  title="Personal Loan Calculator — MinimalDev"
+  description="Calculate personal loan payment and view amortization schedule. Principal & interest only."
+  canonicalPath="/finance/personal-loan-calculator/"
+  h1="Personal Loan Calculator"
+  intro="Estimate monthly payment, total interest, and view a full amortization schedule for a personal loan."
+>
+  <div slot="tool" data-tool="personal-loan-calculator">
+    <div class="form">
+      <div class="field">
+        <label for="pl_amount">Loan amount</label>
+        <input id="pl_amount" type="number" inputmode="decimal" placeholder="e.g., 10000" />
+      </div>
+
+      <div class="field">
+        <label for="pl_rate">APR (%)</label>
+        <input id="pl_rate" type="number" inputmode="decimal" placeholder="e.g., 11.5" />
+      </div>
+
+      <div class="field">
+        <label for="pl_years">Term (years)</label>
+        <input id="pl_years" type="number" inputmode="decimal" placeholder="e.g., 3" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pl_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pl_summary" style="margin-top:12px;">Result will appear here.</div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Payment</th>
+              <th>Principal</th>
+              <th>Interest</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody id="pl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational only. Origination fees and lender rounding rules are not included.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Monthly payment formula (principal + interest):<br/>
+      M = P × (r(1+r)^n) ÷ ((1+r)^n − 1)
+    </p>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      <li><strong>Does this include fees?</strong> No. Add fees into the loan amount for a rough estimate.</li>
+      <li><strong>What if APR is 0%?</strong> Payment is simply principal divided by months.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/emi-calculator/">EMI Calculator</a></li>
+      <li><a href="/finance/apr-calculator/">APR Calculator</a></li>
+      <li><a href="/finance/debt-payoff-calculator/">Debt Payoff Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const amountEl = document.getElementById("pl_amount");
+  const rateEl = document.getElementById("pl_rate");
+  const yearsEl = document.getElementById("pl_years");
+  const calcBtn = document.getElementById("pl_calc");
+  const clearBtn = document.getElementById("pl_clear");
+  const summaryEl = document.getElementById("pl_summary");
+  const tbodyEl = document.getElementById("pl_tbody");
+  if (!amountEl || !rateEl || !yearsEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
+
+  function money(v) {
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  function payment(P, r, n) {
+    if (n <= 0) return NaN;
+    if (r === 0) return P / n;
+    return P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const P = parseFloat(amountEl.value);
+    const annual = (parseFloat(rateEl.value) || 0) / 100;
+    const years = parseFloat(yearsEl.value);
+
+    if (!isFinite(P) || P <= 0 || !isFinite(annual) || annual < 0 || !isFinite(years) || years <= 0) {
+      summaryEl.innerHTML = "Please enter valid values.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const n = Math.round(years * 12);
+    const r = annual / 12;
+
+    const M = payment(P, r, n);
+    const totalPay = M * n;
+    const totalInterest = totalPay - P;
+
+    summaryEl.innerHTML =
+      "<strong>Monthly payment:</strong> " + money(M) + "<br/>" +
+      "<strong>Total interest:</strong> " + money(totalInterest) + "<br/>" +
+      "<strong>Total paid:</strong> " + money(totalPay);
+
+    let balance = P;
+    tbodyEl.innerHTML = "";
+
+    for (let i = 1; i <= n; i++) {
+      const interest = r === 0 ? 0 : balance * r;
+      const principal = M - interest;
+      balance -= principal;
+      if (balance < 0) balance = 0;
+
+      const row =
+        "<tr>" +
+          "<td>" + i + "</td>" +
+          "<td>" + money(M) + "</td>" +
+          "<td>" + money(principal) + "</td>" +
+          "<td>" + money(interest) + "</td>" +
+          "<td>" + money(balance) + "</td>" +
+        "</tr>";
+      tbodyEl.insertAdjacentHTML("beforeend", row);
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    summaryEl.innerHTML = "Result will appear here.";
+    tbodyEl.innerHTML = "";
+  });
+});
+</script>
