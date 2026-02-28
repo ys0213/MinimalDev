@@ -3,7 +3,8 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Discount Calculator",
-  description: "Free discount calculator. Find final price, discount amount, and savings percentage instantly.",
+  description:
+    "Free discount calculator. Find final price, discount amount, and savings percentage instantly.",
   href: "/math/discount-calculator/",
   order: 70,
 };
@@ -11,7 +12,7 @@ export const tool = {
 
 <ToolLayout
   title="Discount Calculator — MinimalDev"
-  description="Free discount calculator. Enter original price and discount percent to get final price and savings."
+  description="Enter original price and discount to get final price, discount amount, and savings."
   canonicalPath="/math/discount-calculator/"
   h1="Discount Calculator"
   intro="Calculate discounted price and savings from an original price and discount percentage."
@@ -19,13 +20,45 @@ export const tool = {
   <div slot="tool" data-tool="discount-calculator">
     <div class="form">
       <div class="field">
+        <label for="dc_currency">Currency</label>
+        <select id="dc_currency" aria-describedby="dc_help" autocomplete="off">
+          <option value="auto" selected>Auto (browser locale)</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="KRW">KRW</option>
+          <option value="JPY">JPY</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="dc_price">Original price</label>
-        <input id="dc_price" type="number" inputmode="decimal" placeholder="e.g., 120" />
+        <input
+          id="dc_price"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 120"
+          min="0"
+          step="0.01"
+          aria-describedby="dc_help dc_error"
+        />
       </div>
 
       <div class="field">
         <label for="dc_discount">Discount (%)</label>
-        <input id="dc_discount" type="number" inputmode="decimal" placeholder="e.g., 25" />
+        <input
+          id="dc_discount"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 25"
+          min="0"
+          max="100"
+          step="0.01"
+          aria-describedby="dc_help dc_error"
+        />
+        <div id="dc_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -33,7 +66,23 @@ export const tool = {
         <button class="btn secondary" type="button" id="dc_clear">Clear</button>
       </div>
 
-      <div class="result" id="dc_result">Result will appear here.</div>
+      <!-- Result card -->
+      <div
+        class="result"
+        id="dc_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
+
+      <!-- Screen-reader summary -->
+      <div class="note" id="dc_sr_summary" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"></div>
+
+      <p class="note" id="dc_help" style="margin-top:10px;">
+        Enter a price and discount rate (0–100). This tool runs locally in your browser; inputs are not stored.
+      </p>
     </div>
   </div>
 
@@ -53,7 +102,7 @@ export const tool = {
 
   <div slot="faq">
     <ul>
-      <li><strong>Can discount be over 100%?</strong> No. A discount above 100% would make price negative.</li>
+      <li><strong>Can discount be over 100%?</strong> No. A discount above 100% would make the price negative.</li>
       <li><strong>What about two discounts (stacking)?</strong> Apply sequentially (e.g., 20% then 10%) for accurate results.</li>
       <li><strong>Does this include sales tax?</strong> No. Use a sales tax calculator to add/remove tax.</li>
     </ul>
@@ -69,42 +118,179 @@ export const tool = {
   </div>
 </ToolLayout>
 
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="dc_faq_schema"></script>
+
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const currencyEl = document.getElementById("dc_currency");
   const priceEl = document.getElementById("dc_price");
   const discEl = document.getElementById("dc_discount");
   const calcBtn = document.getElementById("dc_calc");
   const clearBtn = document.getElementById("dc_clear");
   const outEl = document.getElementById("dc_result");
+  const errEl = document.getElementById("dc_error");
+  const srEl = document.getElementById("dc_sr_summary");
+  const faqSchemaEl = document.getElementById("dc_faq_schema");
 
-  if (!priceEl || !discEl || !calcBtn || !clearBtn || !outEl) return;
+  if (!currencyEl || !priceEl || !discEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  const FAQ = [
+    {
+      q: "Can discount be over 100%?",
+      a: "No. A discount above 100% would make the final price negative.",
+    },
+    {
+      q: "What about two discounts (stacking)?",
+      a: "Apply sequentially. For example, 20% then 10% means price × (1−0.20) × (1−0.10).",
+    },
+    {
+      q: "Does this include sales tax?",
+      a: "No. Add sales tax after discount using a sales tax tool if needed.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": FAQ.map(item => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": { "@type": "Answer", "text": item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
   }
 
-  calcBtn.addEventListener("click", function () {
-    const price = parseFloat(priceEl.value);
-    const disc = parseFloat(discEl.value);
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
 
-    if (!isFinite(price) || price < 0 || !isFinite(disc) || disc < 0 || disc > 100) {
-      outEl.textContent = "Please enter a valid price and discount (0–100).";
+  function clearError() {
+    priceEl.removeAttribute("aria-invalid");
+    discEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "price") priceEl.setAttribute("aria-invalid", "true");
+    if (which === "discount") discEl.setAttribute("aria-invalid", "true");
+    if (which === "both") { priceEl.setAttribute("aria-invalid", "true"); discEl.setAttribute("aria-invalid", "true"); }
+  }
+
+  function getCurrency() {
+    const v = String(currencyEl.value || "auto");
+    // "auto" uses undefined currency style fallback (we will format as number + currency code when auto)
+    return v;
+  }
+
+  function formatMoney(amount) {
+    const c = getCurrency();
+    if (!Number.isFinite(amount)) return "0";
+
+    // If auto: use user's locale, but we can't reliably infer currency.
+    // So show a locale-formatted number and append " (currency not set)".
+    if (c === "auto") {
+      const n = amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return n;
+    }
+
+    try {
+      return amount.toLocaleString(undefined, { style: "currency", currency: c });
+    } catch (_) {
+      // Fallback if currency is unsupported in environment
+      return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + c;
+    }
+  }
+
+  function currencySuffix() {
+    return getCurrency() === "auto" ? "<span class='note'> (set currency for symbol)</span>" : "";
+  }
+
+  function compute() {
+    clearError();
+
+    const priceRaw = String(priceEl.value || "").trim();
+    const discRaw = String(discEl.value || "").trim();
+
+    const price = toNum(priceRaw);
+    const disc = toNum(discRaw);
+
+    if (!priceRaw || !discRaw) {
+      outEl.textContent = "Result will appear here.";
+      srEl.textContent = "";
+      return;
+    }
+
+    if (!Number.isFinite(price) || price < 0) {
+      setError("Please enter a valid original price (0 or more).", "price");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
+      return;
+    }
+
+    if (!Number.isFinite(disc) || disc < 0 || disc > 100) {
+      setError("Please enter a valid discount between 0 and 100.", "discount");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return;
     }
 
     const save = price * (disc / 100);
     const final = price - save;
 
+    // Emphasis / category
+    let tag = "Small discount";
+    if (disc >= 10) tag = "Good discount";
+    if (disc >= 30) tag = "Big discount";
+    if (disc >= 60) tag = "Huge discount";
+
     outEl.innerHTML =
-      "<strong>Final price:</strong> " + money(final) + "<br/>" +
-      "<strong>You save:</strong> " + money(save) + " (" + disc + "%)";
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Discount result</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
+        "Final price: " + formatMoney(final) + currencySuffix() +
+      "</div>" +
+      "<div style='margin-top:6px;'>" +
+        "<strong>You save:</strong> " + formatMoney(save) + currencySuffix() +
+        " <span class='note'>(" + disc.toFixed(2).replace(/\.00$/, "") + "%)</span>" +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        "Formula: final = price × (1 − discount/100)" +
+      "</div>";
+
+    srEl.textContent =
+      "Final price " + formatMoney(final) + ", you save " + formatMoney(save) + ", discount " + disc + " percent.";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    compute();
+    // If there is an error, move focus to the first invalid field
+    if (priceEl.getAttribute("aria-invalid") === "true") priceEl.focus();
+    else if (discEl.getAttribute("aria-invalid") === "true") discEl.focus();
   });
 
   clearBtn.addEventListener("click", function () {
+    currencyEl.value = "auto";
     priceEl.value = "";
     discEl.value = "";
+    clearError();
     outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    priceEl.focus();
   });
+
+  // Live compute (UX): update when inputs change, but keep Calculate button for explicit action
+  priceEl.addEventListener("input", compute);
+  discEl.addEventListener("input", compute);
+  currencyEl.addEventListener("change", compute);
+
+  renderFaqSchema();
+  clearError();
 });
 </script>

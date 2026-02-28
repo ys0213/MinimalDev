@@ -5,7 +5,7 @@ export const tool = {
   title: "Reverse Percentage Calculator",
   description: "Free reverse percentage calculator. Find what percent Y is of X instantly.",
   href: "/math/reverse-percentage-calculator/",
-  order: 80,
+  order: 80, // ✅ keep as-is
 };
 ---
 
@@ -20,12 +20,31 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="rp_y">Y (part)</label>
-        <input id="rp_y" type="number" inputmode="decimal" placeholder="e.g., 45" />
+        <input
+          id="rp_y"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 45"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="rp_help rp_error"
+        />
       </div>
 
       <div class="field">
         <label for="rp_x">X (whole)</label>
-        <input id="rp_x" type="number" inputmode="decimal" placeholder="e.g., 60" />
+        <input
+          id="rp_x"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 60"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="rp_help rp_error"
+        />
+        <div id="rp_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -33,7 +52,26 @@ export const tool = {
         <button class="btn secondary" type="button" id="rp_clear">Clear</button>
       </div>
 
-      <div class="result" id="rp_result">Result will appear here.</div>
+      <div
+        class="result"
+        id="rp_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
+
+      <!-- Screen-reader summary -->
+      <div
+        class="note"
+        id="rp_sr_summary"
+        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+      ></div>
+
+      <p class="note" id="rp_help" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+      </p>
     </div>
   </div>
 
@@ -69,6 +107,9 @@ export const tool = {
   </div>
 </ToolLayout>
 
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="rp_faq_schema"></script>
+
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const yEl = document.getElementById("rp_y");
@@ -76,36 +117,166 @@ document.addEventListener("DOMContentLoaded", function () {
   const calcBtn = document.getElementById("rp_calc");
   const clearBtn = document.getElementById("rp_clear");
   const outEl = document.getElementById("rp_result");
+  const errEl = document.getElementById("rp_error");
+  const srEl = document.getElementById("rp_sr_summary");
+  const faqSchemaEl = document.getElementById("rp_faq_schema");
 
-  if (!yEl || !xEl || !calcBtn || !clearBtn || !outEl) return;
+  if (!yEl || !xEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
 
-  function fmtPct(v) {
-    if (!isFinite(v)) return "0%";
-    // 너무 길게 안 나오게: 소수 2자리까지
-    const rounded = Math.round(v * 100) / 100;
-    return rounded.toLocaleString() + "%";
+  // Single source of truth for FAQ content (schema uses this)
+  const FAQ = [
+    {
+      q: "What if X is 0?",
+      a: "Division by zero is undefined, so the result can’t be computed when X is 0.",
+    },
+    {
+      q: "Can the result exceed 100%?",
+      a: "Yes. If Y is larger than X, then Y ÷ X is greater than 1, producing a percentage above 100%.",
+    },
+    {
+      q: "Is this the same as “percent of a number”?",
+      a: "It’s the reverse operation. Instead of finding a value from a percent, it solves for the percent given Y and X.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
   }
 
-  calcBtn.addEventListener("click", function () {
-    const y = parseFloat(yEl.value);
-    const x = parseFloat(xEl.value);
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
 
-    if (!isFinite(y) || !isFinite(x) || x === 0) {
-      outEl.textContent = "Please enter valid values (X cannot be 0).";
-      return;
+  function clearError() {
+    yEl.removeAttribute("aria-invalid");
+    xEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "y") yEl.setAttribute("aria-invalid", "true");
+    if (which === "x") xEl.setAttribute("aria-invalid", "true");
+    if (which === "both") {
+      yEl.setAttribute("aria-invalid", "true");
+      xEl.setAttribute("aria-invalid", "true");
+    }
+  }
+
+  function fmtNumber(n) {
+    if (!Number.isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 10 });
+  }
+
+  function fmtPct(p) {
+    if (!Number.isFinite(p)) return "0%";
+    const abs = Math.abs(p);
+    const s = abs.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    // Keep it unsigned here; result line uses plain percent.
+    return s + "%";
+  }
+
+  function compute(showEmptyAsPlaceholder) {
+    clearError();
+
+    const yRaw = String(yEl.value || "").trim();
+    const xRaw = String(xEl.value || "").trim();
+
+    if (!yRaw || !xRaw) {
+      if (showEmptyAsPlaceholder) outEl.textContent = "Result will appear here.";
+      srEl.textContent = "";
+      return null;
+    }
+
+    const y = toNum(yRaw);
+    const x = toNum(xRaw);
+
+    if (!Number.isFinite(y)) {
+      setError("Please enter a valid Y (part).", "y");
+      return null;
+    }
+    if (!Number.isFinite(x)) {
+      setError("Please enter a valid X (whole).", "x");
+      return null;
+    }
+
+    if (Math.abs(y) > 1e15) {
+      setError("Y is too large. Please enter a smaller value.", "y");
+      return null;
+    }
+    if (Math.abs(x) > 1e15) {
+      setError("X is too large. Please enter a smaller value.", "x");
+      return null;
+    }
+
+    if (x === 0) {
+      setError("X cannot be 0 (division by zero).", "x");
+      outEl.textContent = "Please enter a non-zero X value.";
+      srEl.textContent = "";
+      return null;
     }
 
     const pct = (y / x) * 100;
 
+    let tag = "Standard";
+    if (pct < 0) tag = "Negative percent";
+    if (pct > 100) tag = "Over 100%";
+
     outEl.innerHTML =
-      "<strong>Result:</strong> " + fmtPct(pct) + "<br/>" +
-      "<span class='note'>" + y + " is " + fmtPct(pct) + " of " + x + ".</span>";
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Result</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
+        fmtPct(pct) +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        fmtNumber(y) + " is " + fmtPct(pct) + " of " + fmtNumber(x) + "." +
+      "</div>" +
+      "<div class='note' style='margin-top:4px;'>" +
+        "Computed as (" + fmtNumber(y) + " ÷ " + fmtNumber(x) + ") × 100" +
+      "</div>";
+
+    srEl.textContent =
+      "Y " + fmtNumber(y) + ", X " + fmtNumber(x) + ". " +
+      "Result " + fmtPct(pct) + ".";
+
+    return { y, x, pct };
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const r = compute(false);
+    if (!r) {
+      if (yEl.getAttribute("aria-invalid") === "true") yEl.focus();
+      else if (xEl.getAttribute("aria-invalid") === "true") xEl.focus();
+      else outEl.textContent = "Please enter values to calculate.";
+    }
   });
 
   clearBtn.addEventListener("click", function () {
     yEl.value = "";
     xEl.value = "";
+    clearError();
     outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    yEl.focus();
   });
+
+  // Live update on input (keeps Calculate for explicit action)
+  yEl.addEventListener("input", function () { compute(true); });
+  xEl.addEventListener("input", function () { compute(true); });
+
+  renderFaqSchema();
+  clearError();
 });
 </script>

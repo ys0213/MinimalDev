@@ -3,21 +3,54 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "BMR Calculator",
-  description: "Free BMR calculator using Mifflin-St Jeor. Estimate daily basal metabolic rate based on age, sex, height, and weight.",
+  description:
+    "Free BMR calculator using Mifflin-St Jeor. Estimate daily basal metabolic rate based on age, sex, height, and weight.",
   href: "/health/bmr-calculator/",
   order: 30,
 };
+
+const faq = [
+  {
+    q: "What is BMR?",
+    a: "BMR (Basal Metabolic Rate) estimates how many calories your body burns per day at rest to support basic functions.",
+  },
+  {
+    q: "Is this the same as TDEE?",
+    a: "No. TDEE includes activity. BMR is a baseline at rest.",
+  },
+  {
+    q: "Which formula does this use?",
+    a: "It uses the Mifflin–St Jeor equation with metric inputs (kg, cm), converting from imperial if needed.",
+  },
+  {
+    q: "Is the result exact?",
+    a: "No. It is an estimate. Real metabolism varies with body composition, sleep, hormones, and health conditions.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
 ---
 
 <ToolLayout
   title="BMR Calculator — MinimalDev"
-  description="Free BMR calculator using the Mifflin-St Jeor equation. Estimate your basal metabolic rate (BMR) in calories/day."
+  description="Free BMR calculator using the Mifflin–St Jeor equation. Estimate your basal metabolic rate (BMR) in calories/day."
   canonicalPath="/health/bmr-calculator/"
   h1="BMR Calculator"
-  intro="Estimate your Basal Metabolic Rate (BMR) using the Mifflin-St Jeor formula. Informational only, not medical advice."
+  intro="Estimate your Basal Metabolic Rate (BMR) using the Mifflin–St Jeor formula. Informational only, not medical advice."
+  faq={faq}
 >
   <div slot="tool" data-tool="bmr-calculator">
     <div class="form">
+      <div class="field">
+        <label for="bmr_unit">Units</label>
+        <select id="bmr_unit">
+          <option value="metric" selected>Metric (cm, kg)</option>
+          <option value="imperial">Imperial (ft/in, lb)</option>
+        </select>
+      </div>
+
       <div class="field">
         <label for="bmr_sex">Sex</label>
         <select id="bmr_sex">
@@ -31,14 +64,43 @@ export const tool = {
         <input id="bmr_age" type="number" inputmode="numeric" min="1" max="120" placeholder="e.g., 30" />
       </div>
 
-      <div class="field">
-        <label for="bmr_height">Height (cm)</label>
-        <input id="bmr_height" type="number" inputmode="decimal" min="1" placeholder="e.g., 175" />
+      <div class="field" id="bmr_height_metric_field">
+        <label for="bmr_height_cm">Height (cm)</label>
+        <input id="bmr_height_cm" type="number" inputmode="decimal" min="1" placeholder="e.g., 175" />
       </div>
 
-      <div class="field">
-        <label for="bmr_weight">Weight (kg)</label>
-        <input id="bmr_weight" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      <div class="field" id="bmr_height_imperial_field" style="display:none;">
+        <label>Height (ft / in)</label>
+        <div style="display:flex; gap:10px;">
+          <input
+            id="bmr_height_ft"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="ft"
+            aria-label="Height in feet"
+            style="flex:1;"
+          />
+          <input
+            id="bmr_height_in"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="in"
+            aria-label="Height in inches"
+            style="flex:1;"
+          />
+        </div>
+      </div>
+
+      <div class="field" id="bmr_weight_metric_field">
+        <label for="bmr_weight_kg">Weight (kg)</label>
+        <input id="bmr_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="bmr_weight_imperial_field" style="display:none;">
+        <label for="bmr_weight_lb">Weight (lb)</label>
+        <input id="bmr_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -46,17 +108,25 @@ export const tool = {
         <button class="btn secondary" type="button" id="bmr_clear">Clear</button>
       </div>
 
-      <div class="result" id="bmr_result">Result will appear here.</div>
+      <div class="result" id="bmr_result" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. Metabolism varies by body composition, hormones, sleep, and health conditions.
+        Informational only. Estimates vary by body composition, sleep, hormones, and health conditions.
+      </p>
+      <p class="note">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      This tool uses the <strong>Mifflin-St Jeor</strong> equation (commonly used in nutrition apps).<br/>
+      This calculator uses the <strong>Mifflin–St Jeor</strong> equation (metric units). If you enter imperial values,
+      they are converted to cm and kg first.
+    </p>
+    <p class="note">
       <strong>Male:</strong> BMR = 10×kg + 6.25×cm − 5×age + 5<br/>
       <strong>Female:</strong> BMR = 10×kg + 6.25×cm − 5×age − 161
     </p>
@@ -64,16 +134,19 @@ export const tool = {
 
   <div slot="examples">
     <ul>
-      <li>Male, 30y, 175 cm, 70 kg → BMR ≈ 1,649 kcal/day</li>
-      <li>Female, 30y, 165 cm, 60 kg → BMR ≈ 1,320 kcal/day</li>
+      <li><strong>Male</strong>, 30y, 175 cm, 70 kg → BMR ≈ <strong>1,649</strong> kcal/day</li>
+      <li><strong>Female</strong>, 30y, 165 cm, 60 kg → BMR ≈ <strong>1,320</strong> kcal/day</li>
+      <li><strong>Imperial example</strong>: 5 ft 9 in, 154 lb → converts to metric then computes</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What is BMR?</strong> It’s an estimate of calories your body burns at rest to keep basic functions running.</li>
-      <li><strong>Is this the same as TDEE?</strong> No. TDEE includes activity; BMR is your baseline.</li>
-      <li><strong>Which formula is best?</strong> There are multiple; Mifflin-St Jeor is widely used for general estimates.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
@@ -89,46 +162,136 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("bmr_unit");
   const sexEl = document.getElementById("bmr_sex");
   const ageEl = document.getElementById("bmr_age");
-  const hEl = document.getElementById("bmr_height");
-  const wEl = document.getElementById("bmr_weight");
+
+  const hCmField = document.getElementById("bmr_height_metric_field");
+  const hFtInField = document.getElementById("bmr_height_imperial_field");
+  const wKgField = document.getElementById("bmr_weight_metric_field");
+  const wLbField = document.getElementById("bmr_weight_imperial_field");
+
+  const hCmEl = document.getElementById("bmr_height_cm");
+  const hFtEl = document.getElementById("bmr_height_ft");
+  const hInEl = document.getElementById("bmr_height_in");
+
+  const wKgEl = document.getElementById("bmr_weight_kg");
+  const wLbEl = document.getElementById("bmr_weight_lb");
+
   const calcBtn = document.getElementById("bmr_calc");
   const clearBtn = document.getElementById("bmr_clear");
   const outEl = document.getElementById("bmr_result");
 
-  if (!sexEl || !ageEl || !hEl || !wEl || !calcBtn || !clearBtn || !outEl) return;
+  if (
+    !unitEl || !sexEl || !ageEl ||
+    !hCmField || !hFtInField || !wKgField || !wLbField ||
+    !hCmEl || !hFtEl || !hInEl || !wKgEl || !wLbEl ||
+    !calcBtn || !clearBtn || !outEl
+  ) return;
 
-  function fmt(n) {
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function fmtKcal(n) {
+    if (!isFinite(n)) return "0";
     return Math.round(n).toLocaleString();
   }
 
-  function compute() {
-    const sex = sexEl.value;
-    const age = parseFloat(ageEl.value);
-    const cm = parseFloat(hEl.value);
-    const kg = parseFloat(wEl.value);
+  function setUnitUI() {
+    const u = String(unitEl.value);
+    const isImp = u === "imperial";
+    hCmField.style.display = isImp ? "none" : "block";
+    wKgField.style.display = isImp ? "none" : "block";
+    hFtInField.style.display = isImp ? "block" : "none";
+    wLbField.style.display = isImp ? "block" : "none";
+  }
 
-    if (!isFinite(age) || age <= 0 || !isFinite(cm) || cm <= 0 || !isFinite(kg) || kg <= 0) {
-      outEl.textContent = "Please enter valid age, height, and weight.";
+  function resetResult() {
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function compute() {
+    const sex = String(sexEl.value);
+    const age = toNum(ageEl.value);
+
+    if (!isFinite(age) || age <= 0 || age > 120) {
+      outEl.textContent = "Please enter a valid age (1–120).";
       return;
     }
 
-    const base = 10 * kg + 6.25 * cm - 5 * age;
+    // Convert to metric inputs required by Mifflin–St Jeor
+    let cm = NaN;
+    let kg = NaN;
+
+    if (String(unitEl.value) === "imperial") {
+      const ft = toNum(hFtEl.value);
+      const inch = toNum(hInEl.value);
+      const lb = toNum(wLbEl.value);
+
+      if (!isFinite(ft) || ft < 0 || !isFinite(inch) || inch < 0 || !isFinite(lb) || lb <= 0) {
+        outEl.textContent = "Please enter valid height (ft/in) and weight (lb).";
+        return;
+      }
+
+      const totalIn = (ft * 12) + inch;
+      if (!(totalIn > 0)) {
+        outEl.textContent = "Height must be greater than 0.";
+        return;
+      }
+
+      cm = totalIn * 2.54;
+      kg = lb * 0.45359237;
+    } else {
+      cm = toNum(hCmEl.value);
+      kg = toNum(wKgEl.value);
+
+      if (!isFinite(cm) || cm <= 0 || !isFinite(kg) || kg <= 0) {
+        outEl.textContent = "Please enter valid height (cm) and weight (kg).";
+        return;
+      }
+    }
+
+    // Basic sanity bounds (avoid obviously wrong input)
+    if (cm < 50 || cm > 272) {
+      outEl.textContent = "Please check height. Enter a realistic value.";
+      return;
+    }
+    if (kg < 10 || kg > 500) {
+      outEl.textContent = "Please check weight. Enter a realistic value.";
+      return;
+    }
+
+    const base = (10 * kg) + (6.25 * cm) - (5 * age);
     const bmr = sex === "female" ? (base - 161) : (base + 5);
 
     outEl.innerHTML =
-      "<strong>BMR:</strong> " + fmt(bmr) + " kcal/day<br/>" +
-      "<span class='note'>This is your estimated daily calories at rest.</span>";
+      "<strong>BMR:</strong> " + fmtKcal(bmr) + " kcal/day<br/>" +
+      "<span class='note'>Estimated daily calories at rest (baseline).</span>";
   }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetResult();
+  });
 
   calcBtn.addEventListener("click", compute);
 
   clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    sexEl.value = "male";
     ageEl.value = "";
-    hEl.value = "";
-    wEl.value = "";
-    outEl.textContent = "Result will appear here.";
+    hCmEl.value = "";
+    wKgEl.value = "";
+    hFtEl.value = "";
+    hInEl.value = "";
+    wLbEl.value = "";
+    setUnitUI();
+    resetResult();
   });
+
+  setUnitUI();
+  resetResult();
 });
 </script>

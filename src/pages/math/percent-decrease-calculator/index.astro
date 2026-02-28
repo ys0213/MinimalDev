@@ -5,7 +5,7 @@ export const tool = {
   title: "Percentage Decrease Calculator",
   description: "Free percentage decrease calculator. Calculate percent decrease between two values instantly.",
   href: "/math/percent-decrease-calculator/",
-  order: 30,
+  order: 30, // ✅ keep as-is
 };
 ---
 
@@ -20,12 +20,31 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="pd_old">Old value</label>
-        <input id="pd_old" type="number" inputmode="decimal" placeholder="e.g., 120" />
+        <input
+          id="pd_old"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 120"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="pd_help pd_error"
+        />
       </div>
 
       <div class="field">
         <label for="pd_new">New value</label>
-        <input id="pd_new" type="number" inputmode="decimal" placeholder="e.g., 90" />
+        <input
+          id="pd_new"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 90"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="pd_help pd_error"
+        />
+        <div id="pd_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -33,9 +52,24 @@ export const tool = {
         <button class="btn secondary" type="button" id="pd_clear">Clear</button>
       </div>
 
-      <div class="result" id="pd_result">Result will appear here.</div>
+      <div
+        class="result"
+        id="pd_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
 
-      <p class="note" style="margin-top:8px;">
+      <!-- Screen-reader summary -->
+      <div
+        class="note"
+        id="pd_sr_summary"
+        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+      ></div>
+
+      <p class="note" id="pd_help" style="margin-top:8px;">
         All calculations run locally in your browser. No data is stored.
       </p>
     </div>
@@ -81,3 +115,195 @@ export const tool = {
     </ul>
   </div>
 </ToolLayout>
+
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="pd_faq_schema"></script>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const oldEl = document.getElementById("pd_old");
+  const newEl = document.getElementById("pd_new");
+  const calcBtn = document.getElementById("pd_calc");
+  const clearBtn = document.getElementById("pd_clear");
+  const outEl = document.getElementById("pd_result");
+  const errEl = document.getElementById("pd_error");
+  const srEl = document.getElementById("pd_sr_summary");
+  const faqSchemaEl = document.getElementById("pd_faq_schema");
+
+  if (!oldEl || !newEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
+
+  // Single source of truth for FAQ content (schema uses this)
+  const FAQ = [
+    {
+      q: "What is percentage decrease?",
+      a: "It measures how much a value has decreased relative to its original (old) value.",
+    },
+    {
+      q: "What if the old value is 0?",
+      a: "The calculation is undefined because it would require division by zero.",
+    },
+    {
+      q: "What if the new value is larger than the old value?",
+      a: "That represents an increase, not a decrease. The computed result would be negative.",
+    },
+    {
+      q: "Is this used for discounts?",
+      a: "Yes. It can calculate discount percentages and general price reductions.",
+    },
+    {
+      q: "Is this accurate?",
+      a: "Yes. It uses the standard mathematical formula for percentage decrease.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    oldEl.removeAttribute("aria-invalid");
+    newEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "old") oldEl.setAttribute("aria-invalid", "true");
+    if (which === "new") newEl.setAttribute("aria-invalid", "true");
+    if (which === "both") {
+      oldEl.setAttribute("aria-invalid", "true");
+      newEl.setAttribute("aria-invalid", "true");
+    }
+  }
+
+  function fmt(n) {
+    if (!Number.isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 10 });
+  }
+
+  function fmtPct(n) {
+    if (!Number.isFinite(n)) return "0%";
+    // Up to 4 decimals, trimmed by locale formatter
+    return n.toLocaleString(undefined, { maximumFractionDigits: 4 }) + "%";
+  }
+
+  function compute(showEmptyAsPlaceholder) {
+    clearError();
+
+    const oRaw = String(oldEl.value || "").trim();
+    const nRaw = String(newEl.value || "").trim();
+
+    if (!oRaw || !nRaw) {
+      outEl.textContent = showEmptyAsPlaceholder ? "Result will appear here." : outEl.textContent;
+      srEl.textContent = "";
+      return null;
+    }
+
+    const oldV = toNum(oRaw);
+    const newV = toNum(nRaw);
+
+    if (!Number.isFinite(oldV)) {
+      setError("Please enter a valid old value.", "old");
+      return null;
+    }
+    if (!Number.isFinite(newV)) {
+      setError("Please enter a valid new value.", "new");
+      return null;
+    }
+
+    if (Math.abs(oldV) > 1e15) {
+      setError("Old value is too large. Please enter a smaller value.", "old");
+      return null;
+    }
+    if (Math.abs(newV) > 1e15) {
+      setError("New value is too large. Please enter a smaller value.", "new");
+      return null;
+    }
+
+    if (oldV === 0) {
+      setError("Old value cannot be 0 (division by zero).", "old");
+      outEl.textContent = "Please enter a non-zero old value.";
+      srEl.textContent = "";
+      return null;
+    }
+
+    const diff = oldV - newV;
+    const pct = (diff / oldV) * 100;
+
+    // UX category (not a claim of “good/bad”, just classification)
+    let tag = "Decrease";
+    if (pct === 0) tag = "No change";
+    else if (pct < 0) tag = "Increase";
+    else if (pct >= 50) tag = "Large decrease";
+
+    const absDiff = Math.abs(diff);
+
+    outEl.innerHTML =
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Percentage change (decrease)</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
+        (pct >= 0 ? "Decrease: " : "Change: ") + fmtPct(pct) +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        "Old: " + fmt(oldV) + " · New: " + fmt(newV) + " · Difference: " + fmt(diff) +
+      "</div>" +
+      "<div class='note' style='margin-top:4px;'>" +
+        "Computed as ((" + fmt(oldV) + " − " + fmt(newV) + ") ÷ " + fmt(oldV) + ") × 100" +
+      "</div>" +
+      (pct < 0
+        ? "<div class='note' style='margin-top:6px;'><strong>Note:</strong> New is larger than old, so this is an increase (negative “decrease”).</div>"
+        : "");
+
+    srEl.textContent =
+      "Old value " + fmt(oldV) + ", new value " + fmt(newV) + ". " +
+      (pct >= 0 ? "Percentage decrease " : "Percentage change ") + fmtPct(pct) + "." +
+      " Difference " + fmt(diff) + ".";
+
+    // Extra: if user is doing “discount math”, show final after “decrease” only when pct >= 0 (already implied by new)
+    // No extra computed fields needed beyond what’s displayed.
+
+    return { oldV, newV, diff, absDiff, pct };
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const r = compute(false);
+    if (!r) {
+      if (oldEl.getAttribute("aria-invalid") === "true") oldEl.focus();
+      else if (newEl.getAttribute("aria-invalid") === "true") newEl.focus();
+      else outEl.textContent = "Please enter values to calculate.";
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    oldEl.value = "";
+    newEl.value = "";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    oldEl.focus();
+  });
+
+  // Live update on input (keeps Calculate for explicit action)
+  oldEl.addEventListener("input", function () { compute(true); });
+  newEl.addEventListener("input", function () { compute(true); });
+
+  renderFaqSchema();
+  clearError();
+});
+</script>

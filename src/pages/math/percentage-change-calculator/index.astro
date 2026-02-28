@@ -5,7 +5,7 @@ export const tool = {
   title: "Percentage Change Calculator",
   description: "Calculate percentage change between two numbers. Find percent increase or decrease instantly.",
   href: "/math/percentage-change-calculator/",
-  order: 40,
+  order: 40, // ✅ keep as-is
 };
 ---
 
@@ -20,12 +20,31 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="pch_from">From value</label>
-        <input id="pch_from" type="number" inputmode="decimal" placeholder="e.g., 100" />
+        <input
+          id="pch_from"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 100"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="pch_help pch_error"
+        />
       </div>
 
       <div class="field">
         <label for="pch_to">To value</label>
-        <input id="pch_to" type="number" inputmode="decimal" placeholder="e.g., 85" />
+        <input
+          id="pch_to"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 85"
+          step="0.01"
+          min="-1e15"
+          max="1e15"
+          aria-describedby="pch_help pch_error"
+        />
+        <div id="pch_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -33,9 +52,24 @@ export const tool = {
         <button class="btn secondary" type="button" id="pch_clear">Clear</button>
       </div>
 
-      <div class="result" id="pch_result">Result will appear here.</div>
+      <div
+        class="result"
+        id="pch_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
 
-      <p class="note" style="margin-top:8px;">
+      <!-- Screen-reader summary -->
+      <div
+        class="note"
+        id="pch_sr_summary"
+        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+      ></div>
+
+      <p class="note" id="pch_help" style="margin-top:8px;">
         All calculations run locally in your browser. No data is stored or transmitted.
       </p>
     </div>
@@ -85,3 +119,187 @@ export const tool = {
     </ul>
   </div>
 </ToolLayout>
+
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="pch_faq_schema"></script>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fromEl = document.getElementById("pch_from");
+  const toEl = document.getElementById("pch_to");
+  const calcBtn = document.getElementById("pch_calc");
+  const clearBtn = document.getElementById("pch_clear");
+  const outEl = document.getElementById("pch_result");
+  const errEl = document.getElementById("pch_error");
+  const srEl = document.getElementById("pch_sr_summary");
+  const faqSchemaEl = document.getElementById("pch_faq_schema");
+
+  if (!fromEl || !toEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
+
+  // Single source of truth for FAQ content (schema uses this)
+  const FAQ = [
+    {
+      q: "What is percentage change?",
+      a: "It measures how much a value increases or decreases relative to its original (starting) value.",
+    },
+    {
+      q: "Why can’t “from value” be 0?",
+      a: "The formula divides by the starting value, so 0 makes the calculation undefined (division by zero).",
+    },
+    {
+      q: "Is this the same as percent difference?",
+      a: "Not exactly. Percent difference compares two values without choosing a starting point; percentage change uses the 'from' value as the baseline.",
+    },
+    {
+      q: "Can the result be negative?",
+      a: "Yes. A negative result indicates a decrease from the starting value.",
+    },
+    {
+      q: "Is this calculation accurate?",
+      a: "Yes. It uses the standard mathematical formula for percentage change.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    fromEl.removeAttribute("aria-invalid");
+    toEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "from") fromEl.setAttribute("aria-invalid", "true");
+    if (which === "to") toEl.setAttribute("aria-invalid", "true");
+    if (which === "both") {
+      fromEl.setAttribute("aria-invalid", "true");
+      toEl.setAttribute("aria-invalid", "true");
+    }
+  }
+
+  function fmt(n) {
+    if (!Number.isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 10 });
+  }
+
+  function fmtPctSigned(p) {
+    if (!Number.isFinite(p)) return "0%";
+    const abs = Math.abs(p);
+    const s = abs.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    if (p > 0) return "+" + s + "%";
+    if (p < 0) return "−" + s + "%";
+    return "0%";
+  }
+
+  function compute(showEmptyAsPlaceholder) {
+    clearError();
+
+    const fRaw = String(fromEl.value || "").trim();
+    const tRaw = String(toEl.value || "").trim();
+
+    if (!fRaw || !tRaw) {
+      if (showEmptyAsPlaceholder) outEl.textContent = "Result will appear here.";
+      srEl.textContent = "";
+      return null;
+    }
+
+    const fromV = toNum(fRaw);
+    const toV = toNum(tRaw);
+
+    if (!Number.isFinite(fromV)) {
+      setError("Please enter a valid from value.", "from");
+      return null;
+    }
+    if (!Number.isFinite(toV)) {
+      setError("Please enter a valid to value.", "to");
+      return null;
+    }
+
+    if (Math.abs(fromV) > 1e15) {
+      setError("From value is too large. Please enter a smaller value.", "from");
+      return null;
+    }
+    if (Math.abs(toV) > 1e15) {
+      setError("To value is too large. Please enter a smaller value.", "to");
+      return null;
+    }
+
+    if (fromV === 0) {
+      setError("From value cannot be 0 (division by zero).", "from");
+      outEl.textContent = "Please enter a non-zero from value.";
+      srEl.textContent = "";
+      return null;
+    }
+
+    const diff = toV - fromV;
+    const pct = (diff / fromV) * 100;
+
+    let tag = "No change";
+    if (pct > 0) tag = pct >= 50 ? "Large increase" : "Increase";
+    if (pct < 0) tag = Math.abs(pct) >= 50 ? "Large decrease" : "Decrease";
+
+    outEl.innerHTML =
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Percentage change</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
+        fmtPctSigned(pct) +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        "From: " + fmt(fromV) + " · To: " + fmt(toV) + " · Difference: " + fmt(diff) +
+      "</div>" +
+      "<div class='note' style='margin-top:4px;'>" +
+        "Computed as ((" + fmt(toV) + " − " + fmt(fromV) + ") ÷ " + fmt(fromV) + ") × 100" +
+      "</div>";
+
+    srEl.textContent =
+      "From value " + fmt(fromV) + ", to value " + fmt(toV) + ". " +
+      "Percentage change " + fmtPctSigned(pct) + ". Difference " + fmt(diff) + ".";
+
+    return { fromV, toV, diff, pct };
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const r = compute(false);
+    if (!r) {
+      if (fromEl.getAttribute("aria-invalid") === "true") fromEl.focus();
+      else if (toEl.getAttribute("aria-invalid") === "true") toEl.focus();
+      else outEl.textContent = "Please enter values to calculate.";
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    fromEl.value = "";
+    toEl.value = "";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    fromEl.focus();
+  });
+
+  // Live update on input (keeps Calculate for explicit action)
+  fromEl.addEventListener("input", function () { compute(true); });
+  toEl.addEventListener("input", function () { compute(true); });
+
+  renderFaqSchema();
+  clearError();
+});
+</script>

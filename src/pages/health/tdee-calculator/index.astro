@@ -7,17 +7,49 @@ export const tool = {
   href: "/health/tdee-calculator/",
   order: 40,
 };
+
+const faq = [
+  {
+    q: "What is TDEE?",
+    a: "TDEE (Total Daily Energy Expenditure) is an estimate of how many calories you burn per day including activity.",
+  },
+  {
+    q: "How is TDEE calculated here?",
+    a: "This tool estimates BMR using Mifflin–St Jeor, then multiplies it by an activity factor.",
+  },
+  {
+    q: "Can I use TDEE for weight loss or gain?",
+    a: "It can be a starting estimate. Real needs vary, so adjust based on actual weight trends over a few weeks.",
+  },
+  {
+    q: "Is this medical advice?",
+    a: "No. This is an informational estimate only.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
 ---
 
 <ToolLayout
   title="TDEE Calculator — MinimalDev"
-  description="Free TDEE calculator. Estimate Total Daily Energy Expenditure using BMR (Mifflin-St Jeor) and activity multiplier."
+  description="Free TDEE calculator. Estimate Total Daily Energy Expenditure using BMR (Mifflin–St Jeor) and an activity multiplier."
   canonicalPath="/health/tdee-calculator/"
   h1="TDEE Calculator"
   intro="Estimate your Total Daily Energy Expenditure (TDEE) using BMR and activity level. Informational only."
+  faq={faq}
 >
   <div slot="tool" data-tool="tdee-calculator">
     <div class="form">
+      <div class="field">
+        <label for="tdee_unit">Units</label>
+        <select id="tdee_unit">
+          <option value="metric" selected>Metric (cm, kg)</option>
+          <option value="imperial">Imperial (ft/in, lb)</option>
+        </select>
+      </div>
+
       <div class="field">
         <label for="tdee_sex">Sex</label>
         <select id="tdee_sex">
@@ -31,14 +63,43 @@ export const tool = {
         <input id="tdee_age" type="number" inputmode="numeric" min="1" max="120" placeholder="e.g., 30" />
       </div>
 
-      <div class="field">
-        <label for="tdee_height">Height (cm)</label>
-        <input id="tdee_height" type="number" inputmode="decimal" min="1" placeholder="e.g., 175" />
+      <div class="field" id="tdee_height_metric_field">
+        <label for="tdee_height_cm">Height (cm)</label>
+        <input id="tdee_height_cm" type="number" inputmode="decimal" min="1" placeholder="e.g., 175" />
       </div>
 
-      <div class="field">
-        <label for="tdee_weight">Weight (kg)</label>
-        <input id="tdee_weight" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      <div class="field" id="tdee_height_imperial_field" style="display:none;">
+        <label>Height (ft / in)</label>
+        <div style="display:flex; gap:10px;">
+          <input
+            id="tdee_height_ft"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="ft"
+            aria-label="Height in feet"
+            style="flex:1;"
+          />
+          <input
+            id="tdee_height_in"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="in"
+            aria-label="Height in inches"
+            style="flex:1;"
+          />
+        </div>
+      </div>
+
+      <div class="field" id="tdee_weight_metric_field">
+        <label for="tdee_weight_kg">Weight (kg)</label>
+        <input id="tdee_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="tdee_weight_imperial_field" style="display:none;">
+        <label for="tdee_weight_lb">Weight (lb)</label>
+        <input id="tdee_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
       </div>
 
       <div class="field">
@@ -57,17 +118,20 @@ export const tool = {
         <button class="btn secondary" type="button" id="tdee_clear">Clear</button>
       </div>
 
-      <div class="result" id="tdee_result">Result will appear here.</div>
+      <div class="result" id="tdee_result" aria-live="polite">Result will appear here.</div>
 
       <p class="note" style="margin-top:10px;">
         Informational only. Activity multipliers are approximations and vary by individual.
+      </p>
+      <p class="note">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      1) Calculate <strong>BMR</strong> via Mifflin-St Jeor.<br/>
+      1) Calculate <strong>BMR</strong> via Mifflin–St Jeor.<br/>
       2) Multiply by an <strong>activity factor</strong> to estimate TDEE.<br/>
       <strong>TDEE = BMR × activity multiplier</strong>
     </p>
@@ -75,16 +139,18 @@ export const tool = {
 
   <div slot="examples">
     <ul>
-      <li>Male 30y, 175 cm, 70 kg, moderate → TDEE ≈ 2,556 kcal/day</li>
-      <li>Female 30y, 165 cm, 60 kg, light → TDEE ≈ 1,815 kcal/day</li>
+      <li>Male 30y, 175 cm, 70 kg, moderate (1.55) → TDEE ≈ 2,556 kcal/day</li>
+      <li>Female 30y, 165 cm, 60 kg, light (1.375) → TDEE ≈ 1,815 kcal/day</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>What is TDEE?</strong> Estimated calories your body uses per day including activity.</li>
-      <li><strong>Can I use TDEE for weight loss?</strong> It helps estimate a starting point; adjust based on real results.</li>
-      <li><strong>Is this medical advice?</strong> No. It’s an informational estimate.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
@@ -100,18 +166,50 @@ export const tool = {
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("tdee_unit");
   const sexEl = document.getElementById("tdee_sex");
   const ageEl = document.getElementById("tdee_age");
-  const hEl = document.getElementById("tdee_height");
-  const wEl = document.getElementById("tdee_weight");
+
+  const hCmField = document.getElementById("tdee_height_metric_field");
+  const hFtInField = document.getElementById("tdee_height_imperial_field");
+  const wKgField = document.getElementById("tdee_weight_metric_field");
+  const wLbField = document.getElementById("tdee_weight_imperial_field");
+
+  const hCmEl = document.getElementById("tdee_height_cm");
+  const hFtEl = document.getElementById("tdee_height_ft");
+  const hInEl = document.getElementById("tdee_height_in");
+
+  const wKgEl = document.getElementById("tdee_weight_kg");
+  const wLbEl = document.getElementById("tdee_weight_lb");
+
   const actEl = document.getElementById("tdee_activity");
   const calcBtn = document.getElementById("tdee_calc");
   const clearBtn = document.getElementById("tdee_clear");
   const outEl = document.getElementById("tdee_result");
 
-  if (!sexEl || !ageEl || !hEl || !wEl || !actEl || !calcBtn || !clearBtn || !outEl) return;
+  if (
+    !unitEl || !sexEl || !ageEl ||
+    !hCmField || !hFtInField || !wKgField || !wLbField ||
+    !hCmEl || !hFtEl || !hInEl || !wKgEl || !wLbEl ||
+    !actEl || !calcBtn || !clearBtn || !outEl
+  ) return;
 
-  function round0(n) { return Math.round(n).toLocaleString(); }
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function round0(n) {
+    return Math.round(n).toLocaleString();
+  }
+
+  function setUnitUI() {
+    const isImp = String(unitEl.value) === "imperial";
+    hCmField.style.display = isImp ? "none" : "block";
+    wKgField.style.display = isImp ? "none" : "block";
+    hFtInField.style.display = isImp ? "block" : "none";
+    wLbField.style.display = isImp ? "block" : "none";
+  }
 
   function bmr(sex, age, cm, kg) {
     const base = 10 * kg + 6.25 * cm - 5 * age;
@@ -119,16 +217,49 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function compute() {
-    const sex = sexEl.value;
-    const age = parseFloat(ageEl.value);
-    const cm = parseFloat(hEl.value);
-    const kg = parseFloat(wEl.value);
-    const mult = parseFloat(actEl.value);
+    const sex = String(sexEl.value);
+    const age = toNum(ageEl.value);
+    const mult = toNum(actEl.value);
 
-    if (!isFinite(age) || age <= 0 || !isFinite(cm) || cm <= 0 || !isFinite(kg) || kg <= 0 || !isFinite(mult) || mult <= 0) {
+    if (!isFinite(age) || age <= 0 || age > 120 || !isFinite(mult) || mult <= 0) {
       outEl.textContent = "Please enter valid values.";
       return;
     }
+
+    let cm = NaN;
+    let kg = NaN;
+
+    if (String(unitEl.value) === "imperial") {
+      const ft = toNum(hFtEl.value);
+      const inch = toNum(hInEl.value);
+      const lb = toNum(wLbEl.value);
+
+      if (!isFinite(ft) || ft < 0 || !isFinite(inch) || inch < 0 || !isFinite(lb) || lb <= 0) {
+        outEl.textContent = "Please enter valid height (ft/in) and weight (lb).";
+        return;
+      }
+
+      const totalIn = (ft * 12) + inch;
+      if (!(totalIn > 0)) {
+        outEl.textContent = "Height must be greater than 0.";
+        return;
+      }
+
+      cm = totalIn * 2.54;
+      kg = lb * 0.45359237;
+    } else {
+      cm = toNum(hCmEl.value);
+      kg = toNum(wKgEl.value);
+
+      if (!isFinite(cm) || cm <= 0 || !isFinite(kg) || kg <= 0) {
+        outEl.textContent = "Please enter valid height (cm) and weight (kg).";
+        return;
+      }
+    }
+
+    // Basic sanity bounds
+    if (cm < 50 || cm > 272) { outEl.textContent = "Please check height. Enter a realistic value."; return; }
+    if (kg < 10 || kg > 500) { outEl.textContent = "Please check weight. Enter a realistic value."; return; }
 
     const B = bmr(sex, age, cm, kg);
     const T = B * mult;
@@ -140,11 +271,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
   calcBtn.addEventListener("click", compute);
 
-  clearBtn.addEventListener("click", function () {
-    ageEl.value = "";
-    hEl.value = "";
-    wEl.value = "";
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
     outEl.textContent = "Result will appear here.";
   });
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    sexEl.value = "male";
+    actEl.value = "1.2";
+    ageEl.value = "";
+    hCmEl.value = "";
+    wKgEl.value = "";
+    hFtEl.value = "";
+    hInEl.value = "";
+    wLbEl.value = "";
+    setUnitUI();
+    outEl.textContent = "Result will appear here.";
+  });
+
+  setUnitUI();
 });
 </script>

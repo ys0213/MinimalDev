@@ -3,9 +3,10 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Percent Calculator",
-  description: "Calculate percent of a number (percentage). Useful for discounts, tax, tips, and quick math.",
+  description:
+    "Calculate percent of a number (percentage). Useful for discounts, tax, tips, and quick math.",
   href: "/math/percent-calculator/",
-  order: 10,
+  order: 10, // ✅ keep as-is
 };
 ---
 
@@ -20,12 +21,31 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="pc_percent">Percent (%)</label>
-        <input id="pc_percent" type="number" inputmode="decimal" placeholder="e.g., 15" />
+        <input
+          id="pc_percent"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 15"
+          min="-1000000"
+          max="1000000"
+          step="0.01"
+          aria-describedby="pc_help pc_error"
+        />
       </div>
 
       <div class="field">
         <label for="pc_number">Number</label>
-        <input id="pc_number" type="number" inputmode="decimal" placeholder="e.g., 200" />
+        <input
+          id="pc_number"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 200"
+          min="-1e15"
+          max="1e15"
+          step="0.01"
+          aria-describedby="pc_help pc_error"
+        />
+        <div id="pc_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -33,9 +53,24 @@ export const tool = {
         <button class="btn secondary" type="button" id="pc_clear">Clear</button>
       </div>
 
-      <div class="result" id="pc_result">Result will appear here.</div>
+      <div
+        class="result"
+        id="pc_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
 
-      <p class="note" style="margin-top:8px;">
+      <!-- Screen-reader summary -->
+      <div
+        class="note"
+        id="pc_sr_summary"
+        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+      ></div>
+
+      <p class="note" id="pc_help" style="margin-top:10px;">
         Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
       </p>
     </div>
@@ -79,3 +114,173 @@ export const tool = {
     </ul>
   </div>
 </ToolLayout>
+
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="pc_faq_schema"></script>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const percentEl = document.getElementById("pc_percent");
+  const numberEl = document.getElementById("pc_number");
+  const calcBtn = document.getElementById("pc_calc");
+  const clearBtn = document.getElementById("pc_clear");
+  const outEl = document.getElementById("pc_result");
+  const errEl = document.getElementById("pc_error");
+  const srEl = document.getElementById("pc_sr_summary");
+  const faqSchemaEl = document.getElementById("pc_faq_schema");
+
+  if (!percentEl || !numberEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
+
+  // Single source of truth for FAQ content (schema uses this)
+  const FAQ = [
+    {
+      q: "What does “percent of a number” mean?",
+      a: "It means taking a portion of the number based on “per 100”. For example, 15% means 15 per 100.",
+    },
+    {
+      q: "Can I use decimals?",
+      a: "Yes. Both percent and number can be decimals (for example, 2.5% of 19.99).",
+    },
+    {
+      q: "How do I calculate “percent off”?",
+      a: "First compute the percent amount, then subtract it from the original price (original − percentAmount).",
+    },
+    {
+      q: "Is this the same as percent increase?",
+      a: "No. Percent increase/decrease compares an old value to a new value. This tool only computes “percent of a number”.",
+    },
+    {
+      q: "Does this store my inputs?",
+      a: "No. Calculations run locally in your browser. Inputs are not stored or sent to a server.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    percentEl.removeAttribute("aria-invalid");
+    numberEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "percent") percentEl.setAttribute("aria-invalid", "true");
+    if (which === "number") numberEl.setAttribute("aria-invalid", "true");
+    if (which === "both") {
+      percentEl.setAttribute("aria-invalid", "true");
+      numberEl.setAttribute("aria-invalid", "true");
+    }
+  }
+
+  function fmt(n) {
+    if (!Number.isFinite(n)) return "0";
+    // Keep up to 10 decimals, trim trailing zeros.
+    const s = n.toLocaleString(undefined, { maximumFractionDigits: 10 });
+    return s;
+  }
+
+  function compute(showEmptyAsPlaceholder) {
+    clearError();
+
+    const pRaw = String(percentEl.value || "").trim();
+    const nRaw = String(numberEl.value || "").trim();
+
+    if (!pRaw || !nRaw) {
+      outEl.textContent = showEmptyAsPlaceholder ? "Result will appear here." : outEl.textContent;
+      srEl.textContent = "";
+      return null;
+    }
+
+    const p = toNum(pRaw);
+    const num = toNum(nRaw);
+
+    if (!Number.isFinite(p)) {
+      setError("Please enter a valid percent.", "percent");
+      return null;
+    }
+    if (!Number.isFinite(num)) {
+      setError("Please enter a valid number.", "number");
+      return null;
+    }
+
+    // Basic sanity bounds (UX only)
+    if (Math.abs(p) > 1000000) {
+      setError("Percent is too large. Please enter a smaller value.", "percent");
+      return null;
+    }
+    if (Math.abs(num) > 1e15) {
+      setError("Number is too large. Please enter a smaller value.", "number");
+      return null;
+    }
+
+    const result = (p / 100) * num;
+
+    // Emphasis tag (transparent rule; not “math truth”, just UX labeling)
+    const absP = Math.abs(p);
+    let tag = "Result";
+    if (absP === 0) tag = "No change";
+    else if (absP < 5) tag = "Small percent";
+    else if (absP >= 25) tag = "Large percent";
+
+    outEl.innerHTML =
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Percent of a number</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
+        fmt(p) + "% of " + fmt(num) + " = " + fmt(result) +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        "Computed as (" + fmt(p) + " ÷ 100) × " + fmt(num) +
+      "</div>";
+
+    srEl.textContent =
+      fmt(p) + " percent of " + fmt(num) + " equals " + fmt(result) + ".";
+
+    return { p, num, result };
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const r = compute(false);
+    if (!r) {
+      // Focus first invalid field if present
+      if (percentEl.getAttribute("aria-invalid") === "true") percentEl.focus();
+      else if (numberEl.getAttribute("aria-invalid") === "true") numberEl.focus();
+      else outEl.textContent = "Please enter values to calculate.";
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    percentEl.value = "";
+    numberEl.value = "";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    percentEl.focus();
+  });
+
+  // Live update on input (keeps Calculate for explicit action)
+  percentEl.addEventListener("input", function () { compute(true); });
+  numberEl.addEventListener("input", function () { compute(true); });
+
+  renderFaqSchema();
+  clearError();
+});
+</script>

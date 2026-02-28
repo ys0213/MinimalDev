@@ -7,14 +7,38 @@ export const tool = {
   href: "/health/bmi-calculator/",
   order: 10,
 };
+
+const faq = [
+  {
+    q: "Is BMI accurate?",
+    a: "BMI is a screening tool based on height and weight. It does not directly measure body fat, muscle mass, or health risk.",
+  },
+  {
+    q: "Is this BMI calculator for adults only?",
+    a: "Yes. The BMI categories shown here are for adults. Children and teens use age- and sex-specific BMI percentiles.",
+  },
+  {
+    q: "Does BMI consider muscle?",
+    a: "No. People with high muscle mass can have a higher BMI even with low body fat.",
+  },
+  {
+    q: "Which BMI categories are used?",
+    a: "Standard adult BMI categories: underweight (<18.5), normal (18.5–24.9), overweight (25–29.9), obesity (≥30).",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser and nothing is uploaded.",
+  },
+];
 ---
 
 <ToolLayout
   title="BMI Calculator — MinimalDev"
-  description="Free BMI calculator using metric or imperial units. Calculate Body Mass Index and view standard BMI categories."
+  description="Free BMI calculator using metric or imperial units. Calculate Body Mass Index and view standard adult BMI categories."
   canonicalPath="/health/bmi-calculator/"
   h1="BMI Calculator"
   intro="Calculate your Body Mass Index (BMI) using metric or imperial units. See your BMI value and category instantly."
+  faq={faq}
 >
   <div slot="tool" data-tool="bmi-calculator">
     <div class="form">
@@ -37,61 +61,166 @@ export const tool = {
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bmi_calc">Calculate</button>
         <button class="btn secondary" type="button" id="bmi_clear">Clear</button>
       </div>
 
-      <div class="result" id="bmi_result">Result will appear here.</div>
+      <div class="result" id="bmi_result" style="margin-top:12px;">Result will appear here.</div>
 
-      <p class="note" style="margin-top:8px;">
-        This calculator is for informational purposes only and does not replace medical advice.
+      <div class="note" id="bmi_category_box" style="margin-top:10px; display:none;">
+        <strong>Adult BMI categories</strong>
+        <ul style="margin:8px 0 0; padding-left:18px;">
+          <li><strong>Underweight:</strong> &lt; 18.5</li>
+          <li><strong>Normal weight:</strong> 18.5 – 24.9</li>
+          <li><strong>Overweight:</strong> 25.0 – 29.9</li>
+          <li><strong>Obesity:</strong> ≥ 30.0</li>
+        </ul>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Informational only. BMI is not a diagnosis and does not replace medical advice.
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      BMI (Body Mass Index) is calculated using height and weight.
+      BMI (Body Mass Index) is a simple ratio of weight to height used as a general screening metric for adults.
+      It helps categorize weight status but does not directly measure body fat percentage.
     </p>
 
     <p class="note">
-      <strong>Metric formula:</strong> BMI = weight (kg) ÷ height (m)²<br />
-      <strong>Imperial formula:</strong> BMI = (weight (lb) ÷ height (in)²) × 703
+      <strong>Metric:</strong> BMI = weight (kg) ÷ height (m)²<br />
+      <strong>Imperial:</strong> BMI = (weight (lb) ÷ height (in)²) × 703
     </p>
 
     <p class="note">
-      The result is compared against standard adult BMI categories.
+      Use BMI as a starting point. If you want a more complete picture, consider waist circumference,
+      body composition, and clinical guidance.
     </p>
-
-    <ul>
-      <li><strong>Underweight:</strong> Below 18.5</li>
-      <li><strong>Normal weight:</strong> 18.5 – 24.9</li>
-      <li><strong>Overweight:</strong> 25 – 29.9</li>
-      <li><strong>Obesity:</strong> 30 and above</li>
-    </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>170 cm, 65 kg → BMI ≈ 22.49 (Normal range)</li>
-      <li>180 cm, 90 kg → BMI ≈ 27.78 (Overweight)</li>
-      <li>70 in, 160 lb → BMI ≈ 22.96</li>
+      <li><strong>170 cm, 65 kg</strong> → BMI ≈ <strong>22.49</strong> (Normal range)</li>
+      <li><strong>180 cm, 90 kg</strong> → BMI ≈ <strong>27.78</strong> (Overweight)</li>
+      <li><strong>70 in, 160 lb</strong> → BMI ≈ <strong>22.96</strong> (Normal range)</li>
     </ul>
   </div>
 
   <div slot="faq">
     <ul>
-      <li><strong>Is BMI accurate?</strong> BMI is a screening tool. It does not directly measure body fat or muscle mass.</li>
-      <li><strong>Is this for adults?</strong> Yes. BMI categories shown here apply to adults, not children or teens.</li>
-      <li><strong>Does BMI consider muscle?</strong> No. Athletes may have a high BMI due to muscle mass.</li>
-      <li><strong>Which BMI chart is used?</strong> Standard adult BMI categories commonly referenced by global health organizations.</li>
-      <li><strong>Is my data stored?</strong> No. All calculations happen locally in your browser.</li>
+      {faq.map((item) => (
+        <li>
+          <strong>{item.q}</strong> {item.a}
+        </li>
+      ))}
     </ul>
   </div>
 
   <div slot="related">
     <ul>
+      <li><a href="/health/calorie-calculator/">Calorie Calculator</a></li>
+      <li><a href="/health/body-fat-calculator/">Body Fat Calculator</a></li>
       <li><a href="/health/water-intake-calculator/">Water Intake Calculator</a></li>
-      <li><a href="/health/">Health Calculators</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
     </ul>
   </div>
 </ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("bmi_unit");
+  const hEl = document.getElementById("bmi_height");
+  const wEl = document.getElementById("bmi_weight");
+  const calcBtn = document.getElementById("bmi_calc");
+  const clearBtn = document.getElementById("bmi_clear");
+  const outEl = document.getElementById("bmi_result");
+  const catBoxEl = document.getElementById("bmi_category_box");
+
+  if (!unitEl || !hEl || !wEl || !calcBtn || !clearBtn || !outEl || !catBoxEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return isFinite(x) ? x : NaN;
+  }
+
+  function setPlaceholders() {
+    const u = String(unitEl.value);
+    if (u === "imperial") {
+      hEl.placeholder = "Height (in)";
+      wEl.placeholder = "Weight (lb)";
+    } else {
+      hEl.placeholder = "Height (cm)";
+      wEl.placeholder = "Weight (kg)";
+    }
+  }
+
+  function category(bmi) {
+    if (!isFinite(bmi)) return "";
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal weight";
+    if (bmi < 30) return "Overweight";
+    return "Obesity";
+  }
+
+  function reset() {
+    outEl.textContent = "Result will appear here.";
+    catBoxEl.style.display = "none";
+  }
+
+  unitEl.addEventListener("change", function () {
+    setPlaceholders();
+    reset();
+  });
+
+  calcBtn.addEventListener("click", function () {
+    const u = String(unitEl.value);
+    const h = toNum(hEl.value);
+    const w = toNum(wEl.value);
+
+    if (!isFinite(h) || h <= 0 || !isFinite(w) || w <= 0) {
+      outEl.textContent = "Please enter valid height and weight.";
+      catBoxEl.style.display = "none";
+      return;
+    }
+
+    let bmi = NaN;
+
+    if (u === "imperial") {
+      // BMI = (lb / in^2) * 703
+      bmi = (w / (h * h)) * 703;
+    } else {
+      // BMI = kg / (m^2), input height in cm
+      const m = h / 100;
+      bmi = w / (m * m);
+    }
+
+    if (!isFinite(bmi) || bmi <= 0) {
+      outEl.textContent = "Could not calculate BMI with these values.";
+      catBoxEl.style.display = "none";
+      return;
+    }
+
+    const cat = category(bmi);
+
+    outEl.innerHTML =
+      "<strong>BMI:</strong> " + bmi.toFixed(2) + "<br/>" +
+      "<strong>Category (adult):</strong> " + cat + "<br/>" +
+      "<span class='note'>BMI is a screening metric and not a diagnosis.</span>";
+
+    catBoxEl.style.display = "block";
+  });
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    hEl.value = "";
+    wEl.value = "";
+    setPlaceholders();
+    reset();
+  });
+
+  setPlaceholders();
+  reset();
+});
+</script>

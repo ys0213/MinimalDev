@@ -5,7 +5,7 @@ export const tool = {
   title: "Sales Tax Calculator",
   description: "Free sales tax calculator. Add or remove sales tax and see subtotal, tax, and total instantly.",
   href: "/math/sales-tax-calculator/",
-  order: 60,
+  order: 60, // ✅ keep as-is
 };
 ---
 
@@ -20,7 +20,7 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="st_mode">Mode</label>
-        <select id="st_mode">
+        <select id="st_mode" aria-describedby="st_help st_error">
           <option value="add" selected>Add tax (price → total)</option>
           <option value="remove">Remove tax (total → price)</option>
         </select>
@@ -28,12 +28,31 @@ export const tool = {
 
       <div class="field">
         <label for="st_amount">Amount</label>
-        <input id="st_amount" type="number" inputmode="decimal" placeholder="e.g., 100" />
+        <input
+          id="st_amount"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 100"
+          step="0.01"
+          min="0"
+          max="1e15"
+          aria-describedby="st_help st_error"
+        />
       </div>
 
       <div class="field">
         <label for="st_rate">Tax rate (%)</label>
-        <input id="st_rate" type="number" inputmode="decimal" placeholder="e.g., 8.25" />
+        <input
+          id="st_rate"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 8.25"
+          step="0.01"
+          min="0"
+          max="1000"
+          aria-describedby="st_help st_error"
+        />
+        <div id="st_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -41,7 +60,20 @@ export const tool = {
         <button class="btn secondary" type="button" id="st_clear">Clear</button>
       </div>
 
-      <div class="result" id="st_result">Result will appear here.</div>
+      <div class="result" id="st_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <!-- Screen-reader summary -->
+      <div
+        class="note"
+        id="st_sr_summary"
+        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+      ></div>
+
+      <p class="note" id="st_help" style="margin-top:8px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+      </p>
     </div>
   </div>
 
@@ -77,6 +109,9 @@ export const tool = {
   </div>
 </ToolLayout>
 
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="st_faq_schema"></script>
+
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const modeEl = document.getElementById("st_mode");
@@ -85,25 +120,116 @@ document.addEventListener("DOMContentLoaded", function () {
   const calcBtn = document.getElementById("st_calc");
   const clearBtn = document.getElementById("st_clear");
   const outEl = document.getElementById("st_result");
+  const errEl = document.getElementById("st_error");
+  const srEl = document.getElementById("st_sr_summary");
+  const faqSchemaEl = document.getElementById("st_faq_schema");
 
-  if (!modeEl || !amountEl || !rateEl || !calcBtn || !clearBtn || !outEl) return;
+  if (!modeEl || !amountEl || !rateEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
 
-  function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  // Single source of truth for FAQ content (schema uses this)
+  const FAQ = [
+    {
+      q: "Is this VAT?",
+      a: "Not exactly. VAT is often included in the listed price; this tool is for a sales-tax workflow where tax is added at checkout. If your prices already include tax, use a VAT-style calculator.",
+    },
+    {
+      q: "Why does remove-tax use division?",
+      a: "Because the tax is embedded in the total. To find the pre-tax price, divide the total by (1 + rate), then compute tax as total − price.",
+    },
+    {
+      q: "Does this round like retailers?",
+      a: "This uses standard rounding for display. Real receipts may round per line item or use different rounding rules depending on jurisdiction and retailer systems.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
   }
 
-  calcBtn.addEventListener("click", function () {
-    const mode = modeEl.value;
-    const amt = parseFloat(amountEl.value);
-    const ratePct = parseFloat(rateEl.value);
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
 
-    if (!isFinite(amt) || amt < 0 || !isFinite(ratePct) || ratePct < 0) {
-      outEl.textContent = "Please enter valid amount and tax rate.";
-      return;
+  function clearError() {
+    amountEl.removeAttribute("aria-invalid");
+    rateEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg, which) {
+    errEl.textContent = msg;
+    if (which === "amount") amountEl.setAttribute("aria-invalid", "true");
+    if (which === "rate") rateEl.setAttribute("aria-invalid", "true");
+    if (which === "both") {
+      amountEl.setAttribute("aria-invalid", "true");
+      rateEl.setAttribute("aria-invalid", "true");
+    }
+  }
+
+  function money(v) {
+    if (!Number.isFinite(v)) return "$0.00";
+    // Avoid "-$0.00"
+    const x = Math.abs(v) < 1e-10 ? 0 : v;
+    return x.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  }
+
+  function fmtPct(p) {
+    if (!Number.isFinite(p)) return "0%";
+    const x = Math.abs(p) < 1e-10 ? 0 : p;
+    return x.toLocaleString(undefined, { maximumFractionDigits: 4 }) + "%";
+  }
+
+  function compute(showEmptyAsPlaceholder) {
+    clearError();
+
+    const mode = String(modeEl.value || "add");
+    const amtRaw = String(amountEl.value || "").trim();
+    const rateRaw = String(rateEl.value || "").trim();
+
+    if (!amtRaw || !rateRaw) {
+      if (showEmptyAsPlaceholder) outEl.textContent = "Result will appear here.";
+      srEl.textContent = "";
+      return null;
+    }
+
+    const amt = toNum(amtRaw);
+    const ratePct = toNum(rateRaw);
+
+    if (!Number.isFinite(amt) || amt < 0) {
+      setError("Please enter a valid amount (0 or higher).", "amount");
+      return null;
+    }
+    if (!Number.isFinite(ratePct) || ratePct < 0) {
+      setError("Please enter a valid tax rate (0 or higher).", "rate");
+      return null;
+    }
+    if (amt > 1e15) {
+      setError("Amount is too large. Please enter a smaller value.", "amount");
+      return null;
+    }
+    if (ratePct > 1000) {
+      setError("Tax rate is too large. Please enter a smaller rate.", "rate");
+      return null;
     }
 
     const r = ratePct / 100;
+
+    // Guard against division blow-ups in remove mode when 1+r is extremely small (can only happen if negative, already blocked).
+    const denom = 1 + r;
+    if (mode === "remove" && denom <= 0) {
+      setError("Tax rate must produce a positive (1 + rate).", "rate");
+      return null;
+    }
 
     let price, tax, total;
 
@@ -113,20 +239,70 @@ document.addEventListener("DOMContentLoaded", function () {
       total = price + tax;
     } else {
       total = amt;
-      price = total / (1 + r);
+      price = total / denom;
       tax = total - price;
     }
 
+    const effectiveRate = mode === "remove" ? (price === 0 ? NaN : (tax / price) * 100) : ratePct;
+    const badge = mode === "add" ? "Tax added" : "Tax removed";
+
     outEl.innerHTML =
-      "<strong>Price (pre-tax):</strong> " + money(price) + "<br/>" +
-      "<strong>Tax:</strong> " + money(tax) + "<br/>" +
-      "<strong>Total:</strong> " + money(total);
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Result</strong>" +
+        "<span class='note' style='margin:0;'>" + badge + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; display:grid; gap:6px;'>" +
+        "<div><strong>Price (pre-tax):</strong> " + money(price) + "</div>" +
+        "<div><strong>Tax:</strong> " + money(tax) + " <span class='note' style='margin-left:6px;'>(" + fmtPct(effectiveRate) + ")</span></div>" +
+        "<div><strong>Total:</strong> " + money(total) + "</div>" +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        (mode === "add"
+          ? ("Computed as tax = price × " + fmtPct(ratePct) + ", total = price + tax.")
+          : ("Computed as price = total ÷ (1 + " + fmtPct(ratePct) + "), tax = total − price."))
+      + "</div>";
+
+    srEl.textContent =
+      "Mode " + (mode === "add" ? "add tax" : "remove tax") +
+      ". Price " + money(price) + ", tax " + money(tax) + ", total " + money(total) + ".";
+
+    return { mode, amt, ratePct, price, tax, total };
+  }
+
+  calcBtn.addEventListener("click", function () {
+    const r = compute(false);
+    if (!r) {
+      if (amountEl.getAttribute("aria-invalid") === "true") amountEl.focus();
+      else if (rateEl.getAttribute("aria-invalid") === "true") rateEl.focus();
+      else outEl.textContent = "Please enter values to calculate.";
+    }
   });
 
   clearBtn.addEventListener("click", function () {
+    modeEl.value = "add";
     amountEl.value = "";
     rateEl.value = "";
+    clearError();
     outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    amountEl.focus();
   });
+
+  // UX: update placeholder hint based on mode
+  function updateAmountPlaceholder() {
+    amountEl.placeholder = modeEl.value === "remove" ? "e.g., 108 (total)" : "e.g., 100 (price)";
+  }
+
+  modeEl.addEventListener("change", function () {
+    updateAmountPlaceholder();
+    compute(true);
+  });
+
+  amountEl.addEventListener("input", function () { compute(true); });
+  rateEl.addEventListener("input", function () { compute(true); });
+
+  updateAmountPlaceholder();
+  renderFaqSchema();
+  clearError();
 });
 </script>

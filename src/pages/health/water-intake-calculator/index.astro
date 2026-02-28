@@ -3,7 +3,8 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Water Intake Calculator",
-  description: "Estimate daily water intake based on weight and activity. Free hydration guideline tool (liters and cups).",
+  description:
+    "Estimate daily water intake based on weight and activity. Free hydration guideline tool (liters and cups).",
   href: "/health/water-intake-calculator/",
   order: 20,
 };
@@ -11,7 +12,7 @@ export const tool = {
 
 <ToolLayout
   title="Water Intake Calculator — MinimalDev"
-  description="Free water intake calculator to estimate how much water you should drink per day based on weight and activity level. Shows liters and approximate cups."
+  description="Estimate daily water intake from weight and activity. Shows liters and approximate cups."
   canonicalPath="/health/water-intake-calculator/"
   h1="Water Intake Calculator"
   intro="Estimate daily water intake using a simple guideline based on body weight and activity. Results are a general reference, not medical advice."
@@ -20,20 +21,29 @@ export const tool = {
     <div class="form">
       <div class="field">
         <label for="wi_unit">Units</label>
-        <select id="wi_unit">
+        <select id="wi_unit" autocomplete="off">
           <option value="metric" selected>Metric (kg)</option>
           <option value="imperial">Imperial (lb)</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="wi_weight">Weight</label>
-        <input id="wi_weight" type="number" inputmode="decimal" placeholder="Weight (kg)" />
+        <label for="wi_weight" id="wi_weight_label">Weight (kg)</label>
+        <input
+          id="wi_weight"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 70"
+          min="1"
+          step="0.1"
+          aria-describedby="wi_help wi_error"
+        />
+        <div id="wi_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
       <div class="field">
         <label for="wi_activity">Activity level</label>
-        <select id="wi_activity">
+        <select id="wi_activity" autocomplete="off" aria-describedby="wi_help">
           <option value="low" selected>Low</option>
           <option value="moderate">Moderate</option>
           <option value="high">High</option>
@@ -44,22 +54,35 @@ export const tool = {
         <button class="btn secondary" type="button" id="wi_clear">Clear</button>
       </div>
 
-      <div class="result" id="wi_result">Result will appear here.</div>
+      <!-- Result card -->
+      <div
+        class="result"
+        id="wi_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
 
-      <p class="note" style="margin-top:8px;">
-        Informational estimate only. Your needs may vary based on climate, diet, health conditions, and exercise.
+      <!-- Extra structured output for screen readers -->
+      <div class="note" id="wi_sr_summary" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"></div>
+
+      <p class="note" id="wi_help" style="margin-top:10px;">
+        Informational estimate only. Needs vary by climate, diet, health conditions, and exercise.
+        Calculations run locally in your browser (no inputs are stored or sent to a server).
       </p>
 
       <p class="note" style="margin-top:6px;">
-        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
+        Guideline used: ~35 ml per kg per day, plus a modest activity adjustment. Cups are approximate (1 cup ≈ 240 ml).
       </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-      This tool uses a simple hydration guideline based on body weight, then applies a small adjustment for higher activity.
-      The base estimate is approximately <strong>35 ml per kg</strong> of body weight per day (a commonly used rule-of-thumb).
+      This tool uses a simple guideline based on body weight, then applies a modest adjustment for higher activity.
+      The base estimate is approximately <strong>35 ml per kg</strong> of body weight per day (rule-of-thumb).
     </p>
 
     <ul>
@@ -69,14 +92,14 @@ export const tool = {
     </ul>
 
     <p class="note">
-      This is not a medical recommendation. If you have kidney/heart conditions, are pregnant, or have specific medical needs, consult a professional.
+      This is not medical advice. If you have kidney/heart conditions, are pregnant, or have specific medical needs, consult a clinician.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
       <li><strong>70 kg, low activity</strong> → about <strong>2.45 L</strong> (≈ 10 cups)</li>
-      <li><strong>70 kg, moderate activity</strong> → higher estimate with adjustment</li>
+      <li><strong>70 kg, moderate activity</strong> → modestly higher estimate</li>
       <li><strong>150 lb, low activity</strong> → roughly <strong>2.4 L</strong> (approx.)</li>
     </ul>
   </div>
@@ -85,7 +108,7 @@ export const tool = {
     <ul>
       <li><strong>How much water should I drink per day?</strong> Many people use weight-based guidelines, but needs vary widely.</li>
       <li><strong>Is this a medical recommendation?</strong> No. It’s an informational estimate based on a rule-of-thumb.</li>
-      <li><strong>Does coffee/tea count as water?</strong> Fluids contribute, but individual tolerance to caffeine varies.</li>
+      <li><strong>Does coffee/tea count as water?</strong> Fluids contribute, but tolerance to caffeine varies.</li>
       <li><strong>Why show cups?</strong> It helps quick planning. Cups are approximate (1 cup ≈ 240 ml).</li>
       <li><strong>Is my data stored?</strong> No. The calculation runs locally in your browser.</li>
     </ul>
@@ -98,3 +121,191 @@ export const tool = {
     </ul>
   </div>
 </ToolLayout>
+
+<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
+<script is:inline type="application/ld+json" id="wi_faq_schema"></script>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("wi_unit");
+  const weightEl = document.getElementById("wi_weight");
+  const weightLabelEl = document.getElementById("wi_weight_label");
+  const actEl = document.getElementById("wi_activity");
+  const clearBtn = document.getElementById("wi_clear");
+  const outEl = document.getElementById("wi_result");
+  const errEl = document.getElementById("wi_error");
+  const srEl = document.getElementById("wi_sr_summary");
+  const faqSchemaEl = document.getElementById("wi_faq_schema");
+
+  if (!unitEl || !weightEl || !weightLabelEl || !actEl || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
+
+  // Single source of truth for FAQ content (used for schema + can be reused for UI later)
+  const FAQ = [
+    {
+      q: "How much water should I drink per day?",
+      a: "Many people use weight-based guidelines, but needs vary widely by climate, activity, diet, and health.",
+    },
+    {
+      q: "Is this a medical recommendation?",
+      a: "No. This is an informational estimate based on a rule-of-thumb and does not replace medical advice.",
+    },
+    {
+      q: "Does coffee/tea count as water?",
+      a: "Fluids contribute to hydration, but tolerance to caffeine varies. This tool does not model caffeine effects.",
+    },
+    {
+      q: "Why show cups?",
+      a: "Cups help quick planning. This page uses 1 cup ≈ 240 ml as an approximation.",
+    },
+    {
+      q: "Is my data stored?",
+      a: "No. Calculations run locally in your browser. Inputs are not stored or sent to a server.",
+    },
+  ];
+
+  function renderFaqSchema() {
+    const json = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": FAQ.map(item => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": { "@type": "Answer", "text": item.a },
+      })),
+    };
+    faqSchemaEl.textContent = JSON.stringify(json);
+  }
+
+  // Heuristic: base = 35 ml/kg, then add a small fixed adjustment for higher activity.
+  const ACTIVITY_EXTRA_ML = { low: 0, moderate: 350, high: 700 };
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function setUnitUx() {
+    const isImp = unitEl.value === "imperial";
+    weightLabelEl.textContent = isImp ? "Weight (lb)" : "Weight (kg)";
+    weightEl.placeholder = isImp ? "e.g., 150" : "e.g., 70";
+    // Reasonable bounds for client-side UX (not medical; just input sanity)
+    weightEl.min = isImp ? "44" : "20";       // ~20kg / ~44lb
+    weightEl.max = isImp ? "660" : "300";     // ~300kg / ~660lb
+    weightEl.step = "0.1";
+  }
+
+  function moneylessNumber(n, digits) {
+    const p = Math.pow(10, digits);
+    return (Math.round(n * p) / p).toFixed(digits);
+  }
+
+  function clearError() {
+    weightEl.removeAttribute("aria-invalid");
+    errEl.textContent = "";
+  }
+
+  function setError(msg) {
+    weightEl.setAttribute("aria-invalid", "true");
+    errEl.textContent = msg;
+  }
+
+  function validate() {
+    clearError();
+    const raw = String(weightEl.value || "").trim();
+    if (!raw) return { ok: false, reason: "empty" };
+
+    const w = toNum(raw);
+    if (!Number.isFinite(w) || w <= 0) {
+      setError("Please enter a valid weight greater than 0.");
+      return { ok: false, reason: "bad_weight" };
+    }
+
+    const min = parseFloat(weightEl.min || "0");
+    const max = parseFloat(weightEl.max || "1e9");
+    if (Number.isFinite(min) && w < min) {
+      setError("Weight seems too low. Please check your entry.");
+      return { ok: false, reason: "low" };
+    }
+    if (Number.isFinite(max) && w > max) {
+      setError("Weight seems too high. Please check your entry.");
+      return { ok: false, reason: "high" };
+    }
+
+    return { ok: true, w };
+  }
+
+  function computeAndRender() {
+    const unit = String(unitEl.value);
+    const activity = String(actEl.value);
+    const v = validate();
+    if (!v.ok) {
+      outEl.textContent = v.reason === "empty" ? "Result will appear here." : "Please fix the input above.";
+      srEl.textContent = "";
+      return;
+    }
+
+    const w = v.w;
+    const kg = unit === "imperial" ? (w * 0.45359237) : w;
+
+    const baseMl = kg * 35;
+    const extraMl = (ACTIVITY_EXTRA_ML[activity] ?? 0);
+    const totalMl = baseMl + extraMl;
+
+    const liters = totalMl / 1000;
+    const cups = totalMl / 240;
+
+    const cupsRounded = Math.round(cups);
+    const mlRounded = Math.round(totalMl);
+
+    // Category / emphasis (simple, transparent thresholds; not medical)
+    // < 2.0L / 2.0–3.0L / > 3.0L
+    let tag = "Typical range";
+    if (liters < 2.0) tag = "Lower estimate";
+    else if (liters > 3.0) tag = "Higher estimate";
+
+    outEl.innerHTML =
+      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
+        "<strong>Estimated daily water</strong>" +
+        "<span class='note' style='margin:0;'>" + tag + "</span>" +
+      "</div>" +
+      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" + moneylessNumber(liters, 2) + " L</div>" +
+      "<div style='margin-top:6px;'>" +
+        "<strong>Approx. cups:</strong> " + cupsRounded.toLocaleString() + " cups" +
+      "</div>" +
+      "<div class='note' style='margin-top:6px;'>" +
+        "~" + mlRounded.toLocaleString() + " ml/day (base " + Math.round(baseMl).toLocaleString() +
+        " ml + activity " + Math.round(extraMl).toLocaleString() + " ml)" +
+      "</div>";
+
+    srEl.textContent =
+      "Estimated daily water: " + moneylessNumber(liters, 2) + " liters, about " + cupsRounded +
+      " cups, approximately " + mlRounded + " milliliters per day.";
+  }
+
+  // Events
+  unitEl.addEventListener("change", function () {
+    setUnitUx();
+    computeAndRender();
+  });
+
+  actEl.addEventListener("change", computeAndRender);
+
+  weightEl.addEventListener("input", computeAndRender);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    actEl.value = "low";
+    weightEl.value = "";
+    setUnitUx();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    srEl.textContent = "";
+    weightEl.focus();
+  });
+
+  // Init
+  renderFaqSchema();
+  setUnitUx();
+  clearError();
+});
+</script>
