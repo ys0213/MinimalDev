@@ -1,0 +1,406 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "PIN Generator",
+  description:
+    "Generate random PIN codes with custom length and count. Optional uniqueness. Runs locally in your browser.",
+  href: "/utility/pin-generator/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/pin-generator/";
+
+const faqs = [
+  {
+    q: "Is this PIN generator secure?",
+    a: "It uses your browser’s cryptographically secure random generator (crypto.getRandomValues) when available. If not available, it falls back to Math.random, which is not suitable for security-critical use.",
+  },
+  {
+    q: "Can I generate 4-digit or 6-digit PINs?",
+    a: "Yes. Choose the length (typically 4 or 6). You can generate multiple PINs at once.",
+  },
+  {
+    q: "Are duplicate PINs possible?",
+    a: "Yes. Random generation can produce duplicates. You can enable best-effort uniqueness, but it is not guaranteed—especially with short PIN lengths and large counts.",
+  },
+  {
+    q: "Does this store or send my PINs anywhere?",
+    a: "No. Everything runs locally in your browser. Nothing is uploaded or stored by this tool.",
+  },
+  {
+    q: "Is a PIN the same as a password?",
+    a: "No. PINs are shorter and generally weaker. For accounts, prefer long unique passwords or a password manager.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`PIN Generator — ${SITE_NAME}`}
+  description="Generate random PIN codes locally in your browser. Choose PIN length, count, digits-only, optional prefix/suffix, and best-effort uniqueness. Includes validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="PIN Generator"
+  intro="Generate random numeric PIN codes (digits only). Choose length and how many PINs to generate. Copy results with one click."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="pin-generator">
+    <div class="form" role="form" aria-describedby="pin_privacy pin_help">
+      <div class="field">
+        <label for="pin_len">PIN length (3–12)</label>
+        <input id="pin_len" type="number" inputmode="numeric" min="3" max="12" value="4" />
+        <p class="note" id="pin_help" style="margin-top:6px;">
+          Common lengths: 4 or 6. Short PINs have limited combinations.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="pin_count">How many PINs (1–100)</label>
+        <input id="pin_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="pin_unique" type="checkbox" />
+          Try to avoid duplicates (best-effort)
+        </label>
+        <p class="note" style="margin-top:6px;">
+          Uniqueness is not guaranteed. With 4 digits there are only 10,000 possible PINs (0000–9999).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="pin_allow_leading">Leading zeros</label>
+        <select id="pin_allow_leading">
+          <option value="yes" selected>Allow (e.g., 0042)</option>
+          <option value="no">Disallow (first digit cannot be 0)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pin_prefix">Optional prefix (digits only)</label>
+        <input id="pin_prefix" type="text" inputmode="numeric" placeholder="e.g., 99" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="pin_suffix">Optional suffix (digits only)</label>
+        <input id="pin_suffix" type="text" inputmode="numeric" placeholder="e.g., 7" autocomplete="off" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pin_gen">Generate</button>
+        <button class="btn secondary" type="button" id="pin_copy">Copy</button>
+        <button class="btn secondary" type="button" id="pin_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pin_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="pin_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="pin_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="pin_out">Generated PINs</label>
+        <textarea
+          id="pin_out"
+          rows="8"
+          style="width:100%; resize:vertical;"
+          readonly
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="pin_privacy" style="margin-top:10px;">
+        Privacy: Generated locally in your browser. No PINs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <ul>
+      <li>Choose a PIN length and count.</li>
+      <li>Optionally disallow leading zeros and/or add a numeric prefix/suffix.</li>
+      <li>The tool draws random digits and formats each PIN.</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>4-digit PIN</strong>, count 10 → quick set of test PINs</li>
+      <li><strong>6-digit PIN</strong>, no leading zero → common OTP-style format</li>
+      <li><strong>Prefix 99</strong> + length 4 → generates PINs like 99xxxx (overall length increases)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const lenEl = document.getElementById("pin_len");
+  const countEl = document.getElementById("pin_count");
+  const uniqueEl = document.getElementById("pin_unique");
+  const leadEl = document.getElementById("pin_allow_leading");
+  const prefixEl = document.getElementById("pin_prefix");
+  const suffixEl = document.getElementById("pin_suffix");
+  const genBtn = document.getElementById("pin_gen");
+  const copyBtn = document.getElementById("pin_copy");
+  const clearBtn = document.getElementById("pin_clear");
+  const errEl = document.getElementById("pin_error");
+  const summaryEl = document.getElementById("pin_summary");
+  const cardsEl = document.getElementById("pin_cards");
+  const outEl = document.getElementById("pin_out");
+
+  if (!lenEl || !countEl || !uniqueEl || !leadEl || !prefixEl || !suffixEl || !genBtn || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function digitsOnly(s) {
+    const raw = String(s || "");
+    const cleaned = raw.replace(/[^\d]/g, "");
+    return cleaned;
+  }
+
+  function secureRandomInt(maxExclusive) {
+    if (!(maxExclusive > 0) || maxExclusive > 0x100000000) return NaN;
+    const cryptoObj = globalThis.crypto;
+    if (!cryptoObj || !cryptoObj.getRandomValues) return NaN;
+
+    const range = 0x100000000;
+    const limit = range - (range % maxExclusive);
+
+    const buf = new Uint32Array(1);
+    while (true) {
+      cryptoObj.getRandomValues(buf);
+      const x = buf[0];
+      if (x < limit) return x % maxExclusive;
+    }
+  }
+
+  function pseudoRandomInt(maxExclusive) {
+    return Math.floor(Math.random() * maxExclusive);
+  }
+
+  function randInt(maxExclusive) {
+    const x = secureRandomInt(maxExclusive);
+    if (isFinite(x)) return x;
+    return pseudoRandomInt(maxExclusive);
+  }
+
+  function padLeft(numStr, len) {
+    let s = String(numStr);
+    while (s.length < len) s = "0" + s;
+    return s;
+  }
+
+  function buildPin(coreLen, allowLeadingZero) {
+    // Build core digits only, length = coreLen.
+    // If leading zeros disallowed, first digit in 1..9, rest 0..9.
+    if (coreLen <= 0) return "";
+    let s = "";
+
+    if (!allowLeadingZero) {
+      const first = 1 + randInt(9); // 1..9
+      s += String(first);
+      for (let i = 2; i <= coreLen; i++) s += String(randInt(10));
+      return s;
+    }
+
+    // Allow leading zero: generate number from 0..(10^len - 1) and pad.
+    // For len up to 12, 10^len may exceed safe integer; generate digit-by-digit instead.
+    for (let i = 0; i < coreLen; i++) s += String(randInt(10));
+    return s;
+  }
+
+  function estimateSpace(len, allowLeadingZero) {
+    // Number of distinct cores possible.
+    // allowLeadingZero: 10^len, else 9*10^(len-1)
+    // For big len, number is huge; we only display for small.
+    if (len <= 0) return 0;
+    if (len > 9) return null; // avoid big integers / misleading formatting
+    const pow = Math.pow(10, len);
+    return allowLeadingZero ? pow : (9 * Math.pow(10, len - 1));
+  }
+
+  function resetUI() {
+    clearError();
+    outEl.value = "";
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  function generate() {
+    clearError();
+    outEl.value = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+
+    const coreLen = Math.floor(parseFloat(lenEl.value));
+    const count = Math.floor(parseFloat(countEl.value));
+    const wantUnique = !!uniqueEl.checked;
+    const allowLeadingZero = String(leadEl.value) === "yes";
+
+    const prefix = digitsOnly(prefixEl.value);
+    const suffix = digitsOnly(suffixEl.value);
+
+    // Keep fields cleaned (UX)
+    if (String(prefixEl.value) !== prefix) prefixEl.value = prefix;
+    if (String(suffixEl.value) !== suffix) suffixEl.value = suffix;
+
+    if (!isFinite(coreLen) || coreLen < 3 || coreLen > 12) {
+      showError("Please enter a valid PIN length (3–12).");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+    if (!isFinite(count) || count < 1 || count > 100) {
+      showError("Please enter a valid count (1–100).");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    // If prefix/suffix present, coreLen still applies to the random core only.
+    // Total length = prefix + core + suffix.
+    const totalLen = prefix.length + coreLen + suffix.length;
+    if (totalLen > 32) {
+      showError("Prefix + PIN + suffix is too long. Reduce prefix/suffix or PIN length.");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const secure = !!(globalThis.crypto && globalThis.crypto.getRandomValues);
+
+    const out = [];
+    const seen = new Set();
+    const maxAttempts = Math.max(5000, count * 300);
+
+    let attempts = 0;
+    while (out.length < count && attempts < maxAttempts) {
+      attempts++;
+      const core = buildPin(coreLen, allowLeadingZero);
+      const pin = prefix + core + suffix;
+
+      if (wantUnique) {
+        if (seen.has(pin)) continue;
+        seen.add(pin);
+      }
+      out.push(pin);
+    }
+
+    if (out.length < count) {
+      showError("Could not generate the requested number of unique PINs with these settings. Increase length or reduce count.");
+    }
+
+    outEl.value = out.join("\n");
+
+    const space = estimateSpace(coreLen, allowLeadingZero);
+    const spaceText = space === null ? "Very large" : space.toLocaleString();
+
+    summaryEl.innerHTML = "<strong>Generated.</strong> " + out.length.toLocaleString() + " PIN(s).";
+
+    const uniquenessOk = (out.length === count);
+    const warnUnique = wantUnique && !uniquenessOk;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Core " + coreLen + " digits", "neutral")}
+        ${badge("Total length " + totalLen, "neutral")}
+        ${badge("Count " + out.length, uniquenessOk ? "good" : "warn")}
+        ${badge(allowLeadingZero ? "Leading zeros allowed" : "No leading zero", "neutral")}
+        ${badge(wantUnique ? "Uniqueness: on" : "Uniqueness: off", warnUnique ? "warn" : (wantUnique ? "good" : "neutral"))}
+        ${badge(secure ? "CSPRNG" : "Math.random fallback", secure ? "good" : "warn")}
+        ${badge("Core space: " + spaceText, coreLen <= 4 ? "warn" : "neutral")}
+      </div>
+    `;
+  }
+
+  async function copyAll() {
+    clearError();
+    if (!outEl.value) return;
+    try {
+      await navigator.clipboard.writeText(outEl.value);
+      summaryEl.innerHTML = "<strong>Copied.</strong>";
+    } catch {
+      showError("Copy failed. Use manual copy.");
+    }
+  }
+
+  genBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyAll);
+
+  clearBtn.addEventListener("click", function () {
+    lenEl.value = "4";
+    countEl.value = "10";
+    uniqueEl.checked = false;
+    leadEl.value = "yes";
+    prefixEl.value = "";
+    suffixEl.value = "";
+    resetUI();
+  });
+
+  // Clean prefix/suffix input to digits-only as user types
+  prefixEl.addEventListener("input", function () {
+    const cleaned = digitsOnly(prefixEl.value);
+    if (prefixEl.value !== cleaned) prefixEl.value = cleaned;
+  });
+  suffixEl.addEventListener("input", function () {
+    const cleaned = digitsOnly(suffixEl.value);
+    if (suffixEl.value !== cleaned) suffixEl.value = cleaned;
+  });
+
+  // Ctrl/Cmd+Enter to generate
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  };
+  lenEl.addEventListener("keydown", keyHandler);
+  countEl.addEventListener("keydown", keyHandler);
+  prefixEl.addEventListener("keydown", keyHandler);
+  suffixEl.addEventListener("keydown", keyHandler);
+
+  resetUI();
+});
+</script>

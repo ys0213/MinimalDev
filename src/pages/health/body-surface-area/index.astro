@@ -1,0 +1,217 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Body Surface Area (BSA) Calculator",
+  description:
+    "Free Body Surface Area calculator using Mosteller, Du Bois, and Haycock formulas. Supports metric and imperial units.",
+  href: "/health/body-surface-area/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/body-surface-area/";
+
+// FAQ + JSON-LD
+const faqs = [
+  {
+    q: "What is Body Surface Area (BSA)?",
+    a: "Body Surface Area is an estimate of the total external surface area of the human body, commonly expressed in square meters (m²).",
+  },
+  {
+    q: "Which BSA formula is most common?",
+    a: "The Mosteller formula is widely used due to its simplicity and good clinical agreement with more complex formulas.",
+  },
+  {
+    q: "Why are there multiple formulas?",
+    a: "Different formulas were derived from different population samples and methods. Results are usually similar but not identical.",
+  },
+  {
+    q: "Is BSA the same as BMI?",
+    a: "No. BSA estimates body surface area, while BMI estimates weight relative to height to assess body mass category.",
+  },
+  {
+    q: "Is this calculator medical advice?",
+    a: "No. It provides mathematical estimates only. For medical dosing or treatment decisions, consult a healthcare professional.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Body Surface Area Calculator — ${SITE_NAME}`}
+  description="Calculate Body Surface Area (BSA) using Mosteller, Du Bois, or Haycock formulas. Supports kg/lb and cm/in."
+  canonicalPath={CANONICAL_PATH}
+  h1="Body Surface Area (BSA) Calculator"
+  intro="Estimate body surface area using standard medical formulas. Supports metric and imperial inputs."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="bsa-calculator">
+    <div class="form" role="form" aria-describedby="bsa_note">
+      
+      <div class="field">
+        <label for="bsa_unit">Units</label>
+        <select id="bsa_unit">
+          <option value="metric" selected>Metric (kg, cm)</option>
+          <option value="imperial">Imperial (lb, inches)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="bsa_weight">Weight</label>
+        <input id="bsa_weight" type="number" inputmode="decimal" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field">
+        <label for="bsa_height">Height</label>
+        <input id="bsa_height" type="number" inputmode="decimal" placeholder="e.g., 175" />
+      </div>
+
+      <div class="field">
+        <label for="bsa_formula">Formula</label>
+        <select id="bsa_formula">
+          <option value="mosteller" selected>Mosteller (recommended)</option>
+          <option value="dubois">Du Bois</option>
+          <option value="haycock">Haycock</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bsa_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bsa_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bsa_error" role="alert" style="display:none;"></div>
+      <div class="result" id="bsa_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="bsa_note" style="margin-top:10px;">
+        Informational only. BSA is commonly used in medical dosing calculations.
+        Privacy: runs entirely in your browser.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <ul>
+      <li><strong>Mosteller:</strong> √((height(cm) × weight(kg)) ÷ 3600)</li>
+      <li><strong>Du Bois:</strong> 0.007184 × height(cm)^0.725 × weight(kg)^0.425</li>
+      <li><strong>Haycock:</strong> 0.024265 × height(cm)^0.3964 × weight(kg)^0.5378</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/bmi-calculator/">BMI Calculator</a></li>
+      <li><a href="/health/">All Health Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const unitEl = document.getElementById("bsa_unit");
+  const weightEl = document.getElementById("bsa_weight");
+  const heightEl = document.getElementById("bsa_height");
+  const formulaEl = document.getElementById("bsa_formula");
+  const calcBtn = document.getElementById("bsa_calc");
+  const clearBtn = document.getElementById("bsa_clear");
+  const errEl = document.getElementById("bsa_error");
+  const outEl = document.getElementById("bsa_result");
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function toMetric(weight, height, unit) {
+    if (unit === "imperial") {
+      weight = weight * 0.453592;   // lb → kg
+      height = height * 2.54;       // inch → cm
+    }
+    return { weight, height };
+  }
+
+  function computeBSA(weight, height, formula) {
+    if (formula === "mosteller")
+      return Math.sqrt((height * weight) / 3600);
+
+    if (formula === "dubois")
+      return 0.007184 * Math.pow(height, 0.725) * Math.pow(weight, 0.425);
+
+    if (formula === "haycock")
+      return 0.024265 * Math.pow(height, 0.3964) * Math.pow(weight, 0.5378);
+  }
+
+  function card(title, value, subtitle) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">
+          ${value}
+        </div>
+        <div class="note">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", function () {
+
+    clearError();
+
+    let weight = parseFloat(weightEl.value);
+    let height = parseFloat(heightEl.value);
+
+    if (!weight || weight <= 0) return showError("Enter valid weight.");
+    if (!height || height <= 0) return showError("Enter valid height.");
+
+    const metric = toMetric(weight, height, unitEl.value);
+    weight = metric.weight;
+    height = metric.height;
+
+    const bsa = computeBSA(weight, height, formulaEl.value);
+    if (!bsa) return showError("Unable to calculate BSA.");
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${card("Body Surface Area", bsa.toFixed(3) + " m²", formulaEl.options[formulaEl.selectedIndex].text)}
+      </div>
+      <div class="note" style="margin-top:10px;">
+        Typical adult BSA range: approximately 1.5 – 2.2 m².
+      </div>
+    `;
+  });
+
+  clearBtn.addEventListener("click", function () {
+    document.querySelectorAll("input").forEach(i => i.value = "");
+    outEl.textContent = "Result will appear here.";
+    clearError();
+  });
+
+});
+</script>

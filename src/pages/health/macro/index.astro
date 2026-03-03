@@ -1,0 +1,350 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Macro Calculator",
+  description:
+    "Free macro calculator. Estimate daily protein, carbs, and fat grams from calories and macro ratios (supports calories or kJ).",
+  href: "/health/macro/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/macro/";
+
+// FAQ content + JSON-LD (auto)
+const faqs = [
+  {
+    q: "What does this macro calculator do?",
+    a: "It converts your daily calorie target and macro split (protein/carbs/fat %) into grams per day using standard calories-per-gram values.",
+  },
+  {
+    q: "What calories-per-gram values are used?",
+    a: "Protein = 4 kcal/g, Carbs = 4 kcal/g, Fat = 9 kcal/g.",
+  },
+  {
+    q: "Do the macro percentages have to add up to 100%?",
+    a: "Yes. This tool validates that protein + carbs + fat equals 100%.",
+  },
+  {
+    q: "Can I use kilojoules (kJ) instead of calories?",
+    a: "Yes. The tool can accept kJ and converts to kcal internally using 1 kcal = 4.184 kJ.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser. Inputs are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Macro Calculator — ${SITE_NAME}`}
+  description="Estimate daily macro grams (protein, carbs, fat) from a calorie target and macro split. Supports kcal and kJ. Informational only."
+  canonicalPath={CANONICAL_PATH}
+  h1="Macro Calculator"
+  intro="Convert a daily calorie target and macro split into grams of protein, carbs, and fat. Informational only."
+>
+  {/* FAQ Schema (auto from faqs[]) */}
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="macro-calculator">
+    <div class="form" role="form" aria-describedby="mc_privacy_note">
+      <div class="field">
+        <label for="mc_energy_unit">Energy unit</label>
+        <select id="mc_energy_unit">
+          <option value="kcal" selected>Calories (kcal)</option>
+          <option value="kj">Kilojoules (kJ)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mc_calories">Daily target</label>
+        <input
+          id="mc_calories"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder="e.g., 2000"
+          autocomplete="off"
+          aria-describedby="mc_calories_help"
+        />
+        <div class="note" id="mc_calories_help">kcal</div>
+      </div>
+
+      <fieldset style="border:0; padding:0; margin:0;">
+        <legend class="note" style="margin:0 0 8px;">Macro split (%)</legend>
+
+        <div class="field">
+          <label for="mc_pro_pct">Protein (%)</label>
+          <input id="mc_pro_pct" type="number" inputmode="decimal" min="0" max="100" placeholder="e.g., 30" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="mc_car_pct">Carbs (%)</label>
+          <input id="mc_car_pct" type="number" inputmode="decimal" min="0" max="100" placeholder="e.g., 40" autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="mc_fat_pct">Fat (%)</label>
+          <input id="mc_fat_pct" type="number" inputmode="decimal" min="0" max="100" placeholder="e.g., 30" autocomplete="off" />
+        </div>
+
+        <div class="note" id="mc_sum_note" style="margin-top:6px;">
+          Tip: common splits include 30/40/30 or 25/50/25. Total must equal 100%.
+        </div>
+      </fieldset>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mc_fill">Use 30/40/30</button>
+        <button class="btn secondary" type="button" id="mc_clear">Clear</button>
+      </div>
+
+      {/* Error region */}
+      <div class="result" id="mc_error" role="alert" aria-live="assertive" style="display:none;"></div>
+
+      {/* Result region */}
+      <div class="result" id="mc_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="mc_privacy_note" style="margin-top:10px;">
+        Informational only (not medical advice). Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts energy targets into grams using standard energy density values:
+      <strong>protein 4 kcal/g</strong>, <strong>carbs 4 kcal/g</strong>, <strong>fat 9 kcal/g</strong>.
+      If you enter kJ, it converts to kcal using <strong>1 kcal = 4.184 kJ</strong>.
+    </p>
+    <p class="note">
+      Formula (for each macro):<br />
+      macro_kcal = total_kcal × (macro% ÷ 100)<br />
+      grams = macro_kcal ÷ kcal_per_gram
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2,000 kcal at 30/40/30 → protein 150g, carbs 200g, fat 67g (approx.)</li>
+      <li>2,500 kcal at 25/50/25 → protein 156g, carbs 313g, fat 69g (approx.)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/bmr-calculator/">BMR Calculator</a></li>
+      <li><a href="/health/body-fat/">Body Fat Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("mc_energy_unit");
+  const calEl = document.getElementById("mc_calories");
+  const calHelp = document.getElementById("mc_calories_help");
+
+  const pEl = document.getElementById("mc_pro_pct");
+  const cEl = document.getElementById("mc_car_pct");
+  const fEl = document.getElementById("mc_fat_pct");
+
+  const calcBtn = document.getElementById("mc_calc");
+  const fillBtn = document.getElementById("mc_fill");
+  const clearBtn = document.getElementById("mc_clear");
+
+  const errEl = document.getElementById("mc_error");
+  const outEl = document.getElementById("mc_result");
+
+  if (
+    !unitEl || !calEl || !calHelp ||
+    !pEl || !cEl || !fEl ||
+    !calcBtn || !fillBtn || !clearBtn ||
+    !errEl || !outEl
+  ) return;
+
+  const KCAL_PER_G = { protein: 4, carbs: 4, fat: 9 };
+  const KJ_PER_KCAL = 4.184;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function setUnitUX() {
+    const u = String(unitEl.value);
+    calHelp.textContent = (u === "kj") ? "kJ" : "kcal";
+    calEl.placeholder = (u === "kj") ? "e.g., 8400" : "e.g., 2000";
+  }
+
+  function round0(n) {
+    return Math.round(n).toLocaleString();
+  }
+
+  function round1(n) {
+    const r = Math.round(n * 10) / 10;
+    return r.toLocaleString(undefined, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  }
+
+  function pctSum(p, c, f) {
+    return p + c + f;
+  }
+
+  function badgeHTML(tone, text) {
+    const base = "display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid rgba(255,255,255,0.14);";
+    const bg = tone === "good"
+      ? "background: rgba(34,197,94,0.12);"
+      : tone === "warn"
+        ? "background: rgba(245,158,11,0.14);"
+        : "background: rgba(255,255,255,0.06);";
+    return "<span style='" + base + bg + "'>" + text + "</span>";
+  }
+
+  function card(title, main, sub, tone) {
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badgeHTML(tone, title) +
+        "</div>" +
+        "<div style='font-size:26px; margin-top:6px; font-weight:900;'>" + main + "</div>" +
+        "<div class='note' style='margin-top:6px;'>" + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function compute() {
+    clearError();
+
+    const unit = String(unitEl.value);
+    const energy = toNum(calEl.value);
+    const p = toNum(pEl.value);
+    const c = toNum(cEl.value);
+    const f = toNum(fEl.value);
+
+    if (!Number.isFinite(energy) || energy <= 0) return showError("Please enter a valid daily target.");
+    if (!Number.isFinite(p) || p < 0 || p > 100) return showError("Protein % must be between 0 and 100.");
+    if (!Number.isFinite(c) || c < 0 || c > 100) return showError("Carbs % must be between 0 and 100.");
+    if (!Number.isFinite(f) || f < 0 || f > 100) return showError("Fat % must be between 0 and 100.");
+
+    const sum = pctSum(p, c, f);
+    // Allow tiny floating error
+    if (Math.abs(sum - 100) > 0.01) return showError("Macro percentages must add up to 100%. Current total: " + round1(sum) + "%.");
+
+    const kcalTotal = (unit === "kj") ? (energy / KJ_PER_KCAL) : energy;
+    if (!Number.isFinite(kcalTotal) || kcalTotal <= 0) return showError("Could not convert energy input.");
+
+    const kcalP = kcalTotal * (p / 100);
+    const kcalC = kcalTotal * (c / 100);
+    const kcalF = kcalTotal * (f / 100);
+
+    const gP = kcalP / KCAL_PER_G.protein;
+    const gC = kcalC / KCAL_PER_G.carbs;
+    const gF = kcalF / KCAL_PER_G.fat;
+
+    // Cross-check: computed energy from grams
+    const kcalCheck = gP * 4 + gC * 4 + gF * 9;
+
+    const energyLabel = (unit === "kj")
+      ? (round0(energy) + " kJ/day")
+      : (round0(energy) + " kcal/day");
+
+    const kcalShown = round0(kcalTotal) + " kcal/day";
+
+    const summary =
+      "<div style='margin-bottom:12px;'>" +
+        "<strong>Daily macros from:</strong> " + energyLabel + "<br/>" +
+        "<span class='note'>Converted energy: " + kcalShown + " · Split: " + round1(p) + "/" + round1(c) + "/" + round1(f) + "</span>" +
+      "</div>";
+
+    const cards =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap;'>" +
+        card("Protein", round0(gP) + " g", round0(kcalP) + " kcal (" + round1(p) + "%)", "good") +
+        card("Carbs", round0(gC) + " g", round0(kcalC) + " kcal (" + round1(c) + "%)", "neutral") +
+        card("Fat", round0(gF) + " g", round0(kcalF) + " kcal (" + round1(f) + "%)", "warn") +
+      "</div>";
+
+    const note =
+      "<div class='note' style='margin-top:10px;'>" +
+        "Energy check (from grams): ~" + round0(kcalCheck) + " kcal/day (rounding can cause small differences)." +
+      "</div>";
+
+    outEl.innerHTML = summary + cards + note;
+  }
+
+  function fillDefault() {
+    pEl.value = "30";
+    cEl.value = "40";
+    fEl.value = "30";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    pEl.focus();
+  }
+
+  function clearAll() {
+    clearError();
+    unitEl.value = "kcal";
+    calEl.value = "";
+    pEl.value = "";
+    cEl.value = "";
+    fEl.value = "";
+    setUnitUX();
+    outEl.textContent = "Result will appear here.";
+  }
+
+  // Enter key triggers calculate (a11y/UX)
+  [calEl, pEl, cEl, fEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  unitEl.addEventListener("change", function () {
+    setUnitUX();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+  });
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDefault);
+  clearBtn.addEventListener("click", clearAll);
+
+  setUnitUX();
+});
+</script>

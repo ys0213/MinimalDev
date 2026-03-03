@@ -1,0 +1,263 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "URL Encoder/Decoder",
+  description:
+    "Free URL encoder and decoder. Encode or decode percent-encoded URLs and query strings locally. Supports UTF-8, component-level encoding, validation, and FAQ schema.",
+  href: "/utility/url-encoder-decoder/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/url-encoder-decoder/";
+
+const faqs = [
+  {
+    q: "What does a URL encoder do?",
+    a: "It converts unsafe characters in a URL into percent-encoded format (e.g., space becomes %20) so they can be safely transmitted over HTTP.",
+  },
+  {
+    q: "What is the difference between encodeURI and encodeURIComponent?",
+    a: "encodeURI is for full URLs and does not encode reserved characters like ?, =, and &. encodeURIComponent encodes almost all non-alphanumeric characters and is suitable for query parameter values.",
+  },
+  {
+    q: "Does URL encoding encrypt data?",
+    a: "No. URL encoding is not encryption. It only transforms characters into a safe transport format.",
+  },
+  {
+    q: "Which character set is used?",
+    a: "This tool uses UTF-8, which is the standard encoding for modern web URLs.",
+  },
+  {
+    q: "Is my data sent to a server?",
+    a: "No. All processing is done locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`URL Encoder/Decoder — ${SITE_NAME}`}
+  description="Encode or decode percent-encoded URLs and query strings using UTF-8. Supports encodeURI vs encodeURIComponent modes, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="URL Encoder/Decoder"
+  intro="Encode or decode URLs and query parameters using standard UTF-8 percent-encoding. Choose full URL or component mode for accurate results."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="url-encoder">
+    <div class="form" role="form" aria-describedby="url_privacy url_help">
+      <div class="field">
+        <label for="url_mode">Mode</label>
+        <select id="url_mode">
+          <option value="encode" selected>Encode</option>
+          <option value="decode">Decode</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="url_type">Encoding Type</label>
+        <select id="url_type">
+          <option value="uri" selected>Full URL (encodeURI)</option>
+          <option value="component">Component (encodeURIComponent)</option>
+        </select>
+        <p class="note" id="url_help" style="margin-top:6px;">
+          Use Full URL for complete links. Use Component for query parameter values.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="url_input">Input</label>
+        <textarea
+          id="url_input"
+          rows="7"
+          style="width:100%; resize:vertical;"
+          placeholder="Enter text or URL..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+        <button class="btn" type="button" id="url_run">Run</button>
+        <button class="btn secondary" type="button" id="url_copy">Copy</button>
+        <button class="btn secondary" type="button" id="url_swap">Swap</button>
+        <button class="btn secondary" type="button" id="url_clear">Clear</button>
+      </div>
+
+      <div class="result" id="url_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="url_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="url_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="url_output">Output</label>
+        <textarea
+          id="url_output"
+          rows="7"
+          style="width:100%; resize:vertical;"
+          readonly
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="url_privacy" style="margin-top:10px;">
+        Privacy: All operations are performed locally in your browser.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <ul>
+      <li><strong>Encode:</strong> Converts unsafe characters to %HH format using UTF-8.</li>
+      <li><strong>Decode:</strong> Converts percent-encoded text back to readable form.</li>
+      <li><strong>Full URL:</strong> Preserves reserved URL syntax.</li>
+      <li><strong>Component:</strong> Encodes everything except A-Z a-z 0-9 - _ . ~.</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>"hello world" → hello%20world</li>
+      <li>"email=test@example.com" (component) → email%3Dtest%40example.com</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/base64/">Base64 Encoder/Decoder</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("url_mode");
+  const typeEl = document.getElementById("url_type");
+  const inputEl = document.getElementById("url_input");
+  const outputEl = document.getElementById("url_output");
+  const runBtn = document.getElementById("url_run");
+  const copyBtn = document.getElementById("url_copy");
+  const swapBtn = document.getElementById("url_swap");
+  const clearBtn = document.getElementById("url_clear");
+  const errEl = document.getElementById("url_error");
+  const summaryEl = document.getElementById("url_summary");
+  const cardsEl = document.getElementById("url_cards");
+
+  if (!modeEl || !typeEl || !inputEl || !outputEl || !runBtn || !copyBtn || !swapBtn || !clearBtn || !errEl || !summaryEl || !cardsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function run() {
+    clearError();
+    outputEl.value = "";
+    cardsEl.style.display = "none";
+    summaryEl.textContent = "Processing...";
+
+    try {
+      const mode = String(modeEl.value);
+      const type = String(typeEl.value);
+      const input = String(inputEl.value ?? "");
+
+      if (!input.trim()) throw new Error("Please enter some input.");
+
+      let result = "";
+
+      if (mode === "encode") {
+        result = type === "uri"
+          ? encodeURI(input)
+          : encodeURIComponent(input);
+      } else {
+        result = decodeURIComponent(input);
+      }
+
+      outputEl.value = result;
+
+      summaryEl.innerHTML = `<strong>Success.</strong> Operation completed using UTF-8.`;
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML = `
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          ${badge(mode.toUpperCase(), "neutral")}
+          ${badge(type === "uri" ? "Full URL" : "Component", "neutral")}
+          ${badge(input.length + " chars", "good")}
+        </div>
+      `;
+    } catch (e) {
+      summaryEl.textContent = "Result will appear here.";
+      showError(e && e.message ? e.message : "Invalid input.");
+    }
+  }
+
+  async function copy() {
+    clearError();
+    if (!outputEl.value) return;
+    try {
+      await navigator.clipboard.writeText(outputEl.value);
+      summaryEl.innerHTML = "<strong>Copied.</strong>";
+    } catch {
+      showError("Copy failed. Use manual copy.");
+    }
+  }
+
+  function swap() {
+    const temp = inputEl.value;
+    inputEl.value = outputEl.value;
+    outputEl.value = temp;
+  }
+
+  function clearAll() {
+    clearError();
+    inputEl.value = "";
+    outputEl.value = "";
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  runBtn.addEventListener("click", run);
+  copyBtn.addEventListener("click", copy);
+  swapBtn.addEventListener("click", swap);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run();
+  });
+});
+</script>

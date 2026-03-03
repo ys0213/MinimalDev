@@ -1,0 +1,445 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Exponent Calculator",
+  description:
+    "Free exponent calculator. Compute powers (a^b), roots, and scientific notation with validation, result cards, and FAQ schema.",
+  href: "/math/exponent-calculator/",
+  order: 98,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/exponent-calculator/";
+
+const faqs = [
+  {
+    q: "What does a^b mean?",
+    a: "a^b means multiplying a by itself b times when b is an integer. For general real b, it represents an exponentiation operation (which may be undefined for some negative bases).",
+  },
+  {
+    q: "What inputs are allowed?",
+    a: "Base (a) and exponent (b) can be decimals. For real-number results: if a is negative, b must be an integer (otherwise the result is not a real number).",
+  },
+  {
+    q: "Does this support roots?",
+    a: "Yes. Use the Root mode to compute the n-th root: root_n(x) = x^(1/n). For real roots, n must be nonzero; for even n, x must be >= 0.",
+  },
+  {
+    q: "What is scientific notation?",
+    a: "Scientific notation expresses a number as m × 10^e where 1 <= |m| < 10. This tool shows a scientific-notation view for large/small results.",
+  },
+  {
+    q: "Why do I see an error for negative base with decimal exponent?",
+    a: "Because (-a)^(non-integer) is generally not a real number. This calculator focuses on real-number outputs.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Exponent Calculator — ${SITE_NAME}`}
+  description="Compute exponents (a^b), roots, and view results with validation, accessible controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Exponent Calculator"
+  intro="Calculate powers (a^b), n-th roots, and get a scientific-notation view for very large or small results."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="exponent-calculator">
+    <div class="form" role="form" aria-describedby="exp_note">
+      <div class="field">
+        <label for="exp_mode">Mode</label>
+        <select id="exp_mode" aria-describedby="exp_mode_help">
+          <option value="power" selected>Power: a^b</option>
+          <option value="root">Root: n-th root of x</option>
+          <option value="sci">Scientific notation: normalize x</option>
+        </select>
+        <p class="note" id="exp_mode_help" style="margin-top:6px;">
+          Power computes a^b. Root computes x^(1/n). Scientific notation expresses x as m × 10^e.
+        </p>
+      </div>
+
+      <div class="field" id="exp_a_field">
+        <label for="exp_a">Base (a)</label>
+        <input id="exp_a" type="number" inputmode="decimal" step="any" placeholder="e.g., 2" />
+      </div>
+
+      <div class="field" id="exp_b_field">
+        <label for="exp_b">Exponent (b)</label>
+        <input id="exp_b" type="number" inputmode="decimal" step="any" placeholder="e.g., 10" />
+        <p class="note" id="exp_b_help" style="margin-top:6px;">
+          For negative base values, exponent must be an integer to keep the result real.
+        </p>
+      </div>
+
+      <div class="field" id="exp_x_field" style="display:none;">
+        <label for="exp_x">Value (x)</label>
+        <input id="exp_x" type="number" inputmode="decimal" step="any" placeholder="e.g., 81" />
+      </div>
+
+      <div class="field" id="exp_n_field" style="display:none;">
+        <label for="exp_n">Root degree (n)</label>
+        <input id="exp_n" type="number" inputmode="decimal" step="any" placeholder="e.g., 4" />
+        <p class="note" id="exp_n_help" style="margin-top:6px;">
+          n must be nonzero. For even n, x must be ≥ 0 for a real result.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="exp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="exp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="exp_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="exp_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="exp_steps" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="exp_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Power:</strong> a^b<br/>
+      <strong>Root:</strong> root<sub>n</sub>(x) = x^(1/n)<br/>
+      <strong>Scientific notation:</strong> x = m × 10^e where 1 ≤ |m| &lt; 10 (or x = 0).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2^10 = 1,024</li>
+      <li>root_2(81) = 9</li>
+      <li>root_3(27) = 3</li>
+      <li>Scientific notation of 12345 = 1.2345 × 10^4</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("exp_mode");
+  const aField = document.getElementById("exp_a_field");
+  const bField = document.getElementById("exp_b_field");
+  const xField = document.getElementById("exp_x_field");
+  const nField = document.getElementById("exp_n_field");
+
+  const aEl = document.getElementById("exp_a");
+  const bEl = document.getElementById("exp_b");
+  const xEl = document.getElementById("exp_x");
+  const nEl = document.getElementById("exp_n");
+
+  const calcBtn = document.getElementById("exp_calc");
+  const clearBtn = document.getElementById("exp_clear");
+  const errEl = document.getElementById("exp_error");
+  const outEl = document.getElementById("exp_result");
+  const stepsEl = document.getElementById("exp_steps");
+
+  if (!modeEl || !aField || !bField || !xField || !nField || !aEl || !bEl || !xEl || !nEl || !calcBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function showError(msg){
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError(){
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function toNum(v){
+    const n = parseFloat(String(v));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function isIntLike(n){
+    if (!Number.isFinite(n)) return false;
+    // tolerate floating input that is effectively an integer
+    return Math.abs(n - Math.round(n)) < 1e-12;
+  }
+
+  function fmt(n){
+    if (!Number.isFinite(n)) return "—";
+    const str = n.toFixed(12).replace(/\.?0+$/,"");
+    return (str === "-0") ? "0" : str;
+  }
+
+  function moneyLike(n){
+    // not currency; just human-readable with grouping
+    if (!Number.isFinite(n)) return "—";
+    const abs = Math.abs(n);
+    if (abs !== 0 && (abs >= 1e15 || abs < 1e-6)) return fmtSci(n);
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fmtSci(n){
+    if (!Number.isFinite(n)) return "—";
+    if (n === 0) return "0";
+    const sign = n < 0 ? -1 : 1;
+    const abs = Math.abs(n);
+    const e = Math.floor(Math.log10(abs));
+    const m = sign * (abs / Math.pow(10, e));
+    const mStr = (Math.round(m * 1e12) / 1e12).toString();
+    return `${mStr} × 10^${e}`;
+  }
+
+  function badge(text){
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, big, sub){
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function setModeUI(){
+    const mode = modeEl.value;
+
+    // hide all optional groups first
+    aField.style.display = "none";
+    bField.style.display = "none";
+    xField.style.display = "none";
+    nField.style.display = "none";
+
+    if (mode === "power") {
+      aField.style.display = "block";
+      bField.style.display = "block";
+      aEl.placeholder = "e.g., 2";
+      bEl.placeholder = "e.g., 10";
+    } else if (mode === "root") {
+      xField.style.display = "block";
+      nField.style.display = "block";
+      xEl.placeholder = "e.g., 81";
+      nEl.placeholder = "e.g., 2";
+    } else {
+      // scientific notation normalize
+      xField.style.display = "block";
+      xEl.placeholder = "e.g., 12345";
+    }
+  }
+
+  function computePower(a, b){
+    // real-number constraint: negative base with non-integer exponent produces complex result
+    if (a < 0 && !isIntLike(b)) return { ok:false, err:"For a negative base, the exponent must be an integer to produce a real result." };
+
+    const y = Math.pow(a, b);
+    if (!Number.isFinite(y)) return { ok:false, err:"Result is not finite (overflow/invalid input)." };
+
+    return { ok:true, y };
+  }
+
+  function computeRoot(x, n){
+    if (!Number.isFinite(n) || n === 0) return { ok:false, err:"Root degree n must be a nonzero number." };
+
+    // For real results:
+    // - if x < 0 and n is not an odd integer => complex
+    if (x < 0) {
+      if (!isIntLike(n) || (Math.abs(Math.round(n)) % 2 === 0)) {
+        return { ok:false, err:"For a negative x, n must be an odd integer to produce a real root." };
+      }
+    }
+
+    const y = Math.pow(x, 1 / n);
+    if (!Number.isFinite(y)) return { ok:false, err:"Result is not finite (overflow/invalid input)." };
+
+    return { ok:true, y };
+  }
+
+  function normalizeSci(x){
+    if (x === 0) return { m:0, e:0 };
+    const abs = Math.abs(x);
+    const e = Math.floor(Math.log10(abs));
+    const m = x / Math.pow(10, e);
+    return { m, e };
+  }
+
+  function renderResult(html){
+    outEl.innerHTML = html;
+  }
+
+  function resetOutputs(){
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+  }
+
+  function compute(){
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const mode = modeEl.value;
+
+    if (mode === "power") {
+      const a = toNum(aEl.value);
+      const b = toNum(bEl.value);
+
+      if (!Number.isFinite(a) || !Number.isFinite(b)) {
+        showError("Please enter valid numbers for base (a) and exponent (b).");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+
+      const res = computePower(a, b);
+      if (!res.ok) { showError(res.err); outEl.textContent = "Result will appear here."; return; }
+
+      const y = res.y;
+
+      renderResult(`
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+          ${card("Result", moneyLike(y), `${badge("a^b")} · ${fmt(a)}^${fmt(b)}`)}
+          ${card("Scientific notation", fmtSci(y), "Helpful for very large/small results")}
+        </div>
+      `);
+
+      // steps for integer exponents (small magnitude), show repeated multiplication summary
+      if (isIntLike(b) && Math.abs(Math.round(b)) <= 20) {
+        const bi = Math.round(b);
+        stepsEl.style.display = "block";
+        stepsEl.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <strong>Notes</strong>
+            ${badge("Integer exponent")}
+          </div>
+          <div class="note" style="margin-top:8px;">
+            ${fmt(a)}^${bi} means multiplying ${fmt(a)} by itself ${Math.abs(bi)} time(s)${bi < 0 ? " and taking the reciprocal" : ""}.
+          </div>
+        `;
+      }
+
+      return;
+    }
+
+    if (mode === "root") {
+      const x = toNum(xEl.value);
+      const n = toNum(nEl.value);
+
+      if (!Number.isFinite(x) || !Number.isFinite(n)) {
+        showError("Please enter valid numbers for x and n.");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+
+      const res = computeRoot(x, n);
+      if (!res.ok) { showError(res.err); outEl.textContent = "Result will appear here."; return; }
+
+      const y = res.y;
+
+      renderResult(`
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+          ${card("Result", moneyLike(y), `${badge("n-th root")} · root_${fmt(n)}(${fmt(x)})`)}
+          ${card("As exponent", `${fmt(x)}^(1/${fmt(n)})`, `= ${moneyLike(y)}`)}
+        </div>
+      `);
+
+      stepsEl.style.display = "block";
+      stepsEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <strong>Steps</strong>
+          ${badge("x^(1/n)")}
+        </div>
+        <div class="note" style="margin-top:8px;">
+          1) Convert root to exponent: root<sub>${fmt(n)}</sub>(${fmt(x)}) = ${fmt(x)}<sup>1/${fmt(n)}</sup><br/>
+          2) Compute: ${fmt(x)}<sup>${fmt(1/n)}</sup> = <strong>${moneyLike(y)}</strong>
+        </div>
+      `;
+      return;
+    }
+
+    // scientific notation normalize
+    const x = toNum(xEl.value);
+    if (!Number.isFinite(x)) {
+      showError("Please enter a valid number to normalize.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const { m, e } = normalizeSci(x);
+    const signLabel = x < 0 ? "Negative" : (x > 0 ? "Positive" : "Zero");
+
+    renderResult(`
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Scientific notation", x === 0 ? "0" : `${fmt(m)} × 10^${e}`, `${badge("Normalize")} · ${signLabel}`)}
+        ${card("Mantissa (m)", fmt(m), "Target range: 1 ≤ |m| < 10 (except 0)")}
+        ${card("Exponent (e)", String(e), "Power of 10")}
+      </div>
+    `);
+
+    stepsEl.style.display = "block";
+    stepsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>How it works</strong>
+        ${badge("m × 10^e")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        We choose e so that moving the decimal point yields a mantissa m with 1 ≤ |m| < 10 (unless x = 0).
+      </div>
+    `;
+  }
+
+  // Enter-to-calc for accessibility
+  [aEl, bEl, xEl, nEl].forEach(function(el){
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  modeEl.addEventListener("change", function(){
+    setModeUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function(){
+    modeEl.value = "power";
+    aEl.value = "";
+    bEl.value = "";
+    xEl.value = "";
+    nEl.value = "";
+    setModeUI();
+    resetOutputs();
+    aEl.focus();
+  });
+
+  setModeUI();
+});
+</script>

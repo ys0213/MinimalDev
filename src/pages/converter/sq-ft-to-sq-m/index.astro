@@ -1,0 +1,341 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sq Ft to Sq M",
+  description:
+    "Convert square feet (ft²) to square meters (m²). Includes validation, accessible UX, result cards, and FAQ schema.",
+  href: "/converter/sq-ft-to-sq-m/",
+  order: 35,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/sq-ft-to-sq-m/";
+
+const faqs = [
+  {
+    q: "How do you convert square feet to square meters?",
+    a: "Multiply square feet by 0.09290304 to get square meters (m² = ft² × 0.09290304).",
+  },
+  {
+    q: "Why does the result look slightly different from other calculators?",
+    a: "Small differences can come from rounding. This tool uses a precise conversion factor and lets you control rounding.",
+  },
+  {
+    q: "Can I convert large floor plans or land areas?",
+    a: "Yes. For very large values, floating-point rounding may appear; the tool warns when inputs are extremely large.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Sq Ft to Sq M Converter — ${SITE_NAME}`}
+  description="Convert square feet (ft²) to square meters (m²) instantly. Validated, accessible, with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sq Ft to Sq M Converter"
+  intro="Convert square feet (ft²) to square meters (m²) for floor plans, real estate listings, and quick area comparisons."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="sq-ft-to-sq-m">
+    <div class="form" role="form" aria-describedby="sfs_hint sfs_privacy">
+      <div class="field">
+        <label for="sfs_ft2">Square feet (ft²)</label>
+        <input id="sfs_ft2" type="number" inputmode="decimal" placeholder="e.g., 1000" />
+        <p class="note" id="sfs_hint" style="margin-top:6px;">
+          Enter a non-negative value. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="sfs_round">Rounding</label>
+        <select id="sfs_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="sfs_convert">Convert</button>
+        <button class="btn secondary" type="button" id="sfs_swap" aria-label="Switch to Sq M to Sq Ft">
+          Reverse (m² → ft²)
+        </button>
+        <button class="btn secondary" type="button" id="sfs_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sfs_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="sfs_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="sfs_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sfs_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sfs_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard exact conversion: <strong>1 ft² = 0.09290304 m²</strong>.<br />
+      Formula: <strong>m² = ft² × 0.09290304</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>100 ft²</strong> ≈ <strong>9.290 m²</strong></li>
+      <li><strong>1,000 ft²</strong> ≈ <strong>92.903 m²</strong></li>
+      <li><strong>2,000 ft²</strong> ≈ <strong>185.806 m²</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/area-converter/">Area Converter</a></li>
+      <li><a href="/converter/sq-m-to-sq-ft/">Sq M to Sq Ft</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ftEl = document.getElementById("sfs_ft2");
+  const roundEl = document.getElementById("sfs_round");
+  const convertBtn = document.getElementById("sfs_convert");
+  const swapBtn = document.getElementById("sfs_swap");
+  const clearBtn = document.getElementById("sfs_clear");
+  const errEl = document.getElementById("sfs_error");
+  const outEl = document.getElementById("sfs_result");
+  const cardsEl = document.getElementById("sfs_cards");
+  const tbodyEl = document.getElementById("sfs_tbody");
+
+  if (!ftEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Exact factor
+  const FT2_TO_M2 = 0.09290304;
+  const M2_TO_FT2 = 1 / FT2_TO_M2;
+
+  // Mode: "ft2->m2" or "m2->ft2"
+  let mode = "ft2->m2";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="sfs_ft2"]');
+    if (!label) return;
+    if (mode === "ft2->m2") {
+      label.textContent = "Square feet (ft²)";
+      ftEl.placeholder = "e.g., 1000";
+      swapBtn.textContent = "Reverse (m² → ft²)";
+      swapBtn.setAttribute("aria-label", "Switch to Sq M to Sq Ft");
+    } else {
+      label.textContent = "Square meters (m²)";
+      ftEl.placeholder = "e.g., 100";
+      swapBtn.textContent = "Reverse (ft² → m²)";
+      swapBtn.setAttribute("aria-label", "Switch to Sq Ft to Sq M");
+    }
+  }
+
+  function fillTable(fromVal, toVal) {
+    tbodyEl.innerHTML = "";
+
+    const rows = [];
+
+    if (mode === "ft2->m2") {
+      rows.push(["Conversion factor", "1 ft² = 0.09290304 m²"]);
+      rows.push(["Reverse factor", "1 m² ≈ " + fmtSmart(M2_TO_FT2) + " ft²"]);
+      rows.push(["Input", fmt(fromVal) + " ft²"]);
+      rows.push(["Output", fmt(toVal) + " m²"]);
+    } else {
+      rows.push(["Conversion factor", "1 m² ≈ " + fmtSmart(M2_TO_FT2) + " ft²"]);
+      rows.push(["Reverse factor", "1 ft² = 0.09290304 m²"]);
+      rows.push(["Input", fmt(fromVal) + " m²"]);
+      rows.push(["Output", fmt(toVal) + " ft²"]);
+    }
+
+    for (const [k, v] of rows) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const inputRaw = toNum(ftEl.value);
+    if (!Number.isFinite(inputRaw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (inputRaw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(inputRaw, 1e18);
+    if (input !== inputRaw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    let output;
+    if (mode === "ft2->m2") output = input * FT2_TO_M2;
+    else output = input * M2_TO_FT2;
+
+    if (mode === "ft2->m2") {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} m²<br/>` +
+        `<span class="note">${fmt(input)} ft² = ${fmt(output)} m²</span>`;
+    } else {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} ft²<br/>` +
+        `<span class="note">${fmt(input)} m² = ${fmt(output)} ft²</span>`;
+    }
+
+    // Category/scale emphasis in base m² for consistency
+    const m2 = mode === "ft2->m2" ? output : input;
+    let scale = "Typical";
+    if (m2 >= 10_000) scale = "Land-scale (10,000 m²+)";
+    else if (m2 < 1) scale = "Small area (< 1 m²)";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "ft2->m2" ? "ft² → m²" : "m² → ft²")}
+        ${badge("Base ≈ " + fmtSmart(m2) + " m²")}
+        ${badge(scale)}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    ftEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "ft2->m2" ? "m2->ft2" : "ft2->m2";
+    setLabels();
+    if (String(ftEl.value || "").trim()) compute();
+    else {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  roundEl.addEventListener("change", function () {
+    if (String(ftEl.value || "").trim()) compute();
+  });
+
+  ftEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  ftEl.addEventListener("input", function () {
+    if (!String(ftEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setLabels();
+});
+</script>

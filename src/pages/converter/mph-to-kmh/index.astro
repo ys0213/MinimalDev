@@ -1,0 +1,345 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "mph to km/h",
+  description:
+    "Convert miles per hour (mph) to kilometers per hour (km/h). Validated, accessible UX with result cards, reference table, and FAQ schema.",
+  href: "/converter/mph-to-kmh/",
+  order: 91,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/mph-to-kmh/";
+
+const faqs = [
+  {
+    q: "What is the conversion from mph to km/h?",
+    a: "km/h = mph × 1.609344 (because 1 mile = 1.609344 kilometers).",
+  },
+  {
+    q: "Are negative speeds allowed?",
+    a: "Yes. Negative values are allowed for calculations (e.g., relative velocity).",
+  },
+  {
+    q: "How accurate is this converter?",
+    a: "It uses standard unit definitions. Small differences can occur due to rounding.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`mph to km/h Converter — ${SITE_NAME}`}
+  description="Convert mph to km/h instantly with validation, accessible UX, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="mph to km/h Converter"
+  intro="Convert miles per hour (mph) to kilometers per hour (km/h). Includes rounding controls and a quick reference table."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="mph-to-kmh">
+    <div class="form" role="form" aria-describedby="m2k_help m2k_privacy">
+      <div class="field">
+        <label for="m2k_mph">Speed (mph)</label>
+        <input id="m2k_mph" type="number" inputmode="decimal" placeholder="e.g., 60" />
+        <p class="note" id="m2k_help" style="margin-top:6px;">
+          Enter a value in mph, then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="m2k_round">Rounding</label>
+        <select id="m2k_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="m2k_convert">Convert</button>
+        <button class="btn secondary" type="button" id="m2k_swap">Swap (km/h → mph)</button>
+        <button class="btn secondary" type="button" id="m2k_clear">Clear</button>
+      </div>
+
+      <div class="result" id="m2k_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="m2k_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="m2k_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Speed</th>
+              <th scope="col">Equivalent</th>
+            </tr>
+          </thead>
+          <tbody id="m2k_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="m2k_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the exact definition: <strong>1 mile = 1.609344 kilometers</strong>.
+      So <strong>km/h = mph × 1.609344</strong> (and mph = km/h ÷ 1.609344).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>60 mph</strong> = <strong>96.561 km/h</strong></li>
+      <li><strong>30 mph</strong> = <strong>48.280 km/h</strong></li>
+      <li><strong>70 mph</strong> = <strong>112.654 km/h</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/kmh-to-mph/">km/h to mph</a></li>
+      <li><a href="/converter/speed-converter/">Speed Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const mphEl = document.getElementById("m2k_mph");
+  const roundEl = document.getElementById("m2k_round");
+  const convertBtn = document.getElementById("m2k_convert");
+  const swapBtn = document.getElementById("m2k_swap");
+  const clearBtn = document.getElementById("m2k_clear");
+  const errEl = document.getElementById("m2k_error");
+  const outEl = document.getElementById("m2k_result");
+  const cardsEl = document.getElementById("m2k_cards");
+  const tbodyEl = document.getElementById("m2k_tbody");
+
+  if (!mphEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Exact: 1 mile = 1.609344 km
+  const KM_PER_MILE = 1.609344;
+  const MPH_PER_KMH = 1 / KM_PER_MILE;
+
+  // Mode: true = mph -> km/h, false = km/h -> mph
+  let modeMphToKmh = true;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1000) return x.toLocaleString(undefined, { maximumFractionDigits: 3 });
+    if (ax >= 1) return x.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setUiForMode() {
+    const label = modeMphToKmh ? "Speed (mph)" : "Speed (km/h)";
+    const ph = modeMphToKmh ? "e.g., 60" : "e.g., 100";
+
+    const lbl = document.querySelector('label[for="m2k_mph"]');
+    if (lbl) lbl.textContent = label;
+
+    mphEl.setAttribute("aria-label", label);
+    mphEl.placeholder = ph;
+
+    swapBtn.textContent = modeMphToKmh ? "Swap (km/h → mph)" : "Swap (mph → km/h)";
+  }
+
+  function fillTable(inputVal) {
+    tbodyEl.innerHTML = "";
+    const rows = modeMphToKmh
+      ? [
+          { a: 20, b: 20 * KM_PER_MILE, aUnit: "mph", bUnit: "km/h" },
+          { a: 30, b: 30 * KM_PER_MILE, aUnit: "mph", bUnit: "km/h" },
+          { a: 50, b: 50 * KM_PER_MILE, aUnit: "mph", bUnit: "km/h" },
+          { a: 60, b: 60 * KM_PER_MILE, aUnit: "mph", bUnit: "km/h" },
+          { a: inputVal, b: inputVal * KM_PER_MILE, aUnit: "mph", bUnit: "km/h", highlight: true },
+        ]
+      : [
+          { a: 30, b: 30 * MPH_PER_KMH, aUnit: "km/h", bUnit: "mph" },
+          { a: 50, b: 50 * MPH_PER_KMH, aUnit: "km/h", bUnit: "mph" },
+          { a: 80, b: 80 * MPH_PER_KMH, aUnit: "km/h", bUnit: "mph" },
+          { a: 100, b: 100 * MPH_PER_KMH, aUnit: "km/h", bUnit: "mph" },
+          { a: inputVal, b: inputVal * MPH_PER_KMH, aUnit: "km/h", bUnit: "mph", highlight: true },
+        ];
+
+    const seen = new Set();
+    for (const r of rows) {
+      const key = `${r.aUnit}:${r.a}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const tr = document.createElement("tr");
+      if (r.highlight) tr.style.fontWeight = "900";
+
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+
+      td1.textContent = `${fmtSmart(r.a)} ${r.aUnit}`;
+      td2.textContent = `${fmt(r.b)} ${r.bUnit}`;
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(mphEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    const value = Math.max(Math.min(raw, 1e15), -1e15);
+    if (value !== raw) showError("Value is extremely large; output may be rounded due to floating-point limits.");
+
+    let result, left, right;
+    if (modeMphToKmh) {
+      result = value * KM_PER_MILE;
+      left = { v: value, u: "mph" };
+      right = { v: result, u: "km/h" };
+    } else {
+      result = value * MPH_PER_KMH;
+      left = { v: value, u: "km/h" };
+      right = { v: result, u: "mph" };
+    }
+
+    const category = (function () {
+      const absMph = modeMphToKmh ? Math.abs(value) : Math.abs(result);
+      if (absMph === 0) return "Stationary";
+      if (absMph < 5) return "Walking pace";
+      if (absMph < 15) return "Running pace";
+      if (absMph < 70) return "Typical driving";
+      return "High speed";
+    })();
+
+    outEl.innerHTML =
+      `<strong>Result:</strong> ${fmt(right.v)} ${right.u}<br/>` +
+      `<span class="note">${fmt(left.v)} ${left.u} = ${fmt(right.v)} ${right.u}</span>`;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(left.u + " → " + right.u)}
+        ${badge("Factor: 1 mile = 1.609344 km")}
+        ${badge(category)}
+      </div>
+    `;
+
+    fillTable(value);
+  }
+
+  function reset() {
+    clearError();
+    mphEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    modeMphToKmh = !modeMphToKmh;
+    setUiForMode();
+    if (String(mphEl.value || "").trim()) compute();
+    else reset();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeMphToKmh = true;
+    setUiForMode();
+    reset();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(mphEl.value || "").trim()) compute();
+  });
+
+  mphEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  mphEl.addEventListener("input", function () {
+    if (!String(mphEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setUiForMode();
+});
+</script>

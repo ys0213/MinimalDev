@@ -1,0 +1,468 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Mean / Median / Mode Calculator",
+  description:
+    "Free mean, median, and mode calculator. Paste a list of numbers and get summary stats instantly (with validation and steps).",
+  href: "/math/mean-median-mode-calculator/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/mean-median-mode-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator compute?",
+    a: "It computes mean (average), median (middle value), and mode (most frequent value) from a list of numbers. It also shows count, sum, min, max, and range.",
+  },
+  {
+    q: "How do I enter the numbers?",
+    a: "Paste numbers separated by commas, spaces, or new lines. You can also use semicolons. Example: 1, 2, 3 4 5.",
+  },
+  {
+    q: "Can I include decimals or negative numbers?",
+    a: "Yes. Decimals and negative numbers are supported.",
+  },
+  {
+    q: "What if there are multiple modes?",
+    a: "If multiple values tie for the highest frequency, the calculator shows all of them (multi-modal). If every value occurs once, it reports “no mode”.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Everything runs locally in your browser and inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Mean / Median / Mode Calculator — ${SITE_NAME}`}
+  description="Compute mean, median, and mode from a list of numbers. Includes input validation, clean result cards, category badges, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Mean / Median / Mode Calculator"
+  intro="Paste a list of numbers and instantly compute mean (average), median, and mode. Useful for grades, surveys, quick analysis, and sanity checks."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="mean-median-mode-calculator">
+    <div class="form" role="form" aria-describedby="mmm_help mmm_privacy">
+      <div class="field">
+        <label for="mmm_input">Numbers</label>
+        <textarea
+          id="mmm_input"
+          rows="5"
+          placeholder="e.g., 10, 12, 12, 15 18&#10;20"
+          spellcheck="false"
+          inputmode="decimal"
+          aria-describedby="mmm_help"
+          style="width:100%; resize:vertical;"
+        ></textarea>
+      </div>
+
+      <div class="field" style="margin-top:-2px;">
+        <label style="gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="mmm_sort" type="checkbox" checked />
+          Show sorted values (first/last preview)
+        </label>
+      </div>
+
+      <div class="field" style="margin-top:-2px;">
+        <label style="gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="mmm_trim" type="checkbox" />
+          Trim outliers (IQR method) and show trimmed stats
+        </label>
+        <p class="note" style="margin-top:6px;">
+          Optional: uses the 1.5×IQR rule to exclude outliers. This is informational; keep disabled if unsure.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mmm_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mmm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mmm_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="mmm_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="mmm_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="mmm_help" style="margin-top:10px;">
+        Enter values separated by commas, spaces, semicolons, or new lines. Supports decimals and negatives.
+        Non-numeric tokens are ignored and reported.
+      </p>
+
+      <p class="note" id="mmm_privacy" style="margin-top:6px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Mean:</strong> sum ÷ count<br/>
+      <strong>Median:</strong> middle value after sorting (average of two middle values if count is even)<br/>
+      <strong>Mode:</strong> value(s) with the highest frequency
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>10, 12, 12, 15, 18 → mean 13.4, median 12, mode 12</li>
+      <li>1 2 3 4 → mean 2.5, median 2.5, no mode</li>
+      <li>-1, -1, 0, 2 → mean 0, median -0.5, mode -1</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("mmm_input");
+  const sortEl = document.getElementById("mmm_sort");
+  const trimEl = document.getElementById("mmm_trim");
+  const calcBtn = document.getElementById("mmm_calc");
+  const clearBtn = document.getElementById("mmm_clear");
+  const errEl = document.getElementById("mmm_error");
+  const outEl = document.getElementById("mmm_result");
+  const detailsEl = document.getElementById("mmm_details");
+
+  if (!inputEl || !sortEl || !trimEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function tokenize(raw) {
+    // Split by commas, semicolons, whitespace, or newlines. Keep original tokens for error reporting.
+    const s = String(raw ?? "");
+    return s
+      .split(/[\s,;]+/g)
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+  }
+
+  function parseNumbers(tokens) {
+    const nums = [];
+    const bad = [];
+    for (const t of tokens) {
+      // Allow leading +/-, decimals. Reject things like "1..2" by strict match
+      if (!/^[+\-]?(\d+(\.\d+)?|\.\d+)$/.test(t)) {
+        bad.push(t);
+        continue;
+      }
+      const v = Number(t);
+      if (!Number.isFinite(v)) { bad.push(t); continue; }
+      nums.push(v);
+    }
+    return { nums, bad };
+  }
+
+  function roundSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax !== 0 && (ax >= 1e15 || ax < 1e-6)) {
+      // scientific-ish display without too much noise
+      const e = Math.floor(Math.log10(ax));
+      const m = x / Math.pow(10, e);
+      const mR = Math.round(m * 1e10) / 1e10;
+      return `${mR} × 10^${e}`;
+    }
+    return x.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function medianOfSorted(arr) {
+    const n = arr.length;
+    if (n === 0) return NaN;
+    const mid = Math.floor(n / 2);
+    if (n % 2 === 1) return arr[mid];
+    return (arr[mid - 1] + arr[mid]) / 2;
+  }
+
+  function quantileSorted(arr, q) {
+    // linear interpolation between points (Type 7-ish)
+    const n = arr.length;
+    if (n === 0) return NaN;
+    const pos = (n - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (arr[base + 1] === undefined) return arr[base];
+    return arr[base] + rest * (arr[base + 1] - arr[base]);
+  }
+
+  function iqrTrim(sorted) {
+    const q1 = quantileSorted(sorted, 0.25);
+    const q3 = quantileSorted(sorted, 0.75);
+    const iqr = q3 - q1;
+    const low = q1 - 1.5 * iqr;
+    const high = q3 + 1.5 * iqr;
+    const kept = sorted.filter(v => v >= low && v <= high);
+    return { kept, low, high, q1, q3, iqr };
+  }
+
+  function modes(arr) {
+    const freq = new Map();
+    for (const v of arr) {
+      // key by exact number string to avoid float map weirdness in display
+      const k = String(v);
+      freq.set(k, (freq.get(k) || 0) + 1);
+    }
+    let max = 0;
+    for (const c of freq.values()) max = Math.max(max, c);
+    const modeKeys = [];
+    if (max <= 1) return { modes: [], maxFreq: max, freq };
+    for (const [k, c] of freq.entries()) {
+      if (c === max) modeKeys.push(k);
+    }
+    // Sort numerically for display
+    modeKeys.sort((a, b) => Number(a) - Number(b));
+    return { modes: modeKeys.map(Number), maxFreq: max, freq };
+  }
+
+  function summarize(arrSorted) {
+    const n = arrSorted.length;
+    let sum = 0;
+    let min = arrSorted[0];
+    let max = arrSorted[n - 1];
+    for (const v of arrSorted) sum += v;
+    const mean = sum / n;
+    const med = medianOfSorted(arrSorted);
+    const { modes: mds, maxFreq } = modes(arrSorted);
+
+    return { n, sum, mean, med, min, max, range: max - min, mds, maxFreq };
+  }
+
+  function categoryLabel(stats) {
+    // Very lightweight "category emphasis" for UX: distribution hint (not a statistical test)
+    // - If mean == median -> "Balanced"
+    // - If mean > median -> "Right-skewed (mean > median)"
+    // - If mean < median -> "Left-skewed (mean < median)"
+    const mean = stats.mean;
+    const med = stats.med;
+    if (!Number.isFinite(mean) || !Number.isFinite(med)) return "Summary";
+    const diff = mean - med;
+    const eps = 1e-12;
+    if (Math.abs(diff) <= eps) return "Balanced";
+    return diff > 0 ? "Right-skewed (mean > median)" : "Left-skewed (mean < median)";
+  }
+
+  function render(stats, opts) {
+    const label = categoryLabel(stats);
+
+    const modeDisplay =
+      stats.mds.length === 0
+        ? "<span class='note'>No mode</span>"
+        : stats.mds.map(v => `<strong>${roundSmart(v)}</strong>`).join(", ");
+
+    const cards =
+      `<div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+         <strong>Results</strong>
+         ${badge(label)}
+       </div>
+       <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+         ${card("Mean", `<span>${roundSmart(stats.mean)}</span>`, `Sum ÷ count · sum ${roundSmart(stats.sum)} ÷ ${stats.n}`)}
+         ${card("Median", `<span>${roundSmart(stats.med)}</span>`, `Middle of sorted values · count ${stats.n}`)}
+         ${card("Mode", `<span>${modeDisplay}</span>`, stats.mds.length ? `Frequency: ${stats.maxFreq}` : "All values occur once")}
+       </div>`;
+
+    const extras =
+      `<div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+         ${card("Count", `<span>${stats.n.toLocaleString()}</span>`, "Number of valid values")}
+         ${card("Min / Max", `<span>${roundSmart(stats.min)} / ${roundSmart(stats.max)}</span>`, `Range: ${roundSmart(stats.range)}`)}
+       </div>`;
+
+    outEl.innerHTML = cards + extras;
+
+    // Details section
+    const sortedPreview = opts.showSorted
+      ? (() => {
+          const s = opts.sorted;
+          const head = s.slice(0, 12).map(roundSmart).join(", ");
+          const tail = s.length > 12 ? `… (${s.length.toLocaleString()} values)` : "";
+          return `<div class="note" style="margin-top:8px;"><strong>Sorted preview:</strong> ${head} ${tail}</div>`;
+        })()
+      : "";
+
+    const ignored = opts.badTokens.length
+      ? `<div class="note" style="margin-top:8px;"><strong>Ignored tokens:</strong> ${opts.badTokens.map(escapeHtml).slice(0, 30).join(", ")}${opts.badTokens.length > 30 ? " …" : ""}</div>`
+      : "";
+
+    const trimmedBlock = opts.trimInfo
+      ? (() => {
+          const t = opts.trimInfo;
+          return `
+            <div style="margin-top:10px;">
+              <strong>Trimmed (IQR) summary</strong>
+              <div class="note" style="margin-top:6px;">
+                Kept ${t.kept.length.toLocaleString()} of ${opts.sorted.length.toLocaleString()} values.
+                Bounds: [${roundSmart(t.low)}, ${roundSmart(t.high)}]
+                · Q1 ${roundSmart(t.q1)} · Q3 ${roundSmart(t.q3)} · IQR ${roundSmart(t.iqr)}
+              </div>
+              ${t.kept.length >= 1 ? (() => {
+                const s2 = t.kept.slice().sort((a,b)=>a-b);
+                const st2 = summarize(s2);
+                const md2 = st2.mds.length ? st2.mds.map(roundSmart).join(", ") : "No mode";
+                return `
+                  <div class="note" style="margin-top:8px;">
+                    <strong>Trimmed mean:</strong> ${roundSmart(st2.mean)} ·
+                    <strong>Trimmed median:</strong> ${roundSmart(st2.med)} ·
+                    <strong>Trimmed mode:</strong> ${md2}
+                  </div>
+                `;
+              })() : `<div class="note" style="margin-top:8px;">Not enough values after trimming.</div>`}
+            </div>
+          `;
+        })()
+      : "";
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Details</strong>
+        ${badge("Info")}
+      </div>
+      ${sortedPreview}
+      ${ignored}
+      ${trimmedBlock}
+    `;
+  }
+
+  function compute() {
+    clearError();
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+
+    const raw = String(inputEl.value ?? "").trim();
+    if (!raw) {
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const tokens = tokenize(raw);
+    const { nums, bad } = parseNumbers(tokens);
+
+    if (nums.length === 0) {
+      showError("No valid numbers found. Enter values like: 10, 12.5, -3");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const sorted = nums.slice().sort((a, b) => a - b);
+
+    const stats = summarize(sorted);
+    if (!Number.isFinite(stats.mean) || !Number.isFinite(stats.med)) {
+      showError("Could not compute statistics with these values.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const showSorted = !!sortEl.checked;
+    const doTrim = !!trimEl.checked;
+
+    let trimInfo = null;
+    if (doTrim && sorted.length >= 4) {
+      trimInfo = iqrTrim(sorted);
+    }
+
+    render(stats, { showSorted, sorted, badTokens: bad, trimInfo });
+  }
+
+  function reset() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  // UX: debounce on input
+  let timer = null;
+  function schedule() {
+    if (timer) window.clearTimeout(timer);
+    timer = window.setTimeout(compute, 150);
+  }
+
+  inputEl.addEventListener("input", function () {
+    if (!String(inputEl.value || "").trim()) { reset(); return; }
+    schedule();
+  });
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) compute();
+  });
+
+  sortEl.addEventListener("change", function () {
+    if (!String(inputEl.value || "").trim()) { reset(); return; }
+    compute();
+  });
+
+  trimEl.addEventListener("change", function () {
+    if (!String(inputEl.value || "").trim()) { reset(); return; }
+    compute();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    inputEl.value = "";
+    sortEl.checked = true;
+    trimEl.checked = false;
+    reset();
+    inputEl.focus();
+  });
+
+  reset();
+});
+</script>

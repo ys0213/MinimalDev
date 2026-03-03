@@ -1,0 +1,454 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Calorie Needs Calculator",
+  description:
+    "Estimate daily calorie needs (maintenance, weight loss, weight gain) using BMR and activity level. Free calculator with unit options.",
+  href: "/health/calorie-needs/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/calorie-needs/";
+
+const faqs = [
+  {
+    q: "What is “calorie needs”?",
+    a: "It’s an estimate of how many calories you need per day to maintain your current weight, based on BMR and activity level.",
+  },
+  {
+    q: "Is this the same as TDEE?",
+    a: "Yes. Maintenance calories in this tool are an estimate of TDEE (Total Daily Energy Expenditure).",
+  },
+  {
+    q: "Which formula does this use?",
+    a: "BMR is estimated using the Mifflin–St Jeor equation, then multiplied by an activity factor to estimate maintenance calories.",
+  },
+  {
+    q: "How are weight loss and weight gain calories computed?",
+    a: "They’re shown as simple adjustments from maintenance (e.g., −250/−500 kcal for loss, +250/+500 kcal for gain). Real outcomes vary by person and adherence.",
+  },
+  {
+    q: "Is this medical advice?",
+    a: "No. This is an informational estimate. If you have medical conditions or special dietary needs, consult a qualified professional.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Calculations run locally in your browser. Inputs are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Calorie Needs Calculator — ${SITE_NAME}`}
+  description="Estimate daily calorie needs (maintenance, weight loss, weight gain) using BMR (Mifflin–St Jeor) and activity level. Units supported."
+  canonicalPath={CANONICAL_PATH}
+  h1="Calorie Needs Calculator"
+  intro="Estimate daily calorie needs using BMR (Mifflin–St Jeor) and an activity multiplier. Shows maintenance, weight loss, and weight gain targets."
+>
+  {/* FAQ Schema (auto from faqs[]) */}
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="calorie-needs-calculator">
+    <div class="form" role="form" aria-describedby="cn_privacy_note">
+      <div class="field">
+        <label for="cn_units">Units</label>
+        <select id="cn_units">
+          <option value="metric" selected>Metric (cm, kg)</option>
+          <option value="imperial">Imperial (ft/in, lb)</option>
+        </select>
+      </div>
+
+      <fieldset style="border:0; padding:0; margin:0;">
+        <legend class="note" style="margin:0 0 8px;">Profile</legend>
+
+        <div class="field">
+          <label for="cn_sex">Sex</label>
+          <select id="cn_sex">
+            <option value="male" selected>Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cn_age">Age</label>
+          <input
+            id="cn_age"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="120"
+            placeholder="e.g., 30"
+            autocomplete="off"
+          />
+          <div class="note" id="cn_age_help">Years (1–120)</div>
+        </div>
+
+        {/* Height: Metric = cm, Imperial = ft + in */}
+        <div class="field" id="cn_height_metric_wrap">
+          <label for="cn_height_cm">Height</label>
+          <input
+            id="cn_height_cm"
+            type="number"
+            inputmode="decimal"
+            min="1"
+            placeholder="e.g., 175"
+            autocomplete="off"
+          />
+          <div class="note" id="cn_height_cm_help">Centimeters</div>
+        </div>
+
+        <div id="cn_height_imperial_wrap" style="display:none;">
+          <div class="field">
+            <label for="cn_height_ft">Height (ft)</label>
+            <input
+              id="cn_height_ft"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              placeholder="e.g., 5"
+              autocomplete="off"
+            />
+          </div>
+          <div class="field">
+            <label for="cn_height_in">Height (in)</label>
+            <input
+              id="cn_height_in"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              max="11.99"
+              placeholder="e.g., 9"
+              autocomplete="off"
+            />
+            <div class="note" id="cn_height_in_help">0–11.99 inches</div>
+          </div>
+        </div>
+
+        {/* Weight */}
+        <div class="field">
+          <label for="cn_weight">Weight</label>
+          <input
+            id="cn_weight"
+            type="number"
+            inputmode="decimal"
+            min="1"
+            placeholder="e.g., 70"
+            autocomplete="off"
+          />
+          <div class="note" id="cn_weight_help">kg</div>
+        </div>
+
+        <div class="field">
+          <label for="cn_activity">Activity level</label>
+          <select id="cn_activity">
+            <option value="1.2" selected>Sedentary (little or no exercise)</option>
+            <option value="1.375">Light (1–3 days/week)</option>
+            <option value="1.55">Moderate (3–5 days/week)</option>
+            <option value="1.725">Very active (6–7 days/week)</option>
+            <option value="1.9">Athlete (very intense training)</option>
+          </select>
+          <div class="note" id="cn_activity_help">Activity multiplier applied to BMR</div>
+        </div>
+      </fieldset>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cn_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cn_clear">Clear</button>
+      </div>
+
+      {/* Error region */}
+      <div
+        class="result"
+        id="cn_error"
+        role="alert"
+        aria-live="assertive"
+        style="display:none;"
+      ></div>
+
+      {/* Results */}
+      <div
+        class="result"
+        id="cn_result"
+        role="status"
+        aria-live="polite"
+        style="margin-top:12px;"
+      >
+        Result will appear here.
+      </div>
+
+      <p class="note" id="cn_privacy_note" style="margin-top:10px;">
+        Informational estimate only. Results vary by person and do not replace medical advice.
+        Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator estimates <strong>maintenance calories (TDEE)</strong> in two steps:
+    </p>
+    <ul>
+      <li>
+        <strong>BMR (Mifflin–St Jeor):</strong><br />
+        Male: 10×kg + 6.25×cm − 5×age + 5<br />
+        Female: 10×kg + 6.25×cm − 5×age − 161
+      </li>
+      <li><strong>Maintenance (TDEE):</strong> TDEE = BMR × activity multiplier</li>
+    </ul>
+    <p class="note">
+      Weight loss / gain targets are shown as simple offsets from maintenance (−250/−500 and +250/+500 kcal/day).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Male, 30y, 175 cm, 70 kg, moderate → maintenance estimate</li>
+      <li>Female, 30y, 165 cm, 60 kg, light → maintenance estimate</li>
+      <li>Use loss/gain cards to pick a starting target, then adjust based on real progress</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/bmr-calculator/">BMR Calculator</a></li>
+      <li><a href="/health/bmi-calculator/">BMI Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitsEl = document.getElementById("cn_units");
+  const sexEl = document.getElementById("cn_sex");
+  const ageEl = document.getElementById("cn_age");
+
+  const hMetricWrap = document.getElementById("cn_height_metric_wrap");
+  const hImperialWrap = document.getElementById("cn_height_imperial_wrap");
+
+  const hCmEl = document.getElementById("cn_height_cm");
+  const hFtEl = document.getElementById("cn_height_ft");
+  const hInEl = document.getElementById("cn_height_in");
+
+  const wEl = document.getElementById("cn_weight");
+  const wHelpEl = document.getElementById("cn_weight_help");
+
+  const actEl = document.getElementById("cn_activity");
+  const calcBtn = document.getElementById("cn_calc");
+  const clearBtn = document.getElementById("cn_clear");
+
+  const errEl = document.getElementById("cn_error");
+  const outEl = document.getElementById("cn_result");
+
+  if (!unitsEl || !sexEl || !ageEl || !hMetricWrap || !hImperialWrap || !hCmEl || !hFtEl || !hInEl || !wEl || !wHelpEl || !actEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  // --- helpers ---
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clamp(n, min, max) {
+    return Math.min(max, Math.max(min, n));
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.innerHTML = "Result will appear here.";
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function round0(n) {
+    return Math.round(n).toLocaleString();
+  }
+
+  function setUnitUX() {
+    const u = String(unitsEl.value);
+    if (u === "imperial") {
+      hMetricWrap.style.display = "none";
+      hImperialWrap.style.display = "block";
+      wHelpEl.textContent = "lb";
+      wEl.placeholder = "e.g., 160";
+    } else {
+      hMetricWrap.style.display = "block";
+      hImperialWrap.style.display = "none";
+      wHelpEl.textContent = "kg";
+      wEl.placeholder = "e.g., 70";
+    }
+  }
+
+  function getCm() {
+    const u = String(unitsEl.value);
+    if (u === "imperial") {
+      const ft = toNum(hFtEl.value);
+      const inch = toNum(hInEl.value);
+      if (!Number.isFinite(ft) || ft < 0) return NaN;
+      if (!Number.isFinite(inch) || inch < 0 || inch >= 12) return NaN;
+      const totalIn = (ft * 12) + inch;
+      return totalIn * 2.54;
+    }
+    return toNum(hCmEl.value);
+  }
+
+  function getKg() {
+    const u = String(unitsEl.value);
+    const w = toNum(wEl.value);
+    if (!Number.isFinite(w)) return NaN;
+    return (u === "imperial") ? (w * 0.45359237) : w;
+  }
+
+  function bmrMifflin(sex, age, cm, kg) {
+    const base = (10 * kg) + (6.25 * cm) - (5 * age);
+    return sex === "female" ? (base - 161) : (base + 5);
+  }
+
+  function card(title, kcal, note, tone) {
+    // tone: "good" | "warn" | "neutral"
+    const badge = tone === "good"
+      ? "<span class='note' style='font-weight:700;'>Recommended start</span>"
+      : tone === "warn"
+        ? "<span class='note' style='font-weight:700;'>Aggressive</span>"
+        : "<span class='note' style='font-weight:700;'>Option</span>";
+
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badge +
+        "</div>" +
+        "<div style='font-size:22px; margin-top:6px; font-weight:800;'>" + round0(kcal) + " kcal/day</div>" +
+        "<div class='note' style='margin-top:6px;'>" + note + "</div>" +
+      "</div>"
+    );
+  }
+
+  function compute() {
+    clearError();
+
+    const sex = String(sexEl.value);
+    const age = toNum(ageEl.value);
+    const cm = getCm();
+    const kg = getKg();
+    const mult = toNum(actEl.value);
+
+    // Validation (explicit + user-friendly)
+    if (!Number.isFinite(age) || age <= 0 || age > 120) return showError("Please enter a valid age (1–120).");
+    if (!Number.isFinite(cm) || cm <= 0 || cm > 260) return showError("Please enter a valid height.");
+    if (!Number.isFinite(kg) || kg <= 0 || kg > 400) return showError("Please enter a valid weight.");
+    if (!Number.isFinite(mult) || mult <= 0) return showError("Please select a valid activity level.");
+
+    const B = bmrMifflin(sex, age, cm, kg);
+    if (!Number.isFinite(B) || B <= 0) return showError("Could not compute BMR with these values.");
+
+    const tdee = B * mult;
+
+    // Simple targets (common, non-medical heuristic)
+    const lossMild = tdee - 250;
+    const loss = tdee - 500;
+    const gainMild = tdee + 250;
+    const gain = tdee + 500;
+
+    // Guardrails: never show below a minimal floor (informational).
+    const floor = 1200; // informational floor; not a medical rule.
+    const lossMildShown = Math.max(lossMild, floor);
+    const lossShown = Math.max(loss, floor);
+
+    const u = String(unitsEl.value);
+    const hLine = u === "imperial"
+      ? ("Height: " + (toNum(hFtEl.value) || 0) + " ft " + (toNum(hInEl.value) || 0) + " in")
+      : ("Height: " + round0(cm) + " cm");
+
+    const wLine = u === "imperial"
+      ? ("Weight: " + (toNum(wEl.value) || 0).toLocaleString() + " lb")
+      : ("Weight: " + (toNum(wEl.value) || 0).toLocaleString() + " kg");
+
+    const summary =
+      "<div style='margin-bottom:12px;'>" +
+        "<strong>Maintenance (TDEE):</strong> " + round0(tdee) + " kcal/day<br/>" +
+        "<span class='note'>BMR ≈ " + round0(B) + " kcal/day · Multiplier " + mult + "</span><br/>" +
+        "<span class='note'>" + hLine + " · " + wLine + " · Age " + age + "</span>" +
+      "</div>";
+
+    const cards =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap;'>" +
+        card("Weight loss (mild)", lossMildShown, "About 250 kcal/day below maintenance.", "good") +
+        card("Weight loss (aggressive)", lossShown, "About 500 kcal/day below maintenance.", "warn") +
+        card("Maintenance", tdee, "Estimated daily calories to maintain weight.", "neutral") +
+        card("Weight gain (mild)", gainMild, "About 250 kcal/day above maintenance.", "neutral") +
+        card("Weight gain (aggressive)", gain, "About 500 kcal/day above maintenance.", "neutral") +
+      "</div>";
+
+    const foot =
+      "<div class='note' style='margin-top:10px;'>" +
+        "These targets are simplified offsets from maintenance. Real changes depend on intake accuracy, activity, sleep, and individual metabolism." +
+      "</div>";
+
+    outEl.innerHTML = summary + cards + foot;
+  }
+
+  function clearAll() {
+    clearError();
+    unitsEl.value = "metric";
+    sexEl.value = "male";
+    actEl.value = "1.2";
+    ageEl.value = "";
+    hCmEl.value = "";
+    hFtEl.value = "";
+    hInEl.value = "";
+    wEl.value = "";
+    setUnitUX();
+    outEl.textContent = "Result will appear here.";
+  }
+
+  // Events
+  unitsEl.addEventListener("change", function () {
+    setUnitUX();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+  });
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  // Optional: Enter key triggers calculate (accessibility / UX)
+  const inputs = [ageEl, hCmEl, hFtEl, hInEl, wEl];
+  inputs.forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  setUnitUX();
+});
+</script>

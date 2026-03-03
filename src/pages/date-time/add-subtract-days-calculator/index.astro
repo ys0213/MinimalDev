@@ -1,0 +1,469 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Add/Subtract Days Calculator",
+  description:
+    "Free add/subtract days calculator. Add or subtract days from a start date. Supports business days (custom weekends + optional holidays), validation, accessible UI, result cards, and FAQ schema.",
+  href: "/date-time/add-subtract-days-calculator/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/add-subtract-days-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It adds or subtracts a number of days from a start date. You can count either calendar days or business days (excluding selected weekend days and optional holidays).",
+  },
+  {
+    q: "What are business days here?",
+    a: "By default, business days are Monday–Friday (Sat/Sun excluded). You can customize which weekdays count as weekends and provide a holiday list to exclude.",
+  },
+  {
+    q: "Is the start date included in the count?",
+    a: "No. The calculator moves forward/backward by N counted days starting from the next/previous day. For example, adding 1 day returns the next counted day.",
+  },
+  {
+    q: "How do I enter holidays?",
+    a: "Paste dates in YYYY-MM-DD format (one per line or comma-separated). Holidays that fall on an otherwise counted day are excluded when business-day mode is enabled.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Add/Subtract Days Calculator — ${SITE_NAME}`}
+  description="Add or subtract days from a date. Choose calendar days or business days with custom weekends and optional holidays. Includes input validation, accessible UI, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Add/Subtract Days Calculator"
+  intro="Add or subtract a number of days from a start date. Optionally count business days by excluding selected weekend days and holidays."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="add-subtract-days-calculator">
+    <div class="form" role="form" aria-describedby="asd_help asd_privacy">
+      <div class="field">
+        <label for="asd_start">Start date</label>
+        <input id="asd_start" type="date" inputmode="none" />
+      </div>
+
+      <div class="field">
+        <label for="asd_delta">Days to add/subtract</label>
+        <input
+          id="asd_delta"
+          type="number"
+          inputmode="numeric"
+          placeholder="e.g., 10 (add) or -10 (subtract)"
+        />
+        <p class="note" style="margin-top:6px;">
+          Use a positive number to add days, negative to subtract days.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="asd_mode">Count type</label>
+        <select id="asd_mode" aria-describedby="asd_help">
+          <option value="calendar" selected>Calendar days</option>
+          <option value="business">Business days (exclude weekends/holidays)</option>
+        </select>
+        <p class="note" id="asd_help" style="margin-top:6px;">
+          Business days skip selected weekend days and optional holidays.
+        </p>
+      </div>
+
+      <div id="asd_business_block" style="display:none; margin-top:6px;">
+        <div class="field">
+          <div style="font-weight:800; margin-bottom:6px;">Weekend days (excluded)</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;" role="group" aria-label="Weekend selection">
+            <label><input type="checkbox" class="asd_weekend" value="0" checked /> Sun</label>
+            <label><input type="checkbox" class="asd_weekend" value="1" /> Mon</label>
+            <label><input type="checkbox" class="asd_weekend" value="2" /> Tue</label>
+            <label><input type="checkbox" class="asd_weekend" value="3" /> Wed</label>
+            <label><input type="checkbox" class="asd_weekend" value="4" /> Thu</label>
+            <label><input type="checkbox" class="asd_weekend" value="5" /> Fri</label>
+            <label><input type="checkbox" class="asd_weekend" value="6" checked /> Sat</label>
+          </div>
+          <p class="note" style="margin-top:6px;">
+            Default is Saturday + Sunday. Customize to match your business calendar.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="asd_holidays">Holidays to exclude (optional)</label>
+          <textarea
+            id="asd_holidays"
+            rows="4"
+            placeholder="One per line (YYYY-MM-DD)&#10;e.g. 2026-01-01&#10;2026-02-09"
+            spellcheck="false"
+            style="width:100%; resize:vertical;"
+          ></textarea>
+          <p class="note" style="margin-top:6px;">
+            Accepts one date per line or comma/space-separated. Format must be YYYY-MM-DD.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="asd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="asd_today">Use today</button>
+        <button class="btn secondary" type="button" id="asd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="asd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="asd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="asd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="asd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Calendar-day mode adds/subtracts N days directly. Business-day mode moves day-by-day, counting only days that are not marked
+      as weekend days and not listed as holidays. The start date itself is not counted—adding 1 returns the next counted day.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Start 2026-03-01, +10 calendar days → 2026-03-11</li>
+      <li>Start 2026-03-06 (Fri), +1 business day with Sat/Sun weekends → 2026-03-09 (Mon)</li>
+      <li>Start 2026-03-03, -5 business days → date 5 business days earlier</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/business-days-calculator/">Business Days Calculator</a></li>
+      <li><a href="/date-time/work-days-calculator/">Work Days Calculator</a></li>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("asd_start");
+  const deltaEl = document.getElementById("asd_delta");
+  const modeEl = document.getElementById("asd_mode");
+  const bizBlockEl = document.getElementById("asd_business_block");
+  const weekendEls = Array.from(document.querySelectorAll(".asd_weekend"));
+  const holEl = document.getElementById("asd_holidays");
+  const calcBtn = document.getElementById("asd_calc");
+  const todayBtn = document.getElementById("asd_today");
+  const clearBtn = document.getElementById("asd_clear");
+  const errEl = document.getElementById("asd_error");
+  const outEl = document.getElementById("asd_result");
+  const detailsEl = document.getElementById("asd_details");
+
+  if (!startEl || !deltaEl || !modeEl || !bizBlockEl || !holEl || !calcBtn || !todayBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+
+    return d;
+  }
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  function addDays(d, n) {
+    const x = new Date(d.getTime());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  function weekendSet() {
+    const set = new Set();
+    for (const el of weekendEls) {
+      if (el && el.checked) set.add(Number(el.value));
+    }
+    return set;
+  }
+
+  function parseHolidaySet(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return { set: new Set(), bad: [] };
+
+    const tokens = s
+      .split(/[\s,;]+/g)
+      .map(t => t.trim())
+      .filter(Boolean);
+
+    const set = new Set();
+    const bad = [];
+    for (const t of tokens) {
+      const d = parseISODate(t);
+      if (!d) { bad.push(t); continue; }
+      set.add(t);
+    }
+    return { set, bad };
+  }
+
+  function toggleBusinessUI() {
+    const isBiz = modeEl.value === "business";
+    bizBlockEl.style.display = isBiz ? "block" : "none";
+  }
+
+  function parseDelta() {
+    const raw = String(deltaEl.value || "").trim();
+    if (!raw) return null;
+    const x = Number(raw);
+    if (!Number.isFinite(x)) return NaN;
+
+    // enforce integer days for predictable date stepping
+    if (!Number.isInteger(x)) return NaN;
+
+    // keep range reasonable to avoid huge loops
+    if (Math.abs(x) > 100000) return NaN;
+
+    return x;
+  }
+
+  function computeCalendar(start, delta) {
+    return addDays(start, delta);
+  }
+
+  function isBusinessDay(d, wkSet, holSet) {
+    const dow = d.getDay();
+    if (wkSet.has(dow)) return false;
+    const iso = toISO(d);
+    if (holSet.has(iso)) return false;
+    return true;
+  }
+
+  function computeBusiness(start, delta, wkSet, holSet) {
+    const step = delta >= 0 ? 1 : -1;
+    const target = Math.abs(delta);
+
+    let moved = 0;
+    let cursor = new Date(start.getTime());
+    let iterations = 0;
+
+    // start date is not counted: move first, then count if business day
+    while (moved < target) {
+      cursor = addDays(cursor, step);
+      iterations++;
+
+      if (iterations > 200000) {
+        // safety
+        return { date: null, steps: iterations };
+      }
+
+      if (isBusinessDay(cursor, wkSet, holSet)) moved++;
+    }
+
+    return { date: cursor, steps: iterations };
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const s = String(startEl.value || "").trim();
+    const sd = parseISODate(s);
+    if (!sd) {
+      showError("Please enter a valid start date.");
+      return;
+    }
+
+    const delta = parseDelta();
+    if (delta === null) {
+      showError("Please enter the number of days to add/subtract.");
+      return;
+    }
+    if (!Number.isFinite(delta)) {
+      showError("Days must be an integer within a reasonable range (e.g., -100000 to 100000).");
+      return;
+    }
+
+    const mode = modeEl.value;
+    const isBiz = mode === "business";
+
+    let resultDate = null;
+    let details = { skipped: 0, badHol: [], holidayCount: 0, wkText: "" };
+
+    if (!isBiz) {
+      resultDate = computeCalendar(sd, delta);
+    } else {
+      const wk = weekendSet();
+      if (wk.size === 7) {
+        showError("All 7 days are marked as weekend. Uncheck at least one day to count business days.");
+        return;
+      }
+
+      const parsed = parseHolidaySet(holEl.value);
+      const holSet = parsed.set;
+
+      const wkNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      details.wkText = wkNames.filter((_, idx) => wk.has(idx)).join(", ") || "None";
+      details.badHol = parsed.bad;
+      details.holidayCount = holSet.size;
+
+      const res = computeBusiness(sd, delta, wk, holSet);
+      if (!res.date) {
+        showError("Could not compute within a safe iteration limit. Try a smaller day count.");
+        return;
+      }
+      resultDate = res.date;
+      details.skipped = res.steps - Math.abs(delta); // approximate non-business days encountered
+      if (details.skipped < 0) details.skipped = 0;
+    }
+
+    const direction = delta > 0 ? "Added" : (delta < 0 ? "Subtracted" : "No change");
+    const typeLabel = isBiz ? "Business days" : "Calendar days";
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        ${badge(`${typeLabel}`)}
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Result date", `<span>${escapeHtml(toISO(resultDate))}</span>`, `Start ${escapeHtml(toISO(sd))} · ${direction} ${Math.abs(delta).toLocaleString()} day(s)`)}
+        ${card("Days applied", `<span>${Math.abs(delta).toLocaleString()}</span>`, `${escapeHtml(typeLabel)} (start date not counted)`)}
+      </div>
+    `;
+
+    if (isBiz) {
+      const badHolNote = details.badHol.length
+        ? `<div class="note" style="margin-top:8px;"><strong>Ignored holiday tokens:</strong> ${details.badHol.map(escapeHtml).slice(0, 30).join(", ")}${details.badHol.length > 30 ? " …" : ""}</div>`
+        : "";
+
+      detailsEl.style.display = "block";
+      detailsEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <strong>Business-day settings</strong>
+          ${badge("Info")}
+        </div>
+        <div class="note" style="margin-top:8px;">
+          Weekend days excluded: <strong>${escapeHtml(details.wkText)}</strong>
+        </div>
+        <div class="note" style="margin-top:6px;">
+          Holiday dates excluded: <strong>${details.holidayCount.toLocaleString()}</strong>
+        </div>
+        <div class="note" style="margin-top:6px;">
+          Non-business days encountered (approx.): <strong>${details.skipped.toLocaleString()}</strong>
+        </div>
+        ${badHolNote}
+      `;
+    }
+  }
+
+  // UX: calculate on Enter in days input
+  deltaEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  modeEl.addEventListener("change", function () {
+    toggleBusinessUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  todayBtn.addEventListener("click", function () {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    startEl.value = `${y}-${m}-${d}`;
+    startEl.focus();
+    resetOutputs();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    deltaEl.value = "";
+    modeEl.value = "calendar";
+    holEl.value = "";
+
+    // Default weekend: Sat + Sun
+    for (const el of weekendEls) {
+      const v = Number(el.value);
+      el.checked = (v === 0 || v === 6);
+    }
+
+    toggleBusinessUI();
+    resetOutputs();
+    startEl.focus();
+  });
+
+  toggleBusinessUI();
+  resetOutputs();
+});
+</script>

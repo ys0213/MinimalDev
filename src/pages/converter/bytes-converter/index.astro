@@ -1,0 +1,431 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Bytes Converter",
+  description:
+    "Convert between bytes and KB/MB/GB/TB using decimal (1000) or binary (1024) standards. Includes validation, accessible UX, result cards, and FAQ schema.",
+  href: "/converter/bytes-converter/",
+  order: 20,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/bytes-converter/";
+
+const faqs = [
+  {
+    q: "What’s the difference between decimal and binary units?",
+    a: "Decimal uses powers of 1000 (1 KB = 1000 bytes). Binary uses powers of 1024 (1 KiB = 1024 bytes). Storage marketing often uses decimal, while operating systems may show binary-equivalent sizes.",
+  },
+  {
+    q: "Is KB the same as KiB?",
+    a: "Strictly, no. KB is decimal (1000). KiB is binary (1024). Some software labels KiB values as KB, which can be confusing.",
+  },
+  {
+    q: "Which should I choose for files on my computer?",
+    a: "If you want to match many OS file size displays, try the binary option (KiB/MiB/GiB). If you want to match disk/ISP marketing (e.g., 1 TB drive), use decimal.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. This converter runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Bytes Converter — ${SITE_NAME}`}
+  description="Convert between bytes and KB/MB/GB/TB using decimal (1000) or binary (1024) standards. Accessible, validated, with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Bytes Converter"
+  intro="Convert bytes to KB/MB/GB/TB (and back). Choose decimal (1000-based) or binary (1024-based) units to match your use case."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="bytes-converter">
+    <div class="form" role="form" aria-describedby="bc_hint bc_privacy">
+      <div class="field">
+        <label for="bc_value">Value</label>
+        <input id="bc_value" type="number" inputmode="decimal" placeholder="e.g., 1048576" />
+        <p class="note" id="bc_hint" style="margin-top:6px;">
+          Enter a value, select input unit + standard, then convert. Negative values are not allowed.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="bc_from">From</label>
+        <select id="bc_from">
+          <option value="B" selected>Bytes (B)</option>
+          <option value="KB">Kilobytes (KB)</option>
+          <option value="MB">Megabytes (MB)</option>
+          <option value="GB">Gigabytes (GB)</option>
+          <option value="TB">Terabytes (TB)</option>
+          <option value="KiB">Kibibytes (KiB)</option>
+          <option value="MiB">Mebibytes (MiB)</option>
+          <option value="GiB">Gibibytes (GiB)</option>
+          <option value="TiB">Tebibytes (TiB)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="bc_standard">Standard</label>
+        <select id="bc_standard">
+          <option value="auto" selected>Auto (based on unit)</option>
+          <option value="decimal">Decimal (1000-based)</option>
+          <option value="binary">Binary (1024-based)</option>
+        </select>
+        <p class="note" style="margin-top:6px;">
+          Auto uses 1000 for KB/MB/GB/TB and 1024 for KiB/MiB/GiB/TiB.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="bc_round">Rounding</label>
+        <select id="bc_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="bc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="bc_swap" aria-label="Swap from and to units">Swap</button>
+        <button class="btn secondary" type="button" id="bc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="bc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="bc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="bc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Conversions work by converting the input to <strong>bytes</strong> first, then converting bytes to the target unit.<br/>
+      Decimal: KB = 1000 B, MB = 1000² B, ...<br/>
+      Binary: KiB = 1024 B, MiB = 1024² B, ...
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1,048,576 B</strong> → <strong>1 MiB</strong> (binary)</li>
+      <li><strong>1,000,000 B</strong> → <strong>1 MB</strong> (decimal)</li>
+      <li><strong>2 GB</strong> → <strong>2,000,000,000 B</strong> (decimal)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/mb-to-gb/">MB to GB Converter</a></li>
+      <li><a href="/converter/gb-to-mb/">GB to MB Converter</a></li>
+      <li><a href="/converter/data/">Data Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("bc_value");
+  const fromEl = document.getElementById("bc_from");
+  const stdEl = document.getElementById("bc_standard");
+  const roundEl = document.getElementById("bc_round");
+  const convertBtn = document.getElementById("bc_convert");
+  const swapBtn = document.getElementById("bc_swap");
+  const clearBtn = document.getElementById("bc_clear");
+  const errEl = document.getElementById("bc_error");
+  const outEl = document.getElementById("bc_result");
+  const cardsEl = document.getElementById("bc_cards");
+  const tbodyEl = document.getElementById("bc_tbody");
+
+  if (!valueEl || !fromEl || !stdEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Target units: always show a full table for both families
+  const DEC_UNITS = ["B", "KB", "MB", "GB", "TB"];
+  const BIN_UNITS = ["B", "KiB", "MiB", "GiB", "TiB"];
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function unitFamily(u) {
+    return (u === "KiB" || u === "MiB" || u === "GiB" || u === "TiB") ? "binary" :
+           (u === "KB" || u === "MB" || u === "GB" || u === "TB") ? "decimal" :
+           "bytes";
+  }
+
+  function powInt(base, exp) {
+    // exp is small (0..4), use loop to reduce floating-point surprises a bit
+    let x = 1;
+    for (let i = 0; i < exp; i++) x *= base;
+    return x;
+  }
+
+  function bytesPerUnit(unit, standard) {
+    // standard: "decimal" or "binary"
+    if (unit === "B") return 1;
+
+    const decIndex = DEC_UNITS.indexOf(unit);
+    if (decIndex >= 0) return powInt(1000, decIndex);
+
+    const binIndex = BIN_UNITS.indexOf(unit);
+    if (binIndex >= 0) return powInt(1024, binIndex);
+
+    // fallback
+    return NaN;
+  }
+
+  function autoStandardForUnit(unit) {
+    const fam = unitFamily(unit);
+    if (fam === "binary") return "binary";
+    if (fam === "decimal") return "decimal";
+    return "decimal"; // bytes: default to decimal unless user forces binary
+  }
+
+  function setRow(unit, value) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    const td2 = document.createElement("td");
+    td1.textContent = unit;
+    td2.textContent = value;
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbodyEl.appendChild(tr);
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const vRaw = toNum(valueEl.value);
+    if (!Number.isFinite(vRaw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (vRaw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const v = Math.min(vRaw, 1e18);
+    if (v !== vRaw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const fromUnit = String(fromEl.value);
+    const stdSel = String(stdEl.value);
+
+    const std = (stdSel === "auto") ? autoStandardForUnit(fromUnit) : stdSel;
+    if (std !== "decimal" && std !== "binary") {
+      outEl.textContent = "Please choose a valid standard.";
+      return;
+    }
+
+    const bpu = bytesPerUnit(fromUnit, std);
+    if (!Number.isFinite(bpu) || bpu <= 0) {
+      outEl.textContent = "Unsupported unit selection.";
+      return;
+    }
+
+    // Convert input to bytes
+    const bytes = v * bpu;
+
+    // Compute full tables (both standards), so users can compare
+    // Decimal table
+    const decVals = {};
+    for (let i = 0; i < DEC_UNITS.length; i++) {
+      const u = DEC_UNITS[i];
+      const div = powInt(1000, i);
+      decVals[u] = bytes / div;
+    }
+
+    // Binary table
+    const binVals = {};
+    for (let i = 0; i < BIN_UNITS.length; i++) {
+      const u = BIN_UNITS[i];
+      const div = powInt(1024, i);
+      binVals[u] = bytes / div;
+    }
+
+    // Primary display: show the same-family “main” unit next to bytes
+    // If from is decimal family -> highlight MB/GB-ish based on magnitude, similarly for binary.
+    function pickBest(unitList, base) {
+      let best = unitList[0];
+      for (let i = 1; i < unitList.length; i++) {
+        const candidate = unitList[i];
+        const val = bytes / powInt(base, i);
+        if (Math.abs(val) >= 1) best = candidate;
+        else break;
+      }
+      return best;
+    }
+
+    const bestDec = pickBest(DEC_UNITS, 1000);
+    const bestBin = pickBest(BIN_UNITS, 1024);
+
+    const primary = (std === "decimal")
+      ? `${fmt(decVals[bestDec])} ${bestDec}`
+      : `${fmt(binVals[bestBin])} ${bestBin}`;
+
+    outEl.innerHTML =
+      `<strong>Result:</strong> ${primary}<br/>` +
+      `<span class="note">Bytes: ${fmtSmart(bytes)} B</span>`;
+
+    const unitLabel = (std === "decimal") ? "Decimal (1000)" : "Binary (1024)";
+    const fam = unitFamily(fromUnit);
+    const famLabel = fam === "binary" ? "Binary unit (KiB/MiB/...)" : fam === "decimal" ? "Decimal unit (KB/MB/...)" : "Bytes";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Input unit: " + fromUnit, "neutral")}
+        ${badge("Detected family: " + famLabel, "neutral")}
+        ${badge("Standard used: " + unitLabel, (stdSel === "auto") ? "good" : "neutral")}
+        ${badge("Both tables shown", "good")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Notes: Decimal uses KB/MB/GB/TB (1000-based). Binary uses KiB/MiB/GiB/TiB (1024-based).
+      </div>
+    `;
+
+    // Populate table with grouped sections (simple, no extra CSS required)
+    setRow("— Decimal (1000-based) —", "");
+    DEC_UNITS.forEach((u) => setRow(u, `${fmt(decVals[u])} ${u}`));
+
+    setRow("— Binary (1024-based) —", "");
+    BIN_UNITS.forEach((u) => setRow(u, `${fmt(binVals[u])} ${u}`));
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    fromEl.value = "B";
+    stdEl.value = "auto";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  swapBtn.addEventListener("click", function () {
+    // Swap between a “natural” counterpart: if in decimal, swap to binary analog at same power, and vice versa.
+    const u = String(fromEl.value);
+    const di = DEC_UNITS.indexOf(u);
+    const bi = BIN_UNITS.indexOf(u);
+
+    if (di > 0) fromEl.value = BIN_UNITS[di]; // KB->KiB, MB->MiB...
+    else if (bi > 0) fromEl.value = DEC_UNITS[bi]; // KiB->KB ...
+    else fromEl.value = "KB"; // bytes -> KB
+
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  fromEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  stdEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

@@ -1,0 +1,289 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Commission Calculator",
+  description:
+    "Free commission calculator. Compute commission amount, net payout, and effective rate from sale amount, commission %, and optional extras.",
+  href: "/finance/commission-calculator/",
+  order: 68,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/commission-calculator/";
+
+const faqs = [
+  {
+    q: "What is a commission?",
+    a: "A commission is a fee paid based on a sale amount, commonly calculated as a percentage of the sale.",
+  },
+  {
+    q: "How do I calculate commission from a percentage?",
+    a: "commission = saleAmount × (commissionRate ÷ 100). Example: 1,000 at 10% → 100.",
+  },
+  {
+    q: "What is net payout?",
+    a: "Net payout is what remains after commission and optional fees: net = saleAmount − commission − fees + bonus (if any).",
+  },
+  {
+    q: "Can I include a bonus or fixed fee?",
+    a: "Yes. This calculator supports an optional bonus (added to payout) and an optional fixed fee (subtracted from payout).",
+  },
+  {
+    q: "Does this include taxes or withholding?",
+    a: "No. Taxes and withholding vary by country and contract. If you want an after-tax estimate, subtract expected taxes separately.",
+  },
+  {
+    q: "Can the commission rate be 0% or over 100%?",
+    a: "Yes. 0% means no commission. Over 100% is mathematically allowed but uncommon in real agreements.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Commission Calculator — ${SITE_NAME}`}
+  description="Commission calculator to estimate commission amount, net payout, and effective rate. Supports optional fixed fees and bonuses with clear breakdown."
+  canonicalPath={CANONICAL_PATH}
+  h1="Commission Calculator"
+  intro="Calculate commission amount and net payout from a sale amount and commission rate. Add optional fees and bonuses for a clearer estimate."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="commission-calculator">
+    <div class="form" role="form" aria-describedby="cm_note">
+      <div class="field">
+        <label for="cm_sale">Sale amount</label>
+        <input id="cm_sale" type="number" inputmode="decimal" placeholder="e.g., 1000" />
+      </div>
+
+      <div class="field">
+        <label for="cm_rate">Commission rate (%)</label>
+        <input id="cm_rate" type="number" inputmode="decimal" placeholder="e.g., 10" />
+      </div>
+
+      <div class="field">
+        <label for="cm_fee">Fixed fee (optional)</label>
+        <input id="cm_fee" type="number" inputmode="decimal" placeholder="e.g., 25" />
+        <p class="note" style="margin-top:6px;">
+          Examples: platform fee, processing fee, fixed deduction.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="cm_bonus">Bonus (optional)</label>
+        <input id="cm_bonus" type="number" inputmode="decimal" placeholder="e.g., 50" />
+        <p class="note" style="margin-top:6px;">
+          Bonus is added after commission/fees (simple estimate).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="cm_currency">Currency (display only)</label>
+        <select id="cm_currency">
+          <option value="USD" selected>USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="JPY">JPY</option>
+          <option value="KRW">KRW</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cm_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cm_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="cm_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="cm_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Commission:</strong> sale × (rate ÷ 100)<br/>
+      <strong>Net payout:</strong> sale − commission − fee + bonus<br/>
+      <strong>Effective rate:</strong> commission ÷ sale × 100
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Sale 1,000 at 10% → commission 100 → net 900 (no fee/bonus)</li>
+      <li>Sale 1,000 at 10%, fee 25 → net 875</li>
+      <li>Sale 1,000 at 10%, bonus 50 → net 950</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/markup-calculator/">Markup Calculator</a></li>
+      <li><a href="/finance/margin-calculator/">Margin Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const saleEl = document.getElementById("cm_sale");
+  const rateEl = document.getElementById("cm_rate");
+  const feeEl = document.getElementById("cm_fee");
+  const bonusEl = document.getElementById("cm_bonus");
+  const curEl = document.getElementById("cm_currency");
+  const calcBtn = document.getElementById("cm_calc");
+  const clearBtn = document.getElementById("cm_clear");
+  const errEl = document.getElementById("cm_error");
+  const outEl = document.getElementById("cm_result");
+
+  if (!saleEl || !rateEl || !feeEl || !bonusEl || !curEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function decimalsForCurrency(code) {
+    if (code === "JPY" || code === "KRW") return 0;
+    return 2;
+  }
+
+  function money(v, code) {
+    if (!Number.isFinite(v)) v = 0;
+    const d = decimalsForCurrency(code);
+    const p = Math.pow(10, d);
+    const rounded = Math.round(v * p) / p;
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString(undefined, { style: "currency", currency: code, minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function fmtPct(v) {
+    if (!Number.isFinite(v)) return "0%";
+    const rounded = Math.round(v * 100) / 100;
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString() + "%";
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, value, subtitle) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">${value}</div>
+        <div class="note" style="margin-top:4px;">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  function bucketNet(net, sale) {
+    if (!Number.isFinite(net) || !Number.isFinite(sale)) return "—";
+    if (sale === 0) return "—";
+    const ratio = net / sale;
+    if (ratio < 0) return "Negative payout";
+    if (ratio < 0.5) return "Low payout";
+    if (ratio < 0.9) return "Typical payout";
+    return "High payout";
+  }
+
+  function compute() {
+    clearError();
+
+    const sale = num(saleEl.value);
+    const ratePct = num(rateEl.value);
+    const fee = String(feeEl.value || "").trim() === "" ? 0 : num(feeEl.value);
+    const bonus = String(bonusEl.value || "").trim() === "" ? 0 : num(bonusEl.value);
+    const code = String(curEl.value || "USD");
+
+    if (!Number.isFinite(sale) || sale < 0) {
+      showError("Please enter a valid sale amount (0 or higher).");
+      return;
+    }
+    if (!Number.isFinite(ratePct)) {
+      showError("Please enter a valid commission rate (%).");
+      return;
+    }
+    if (!Number.isFinite(fee) || fee < 0) {
+      showError("Please enter a valid fixed fee (0 or higher).");
+      return;
+    }
+    if (!Number.isFinite(bonus) || bonus < 0) {
+      showError("Please enter a valid bonus (0 or higher).");
+      return;
+    }
+
+    const r = ratePct / 100;
+    const commission = sale * r;
+    const net = sale - commission - fee + bonus;
+
+    const effectiveRate = (sale === 0) ? 0 : (commission / sale) * 100;
+    const netLabel = bucketNet(net, sale);
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Commission", money(commission, code), `commission = sale × ${fmtPct(ratePct)} · effective ${fmtPct(effectiveRate)}`)}
+        ${card("Net payout", money(net, code), `${badge(netLabel)} · net = sale − commission − fee + bonus`)}
+        ${card("Breakdown", money(sale, code), `sale ${money(sale, code)} − commission ${money(commission, code)} − fee ${money(fee, code)} + bonus ${money(bonus, code)}`)}
+      </div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  // Enter-to-calc
+  [saleEl, rateEl, feeEl, bonusEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    saleEl.value = "";
+    rateEl.value = "";
+    feeEl.value = "";
+    bonusEl.value = "";
+    curEl.value = "USD";
+    outEl.textContent = "Result will appear here.";
+    clearError();
+    saleEl.focus();
+  });
+});
+</script>

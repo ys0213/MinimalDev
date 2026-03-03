@@ -1,0 +1,311 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "VAT Calculator",
+  description:
+    "Free VAT calculator. Add VAT to a net price or remove VAT from a gross price. Shows net, VAT amount, and gross total.",
+  href: "/finance/vat-calculator/",
+  order: 65,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/vat-calculator/";
+
+const faqs = [
+  {
+    q: "What is VAT?",
+    a: "VAT (Value Added Tax) is a consumption tax used in many countries. Prices are often shown as gross (VAT included) for consumers, while businesses may track net and VAT separately.",
+  },
+  {
+    q: "What’s the difference between VAT and sales tax?",
+    a: "Sales tax is typically added at checkout, while VAT is often included in the displayed price (gross). VAT is collected throughout the supply chain, not only at the final sale.",
+  },
+  {
+    q: "How do I remove VAT from a VAT-included price?",
+    a: "If the price is VAT-included (gross), net = gross ÷ (1 + VAT rate). VAT amount = gross − net.",
+  },
+  {
+    q: "How do I add VAT to a net price?",
+    a: "If the price is VAT-excluded (net), VAT amount = net × VAT rate. Gross = net + VAT amount.",
+  },
+  {
+    q: "What if the VAT rate is 0%?",
+    a: "Then net and gross are the same and the VAT amount is 0.",
+  },
+  {
+    q: "Does this match receipt rounding?",
+    a: "This tool uses standard rounding for display. Some invoices/receipts may round differently (per line item or per tax component).",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`VAT Calculator — ${SITE_NAME}`}
+  description="VAT calculator to add or remove VAT. Compute net price, VAT amount, and gross total with clear breakdown and accessible results."
+  canonicalPath={CANONICAL_PATH}
+  h1="VAT Calculator"
+  intro="Add VAT to a net amount or remove VAT from a VAT-included price. Shows net, VAT amount, and gross total."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="vat-calculator">
+    <div class="form" role="form" aria-describedby="vat_note">
+      <div class="field">
+        <label for="vat_mode">Mode</label>
+        <select id="vat_mode">
+          <option value="add" selected>Add VAT (net → gross)</option>
+          <option value="remove">Remove VAT (gross → net)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="vat_amount" id="vat_amount_label">Net amount</label>
+        <input id="vat_amount" type="number" inputmode="decimal" placeholder="e.g., 100" aria-describedby="vat_amount_help" />
+        <p class="note" id="vat_amount_help" style="margin-top:6px;">
+          Use “Add VAT” when your starting amount excludes VAT (net). Use “Remove VAT” when your starting amount includes VAT (gross).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="vat_rate">VAT rate (%)</label>
+        <input id="vat_rate" type="number" inputmode="decimal" placeholder="e.g., 20" />
+      </div>
+
+      <div class="field">
+        <label for="vat_currency">Currency (display only)</label>
+        <select id="vat_currency">
+          <option value="USD" selected>USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="JPY">JPY</option>
+          <option value="KRW">KRW</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="vat_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="vat_clear">Clear</button>
+      </div>
+
+      <div class="result" id="vat_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="vat_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="vat_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Add VAT (net → gross):</strong> VAT = net × rate, gross = net + VAT<br/>
+      <strong>Remove VAT (gross → net):</strong> net = gross ÷ (1 + rate), VAT = gross − net
+    </p>
+    <ul>
+      <li><strong>Rate</strong> is expressed as a percentage (e.g., 20% → 0.20).</li>
+      <li><strong>Gross</strong> means VAT included; <strong>net</strong> means VAT excluded.</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Add VAT: net 100 at 20% → VAT 20 → gross 120</li>
+      <li>Remove VAT: gross 120 at 20% → net 100 → VAT 20</li>
+      <li>Add VAT: net 59.99 at 7.5% → gross 64.49 (rounded)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sales-tax-calculator/">Sales Tax Calculator</a></li>
+      <li><a href="/math/discount-calculator/">Discount Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("vat_mode");
+  const amountEl = document.getElementById("vat_amount");
+  const amountLabelEl = document.getElementById("vat_amount_label");
+  const rateEl = document.getElementById("vat_rate");
+  const curEl = document.getElementById("vat_currency");
+  const calcBtn = document.getElementById("vat_calc");
+  const clearBtn = document.getElementById("vat_clear");
+  const errEl = document.getElementById("vat_error");
+  const outEl = document.getElementById("vat_result");
+
+  if (!modeEl || !amountEl || !amountLabelEl || !rateEl || !curEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function decimalsForCurrency(code) {
+    // Common display defaults. Not exhaustive; used only for formatting.
+    if (code === "JPY" || code === "KRW") return 0;
+    return 2;
+  }
+
+  function money(v, code) {
+    if (!Number.isFinite(v)) v = 0;
+    const d = decimalsForCurrency(code);
+    const rounded = Math.round(v * Math.pow(10, d)) / Math.pow(10, d);
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString(undefined, { style: "currency", currency: code, minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function pct(v) {
+    if (!Number.isFinite(v)) return "0%";
+    const rounded = Math.round(v * 100) / 100;
+    return (Object.is(rounded, -0) ? 0 : rounded).toLocaleString() + "%";
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, value, subtitle) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">${value}</div>
+        <div class="note" style="margin-top:4px;">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  function syncLabels() {
+    const mode = String(modeEl.value);
+    if (mode === "add") {
+      amountLabelEl.textContent = "Net amount (VAT excluded)";
+      amountEl.placeholder = "e.g., 100";
+    } else {
+      amountLabelEl.textContent = "Gross amount (VAT included)";
+      amountEl.placeholder = "e.g., 120";
+    }
+  }
+
+  function compute() {
+    clearError();
+
+    const mode = String(modeEl.value);
+    const amt = num(amountEl.value);
+    const ratePct = num(rateEl.value);
+    const code = String(curEl.value || "USD");
+
+    if (!Number.isFinite(amt) || amt < 0) {
+      showError("Please enter a valid amount (0 or higher).");
+      return;
+    }
+    if (!Number.isFinite(ratePct) || ratePct < 0 || ratePct > 100) {
+      showError("Please enter a valid VAT rate between 0 and 100.");
+      return;
+    }
+
+    const r = ratePct / 100;
+
+    let net = 0, vat = 0, gross = 0;
+
+    if (mode === "add") {
+      net = amt;
+      vat = net * r;
+      gross = net + vat;
+    } else {
+      gross = amt;
+      if (r === 0) {
+        net = gross;
+        vat = 0;
+      } else {
+        net = gross / (1 + r);
+        vat = gross - net;
+      }
+    }
+
+    // Categorize VAT rate (light/standard/high is not globally standard; purely a UX label)
+    let rateBucket = "Low rate";
+    if (ratePct >= 20) rateBucket = "High rate";
+    else if (ratePct >= 10) rateBucket = "Standard rate";
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Net (VAT excluded)", money(net, code), mode === "add" ? "Starting amount" : "Computed from gross")}
+        ${card("VAT amount", money(vat, code), `${badge(rateBucket)} · rate ${pct(ratePct)}`)}
+        ${card("Gross (VAT included)", money(gross, code), mode === "add" ? "Computed total" : "Starting amount")}
+      </div>
+
+      <div class="note" style="margin-top:10px;">
+        <strong>Formulas:</strong>
+        ${mode === "add"
+          ? `VAT = net × rate, gross = net + VAT`
+          : `net = gross ÷ (1 + rate), VAT = gross − net`
+        }
+      </div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  // Enter-to-calc
+  [amountEl, rateEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  modeEl.addEventListener("change", function () {
+    syncLabels();
+    outEl.textContent = "Result will appear here.";
+    clearError();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "add";
+    curEl.value = "USD";
+    amountEl.value = "";
+    rateEl.value = "";
+    syncLabels();
+    outEl.textContent = "Result will appear here.";
+    clearError();
+    amountEl.focus();
+  });
+
+  syncLabels();
+});
+</script>

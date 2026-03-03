@@ -1,0 +1,483 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Ratio Calculator",
+  description:
+    "Free ratio calculator. Simplify ratios, scale ratios to a target value, and compute proportions (A:B = C:D) instantly.",
+  href: "/math/ratio-calculator/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/ratio-calculator/";
+
+const faqs = [
+  {
+    q: "What is a ratio?",
+    a: "A ratio compares two quantities using division, often written as A:B or A/B.",
+  },
+  {
+    q: "How do you simplify a ratio?",
+    a: "Divide both parts by their greatest common divisor (GCD). Example: 10:15 → 2:3.",
+  },
+  {
+    q: "How do you scale a ratio to a target value?",
+    a: "Pick which side to target (A or B), compute scale = target ÷ currentSide, then multiply both sides by scale.",
+  },
+  {
+    q: "What is a proportion (A:B = C:D)?",
+    a: "A proportion states two ratios are equal. You can solve for a missing value using cross multiplication.",
+  },
+  {
+    q: "Can ratios use decimals?",
+    a: "Yes. This tool supports decimals and will also show an approximated simplified integer ratio when possible.",
+  },
+  {
+    q: "What if one side is zero?",
+    a: "A ratio like 0:5 is valid. But 5:0 implies division by zero when interpreted as A/B, so some operations (like percent forms) are undefined.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Ratio Calculator — ${SITE_NAME}`}
+  description="Ratio calculator to simplify ratios, scale to a target value, and solve proportions. Includes clear breakdown cards and accessibility-friendly UX."
+  canonicalPath={CANONICAL_PATH}
+  h1="Ratio Calculator"
+  intro="Work with ratios in three ways: simplify A:B, scale A:B to a target for A or B, or solve a proportion (A:B = C:D)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ratio-calculator">
+    <div class="form" role="form" aria-describedby="rt_note">
+      <div class="field">
+        <label for="rt_mode">Mode</label>
+        <select id="rt_mode">
+          <option value="simplify" selected>Simplify ratio (A:B)</option>
+          <option value="scale">Scale ratio to a target</option>
+          <option value="proportion">Solve proportion (A:B = C:D)</option>
+        </select>
+      </div>
+
+      <div id="rt_block_simplify" style="display:block;">
+        <h2 style="margin:0 0 10px;">Simplify A:B</h2>
+
+        <div class="field">
+          <label for="rt_a">A</label>
+          <input id="rt_a" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        </div>
+
+        <div class="field">
+          <label for="rt_b">B</label>
+          <input id="rt_b" type="number" inputmode="decimal" placeholder="e.g., 15" />
+        </div>
+      </div>
+
+      <div id="rt_block_scale" style="display:none;">
+        <h2 style="margin:0 0 10px;">Scale A:B to a target</h2>
+
+        <div class="field">
+          <label for="rt_sa">A</label>
+          <input id="rt_sa" type="number" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+
+        <div class="field">
+          <label for="rt_sb">B</label>
+          <input id="rt_sb" type="number" inputmode="decimal" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="rt_target_side">Target side</label>
+          <select id="rt_target_side">
+            <option value="A" selected>Target A</option>
+            <option value="B">Target B</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rt_target_value">Target value</label>
+          <input id="rt_target_value" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <div id="rt_block_prop" style="display:none;">
+        <h2 style="margin:0 0 10px;">Solve A:B = C:D</h2>
+
+        <div class="note" style="margin-bottom:10px;">
+          Leave exactly <strong>one</strong> field blank to solve for it.
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="field">
+            <label for="rt_pa">A</label>
+            <input id="rt_pa" type="number" inputmode="decimal" placeholder="e.g., 2" />
+          </div>
+          <div class="field">
+            <label for="rt_pb">B</label>
+            <input id="rt_pb" type="number" inputmode="decimal" placeholder="e.g., 3" />
+          </div>
+          <div class="field">
+            <label for="rt_pc">C</label>
+            <input id="rt_pc" type="number" inputmode="decimal" placeholder="e.g., 10" />
+          </div>
+          <div class="field">
+            <label for="rt_pd">D</label>
+            <input id="rt_pd" type="number" inputmode="decimal" placeholder="(leave blank to solve)" />
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="btn" type="button" id="rt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="rt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rt_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="rt_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="rt_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Simplify:</strong> divide A and B by their GCD (for integer ratios).<br/>
+      <strong>Scale:</strong> scale = target ÷ chosenSide, then A′ = A×scale, B′ = B×scale.<br/>
+      <strong>Proportion:</strong> A:B = C:D ⇒ A×D = B×C (cross multiplication).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>10:15 → 2:3</li>
+      <li>2:3 scaled to A=10 → 10:15</li>
+      <li>2:3 = 10:D → D = 15</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/percentage-difference-calculator/">Percentage Difference Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("rt_mode");
+
+  const blockS = document.getElementById("rt_block_simplify");
+  const blockSc = document.getElementById("rt_block_scale");
+  const blockP = document.getElementById("rt_block_prop");
+
+  const aEl = document.getElementById("rt_a");
+  const bEl = document.getElementById("rt_b");
+
+  const saEl = document.getElementById("rt_sa");
+  const sbEl = document.getElementById("rt_sb");
+  const targetSideEl = document.getElementById("rt_target_side");
+  const targetValEl = document.getElementById("rt_target_value");
+
+  const paEl = document.getElementById("rt_pa");
+  const pbEl = document.getElementById("rt_pb");
+  const pcEl = document.getElementById("rt_pc");
+  const pdEl = document.getElementById("rt_pd");
+
+  const calcBtn = document.getElementById("rt_calc");
+  const clearBtn = document.getElementById("rt_clear");
+  const errEl = document.getElementById("rt_error");
+  const outEl = document.getElementById("rt_result");
+
+  if (!modeEl || !blockS || !blockSc || !blockP ||
+      !aEl || !bEl || !saEl || !sbEl || !targetSideEl || !targetValEl ||
+      !paEl || !pbEl || !pcEl || !pdEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function str(v) { return String(v ?? "").trim(); }
+  function hasVal(el) { return str(el.value) !== ""; }
+
+  function numOrNaN(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function roundSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const abs = Math.abs(x);
+    const d = abs >= 1000 ? 2 : abs >= 1 ? 4 : 6;
+    const p = Math.pow(10, d);
+    const r = Math.round(x * p) / p;
+    const safe = Object.is(r, -0) ? 0 : r;
+    return safe.toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function gcdInt(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return 0;
+    while (b !== 0) {
+      const t = a % b;
+      a = b;
+      b = t;
+    }
+    return a;
+  }
+
+  function approxIntRatio(a, b) {
+    // Convert decimals to integers by scaling up to 6 decimals.
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    if (a === 0 && b === 0) return null;
+
+    const scale = 1_000_000;
+    const ai = Math.round(a * scale);
+    const bi = Math.round(b * scale);
+
+    if (!Number.isFinite(ai) || !Number.isFinite(bi)) return null;
+    if (ai === 0 && bi === 0) return null;
+
+    const g = gcdInt(ai, bi);
+    if (g === 0) return null;
+
+    const A = ai / g;
+    const B = bi / g;
+
+    // If huge, don’t show as "simplified integer" (avoid nonsense).
+    if (Math.abs(A) > 1e9 || Math.abs(B) > 1e9) return null;
+    return { A, B };
+  }
+
+  function setMode(mode) {
+    blockS.style.display = mode === "simplify" ? "block" : "none";
+    blockSc.style.display = mode === "scale" ? "block" : "none";
+    blockP.style.display = mode === "proportion" ? "block" : "none";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function simplifyMode() {
+    const A = numOrNaN(aEl.value);
+    const B = numOrNaN(bEl.value);
+
+    if (!Number.isFinite(A) || !Number.isFinite(B)) {
+      showError("Please enter valid numbers for A and B.");
+      return;
+    }
+    if (A === 0 && B === 0) {
+      showError("A and B cannot both be 0.");
+      return;
+    }
+
+    const ratio = (B === 0) ? null : (A / B);
+    const approx = approxIntRatio(A, B);
+
+    const primary = approx ? `${approx.A}:${approx.B}` : `${roundSmart(A)}:${roundSmart(B)}`;
+    const category =
+      (B === 0) ? "B is zero"
+      : (ratio < 1 ? "A < B" : ratio > 1 ? "A > B" : "A = B");
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Simplified ratio", primary, `${badge(category)} · based on A and B`)}
+        ${card("As a fraction", (B === 0 ? "undefined" : roundSmart(A / B)), `A ÷ B`)}
+        ${card("Original", `${roundSmart(A)}:${roundSmart(B)}`, `raw input`)}
+      </div>
+    `;
+  }
+
+  function scaleMode() {
+    const A = numOrNaN(saEl.value);
+    const B = numOrNaN(sbEl.value);
+    const side = String(targetSideEl.value);
+    const target = numOrNaN(targetValEl.value);
+
+    if (!Number.isFinite(A) || !Number.isFinite(B) || !Number.isFinite(target)) {
+      showError("Please enter valid numbers for A, B, and target.");
+      return;
+    }
+    if (A === 0 && B === 0) {
+      showError("A and B cannot both be 0.");
+      return;
+    }
+
+    const baseSideVal = side === "A" ? A : B;
+    if (baseSideVal === 0) {
+      showError("Cannot scale when the chosen target side is 0 in the original ratio.");
+      return;
+    }
+
+    const scale = target / baseSideVal;
+    const A2 = A * scale;
+    const B2 = B * scale;
+
+    const approx = approxIntRatio(A2, B2);
+    const scaledLabel = approx ? `${approx.A}:${approx.B}` : `${roundSmart(A2)}:${roundSmart(B2)}`;
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Scaled ratio", `${roundSmart(A2)}:${roundSmart(B2)}`, `${badge("Scaled")} · scale = ${roundSmart(scale)}`)}
+        ${card("Target satisfied", side === "A" ? `A = ${roundSmart(A2)}` : `B = ${roundSmart(B2)}`, `target ${side} = ${roundSmart(target)}`)}
+        ${card("Nearest integer ratio", scaledLabel, `approximate integer form (when meaningful)`)}
+      </div>
+    `;
+  }
+
+  function proportionMode() {
+    // Exactly one blank
+    const fields = [
+      { key: "A", el: paEl },
+      { key: "B", el: pbEl },
+      { key: "C", el: pcEl },
+      { key: "D", el: pdEl },
+    ];
+
+    const blanks = fields.filter(f => !hasVal(f.el));
+    if (blanks.length !== 1) {
+      showError("Please leave exactly one field blank (A, B, C, or D) to solve the proportion.");
+      return;
+    }
+
+    const A = hasVal(paEl) ? numOrNaN(paEl.value) : NaN;
+    const B = hasVal(pbEl) ? numOrNaN(pbEl.value) : NaN;
+    const C = hasVal(pcEl) ? numOrNaN(pcEl.value) : NaN;
+    const D = hasVal(pdEl) ? numOrNaN(pdEl.value) : NaN;
+
+    const unknown = blanks[0].key;
+
+    // Validate knowns
+    const knowns = { A, B, C, D };
+    for (const k of ["A","B","C","D"]) {
+      if (k !== unknown) {
+        if (!Number.isFinite(knowns[k])) {
+          showError("Please enter valid numbers for the filled fields.");
+          return;
+        }
+      }
+    }
+
+    // Cross-multiplication: A:D? Actually A:B = C:D => A*D = B*C
+    let solved;
+    if (unknown === "A") {
+      if (D === 0) { showError("Cannot solve for A when D is 0 (would divide by 0)."); return; }
+      solved = (B * C) / D;
+    } else if (unknown === "B") {
+      if (C === 0) { showError("Cannot solve for B when C is 0 (would divide by 0)."); return; }
+      solved = (A * D) / C;
+    } else if (unknown === "C") {
+      if (B === 0) { showError("Cannot solve for C when B is 0 (would divide by 0)."); return; }
+      solved = (A * D) / B;
+    } else { // D
+      if (A === 0) { showError("Cannot solve for D when A is 0 (would divide by 0)."); return; }
+      solved = (B * C) / A;
+    }
+
+    if (!Number.isFinite(solved)) {
+      showError("Could not compute with these values.");
+      return;
+    }
+
+    const A2 = unknown === "A" ? solved : A;
+    const B2 = unknown === "B" ? solved : B;
+    const C2 = unknown === "C" ? solved : C;
+    const D2 = unknown === "D" ? solved : D;
+
+    const left = (B2 === 0) ? null : (A2 / B2);
+    const right = (D2 === 0) ? null : (C2 / D2);
+
+    const match = (left !== null && right !== null) ? Math.abs(left - right) : null;
+    const label = match === null ? "Check undefined" : (match < 1e-9 ? "Proportion holds" : "Check inputs");
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Solved value", `${unknown} = ${roundSmart(solved)}`, `${badge(label)} · cross-multiplication`)}
+        ${card("Left ratio (A/B)", (left === null ? "undefined" : roundSmart(left)), `A=${roundSmart(A2)}, B=${roundSmart(B2)}`)}
+        ${card("Right ratio (C/D)", (right === null ? "undefined" : roundSmart(right)), `C=${roundSmart(C2)}, D=${roundSmart(D2)}`)}
+      </div>
+      <div class="note" style="margin-top:10px;">
+        A:B = C:D ⇒ A×D = B×C. Here: ${roundSmart(A2)}×${roundSmart(D2)} vs ${roundSmart(B2)}×${roundSmart(C2)}.
+      </div>
+    `;
+  }
+
+  function compute() {
+    clearError();
+    const mode = String(modeEl.value);
+    if (mode === "simplify") simplifyMode();
+    else if (mode === "scale") scaleMode();
+    else proportionMode();
+  }
+
+  modeEl.addEventListener("change", function () {
+    setMode(String(modeEl.value));
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  // Enter-to-calc across all inputs
+  const allInputs = [aEl,bEl,saEl,sbEl,targetValEl,paEl,pbEl,pcEl,pdEl];
+  allInputs.forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    aEl.value = ""; bEl.value = "";
+    saEl.value = ""; sbEl.value = ""; targetValEl.value = ""; targetSideEl.value = "A";
+    paEl.value = ""; pbEl.value = ""; pcEl.value = ""; pdEl.value = "";
+    modeEl.value = "simplify";
+    setMode("simplify");
+    aEl.focus();
+  });
+
+  setMode(String(modeEl.value));
+});
+</script>

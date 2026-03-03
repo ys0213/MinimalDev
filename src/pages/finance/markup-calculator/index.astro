@@ -1,0 +1,376 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Markup Calculator",
+  description:
+    "Free markup calculator. Compute markup %, profit, selling price, and gross margin from cost and price/target markup.",
+  href: "/finance/markup-calculator/",
+  order: 67,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/markup-calculator/";
+
+const faqs = [
+  {
+    q: "What is markup?",
+    a: "Markup is profit divided by cost: markup% = (price − cost) ÷ cost × 100.",
+  },
+  {
+    q: "What is profit margin and how is it different?",
+    a: "Margin (gross margin) is profit divided by price: margin% = (price − cost) ÷ price × 100. Margin and markup are not the same.",
+  },
+  {
+    q: "How do I calculate price from cost and markup?",
+    a: "price = cost × (1 + markupRate). Example: cost 60, markup 25% → price = 60 × 1.25 = 75.",
+  },
+  {
+    q: "Can markup be negative?",
+    a: "Yes. If price is below cost, profit is negative and markup is negative.",
+  },
+  {
+    q: "Can markup be over 100%?",
+    a: "Yes. A markup over 100% means the profit is larger than the cost (e.g., cost 50, price 120 → markup 140%).",
+  },
+  {
+    q: "Does this include taxes, shipping, or platform fees?",
+    a: "No. Enter your full effective cost (including fees) if you want them included in the calculation.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Markup Calculator — ${SITE_NAME}`}
+  description="Markup calculator to compute markup %, gross margin %, profit, and selling price. Includes cost+price and cost+target markup modes with clear breakdown."
+  canonicalPath={CANONICAL_PATH}
+  h1="Markup Calculator"
+  intro="Calculate markup, margin, and profit from cost and price — or solve for the selling price using a target markup."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="markup-calculator">
+    <div class="form" role="form" aria-describedby="mk_note">
+      <div class="field">
+        <label for="mk_mode">Mode</label>
+        <select id="mk_mode">
+          <option value="from_price" selected>Cost + Price → Markup / Margin</option>
+          <option value="target_markup">Cost + Target Markup → Price</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mk_cost">Cost</label>
+        <input id="mk_cost" type="number" inputmode="decimal" placeholder="e.g., 60" />
+        <p class="note" id="mk_cost_help" style="margin-top:6px;">
+          Tip: include shipping, platform fees, and packaging if you want “true” markup.
+        </p>
+      </div>
+
+      <div class="field" id="mk_price_field">
+        <label for="mk_price">Selling price</label>
+        <input id="mk_price" type="number" inputmode="decimal" placeholder="e.g., 75" />
+      </div>
+
+      <div class="field" id="mk_target_field" style="display:none;">
+        <label for="mk_target">Target markup (%)</label>
+        <input id="mk_target" type="number" inputmode="decimal" placeholder="e.g., 25" />
+        <p class="note" id="mk_target_help" style="margin-top:6px;">
+          Target markup uses: <strong>price = cost × (1 + markupRate)</strong>
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="mk_currency">Currency (display only)</label>
+        <select id="mk_currency">
+          <option value="USD" selected>USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="JPY">JPY</option>
+          <option value="KRW">KRW</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mk_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mk_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mk_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="mk_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="mk_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Profit:</strong> price − cost<br/>
+      <strong>Markup %:</strong> (price − cost) ÷ cost × 100<br/>
+      <strong>Margin % (gross margin):</strong> (price − cost) ÷ price × 100
+    </p>
+    <p class="note">
+      <strong>Price from target markup:</strong> price = cost × (1 + markupRate)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Cost 60, price 75 → profit 15 → markup 25% → margin 20%</li>
+      <li>Cost 60, target markup 25% → price 75</li>
+      <li>Cost 50, price 120 → profit 70 → markup 140%</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/margin-calculator/">Margin Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/discount-calculator/">Discount Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("mk_mode");
+  const costEl = document.getElementById("mk_cost");
+  const priceField = document.getElementById("mk_price_field");
+  const priceEl = document.getElementById("mk_price");
+  const targetField = document.getElementById("mk_target_field");
+  const targetEl = document.getElementById("mk_target");
+  const curEl = document.getElementById("mk_currency");
+  const calcBtn = document.getElementById("mk_calc");
+  const clearBtn = document.getElementById("mk_clear");
+  const errEl = document.getElementById("mk_error");
+  const outEl = document.getElementById("mk_result");
+
+  if (!modeEl || !costEl || !priceField || !priceEl || !targetField || !targetEl || !curEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function decimalsForCurrency(code) {
+    if (code === "JPY" || code === "KRW") return 0;
+    return 2;
+  }
+
+  function money(v, code) {
+    if (!Number.isFinite(v)) v = 0;
+    const d = decimalsForCurrency(code);
+    const p = Math.pow(10, d);
+    const rounded = Math.round(v * p) / p;
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString(undefined, { style: "currency", currency: code, minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function fmtPct(v) {
+    if (!Number.isFinite(v)) return "0%";
+    const rounded = Math.round(v * 100) / 100;
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString() + "%";
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, value, subtitle) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">${value}</div>
+        <div class="note" style="margin-top:4px;">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  function bucketMarkup(pct) {
+    if (!Number.isFinite(pct)) return "—";
+    if (pct < 0) return "Negative markup";
+    if (pct < 20) return "Low markup";
+    if (pct < 50) return "Typical markup";
+    if (pct < 100) return "High markup";
+    return "Very high markup";
+  }
+
+  function bucketMargin(pct) {
+    if (!Number.isFinite(pct)) return "—";
+    if (pct < 0) return "Negative margin";
+    if (pct < 10) return "Low margin";
+    if (pct < 30) return "Typical margin";
+    if (pct < 60) return "High margin";
+    return "Very high margin";
+  }
+
+  function syncModeUI() {
+    const mode = String(modeEl.value);
+
+    if (mode === "from_price") {
+      priceField.style.display = "";
+      targetField.style.display = "none";
+      priceEl.disabled = false;
+      targetEl.disabled = true;
+      outEl.textContent = "Result will appear here.";
+    } else {
+      priceField.style.display = "none";
+      targetField.style.display = "";
+      priceEl.disabled = true;
+      targetEl.disabled = false;
+      outEl.textContent = "Result will appear here.";
+    }
+    clearError();
+  }
+
+  function compute() {
+    clearError();
+
+    const mode = String(modeEl.value);
+    const cost = num(costEl.value);
+    const code = String(curEl.value || "USD");
+
+    if (!Number.isFinite(cost) || cost < 0) {
+      showError("Please enter a valid cost (0 or higher).");
+      return;
+    }
+
+    let price = NaN;
+
+    if (mode === "from_price") {
+      price = num(priceEl.value);
+      if (!Number.isFinite(price) || price < 0) {
+        showError("Please enter a valid selling price (0 or higher).");
+        return;
+      }
+
+      const profit = price - cost;
+
+      // Markup: profit / cost
+      const markupPct = (cost === 0)
+        ? (profit === 0 ? 0 : Infinity)
+        : (profit / cost) * 100;
+
+      // Margin: profit / price (avoid divide-by-zero)
+      const marginPct = (price === 0)
+        ? (profit === 0 ? 0 : -Infinity)
+        : (profit / price) * 100;
+
+      const markupLabel = (markupPct === Infinity) ? "Infinite markup (cost 0)" : bucketMarkup(markupPct);
+      const marginLabel = (!Number.isFinite(marginPct)) ? "—" : bucketMargin(marginPct);
+
+      outEl.innerHTML = `
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+          ${card("Profit", money(profit, code), `profit = price − cost`)}
+          ${card("Markup", (markupPct === Infinity ? "∞" : fmtPct(markupPct)), `${badge(markupLabel)} · markup = profit ÷ cost`)}
+          ${card("Margin (gross margin)", (Number.isFinite(marginPct) ? fmtPct(marginPct) : "—"), `${badge(marginLabel)} · margin = profit ÷ price`)}
+        </div>
+        <div class="note" style="margin-top:10px;">
+          <strong>Inputs:</strong> cost ${money(cost, code)}, price ${money(price, code)}
+        </div>
+      `;
+      return;
+    }
+
+    // target_markup
+    const targetPct = num(targetEl.value);
+    if (!Number.isFinite(targetPct)) {
+      showError("Please enter a valid target markup (%).");
+      return;
+    }
+    if (targetPct < -100) {
+      showError("Target markup is too low. Enter -100% or higher.");
+      return;
+    }
+
+    const k = targetPct / 100;
+    price = cost * (1 + k);
+
+    if (!Number.isFinite(price) || price < 0) {
+      showError("Computed price is invalid. Please check your inputs.");
+      return;
+    }
+
+    const profit = price - cost;
+    const markupPct = (cost === 0)
+      ? (profit === 0 ? 0 : Infinity)
+      : (profit / cost) * 100;
+
+    const marginPct = (price === 0)
+      ? (profit === 0 ? 0 : -Infinity)
+      : (profit / price) * 100;
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Selling price", money(price, code), `price = cost × (1 + markupRate)`)}
+        ${card("Profit", money(profit, code), `profit = price − cost`)}
+        ${card("Resulting margin", (Number.isFinite(marginPct) ? fmtPct(marginPct) : "—"), `${badge(Number.isFinite(marginPct) ? bucketMargin(marginPct) : "—")}`)}
+      </div>
+      <div class="note" style="margin-top:10px;">
+        <strong>Target:</strong> markup ${fmtPct(targetPct)} · <strong>Inputs:</strong> cost ${money(cost, code)}
+      </div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  // Enter-to-calc
+  [costEl, priceEl, targetEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  modeEl.addEventListener("change", syncModeUI);
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "from_price";
+    curEl.value = "USD";
+    costEl.value = "";
+    priceEl.value = "";
+    targetEl.value = "";
+    syncModeUI();
+    outEl.textContent = "Result will appear here.";
+    clearError();
+    costEl.focus();
+  });
+
+  syncModeUI();
+});
+</script>

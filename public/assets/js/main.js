@@ -6,7 +6,7 @@ const TOOL_MODULES = {
   "percent-decrease-calculator": "/assets/js/tools/percent-decrease-calculator.js",
   "percentage-change-calculator": "/assets/js/tools/percentage-change-calculator.js",
 
-  "length-converter": "/assets/js/tools/length-converter.js",
+  "length": "/assets/js/tools/length.js",
   "weight-converter": "/assets/js/tools/weight-converter.js",
   "temperature-converter": "/assets/js/tools/temperature-converter.js",
   

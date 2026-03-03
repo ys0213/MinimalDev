@@ -1,0 +1,319 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "km to miles",
+  description:
+    "Convert kilometers (km) to miles (mi) instantly. Includes validation, accessible UX, result cards, quick table, and FAQ schema.",
+  href: "/converter/km-to-miles/",
+  order: 24,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/km-to-miles/";
+
+const faqs = [
+  {
+    q: "What is the km to miles formula?",
+    a: "miles = kilometers ÷ 1.609344. (Because 1 mile = 1.609344 km exactly.)",
+  },
+  {
+    q: "Is this conversion exact?",
+    a: "The base relationship 1 mile = 1.609344 km is exact. Displayed results may be rounded.",
+  },
+  {
+    q: "Can I convert miles to kilometers here?",
+    a: "Yes. Switch the direction to “Miles → Kilometers”.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`km to miles Converter — ${SITE_NAME}`}
+  description="Convert kilometers (km) to miles (mi) instantly, with an option to reverse (mi → km). Includes validation, accessible controls, result cards, quick conversions, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="km to miles Converter"
+  intro="Convert kilometers to miles (and miles to kilometers) using standard distance conversions."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="km-to-miles">
+    <div class="form" role="form" aria-describedby="k2m_privacy k2m_help">
+      <div class="field">
+        <label for="k2m_value">Value</label>
+        <input
+          id="k2m_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 5"
+          aria-describedby="k2m_help"
+        />
+        <p class="note" id="k2m_help" style="margin-top:6px;">
+          Reference: <strong>1 mi = 1.609344 km</strong> (exact).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="k2m_mode">Direction</label>
+        <select id="k2m_mode">
+          <option value="km_to_mi" selected>Kilometers → Miles</option>
+          <option value="mi_to_km">Miles → Kilometers</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="k2m_round">Rounding</label>
+        <select id="k2m_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="8">Up to 8 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="k2m_calc">Convert</button>
+        <button class="btn secondary" type="button" id="k2m_swap" aria-label="Swap direction">Swap</button>
+        <button class="btn secondary" type="button" id="k2m_clear">Clear</button>
+      </div>
+
+      <div class="result" id="k2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="k2m_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="k2m_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Quick conversions</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody id="k2m_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="k2m_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>km → mi:</strong> miles = kilometers ÷ 1.609344<br/>
+      <strong>mi → km:</strong> kilometers = miles × 1.609344
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>5 km</strong> → <strong>3.107 mi</strong> (approx.)</li>
+      <li><strong>10 km</strong> → <strong>6.214 mi</strong> (approx.)</li>
+      <li><strong>26.2 mi</strong> → <strong>42.195 km</strong> (marathon distance, approx. display)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/miles-to-km/">Miles to km</a></li>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("k2m_value");
+  const modeEl = document.getElementById("k2m_mode");
+  const roundEl = document.getElementById("k2m_round");
+  const calcBtn = document.getElementById("k2m_calc");
+  const swapBtn = document.getElementById("k2m_swap");
+  const clearBtn = document.getElementById("k2m_clear");
+  const errEl = document.getElementById("k2m_error");
+  const resEl = document.getElementById("k2m_result");
+  const cardsEl = document.getElementById("k2m_cards");
+  const tbodyEl = document.getElementById("k2m_table");
+
+  if (!valueEl || !modeEl || !roundEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  const MI_IN_KM = 1.609344; // exact
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clampAbs(x, maxAbs) {
+    if (!Number.isFinite(x)) return x;
+    if (Math.abs(x) > maxAbs) return Math.sign(x) * maxAbs;
+    return x;
+  }
+
+  function fmtFixed(x, decimals) {
+    if (!Number.isFinite(x)) return "—";
+    if (decimals === 8) {
+      const r = Math.round(x * 1e8) / 1e8;
+      return r.toString();
+    }
+    return x.toFixed(decimals);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(valueEl.value);
+    if (!Number.isFinite(raw)) {
+      resEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    const v = clampAbs(raw, 1e18);
+    if (v !== raw) {
+      showError("Value is too large for reliable display. Using a clamped value for output.");
+    }
+
+    const mode = String(modeEl.value);
+    const decimals = parseInt(String(roundEl.value), 10);
+
+    let out, fromUnit, toUnit, factorNote;
+
+    if (mode === "km_to_mi") {
+      out = v / MI_IN_KM;
+      fromUnit = "km";
+      toUnit = "mi";
+      factorNote = "÷ 1.609344";
+    } else {
+      out = v * MI_IN_KM;
+      fromUnit = "mi";
+      toUnit = "km";
+      factorNote = "× 1.609344";
+    }
+
+    const outStr = fmtFixed(out, decimals);
+    const inStr = fmtFixed(v, decimals === 8 ? 8 : Math.min(decimals, 6));
+
+    resEl.innerHTML =
+      "<strong>Result:</strong> " + outStr + " " + toUnit + "<br/>" +
+      "<span class='note'>" + inStr + " " + fromUnit + " " + factorNote + " = " + outStr + " " + toUnit + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromUnit, "neutral")}
+        ${badge("To: " + toUnit, "neutral")}
+        ${badge("Rounding: " + (decimals === 8 ? "up to 8" : decimals) + " dp", "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+    `;
+
+    const presets = mode === "km_to_mi"
+      ? [1, 5, 10, 21.0975, 42.195]
+      : [1, 3.1, 6.2, 13.1, 26.2];
+
+    for (const s0 of presets) {
+      const s = s0;
+      const o = mode === "km_to_mi" ? (s / MI_IN_KM) : (s * MI_IN_KM);
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = fmtFixed(s, decimals === 8 ? 8 : Math.min(decimals, 4)) + " " + fromUnit;
+      td2.textContent = fmtFixed(o, decimals) + " " + toUnit;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    modeEl.value = "km_to_mi";
+    roundEl.value = "3";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    modeEl.value = modeEl.value === "km_to_mi" ? "mi_to_km" : "km_to_mi";
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  modeEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

@@ -1,0 +1,253 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Percentage Difference Calculator",
+  description:
+    "Free percentage difference calculator. Compare two values without choosing a baseline. Shows absolute and percent difference.",
+  href: "/math/percentage-difference-calculator/",
+  order: 45,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/percentage-difference-calculator/";
+
+/**
+ * FAQ (also used to render on page + to generate FAQPage JSON-LD)
+ */
+const faqs = [
+  {
+    q: "What is percentage difference?",
+    a: "Percentage difference compares two values without choosing a starting value. It uses the average of the two values as the denominator.",
+  },
+  {
+    q: "How is it different from percentage change?",
+    a: "Percentage change uses a baseline (“from” value) and divides by that baseline. Percentage difference divides by the average of the two values instead.",
+  },
+  {
+    q: "Can the result be over 100%?",
+    a: "Yes. If the two values are very far apart relative to their average, the percentage difference can exceed 100%.",
+  },
+  {
+    q: "What if one or both values are 0?",
+    a: "If both values are 0, the average is 0 and the percentage difference is undefined. If only one is 0, it can still be computed because the average is non-zero.",
+  },
+  {
+    q: "Is this the same as “percent error”?",
+    a: "No. Percent error typically compares a measured value to a reference/true value. Percentage difference treats both values symmetrically.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Percentage Difference Calculator — ${SITE_NAME}`}
+  description="Calculate percentage difference between two numbers using the symmetric average-denominator method. Includes absolute difference and a clear interpretation."
+  canonicalPath={CANONICAL_PATH}
+  h1="Percentage Difference Calculator"
+  intro="Compare two values without choosing a baseline. Percentage difference uses the average of the two numbers, making the result symmetric."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="percentage-difference-calculator">
+    <div class="form" role="form" aria-describedby="pdif_note">
+      <div class="field">
+        <label for="pdif_a">Value A</label>
+        <input id="pdif_a" type="number" inputmode="decimal" placeholder="e.g., 120" />
+      </div>
+
+      <div class="field">
+        <label for="pdif_b">Value B</label>
+        <input id="pdif_b" type="number" inputmode="decimal" placeholder="e.g., 90" />
+      </div>
+
+      <div class="field">
+        <label for="pdif_precision">Display precision</label>
+        <select id="pdif_precision">
+          <option value="0">0 decimals</option>
+          <option value="1">1 decimal</option>
+          <option value="2" selected>2 decimals</option>
+          <option value="3">3 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pdif_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pdif_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pdif_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="pdif_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="pdif_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Formula (symmetric):</strong><br />
+      Percentage difference = ( |A − B| ÷ ((|A| + |B|) ÷ 2) ) × 100
+    </p>
+    <ul>
+      <li><strong>Absolute difference:</strong> |A − B|</li>
+      <li><strong>Average magnitude:</strong> (|A| + |B|) / 2</li>
+      <li><strong>Symmetric:</strong> swapping A and B gives the same result</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>A 120, B 90 → |diff| 30, average 105 → 28.57%</li>
+      <li>A 50, B 60 → |diff| 10, average 55 → 18.18%</li>
+      <li>A 0, B 80 → |diff| 80, average 40 → 200%</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
+      <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("pdif_a");
+  const bEl = document.getElementById("pdif_b");
+  const precEl = document.getElementById("pdif_precision");
+  const calcBtn = document.getElementById("pdif_calc");
+  const clearBtn = document.getElementById("pdif_clear");
+  const errEl = document.getElementById("pdif_error");
+  const outEl = document.getElementById("pdif_result");
+
+  if (!aEl || !bEl || !precEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmtNumber(x, decimals) {
+    const d = Math.max(0, Math.min(8, decimals));
+    // Avoid "-0.00"
+    const rounded = Math.round(x * Math.pow(10, d)) / Math.pow(10, d);
+    const safe = Object.is(rounded, -0) ? 0 : rounded;
+    return safe.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function fmtPct(x, decimals) {
+    return fmtNumber(x, decimals) + "%";
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, value, subtitle) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px;">${value}</div>
+        <div class="note" style="margin-top:4px;">${subtitle}</div>
+      </div>
+    `;
+  }
+
+  function compute() {
+    clearError();
+
+    const A = num(aEl.value);
+    const B = num(bEl.value);
+    const decimals = parseInt(String(precEl.value), 10);
+
+    if (!Number.isFinite(A) || !Number.isFinite(B)) {
+      showError("Please enter valid numbers for both values.");
+      return;
+    }
+
+    const absDiff = Math.abs(A - B);
+
+    const denom = (Math.abs(A) + Math.abs(B)) / 2;
+    if (denom === 0) {
+      // A=0 and B=0
+      showError("Percentage difference is undefined when both values are 0.");
+      return;
+    }
+
+    const pctDiff = (absDiff / denom) * 100;
+
+    // Interpretation buckets (heuristic, not a standard)
+    let bucket = "Small";
+    if (pctDiff >= 50) bucket = "Large";
+    else if (pctDiff >= 20) bucket = "Moderate";
+
+    const equation =
+      `|A − B| ÷ ((|A| + |B|)/2) × 100 = ` +
+      `${fmtNumber(absDiff, decimals)} ÷ ${fmtNumber(denom, decimals)} × 100`;
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Percentage difference", fmtPct(pctDiff, decimals), `${badge(bucket)} · symmetric comparison (no baseline)`)}
+        ${card("Absolute difference", fmtNumber(absDiff, decimals), `|${fmtNumber(A, decimals)} − ${fmtNumber(B, decimals)}|`)}
+        ${card("Average magnitude", fmtNumber(denom, decimals), `(|A| + |B|) / 2`)}
+      </div>
+
+      <div class="note" style="margin-top:10px;">
+        <strong>Calculation:</strong> ${equation}
+      </div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  // UX: compute on Enter
+  [aEl, bEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    aEl.value = "";
+    bEl.value = "";
+    precEl.value = "2";
+    outEl.textContent = "Result will appear here.";
+    clearError();
+    aEl.focus();
+  });
+});
+</script>

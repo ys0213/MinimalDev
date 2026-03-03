@@ -1,0 +1,396 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random String Generator",
+  description:
+    "Generate random strings with custom length and character sets. Uses cryptographically secure randomness in your browser.",
+  href: "/utility/random-string-generator/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/random-string-generator/";
+
+const faqs = [
+  {
+    q: "Is this random string generator secure?",
+    a: "It uses your browser’s cryptographically secure random number generator (crypto.getRandomValues) when available, which is suitable for tokens and identifiers.",
+  },
+  {
+    q: "What is the difference between a random string and a password?",
+    a: "A random string is a general-purpose token/identifier. A password generator often adds UX like guaranteed character inclusion and may target human entry. Both can be strong if long and random.",
+  },
+  {
+    q: "Can I generate URL-safe strings?",
+    a: "Yes. Use the URL-safe preset (A–Z, a–z, 0–9, - and _).",
+  },
+  {
+    q: "Are duplicates possible?",
+    a: "Yes. Randomness means repeats can occur, especially with short lengths or small character sets.",
+  },
+  {
+    q: "Is any data stored or sent to a server?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random String Generator — ${SITE_NAME}`}
+  description="Generate random strings locally using cryptographically secure randomness. Choose length, count, and character sets (URL-safe, base64-like, hex, custom). Includes validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random String Generator"
+  intro="Generate random strings for tokens, IDs, test data, and one-time codes. Choose length, count, and character sets (including URL-safe)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-string-generator">
+    <div class="form" role="form" aria-describedby="rs_privacy rs_help">
+      <div class="field">
+        <label for="rs_preset">Character preset</label>
+        <select id="rs_preset">
+          <option value="alnum" selected>Alphanumeric (A–Z, a–z, 0–9)</option>
+          <option value="urlsafe">URL-safe (A–Z, a–z, 0–9, - _)</option>
+          <option value="hex">Hex (0–9, a–f)</option>
+          <option value="base64">Base64-like (A–Z, a–z, 0–9, + /)</option>
+          <option value="letters">Letters only (A–Z, a–z)</option>
+          <option value="digits">Digits only (0–9)</option>
+          <option value="custom">Custom</option>
+        </select>
+        <p class="note" id="rs_help" style="margin-top:6px;">
+          For query params and URLs, prefer the URL-safe preset.
+        </p>
+      </div>
+
+      <div class="field" id="rs_custom_wrap" style="display:none;">
+        <label for="rs_custom">Custom characters</label>
+        <input
+          id="rs_custom"
+          type="text"
+          inputmode="text"
+          placeholder="e.g., ABC123-_"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p class="note" style="margin-top:6px;">
+          Duplicate characters are removed automatically. At least 2 unique characters recommended.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="rs_len">Length per string (1–256)</label>
+        <input id="rs_len" type="number" inputmode="numeric" min="1" max="256" value="16" />
+      </div>
+
+      <div class="field">
+        <label for="rs_count">How many strings (1–50)</label>
+        <input id="rs_count" type="number" inputmode="numeric" min="1" max="50" value="5" />
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="rs_unique" type="checkbox" />
+          Try to avoid duplicates (best-effort)
+        </label>
+        <p class="note" style="margin-top:6px;">
+          Uniqueness is not guaranteed. Best-effort works well for small counts.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rs_gen">Generate</button>
+        <button class="btn secondary" type="button" id="rs_copy">Copy</button>
+        <button class="btn secondary" type="button" id="rs_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rs_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rs_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rs_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="rs_out">Generated strings</label>
+        <textarea
+          id="rs_out"
+          rows="8"
+          style="width:100%; resize:vertical;"
+          readonly
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="rs_privacy" style="margin-top:10px;">
+        Privacy: All generation happens locally in your browser using cryptographically secure randomness when available.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <ul>
+      <li>Select a character set (preset or custom).</li>
+      <li>Set length and count.</li>
+      <li>The generator draws random indices from the character set and builds each string.</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>URL-safe</strong>, length 32 → tokens for links and query params</li>
+      <li><strong>Hex</strong>, length 24 → IDs similar to some database object IDs</li>
+      <li><strong>Digits</strong>, length 6 → one-time codes (not SMS delivery)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
+      <li><a href="/utility/random-number-generator/">Random Number Generator</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const presetEl = document.getElementById("rs_preset");
+  const customWrap = document.getElementById("rs_custom_wrap");
+  const customEl = document.getElementById("rs_custom");
+  const lenEl = document.getElementById("rs_len");
+  const countEl = document.getElementById("rs_count");
+  const uniqueEl = document.getElementById("rs_unique");
+  const genBtn = document.getElementById("rs_gen");
+  const copyBtn = document.getElementById("rs_copy");
+  const clearBtn = document.getElementById("rs_clear");
+  const errEl = document.getElementById("rs_error");
+  const summaryEl = document.getElementById("rs_summary");
+  const cardsEl = document.getElementById("rs_cards");
+  const outEl = document.getElementById("rs_out");
+
+  if (!presetEl || !customWrap || !customEl || !lenEl || !countEl || !uniqueEl || !genBtn || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl) return;
+
+  const PRESETS = {
+    alnum: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    urlsafe: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
+    hex: "0123456789abcdef",
+    base64: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+    letters: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    digits: "0123456789",
+  };
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function uniqChars(s) {
+    const seen = new Set();
+    let out = "";
+    for (const ch of String(s || "")) {
+      if (!seen.has(ch)) { seen.add(ch); out += ch; }
+    }
+    return out;
+  }
+
+  function getCharSet() {
+    const preset = String(presetEl.value);
+    if (preset === "custom") return uniqChars(customEl.value);
+    return PRESETS[preset] || PRESETS.alnum;
+  }
+
+  function secureRandomInt(maxExclusive) {
+    // maxExclusive must be <= 2^32
+    if (!(maxExclusive > 0) || maxExclusive > 0x100000000) return NaN;
+    // Use rejection sampling to avoid modulo bias.
+    const cryptoObj = globalThis.crypto;
+    if (!cryptoObj || !cryptoObj.getRandomValues) return NaN;
+
+    const range = 0x100000000; // 2^32
+    const limit = range - (range % maxExclusive);
+
+    const buf = new Uint32Array(1);
+    while (true) {
+      cryptoObj.getRandomValues(buf);
+      const x = buf[0];
+      if (x < limit) return x % maxExclusive;
+    }
+  }
+
+  function pseudoRandomInt(maxExclusive) {
+    // Fallback: not cryptographically secure
+    return Math.floor(Math.random() * maxExclusive);
+  }
+
+  function randIndex(maxExclusive) {
+    const x = secureRandomInt(maxExclusive);
+    if (isFinite(x)) return x;
+    return pseudoRandomInt(maxExclusive);
+  }
+
+  function buildOne(chars, length) {
+    let s = "";
+    for (let i = 0; i < length; i++) {
+      const idx = randIndex(chars.length);
+      s += chars.charAt(idx);
+    }
+    return s;
+  }
+
+  function generate() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outEl.value = "";
+
+    const len = Math.floor(parseFloat(lenEl.value));
+    const count = Math.floor(parseFloat(countEl.value));
+    const wantUnique = !!uniqueEl.checked;
+
+    if (!isFinite(len) || len < 1 || len > 256) {
+      showError("Please enter a valid length (1–256).");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+    if (!isFinite(count) || count < 1 || count > 50) {
+      showError("Please enter a valid count (1–50).");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const chars = getCharSet();
+    if (!chars || chars.length < 2) {
+      showError("Please choose a character set with at least 2 unique characters.");
+      summaryEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    // Best-effort uniqueness: cap attempts so it doesn't hang with tiny char sets.
+    const out = [];
+    const seen = new Set();
+    const maxAttempts = Math.max(2000, count * 200);
+
+    let attempts = 0;
+    while (out.length < count && attempts < maxAttempts) {
+      attempts++;
+      const s = buildOne(chars, len);
+      if (wantUnique) {
+        if (seen.has(s)) continue;
+        seen.add(s);
+      }
+      out.push(s);
+    }
+
+    if (out.length < count) {
+      showError("Could not generate the requested number of unique strings with these settings. Try a longer length or a larger character set.");
+    }
+
+    outEl.value = out.join("\n");
+
+    const preset = String(presetEl.value);
+    const label = preset === "custom" ? "Custom" : preset.toUpperCase();
+
+    const secure = !!(globalThis.crypto && globalThis.crypto.getRandomValues);
+    const securityNote = secure ? "CSPRNG" : "Math.random fallback";
+
+    summaryEl.innerHTML = "<strong>Generated.</strong> " + out.length.toLocaleString() + " string(s).";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(label, "neutral")}
+        ${badge("Length " + len, "neutral")}
+        ${badge("Count " + out.length, out.length === count ? "good" : "warn")}
+        ${badge("Charset " + chars.length, "neutral")}
+        ${badge(securityNote, secure ? "good" : "warn")}
+      </div>
+    `;
+  }
+
+  async function copyAll() {
+    clearError();
+    if (!outEl.value) return;
+    try {
+      await navigator.clipboard.writeText(outEl.value);
+      summaryEl.innerHTML = "<strong>Copied.</strong>";
+    } catch {
+      showError("Copy failed. Use manual copy.");
+    }
+  }
+
+  function clearAll() {
+    clearError();
+    outEl.value = "";
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  function syncPresetUI() {
+    const isCustom = String(presetEl.value) === "custom";
+    customWrap.style.display = isCustom ? "block" : "none";
+    if (!isCustom) customEl.value = "";
+  }
+
+  presetEl.addEventListener("change", function () {
+    syncPresetUI();
+    clearAll();
+  });
+
+  genBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyAll);
+  clearBtn.addEventListener("click", function () {
+    lenEl.value = "16";
+    countEl.value = "5";
+    uniqueEl.checked = false;
+    presetEl.value = "alnum";
+    customEl.value = "";
+    syncPresetUI();
+    clearAll();
+  });
+
+  // Ctrl/Cmd+Enter to generate
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  };
+  document.getElementById("rs_out")?.addEventListener("keydown", keyHandler);
+  document.getElementById("rs_custom")?.addEventListener("keydown", keyHandler);
+  document.getElementById("rs_len")?.addEventListener("keydown", keyHandler);
+  document.getElementById("rs_count")?.addEventListener("keydown", keyHandler);
+
+  syncPresetUI();
+});
+</script>

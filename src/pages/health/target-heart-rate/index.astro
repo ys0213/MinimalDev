@@ -1,0 +1,345 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Target Heart Rate Calculator",
+  description:
+    "Free target heart rate calculator. Estimate workout target bpm from age and optional resting heart rate using Tanaka max HR and Karvonen (HRR).",
+  href: "/health/target-heart-rate/",
+  order: 110,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/target-heart-rate/";
+
+// FAQ + JSON-LD (auto)
+const faqs = [
+  {
+    q: "What is target heart rate?",
+    a: "Target heart rate is a heart-rate range (in bpm) you aim for during exercise to match a desired intensity (for example, moderate cardio).",
+  },
+  {
+    q: "How does this calculator estimate target heart rate?",
+    a: "It estimates Max HR from age using the Tanaka formula, then calculates a target range using either percent of Max HR or Heart Rate Reserve (Karvonen) if resting heart rate is provided.",
+  },
+  {
+    q: "Which max heart rate formula is used?",
+    a: "Tanaka: Max HR ≈ 208 − 0.7 × age. It is an estimate and can vary by individual.",
+  },
+  {
+    q: "Do I need resting heart rate?",
+    a: "No. Resting heart rate is optional. If provided, the Karvonen (HRR) method can produce a more individualized target range.",
+  },
+  {
+    q: "Is this medical advice?",
+    a: "No. This is an informational estimate. If you have heart conditions, symptoms, or take medications affecting heart rate, consult a clinician before using heart-rate-based targets.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Target Heart Rate Calculator — ${SITE_NAME}`}
+  description="Estimate target heart rate (bpm) for exercise based on age and optional resting heart rate. Choose intensity and method (Max HR % or Karvonen HRR)."
+  canonicalPath={CANONICAL_PATH}
+  h1="Target Heart Rate Calculator"
+  intro="Estimate a target heart rate range for your workout intensity. Informational only."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="target-heart-rate-calculator">
+    <div class="form" role="form" aria-describedby="thr_privacy_note">
+      <div class="field">
+        <label for="thr_age">Age</label>
+        <input id="thr_age" type="number" inputmode="numeric" min="1" max="120" placeholder="e.g., 30" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="thr_rest">Resting heart rate (optional)</label>
+        <input id="thr_rest" type="number" inputmode="numeric" min="20" max="150" placeholder="e.g., 60" autocomplete="off" />
+        <div class="note">Used for Karvonen (HRR) calculations if selected or when Auto is enabled.</div>
+      </div>
+
+      <div class="field">
+        <label for="thr_intensity">Intensity</label>
+        <select id="thr_intensity">
+          <option value="moderate" selected>Moderate (50–70%)</option>
+          <option value="vigorous">Vigorous (70–85%)</option>
+          <option value="custom">Custom range</option>
+        </select>
+        <div class="note">Moderate and vigorous ranges are commonly used training guidance bands.</div>
+      </div>
+
+      <div class="field" id="thr_custom_wrap" style="display:none;">
+        <label for="thr_custom_min">Custom min (%)</label>
+        <input id="thr_custom_min" type="number" inputmode="decimal" placeholder="e.g., 60" />
+        <div style="height:10px;"></div>
+        <label for="thr_custom_max">Custom max (%)</label>
+        <input id="thr_custom_max" type="number" inputmode="decimal" placeholder="e.g., 75" />
+        <div class="note">Enter 0–100. Example: 60 to 75.</div>
+      </div>
+
+      <div class="field">
+        <label for="thr_method">Method</label>
+        <select id="thr_method">
+          <option value="auto" selected>Auto (use HRR if resting HR entered)</option>
+          <option value="max">Percent of Max HR</option>
+          <option value="hrr">Heart Rate Reserve (Karvonen)</option>
+        </select>
+        <div class="note">HRR requires resting heart rate.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="thr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="thr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="thr_error" role="alert" aria-live="assertive" style="display:none;"></div>
+
+      <div class="result" id="thr_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="thr_privacy_note" style="margin-top:10px;">
+        Informational only (not medical advice). Targets vary by fitness, heat, fatigue, altitude, and medication.
+        Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator estimates your <strong>Max HR</strong> from age, then converts an intensity range into bpm.
+      If you provide <strong>resting HR</strong>, it can use <strong>Heart Rate Reserve (HRR)</strong> (Karvonen), which often feels more personalized.
+    </p>
+    <ul>
+      <li><strong>Max HR (Tanaka):</strong> 208 − 0.7 × age</li>
+      <li><strong>Max HR % method:</strong> Target = MaxHR × %</li>
+      <li><strong>Karvonen (HRR):</strong> Target = RestHR + (MaxHR − RestHR) × %</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Age 30 → Max HR ≈ 187 bpm (estimate). Moderate 50–70% → target range shown.</li>
+      <li>Age 30 + Resting HR 60 → HRR-based moderate range will differ from Max-HR-only.</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/heart-rate/">Heart Rate Zones Calculator</a></li>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ageEl = document.getElementById("thr_age");
+  const restEl = document.getElementById("thr_rest");
+  const intensityEl = document.getElementById("thr_intensity");
+  const methodEl = document.getElementById("thr_method");
+  const cWrap = document.getElementById("thr_custom_wrap");
+  const cMinEl = document.getElementById("thr_custom_min");
+  const cMaxEl = document.getElementById("thr_custom_max");
+  const calcBtn = document.getElementById("thr_calc");
+  const clearBtn = document.getElementById("thr_clear");
+  const errEl = document.getElementById("thr_error");
+  const outEl = document.getElementById("thr_result");
+
+  if (!ageEl || !restEl || !intensityEl || !methodEl || !cWrap || !cMinEl || !cMaxEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function round0(n) { return Math.round(n); }
+
+  function tanakaMaxHr(age) {
+    return 208 - 0.7 * age;
+  }
+
+  function badgeHTML(kind, text) {
+    const base = "display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid rgba(255,255,255,0.14);";
+    const bg =
+      kind === "ok" ? "background: rgba(34,197,94,0.12);" :
+      kind === "warn" ? "background: rgba(245,158,11,0.14);" :
+      "background: rgba(255,255,255,0.06);";
+    return "<span style='" + base + bg + "'>" + text + "</span>";
+  }
+
+  function card(title, main, sub, kind) {
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badgeHTML(kind, title) +
+        "</div>" +
+        "<div style='font-size:26px; margin-top:6px; font-weight:900;'>" + main + "</div>" +
+        "<div class='note' style='margin-top:6px;'>" + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function setCustomVisibility() {
+    const isCustom = String(intensityEl.value) === "custom";
+    cWrap.style.display = isCustom ? "block" : "none";
+    cMinEl.setAttribute("aria-hidden", isCustom ? "false" : "true");
+    cMaxEl.setAttribute("aria-hidden", isCustom ? "false" : "true");
+  }
+
+  function getIntensityRange() {
+    const mode = String(intensityEl.value);
+    if (mode === "moderate") return { lo: 0.50, hi: 0.70, label: "Moderate (50–70%)" };
+    if (mode === "vigorous") return { lo: 0.70, hi: 0.85, label: "Vigorous (70–85%)" };
+
+    // custom
+    const minPct = toNum(cMinEl.value);
+    const maxPct = toNum(cMaxEl.value);
+    if (!Number.isFinite(minPct) || !Number.isFinite(maxPct)) return { err: "Please enter custom min and max percentages." };
+    if (minPct < 0 || maxPct < 0 || minPct > 100 || maxPct > 100) return { err: "Custom percentages must be between 0 and 100." };
+    if (maxPct <= minPct) return { err: "Custom max must be greater than custom min." };
+    return { lo: minPct / 100, hi: maxPct / 100, label: "Custom (" + minPct + "–" + maxPct + "%)" };
+  }
+
+  function compute() {
+    clearError();
+
+    const age = toNum(ageEl.value);
+    const rest = String(restEl.value || "").trim() === "" ? NaN : toNum(restEl.value);
+    const method = String(methodEl.value);
+
+    if (!Number.isFinite(age) || age <= 0 || age > 120) return showError("Please enter a valid age (1–120).");
+
+    const maxHr = tanakaMaxHr(age);
+    if (!Number.isFinite(maxHr) || maxHr <= 0) return showError("Could not compute Max HR with this age.");
+
+    const range = getIntensityRange();
+    if (range.err) return showError(range.err);
+
+    const restProvided = Number.isFinite(rest);
+    if (restProvided) {
+      if (rest < 20 || rest > 150) return showError("Resting heart rate looks out of range. Please check your input.");
+      if (rest >= maxHr) return showError("Resting heart rate must be lower than estimated Max HR to compute HRR targets.");
+    }
+
+    let use = method;
+    if (use === "auto") use = restProvided ? "hrr" : "max";
+    if (use === "hrr" && !restProvided) return showError("To use HRR (Karvonen), please enter resting heart rate.");
+
+    const loPct = range.lo;
+    const hiPct = range.hi;
+
+    let lo, hi;
+    if (use === "hrr") {
+      const hrr = maxHr - rest;
+      lo = rest + hrr * loPct;
+      hi = rest + hrr * hiPct;
+    } else {
+      lo = maxHr * loPct;
+      hi = maxHr * hiPct;
+    }
+
+    const loR = round0(lo);
+    const hiR = round0(hi);
+
+    const cards =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;'>" +
+        card("Target range", loR.toLocaleString() + "–" + hiR.toLocaleString() + " bpm", range.label + " · " + (use === "hrr" ? "HRR (Karvonen)" : "Max HR %"), "ok") +
+        card("Max HR (est.)", round0(maxHr).toLocaleString() + " bpm", "Tanaka: 208 − 0.7 × age", "neutral") +
+        (restProvided
+          ? card("Resting HR", round0(rest).toLocaleString() + " bpm", "Used for HRR if selected/auto", "neutral")
+          : card("Method", (use === "max" ? "Max HR %" : "HRR"), (use === "max" ? "No resting HR needed" : "Requires resting HR"), "neutral")
+        ) +
+      "</div>";
+
+    const breakdown =
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;'>" +
+          "<strong>How it was calculated</strong>" +
+          badgeHTML(use === "hrr" ? "neutral" : "neutral", use === "hrr" ? "RestHR + (MaxHR − RestHR) × %" : "MaxHR × %") +
+        "</div>" +
+        "<div class='note' style='margin-top:8px;'>" +
+          "<div><strong>Intensity band:</strong> " + Math.round(loPct * 100) + "%–" + Math.round(hiPct * 100) + "%</div>" +
+          (use === "hrr"
+            ? "<div><strong>HRR:</strong> MaxHR (" + round0(maxHr).toLocaleString() + ") − RestHR (" + round0(rest).toLocaleString() + ") = " + round0(maxHr - rest).toLocaleString() + " bpm</div>"
+            : "<div><strong>Max HR:</strong> " + round0(maxHr).toLocaleString() + " bpm</div>") +
+          "<div><strong>Target:</strong> " +
+            (use === "hrr"
+              ? "RestHR + HRR × % → " + loR.toLocaleString() + "–" + hiR.toLocaleString() + " bpm"
+              : "MaxHR × % → " + loR.toLocaleString() + "–" + hiR.toLocaleString() + " bpm") +
+          "</div>" +
+        "</div>" +
+      "</div>";
+
+    const footer =
+      "<div class='note' style='margin-top:10px;'>" +
+        "If your measured heart rate feels consistently too high/low for perceived effort, adjust your target band or consider a field test under guidance." +
+      "</div>";
+
+    outEl.innerHTML = cards + breakdown + footer;
+  }
+
+  function clearAll() {
+    clearError();
+    ageEl.value = "";
+    restEl.value = "";
+    intensityEl.value = "moderate";
+    methodEl.value = "auto";
+    cMinEl.value = "";
+    cMaxEl.value = "";
+    setCustomVisibility();
+    outEl.textContent = "Result will appear here.";
+    ageEl.focus();
+  }
+
+  // Enter triggers calculate
+  [ageEl, restEl, cMinEl, cMaxEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  intensityEl.addEventListener("change", function () {
+    setCustomVisibility();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  setCustomVisibility();
+});
+</script>

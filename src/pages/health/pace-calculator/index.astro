@@ -1,0 +1,294 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Pace Calculator",
+  description:
+    "Free running pace calculator. Calculate pace, time, or distance with support for km and miles.",
+  href: "/health/pace-calculator/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/pace-calculator/";
+
+const faqs = [
+  {
+    q: "What is running pace?",
+    a: "Running pace is the amount of time it takes to cover a unit of distance, usually minutes per kilometer or minutes per mile.",
+  },
+  {
+    q: "What does this pace calculator do?",
+    a: "It calculates pace, time, or distance when you enter any two of the three values. You can choose kilometers or miles.",
+  },
+  {
+    q: "Can I use this for walking or cycling?",
+    a: "Yes. The math works for any steady-speed activity, but units are shown as min/km or min/mile.",
+  },
+  {
+    q: "Does this store my data?",
+    a: "No. All calculations run locally in your browser. Nothing is stored or transmitted.",
+  },
+  {
+    q: "Is this medically accurate training advice?",
+    a: "No. This is a mathematical calculator. For structured training guidance, consult a qualified coach or professional.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Pace Calculator — ${SITE_NAME}`}
+  description="Calculate running pace, total time, or distance. Supports kilometers and miles with clear result breakdown."
+  canonicalPath={CANONICAL_PATH}
+  h1="Pace Calculator"
+  intro="Calculate pace, distance, or time. Enter any two values to compute the third."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  {/* ✅ 이 툴에서만 모바일 오버플로우 방지 */}
+  <style>
+    {`
+      [data-tool="pace-calculator"]{
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      [data-tool="pace-calculator"] *{
+        min-width: 0; /* flex/grid 내부 요소가 튀는 문제 방지 */
+      }
+
+      /* time 3칸, pace 2칸: flex 대신 grid로 (모바일에서 안전) */
+      [data-tool="pace-calculator"] .pc-time{
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+      }
+      [data-tool="pace-calculator"] .pc-pace{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      [data-tool="pace-calculator"] .pc-time input,
+      [data-tool="pace-calculator"] .pc-pace input{
+        width: 100%;
+      }
+
+      /* 버튼도 모바일에서 1열로 안정화 */
+      [data-tool="pace-calculator"] .pc-actions{
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      [data-tool="pace-calculator"] .pc-actions .btn{
+        flex: 1 1 160px;
+      }
+
+      @media (max-width: 420px){
+        [data-tool="pace-calculator"] .pc-actions{
+          flex-direction: column;
+        }
+        [data-tool="pace-calculator"] .pc-actions .btn{
+          width: 100%;
+        }
+      }
+    `}
+  </style>
+
+  <div slot="tool" data-tool="pace-calculator">
+    <div class="form" role="form">
+      <div class="field">
+        <label for="pc_mode">Calculate</label>
+        <select id="pc_mode">
+          <option value="pace" selected>Pace (from time & distance)</option>
+          <option value="time">Time (from pace & distance)</option>
+          <option value="distance">Distance (from time & pace)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pc_unit">Distance unit</label>
+        <select id="pc_unit">
+          <option value="km" selected>Kilometers (km)</option>
+          <option value="mile">Miles</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Time (hh:mm:ss)</label>
+        <div class="pc-time">
+          <input id="pc_h" type="number" inputmode="numeric" placeholder="hh" min="0" />
+          <input id="pc_m" type="number" inputmode="numeric" placeholder="mm" min="0" max="59" />
+          <input id="pc_s" type="number" inputmode="numeric" placeholder="ss" min="0" max="59" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="pc_distance">Distance</label>
+        <input id="pc_distance" type="number" inputmode="decimal" placeholder="e.g., 5" />
+      </div>
+
+      <div class="field">
+        <label for="pc_pm">Pace (mm:ss per unit)</label>
+        <div class="pc-pace">
+          <input id="pc_pm" type="number" inputmode="numeric" placeholder="mm" min="0" />
+          <input id="pc_ps" type="number" inputmode="numeric" placeholder="ss" min="0" max="59" />
+        </div>
+      </div>
+
+      <div class="pc-actions">
+        <button class="btn" type="button" id="pc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pc_error" style="display:none;" role="alert"></div>
+      <div class="result" id="pc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <ul>
+      <li><strong>Pace:</strong> total time ÷ distance</li>
+      <li><strong>Time:</strong> pace × distance</li>
+      <li><strong>Distance:</strong> total time ÷ pace</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/heart-rate/">Heart Rate Zones Calculator</a></li>
+      <li><a href="/health/">All Health Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("pc_mode");
+  const unitEl = document.getElementById("pc_unit");
+
+  const hEl = document.getElementById("pc_h");
+  const mEl = document.getElementById("pc_m");
+  const sEl = document.getElementById("pc_s");
+
+  const distEl = document.getElementById("pc_distance");
+
+  const pmEl = document.getElementById("pc_pm");
+  const psEl = document.getElementById("pc_ps");
+
+  const calcBtn = document.getElementById("pc_calc");
+  const clearBtn = document.getElementById("pc_clear");
+  const errEl = document.getElementById("pc_error");
+  const outEl = document.getElementById("pc_result");
+
+  if (!modeEl || !unitEl || !hEl || !mEl || !sEl || !distEl || !pmEl || !psEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function toInt(v) {
+    const x = parseInt(String(v || "0"), 10);
+    return Number.isFinite(x) ? x : 0;
+  }
+  function toSeconds(h, m, s) { return (h * 3600) + (m * 60) + s; }
+
+  function formatTime(sec) {
+    sec = Math.round(sec);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return (h > 0 ? h + ":" : "") + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function formatPace(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearError();
+    const mode = modeEl.value;
+    const unit = unitEl.value;
+
+    const h = Math.max(0, toInt(hEl.value));
+    const m = Math.max(0, toInt(mEl.value));
+    const s = Math.max(0, toInt(sEl.value));
+
+    const dist = parseFloat(distEl.value);
+    const pm = Math.max(0, toInt(pmEl.value));
+    const ps = Math.max(0, toInt(psEl.value));
+
+    if (m > 59 || s > 59) return showError("Minutes/seconds must be 0–59.");
+    if (ps > 59) return showError("Pace seconds must be 0–59.");
+
+    if (mode === "pace") {
+      if (!Number.isFinite(dist) || dist <= 0) return showError("Enter valid distance.");
+      const totalSec = toSeconds(h, m, s);
+      if (totalSec <= 0) return showError("Enter valid time.");
+      const paceSec = totalSec / dist;
+
+      outEl.innerHTML =
+        "<strong>Pace:</strong> " + formatPace(paceSec) +
+        " min/" + (unit === "km" ? "km" : "mile");
+    }
+
+    if (mode === "time") {
+      if (!Number.isFinite(dist) || dist <= 0) return showError("Enter valid distance.");
+      const paceSec = pm * 60 + ps;
+      if (paceSec <= 0) return showError("Enter valid pace.");
+      const totalSec = paceSec * dist;
+
+      outEl.innerHTML =
+        "<strong>Total time:</strong> " + formatTime(totalSec);
+    }
+
+    if (mode === "distance") {
+      const totalSec = toSeconds(h, m, s);
+      const paceSec = pm * 60 + ps;
+      if (totalSec <= 0 || paceSec <= 0) return showError("Enter valid time and pace.");
+      const distance = totalSec / paceSec;
+
+      outEl.innerHTML =
+        "<strong>Distance:</strong> " +
+        distance.toFixed(2) + " " + (unit === "km" ? "km" : "miles");
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    // 이 페이지 input만 지우도록 범위 제한
+    const host = document.querySelector('[data-tool="pace-calculator"]');
+    if (host) host.querySelectorAll("input").forEach(i => (i.value = ""));
+    outEl.textContent = "Result will appear here.";
+    clearError();
+  });
+});
+</script>

@@ -205,12 +205,20 @@ label{
   color: var(--muted);
   font-weight: 650;
 }
-input, select, textarea{
-  width: 100%;
+input{
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(0,0,0,0.18);
+  color: var(--text);
+  outline: none;
+}
+select, textarea{
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.68);
   color: var(--text);
   outline: none;
 }

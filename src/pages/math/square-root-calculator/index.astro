@@ -1,0 +1,258 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Square Root Calculator",
+  description:
+    "Free square root calculator. Compute √x with validation, unit-aware input help, result cards, and FAQ schema.",
+  href: "/math/square-root-calculator/",
+  order: 97,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/square-root-calculator/";
+
+const faqs = [
+  {
+    q: "What is a square root?",
+    a: "The square root of x is a number y such that y² = x. This calculator returns the principal (non-negative) square root for x ≥ 0.",
+  },
+  {
+    q: "Can I take the square root of a negative number here?",
+    a: "No. Negative inputs would produce complex numbers. This tool focuses on real-number results, so it requires x ≥ 0.",
+  },
+  {
+    q: "What is the principal square root?",
+    a: "For x ≥ 0 there are two square roots (±√x), but the principal square root is the non-negative one shown by √x.",
+  },
+  {
+    q: "How accurate is the result?",
+    a: "The result uses JavaScript floating-point math and is displayed with sensible rounding. Extremely large or tiny values may be shown in scientific notation.",
+  },
+  {
+    q: "Does this store my inputs?",
+    a: "No. The calculation runs locally in your browser and does not store or transmit inputs.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Square Root Calculator — ${SITE_NAME}`}
+  description="Compute √x instantly with validation, accessible inputs, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Square Root Calculator"
+  intro="Calculate the principal square root (√x) for non-negative numbers. Includes step view, result cards, and scientific-notation formatting."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="square-root-calculator">
+    <div class="form" role="form" aria-describedby="sr_note">
+      <div class="field">
+        <label for="sr_x">Number (x)</label>
+        <input
+          id="sr_x"
+          type="number"
+          inputmode="decimal"
+          step="any"
+          placeholder="e.g., 81"
+          aria-describedby="sr_help"
+        />
+        <p class="note" id="sr_help" style="margin-top:6px;">
+          Enter a non-negative value (x ≥ 0). This tool returns the principal (non-negative) √x.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sr_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="sr_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="sr_steps" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="sr_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Definition:</strong> y = √x means y² = x (principal root for x ≥ 0).<br/>
+      <strong>Identity:</strong> √x = x^(1/2)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>√81 = 9</li>
+      <li>√2 ≈ 1.41421356</li>
+      <li>√0.25 = 0.5</li>
+      <li>√0 = 0</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("sr_x");
+  const calcBtn = document.getElementById("sr_calc");
+  const clearBtn = document.getElementById("sr_clear");
+  const errEl = document.getElementById("sr_error");
+  const outEl = document.getElementById("sr_result");
+  const stepsEl = document.getElementById("sr_steps");
+
+  if (!xEl || !calcBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function toNum(v){
+    const n = parseFloat(String(v));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function clearError(){
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg){
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text){
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function fmtPlain(n){
+    if (!Number.isFinite(n)) return "—";
+    const s = n.toFixed(12).replace(/\.?0+$/,"");
+    return (s === "-0") ? "0" : s;
+  }
+
+  function fmtSci(n){
+    if (!Number.isFinite(n)) return "—";
+    if (n === 0) return "0";
+    const sign = n < 0 ? -1 : 1;
+    const abs = Math.abs(n);
+    const e = Math.floor(Math.log10(abs));
+    const m = sign * (abs / Math.pow(10, e));
+    const mStr = (Math.round(m * 1e12) / 1e12).toString();
+    return `${mStr} × 10^${e}`;
+  }
+
+  function fmtSmart(n){
+    if (!Number.isFinite(n)) return "—";
+    const abs = Math.abs(n);
+    if (abs !== 0 && (abs >= 1e15 || abs < 1e-6)) return fmtSci(n);
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function card(title, big, sub){
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function resetOutputs(){
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+  }
+
+  function compute(){
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const x = toNum(xEl.value);
+    if (!Number.isFinite(x)) {
+      showError("Please enter a valid number.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+    if (x < 0) {
+      showError("Please enter a non-negative number (x ≥ 0). This tool computes real square roots only.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const y = Math.sqrt(x);
+    if (!Number.isFinite(y)) {
+      showError("Result is not finite (overflow/invalid input).");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Square root", fmtSmart(y), `${badge("√x")} · √${fmtPlain(x)}`)}
+        ${card("Scientific notation", fmtSci(y), "Helpful for very large/small results")}
+        ${card("Check (y²)", fmtSmart(y * y), "Should match x (within rounding)")}
+      </div>
+    `;
+
+    stepsEl.style.display = "block";
+    stepsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Steps</strong>
+        ${badge("Principal root")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        1) Compute y = √x = x^(1/2).<br/>
+        2) Verify: y² ≈ x (minor differences can occur due to rounding).
+      </div>
+    `;
+  }
+
+  xEl.addEventListener("keydown", function(e){
+    if (e.key === "Enter") compute();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function(){
+    xEl.value = "";
+    resetOutputs();
+    xEl.focus();
+  });
+
+  resetOutputs();
+});
+</script>

@@ -1,0 +1,1202 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "QR Code Generator",
+  description:
+    "Free QR code generator. Create QR codes for text, URLs, Wi-Fi, email, SMS, and phone. Download PNG/SVG. Runs locally with accessibility and FAQ schema.",
+  href: "/utility/qr-generator/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/qr-generator/";
+
+const faqs = [
+  {
+    q: "Is this QR generator free and private?",
+    a: "Yes. The QR code is generated locally in your browser. Your data is not sent to a server or stored.",
+  },
+  {
+    q: "What types of QR codes can I create?",
+    a: "This tool supports plain text/URL plus structured formats for Wi-Fi, email (mailto), phone (tel), and SMS (smsto).",
+  },
+  {
+    q: "Can I download the QR code?",
+    a: "Yes. You can download PNG or SVG. SVG is best for printing because it scales without losing quality.",
+  },
+  {
+    q: "Why is error correction important?",
+    a: "Higher error correction makes QR codes more resilient to damage and printing issues, but increases density (more modules).",
+  },
+  {
+    q: "Will every scanner read Wi-Fi QR codes?",
+    a: "Most modern phone cameras support Wi-Fi QR formats, but compatibility can vary by device and OS version.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`QR Code Generator — ${SITE_NAME}`}
+  description="Generate QR codes for URLs, text, Wi-Fi, email, SMS, and phone. Choose size and error correction. Download as PNG or SVG. Includes accessibility, validation, result preview, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="QR Code Generator"
+  intro="Generate QR codes locally in your browser. Supports URL/text plus Wi-Fi, email, phone, and SMS formats. Download PNG/SVG for sharing or printing."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="qr-generator">
+    <div class="form" role="form" aria-describedby="qr_privacy qr_help">
+      <div class="field">
+        <label for="qr_type">Type</label>
+        <select id="qr_type">
+          <option value="url" selected>URL / Text</option>
+          <option value="wifi">Wi-Fi</option>
+          <option value="email">Email</option>
+          <option value="phone">Phone</option>
+          <option value="sms">SMS</option>
+        </select>
+        <p class="note" id="qr_help" style="margin-top:6px;">
+          Choose a type. The tool builds the correct QR payload format automatically.
+        </p>
+      </div>
+
+      <!-- URL/TEXT -->
+      <div id="qr_panel_url" style="display:block;">
+        <div class="field">
+          <label for="qr_text">URL or text</label>
+          <textarea
+            id="qr_text"
+            rows="4"
+            placeholder="e.g., https://example.com"
+            style="width:100%; resize:vertical;"
+            inputmode="text"
+          ></textarea>
+          <p class="note" style="margin-top:6px;">
+            Tip: Include the full URL (with https://) for best scanner compatibility.
+          </p>
+        </div>
+      </div>
+
+      <!-- WIFI -->
+      <div id="qr_panel_wifi" style="display:none;">
+        <div class="field">
+          <label for="qr_wifi_ssid">Network name (SSID)</label>
+          <input id="qr_wifi_ssid" type="text" placeholder="e.g., MyWiFi" />
+        </div>
+
+        <div class="field">
+          <label for="qr_wifi_auth">Security</label>
+          <select id="qr_wifi_auth">
+            <option value="WPA" selected>WPA/WPA2/WPA3</option>
+            <option value="WEP">WEP</option>
+            <option value="nopass">None (open)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="qr_wifi_pass">Password</label>
+          <input id="qr_wifi_pass" type="text" placeholder="Wi-Fi password" />
+          <p class="note" style="margin-top:6px;">
+            If security is “None”, password is ignored.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="qr_wifi_hidden" type="checkbox" />
+            Hidden network
+          </label>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div id="qr_panel_email" style="display:none;">
+        <div class="field">
+          <label for="qr_email_to">To</label>
+          <input id="qr_email_to" type="email" inputmode="email" placeholder="e.g., name@example.com" />
+        </div>
+        <div class="field">
+          <label for="qr_email_subject">Subject (optional)</label>
+          <input id="qr_email_subject" type="text" placeholder="e.g., Hello" />
+        </div>
+        <div class="field">
+          <label for="qr_email_body">Body (optional)</label>
+          <textarea id="qr_email_body" rows="3" placeholder="Write a message..." style="width:100%; resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <!-- PHONE -->
+      <div id="qr_panel_phone" style="display:none;">
+        <div class="field">
+          <label for="qr_phone">Phone number</label>
+          <input id="qr_phone" type="tel" inputmode="tel" placeholder="e.g., +1 555 123 4567" />
+          <p class="note" style="margin-top:6px;">
+            Use international format if possible (e.g., +82...).
+          </p>
+        </div>
+      </div>
+
+      <!-- SMS -->
+      <div id="qr_panel_sms" style="display:none;">
+        <div class="field">
+          <label for="qr_sms_to">Phone number</label>
+          <input id="qr_sms_to" type="tel" inputmode="tel" placeholder="e.g., +1 555 123 4567" />
+        </div>
+        <div class="field">
+          <label for="qr_sms_body">Message (optional)</label>
+          <textarea id="qr_sms_body" rows="3" placeholder="Message..." style="width:100%; resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <hr style="margin:14px 0; opacity:.35;" />
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div class="field" style="min-width:220px;">
+          <label for="qr_size">Size</label>
+          <select id="qr_size">
+            <option value="192">Small (192px)</option>
+            <option value="256" selected>Medium (256px)</option>
+            <option value="320">Large (320px)</option>
+            <option value="384">XL (384px)</option>
+            <option value="512">Print (512px)</option>
+          </select>
+        </div>
+
+        <div class="field" style="min-width:220px;">
+          <label for="qr_ecc">Error correction</label>
+          <select id="qr_ecc">
+            <option value="L">L (7%)</option>
+            <option value="M" selected>M (15%)</option>
+            <option value="Q">Q (25%)</option>
+            <option value="H">H (30%)</option>
+          </select>
+          <p class="note" style="margin-top:6px;">
+            Higher = more resilient, but denser QR.
+          </p>
+        </div>
+
+        <div class="field" style="min-width:220px;">
+          <label for="qr_margin">Quiet zone (margin)</label>
+          <select id="qr_margin">
+            <option value="4" selected>Normal</option>
+            <option value="2">Tight</option>
+            <option value="8">Extra</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+        <button class="btn" type="button" id="qr_generate">Generate</button>
+        <button class="btn secondary" type="button" id="qr_download_png">Download PNG</button>
+        <button class="btn secondary" type="button" id="qr_download_svg">Download SVG</button>
+        <button class="btn secondary" type="button" id="qr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="qr_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="qr_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="qr_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:12px; display:grid; grid-template-columns:1fr; gap:10px;">
+        <div class="result" style="overflow:auto;">
+          <strong>Preview</strong>
+          <div class="note" style="margin-top:6px;">Scan the code to verify before sharing.</div>
+          <div style="margin-top:10px; display:flex; justify-content:center;">
+            <div
+              id="qr_preview"
+              aria-label="QR code preview"
+              role="img"
+              style="display:flex; align-items:center; justify-content:center; min-height:260px; width:100%;"
+            >
+              <span class="note">No QR generated yet.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="qr_payload">QR payload (read-only)</label>
+          <textarea id="qr_payload" rows="3" readonly style="width:100%; resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="qr_privacy" style="margin-top:10px;">
+        Privacy: QR generation runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool builds a QR “payload” string and renders it as a QR code. Supported payload formats:
+    </p>
+    <ul>
+      <li><strong>URL/Text:</strong> raw text</li>
+      <li><strong>Wi-Fi:</strong> <code>WIFI:T:WPA;S:SSID;P:password;H:false;;</code></li>
+      <li><strong>Email:</strong> <code>mailto:address?subject=...&amp;body=...</code></li>
+      <li><strong>Phone:</strong> <code>tel:+15551234567</code></li>
+      <li><strong>SMS:</strong> <code>SMSTO:+15551234567:message</code></li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>URL:</strong> https://example.com</li>
+      <li><strong>Wi-Fi:</strong> SSID “CafeWiFi”, WPA, password “secret123”</li>
+      <li><strong>Email:</strong> mailto:help@example.com?subject=Support</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const typeEl = document.getElementById("qr_type");
+
+  const panelUrl = document.getElementById("qr_panel_url");
+  const panelWifi = document.getElementById("qr_panel_wifi");
+  const panelEmail = document.getElementById("qr_panel_email");
+  const panelPhone = document.getElementById("qr_panel_phone");
+  const panelSms = document.getElementById("qr_panel_sms");
+
+  const textEl = document.getElementById("qr_text");
+
+  const wifiSsidEl = document.getElementById("qr_wifi_ssid");
+  const wifiAuthEl = document.getElementById("qr_wifi_auth");
+  const wifiPassEl = document.getElementById("qr_wifi_pass");
+  const wifiHiddenEl = document.getElementById("qr_wifi_hidden");
+
+  const emailToEl = document.getElementById("qr_email_to");
+  const emailSubEl = document.getElementById("qr_email_subject");
+  const emailBodyEl = document.getElementById("qr_email_body");
+
+  const phoneEl = document.getElementById("qr_phone");
+
+  const smsToEl = document.getElementById("qr_sms_to");
+  const smsBodyEl = document.getElementById("qr_sms_body");
+
+  const sizeEl = document.getElementById("qr_size");
+  const eccEl = document.getElementById("qr_ecc");
+  const marginEl = document.getElementById("qr_margin");
+
+  const genBtn = document.getElementById("qr_generate");
+  const dlPngBtn = document.getElementById("qr_download_png");
+  const dlSvgBtn = document.getElementById("qr_download_svg");
+  const clearBtn = document.getElementById("qr_clear");
+
+  const errEl = document.getElementById("qr_error");
+  const summaryEl = document.getElementById("qr_summary");
+  const cardsEl = document.getElementById("qr_cards");
+  const previewEl = document.getElementById("qr_preview");
+  const payloadEl = document.getElementById("qr_payload");
+
+  if (!typeEl || !panelUrl || !panelWifi || !panelEmail || !panelPhone || !panelSms ||
+      !textEl || !wifiSsidEl || !wifiAuthEl || !wifiPassEl || !wifiHiddenEl ||
+      !emailToEl || !emailSubEl || !emailBodyEl || !phoneEl || !smsToEl || !smsBodyEl ||
+      !sizeEl || !eccEl || !marginEl || !genBtn || !dlPngBtn || !dlSvgBtn || !clearBtn ||
+      !errEl || !summaryEl || !cardsEl || !previewEl || !payloadEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${escapeHtml(text)}</span>`;
+  }
+
+  function setPanels(type) {
+    panelUrl.style.display = type === "url" ? "block" : "none";
+    panelWifi.style.display = type === "wifi" ? "block" : "none";
+    panelEmail.style.display = type === "email" ? "block" : "none";
+    panelPhone.style.display = type === "phone" ? "block" : "none";
+    panelSms.style.display = type === "sms" ? "block" : "none";
+
+    // basic UX: password disabled for open Wi-Fi
+    if (type === "wifi") {
+      const auth = String(wifiAuthEl.value);
+      const open = auth === "nopass";
+      wifiPassEl.disabled = open;
+      wifiPassEl.setAttribute("aria-disabled", open ? "true" : "false");
+      if (open) wifiPassEl.value = "";
+    }
+  }
+
+  function normalizeNewlines(s) {
+    return String(s ?? "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  }
+
+  function validEmail(email) {
+    // simple validation (client-side heuristic)
+    const e = String(email ?? "").trim();
+    if (!e) return false;
+    // basic pattern: something@something.something
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+
+  function normalizePhone(p) {
+    // keep + and digits; remove spaces, hyphens, parentheses
+    const raw = String(p ?? "").trim();
+    if (!raw) return "";
+    const cleaned = raw.replace(/[^\d+]/g, "");
+    // allow + at start only
+    return cleaned.replace(/\+(?=.)/g, (m, off) => (off === 0 ? "+" : ""));
+  }
+
+  function pctDensityLabel(ecc, size, margin, payloadLen) {
+    // heuristic density label
+    const s = Number(size) || 256;
+    const m = Number(margin) || 4;
+    const L = payloadLen || 0;
+    let score = L / 60 + (ecc === "H" ? 2 : ecc === "Q" ? 1.5 : ecc === "M" ? 1 : 0.5) - (s >= 384 ? 0.7 : s >= 320 ? 0.4 : 0);
+    score += (m <= 2 ? 0.4 : m >= 8 ? -0.2 : 0);
+    if (score < 1.6) return { label: "Low density", kind: "good" };
+    if (score < 2.4) return { label: "Medium density", kind: "neutral" };
+    return { label: "High density", kind: "warn" };
+  }
+
+  function wifiEscape(s) {
+    // Escape \ ; , : per common WIFI QR convention
+    return String(s ?? "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/:/g, "\\:");
+  }
+
+  function buildPayload() {
+    const type = String(typeEl.value);
+
+    if (type === "url") {
+      const t = normalizeNewlines(textEl.value);
+      if (!t) throw new Error("Please enter a URL or text.");
+      // Not forcing URL format; allow arbitrary text. But UX warning if looks like URL without scheme.
+      return { payload: t, hint: t.startsWith("http://") || t.startsWith("https://") ? "URL detected" : "Text payload" };
+    }
+
+    if (type === "wifi") {
+      const ssid = String(wifiSsidEl.value ?? "").trim();
+      const auth = String(wifiAuthEl.value);
+      const pass = String(wifiPassEl.value ?? "");
+      const hidden = !!wifiHiddenEl.checked;
+
+      if (!ssid) throw new Error("Please enter a Wi-Fi network name (SSID).");
+      if (auth !== "nopass" && !pass) throw new Error("Please enter a Wi-Fi password (or choose Security: None).");
+
+      const T = auth; // WPA / WEP / nopass
+      const S = wifiEscape(ssid);
+      const P = auth === "nopass" ? "" : wifiEscape(pass);
+      const H = hidden ? "true" : "false";
+
+      // WIFI format: WIFI:T:WPA;S:MySSID;P:mypass;H:false;;
+      const payload = `WIFI:T:${T};S:${S};P:${P};H:${H};;`;
+      return { payload, hint: "Wi-Fi payload" };
+    }
+
+    if (type === "email") {
+      const to = String(emailToEl.value ?? "").trim();
+      const subject = String(emailSubEl.value ?? "");
+      const body = String(emailBodyEl.value ?? "");
+
+      if (!validEmail(to)) throw new Error("Please enter a valid email address.");
+      const qs = [];
+      if (subject.trim()) qs.push("subject=" + encodeURIComponent(subject));
+      if (body.trim()) qs.push("body=" + encodeURIComponent(body));
+      const payload = "mailto:" + encodeURIComponent(to) + (qs.length ? "?" + qs.join("&") : "");
+      return { payload, hint: "Email (mailto) payload" };
+    }
+
+    if (type === "phone") {
+      const p = normalizePhone(phoneEl.value);
+      if (!p) throw new Error("Please enter a phone number.");
+      const payload = "tel:" + p;
+      return { payload, hint: "Phone (tel) payload" };
+    }
+
+    if (type === "sms") {
+      const to = normalizePhone(smsToEl.value);
+      const body = String(smsBodyEl.value ?? "");
+      if (!to) throw new Error("Please enter a phone number.");
+      // SMSTO is widely supported: SMSTO:number:message
+      const payload = "SMSTO:" + to + ":" + body;
+      return { payload, hint: "SMS (SMSTO) payload" };
+    }
+
+    throw new Error("Unknown QR type.");
+  }
+
+  function crc32(bytes) {
+    // not required for QR; used only for deterministic filename hash
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) {
+      c ^= bytes[i];
+      for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & (-(c & 1)));
+    }
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function hashName(payload) {
+    const enc = new TextEncoder();
+    const bytes = enc.encode(payload);
+    const h = crc32(bytes).toString(16).padStart(8, "0");
+    return "qr-" + h;
+  }
+
+  // Minimal QR encoder (Byte mode) + renderer (SVG + Canvas PNG)
+  // Note: This is a compact, self-contained QR implementation designed for tool pages.
+  // It supports standard ECC levels and auto version selection for typical payload sizes.
+  // It does not attempt to support Kanji mode or ECI.
+  const QR = (function () {
+    // Tables adapted from common QR specifications; implementation follows standard algorithms.
+    // (No external network calls; all local.)
+
+    const ECC_LEVEL = { L: 1, M: 0, Q: 3, H: 2 };
+
+    function gfExpTable() {
+      const exp = new Uint8Array(512);
+      const log = new Uint8Array(256);
+      let x = 1;
+      for (let i = 0; i < 255; i++) {
+        exp[i] = x;
+        log[x] = i;
+        x <<= 1;
+        if (x & 0x100) x ^= 0x11d;
+      }
+      for (let i = 255; i < 512; i++) exp[i] = exp[i - 255];
+      return { exp, log };
+    }
+
+    const GF = gfExpTable();
+
+    function gfMul(a, b) {
+      if (a === 0 || b === 0) return 0;
+      return GF.exp[GF.log[a] + GF.log[b]];
+    }
+
+    function rsGeneratorPoly(deg) {
+      let poly = [1];
+      for (let i = 0; i < deg; i++) {
+        poly = polyMultiply(poly, [1, GF.exp[i]]);
+      }
+      return poly;
+    }
+
+    function polyMultiply(p, q) {
+      const r = new Array(p.length + q.length - 1).fill(0);
+      for (let i = 0; i < p.length; i++) {
+        for (let j = 0; j < q.length; j++) {
+          r[i + j] ^= gfMul(p[i], q[j]);
+        }
+      }
+      return r;
+    }
+
+    function rsEncode(data, ecLen) {
+      const gen = rsGeneratorPoly(ecLen);
+      const msg = data.slice();
+      for (let i = 0; i < ecLen; i++) msg.push(0);
+
+      for (let i = 0; i < data.length; i++) {
+        const coef = msg[i];
+        if (coef !== 0) {
+          for (let j = 0; j < gen.length; j++) {
+            msg[i + j] ^= gfMul(gen[j], coef);
+          }
+        }
+      }
+      return msg.slice(msg.length - ecLen);
+    }
+
+    // Version capacities for Byte mode: use (data codewords) table via total codewords - ec codewords.
+    // We'll use per-version tables for total codewords and EC codewords by level (standard QR).
+    const TOTAL_CODEWORDS = [
+      0,
+      26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
+      404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
+      1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
+      2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
+    ];
+
+    // EC codewords per version for each level (L,M,Q,H). Source: standard QR spec tables.
+    // Only need up to version 40.
+    const EC_CODEWORDS = {
+      L: [0,
+        7,10,15,20,26,18,20,24,30,18,
+        20,24,30,18,20,24,30,26,28,30,
+        28,30,28,30,30,26,28,30,30,30,
+        30,30,30,30,30,30,30,30,30,30
+      ],
+      M: [0,
+        10,16,26,18,24,16,18,22,22,26,
+        30,22,22,24,24,28,28,26,26,26,
+        26,28,28,28,28,28,28,28,28,28,
+        28,28,28,28,28,28,28,28,28,28
+      ],
+      Q: [0,
+        13,22,18,26,18,24,18,22,20,24,
+        28,26,24,20,30,24,28,28,26,30,
+        28,30,30,30,30,30,30,30,30,30,
+        30,30,30,30,30,30,30,30,30,30
+      ],
+      H: [0,
+        17,28,22,16,22,28,26,26,24,28,
+        24,28,22,24,24,30,28,28,26,28,
+        30,24,30,30,30,30,30,30,30,30,
+        30,30,30,30,30,30,30,30,30,30
+      ]
+    };
+
+    // Alignment pattern locations per version
+    const ALIGN = [
+      [],
+      [],
+      [6,18],
+      [6,22],
+      [6,26],
+      [6,30],
+      [6,34],
+      [6,22,38],
+      [6,24,42],
+      [6,26,46],
+      [6,28,50],
+      [6,30,54],
+      [6,32,58],
+      [6,34,62],
+      [6,26,46,66],
+      [6,26,48,70],
+      [6,26,50,74],
+      [6,30,54,78],
+      [6,30,56,82],
+      [6,30,58,86],
+      [6,34,62,90],
+      [6,28,50,72,94],
+      [6,26,50,74,98],
+      [6,30,54,78,102],
+      [6,28,54,80,106],
+      [6,32,58,84,110],
+      [6,30,58,86,114],
+      [6,34,62,90,118],
+      [6,26,50,74,98,122],
+      [6,30,54,78,102,126],
+      [6,26,52,78,104,130],
+      [6,30,56,82,108,134],
+      [6,34,60,86,112,138],
+      [6,30,58,86,114,142],
+      [6,34,62,90,118,146],
+      [6,30,54,78,102,126,150],
+      [6,24,50,76,102,128,154],
+      [6,28,54,80,106,132,158],
+      [6,32,58,84,110,136,162],
+      [6,26,54,82,110,138,166],
+      [6,30,58,86,114,142,170]
+    ];
+
+    function sizeForVersion(v) {
+      return 17 + 4 * v;
+    }
+
+    function chooseVersion(byteLen, ecc) {
+      for (let v = 1; v <= 40; v++) {
+        const total = TOTAL_CODEWORDS[v];
+        const ec = EC_CODEWORDS[ecc][v];
+        const dataCw = total - ec;
+        // Byte mode overhead:
+        // mode(4) + count(8 for v<=9 else 16) + data(8*len) + terminator/pad to cw
+        const countBits = v <= 9 ? 8 : 16;
+        const neededBits = 4 + countBits + (byteLen * 8);
+        const neededCw = Math.ceil(neededBits / 8);
+        if (neededCw <= dataCw) return v;
+      }
+      return null;
+    }
+
+    function makeBitBuffer(bytes, version) {
+      const bits = [];
+      function pushBits(val, n) {
+        for (let i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1);
+      }
+      // Mode: Byte (0100)
+      pushBits(0b0100, 4);
+      // Count
+      if (version <= 9) pushBits(bytes.length, 8);
+      else pushBits(bytes.length, 16);
+      // Data
+      for (let i = 0; i < bytes.length; i++) pushBits(bytes[i], 8);
+      // Terminator up to 4 bits
+      pushBits(0, Math.min(4, Math.max(0, (8 * 1000000) - bits.length))); // safe
+      return bits;
+    }
+
+    function bitsToCodewords(bits, dataCwLen) {
+      // Add terminator (up to 4 zeros) properly and pad to byte boundary
+      const outBits = bits.slice();
+      // terminator: up to 4 zeros, but not beyond capacity
+      // We don't know full bit capacity here; handle by cw len in bytes
+      while (outBits.length % 8 !== 0) outBits.push(0);
+      const codewords = [];
+      for (let i = 0; i < outBits.length; i += 8) {
+        let b = 0;
+        for (let j = 0; j < 8; j++) b = (b << 1) | outBits[i + j];
+        codewords.push(b);
+      }
+      // Pad with 0xEC, 0x11 alternately
+      const pads = [0xEC, 0x11];
+      let p = 0;
+      while (codewords.length < dataCwLen) {
+        codewords.push(pads[p % 2]);
+        p++;
+      }
+      return codewords.slice(0, dataCwLen);
+    }
+
+    function placeFinder(mat, x, y) {
+      for (let dy = -1; dy <= 7; dy++) {
+        for (let dx = -1; dx <= 7; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (yy < 0 || yy >= mat.length || xx < 0 || xx >= mat.length) continue;
+          const on = (dx >= 0 && dx <= 6 && dy >= 0 && dy <= 6 &&
+            (dx === 0 || dx === 6 || dy === 0 || dy === 6 || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4)));
+          mat[yy][xx] = on ? 1 : 0;
+          mat.res[yy][xx] = true;
+        }
+      }
+    }
+
+    function placeAlignment(mat, cx, cy) {
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const xx = cx + dx, yy = cy + dy;
+          const adx = Math.abs(dx), ady = Math.abs(dy);
+          const on = (adx === 2 || ady === 2 || (adx === 0 && ady === 0));
+          mat[yy][xx] = on ? 1 : 0;
+          mat.res[yy][xx] = true;
+        }
+      }
+    }
+
+    function placeTiming(mat) {
+      const n = mat.length;
+      for (let i = 8; i < n - 8; i++) {
+        const v = (i % 2 === 0) ? 1 : 0;
+        if (!mat.res[6][i]) { mat[6][i] = v; mat.res[6][i] = true; }
+        if (!mat.res[i][6]) { mat[i][6] = v; mat.res[i][6] = true; }
+      }
+    }
+
+    function placeDarkModule(mat, version) {
+      const n = mat.length;
+      const x = 8;
+      const y = (4 * version) + 9;
+      mat[y][x] = 1;
+      mat.res[y][x] = true;
+    }
+
+    function reserveFormatInfo(mat) {
+      const n = mat.length;
+      // format info areas around finders
+      for (let i = 0; i < 9; i++) {
+        if (i !== 6) { mat.res[8][i] = true; mat.res[i][8] = true; }
+      }
+      for (let i = 0; i < 8; i++) {
+        mat.res[8][n - 1 - i] = true;
+        mat.res[n - 1 - i][8] = true;
+      }
+      mat.res[8][8] = true;
+      mat.res[n - 8][8] = true;
+    }
+
+    function reserveVersionInfo(mat, version) {
+      if (version < 7) return;
+      const n = mat.length;
+      for (let y = 0; y < 6; y++) {
+        for (let x = 0; x < 3; x++) {
+          mat.res[y][n - 11 + x] = true;
+          mat.res[n - 11 + x][y] = true;
+        }
+      }
+    }
+
+    // Format bits for ECC+mask. Precomputed generation via BCH (standard).
+    function formatBits(ecc, mask) {
+      const eccBits = { M:0, L:1, H:2, Q:3 }[ecc]; // note: QR uses specific mapping
+      const data = (eccBits << 3) | mask;
+      let d = data << 10;
+      const g = 0b10100110111;
+      for (let i = 14; i >= 10; i--) {
+        if ((d >>> i) & 1) d ^= (g << (i - 10));
+      }
+      const bch = ((data << 10) | (d & 0x3FF)) ^ 0b101010000010010;
+      return bch & 0x7FFF;
+    }
+
+    function writeFormat(mat, ecc, mask) {
+      const n = mat.length;
+      const bits = formatBits(ecc, mask);
+      function bit(i) { return (bits >>> i) & 1; }
+
+      // Around top-left
+      for (let i = 0; i <= 5; i++) mat[8][i] = bit(14 - i);
+      mat[8][7] = bit(8);
+      mat[8][8] = bit(7);
+      mat[7][8] = bit(6);
+      for (let i = 9; i <= 14; i++) mat[14 - i][8] = bit(14 - i);
+
+      // Top-right
+      for (let i = 0; i < 8; i++) mat[8][n - 1 - i] = bit(i);
+
+      // Bottom-left
+      for (let i = 0; i < 7; i++) mat[n - 1 - i][8] = bit(8 + i);
+
+      // Mark reserved already; just set values.
+    }
+
+    function maskFn(mask, r, c) {
+      switch (mask) {
+        case 0: return ((r + c) % 2) === 0;
+        case 1: return (r % 2) === 0;
+        case 2: return (c % 3) === 0;
+        case 3: return ((r + c) % 3) === 0;
+        case 4: return ((Math.floor(r / 2) + Math.floor(c / 3)) % 2) === 0;
+        case 5: return (((r * c) % 2) + ((r * c) % 3)) === 0;
+        case 6: return ((((r * c) % 2) + ((r * c) % 3)) % 2) === 0;
+        case 7: return ((((r + c) % 2) + ((r * c) % 3)) % 2) === 0;
+        default: return false;
+      }
+    }
+
+    function placeData(mat, codewords) {
+      const n = mat.length;
+      const bits = [];
+      for (const cw of codewords) {
+        for (let i = 7; i >= 0; i--) bits.push((cw >>> i) & 1);
+      }
+
+      let iBit = 0;
+      let dirUp = true;
+      for (let x = n - 1; x > 0; x -= 2) {
+        if (x === 6) x--; // skip timing column
+        for (let yOff = 0; yOff < n; yOff++) {
+          const y = dirUp ? (n - 1 - yOff) : yOff;
+          for (let dx = 0; dx < 2; dx++) {
+            const xx = x - dx;
+            if (mat.res[y][xx]) continue;
+            mat[y][xx] = bits[iBit++] ? 1 : 0;
+            if (iBit >= bits.length) return;
+          }
+        }
+        dirUp = !dirUp;
+      }
+    }
+
+    function cloneMat(mat) {
+      const n = mat.length;
+      const out = new Array(n);
+      out.res = mat.res; // share reservation map
+      for (let y = 0; y < n; y++) out[y] = mat[y].slice();
+      return out;
+    }
+
+    function applyMask(mat, mask) {
+      const n = mat.length;
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (mat.res[r][c]) continue;
+          if (maskFn(mask, r, c)) mat[r][c] ^= 1;
+        }
+      }
+    }
+
+    function penaltyScore(mat) {
+      // basic QR penalty rules (approx)
+      const n = mat.length;
+      let score = 0;
+
+      // Rule 1: rows/cols consecutive modules
+      function linePenalty(get) {
+        for (let i = 0; i < n; i++) {
+          let runColor = get(i, 0);
+          let runLen = 1;
+          for (let j = 1; j < n; j++) {
+            const v = get(i, j);
+            if (v === runColor) runLen++;
+            else {
+              if (runLen >= 5) score += 3 + (runLen - 5);
+              runColor = v;
+              runLen = 1;
+            }
+          }
+          if (runLen >= 5) score += 3 + (runLen - 5);
+        }
+      }
+      linePenalty((r, c) => mat[r][c]);
+      linePenalty((c, r) => mat[r][c]);
+
+      // Rule 2: 2x2 blocks
+      for (let r = 0; r < n - 1; r++) {
+        for (let c = 0; c < n - 1; c++) {
+          const v = mat[r][c];
+          if (v === mat[r][c+1] && v === mat[r+1][c] && v === mat[r+1][c+1]) score += 3;
+        }
+      }
+
+      // Rule 3: finder-like patterns in rows/cols
+      const pat1 = [1,0,1,1,1,0,1,0,0,0,0];
+      const pat2 = [0,0,0,0,1,0,1,1,1,0,1];
+      function hasPattern(arr, idx, pat) {
+        for (let k = 0; k < pat.length; k++) if (arr[idx + k] !== pat[k]) return false;
+        return true;
+      }
+      function patternPenalty(getLine) {
+        for (let i = 0; i < n; i++) {
+          const arr = new Array(n);
+          for (let j = 0; j < n; j++) arr[j] = getLine(i, j);
+          for (let j = 0; j <= n - 11; j++) {
+            if (hasPattern(arr, j, pat1) || hasPattern(arr, j, pat2)) score += 40;
+          }
+        }
+      }
+      patternPenalty((r, c) => mat[r][c]);
+      patternPenalty((c, r) => mat[r][c]);
+
+      // Rule 4: balance of dark modules
+      let dark = 0;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (mat[r][c]) dark++;
+      const total = n * n;
+      const k = Math.abs((dark * 100 / total) - 50);
+      score += Math.floor(k / 5) * 10;
+
+      return score;
+    }
+
+    function encode(payload, ecc) {
+      const enc = new TextEncoder();
+      const bytes = Array.from(enc.encode(payload));
+      const version = chooseVersion(bytes.length, ecc);
+      if (!version) throw new Error("Payload too long for a QR code with the selected error correction.");
+      const total = TOTAL_CODEWORDS[version];
+      const ecLen = EC_CODEWORDS[ecc][version];
+      const dataCwLen = total - ecLen;
+
+      const bits = makeBitBuffer(bytes, version);
+      const dataCw = bitsToCodewords(bits, dataCwLen);
+      const ec = rsEncode(dataCw, ecLen);
+      const all = dataCw.concat(ec);
+
+      const n = sizeForVersion(version);
+      const mat = new Array(n);
+      mat.res = new Array(n);
+      for (let y = 0; y < n; y++) {
+        mat[y] = new Array(n).fill(0);
+        mat.res[y] = new Array(n).fill(false);
+      }
+
+      placeFinder(mat, 0, 0);
+      placeFinder(mat, n - 7, 0);
+      placeFinder(mat, 0, n - 7);
+
+      // Alignment patterns
+      const pts = ALIGN[version] || [];
+      if (pts.length) {
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = 0; j < pts.length; j++) {
+            const cx = pts[i], cy = pts[j];
+            // skip overlaps with finders
+            const inTL = (cx <= 8 && cy <= 8);
+            const inTR = (cx >= n - 9 && cy <= 8);
+            const inBL = (cx <= 8 && cy >= n - 9);
+            if (inTL || inTR || inBL) continue;
+            placeAlignment(mat, cx, cy);
+          }
+        }
+      }
+
+      placeTiming(mat);
+      placeDarkModule(mat, version);
+      reserveFormatInfo(mat);
+      reserveVersionInfo(mat, version);
+
+      placeData(mat, all);
+
+      // Choose best mask by penalty
+      let bestMask = 0;
+      let bestScore = Infinity;
+      let bestMat = null;
+
+      for (let mask = 0; mask < 8; mask++) {
+        const m2 = cloneMat(mat);
+        applyMask(m2, mask);
+        writeFormat(m2, ecc, mask);
+        const s = penaltyScore(m2);
+        if (s < bestScore) { bestScore = s; bestMask = mask; bestMat = m2; }
+      }
+
+      return { version, mask: bestMask, matrix: bestMat };
+    }
+
+    return { encode };
+  })();
+
+  function renderSVG(matrix, moduleSize, margin) {
+    const n = matrix.length;
+    const ms = moduleSize;
+    const m = margin;
+
+    const size = (n + m * 2) * ms;
+    let path = "";
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        if (matrix[y][x]) {
+          const xx = (x + m) * ms;
+          const yy = (y + m) * ms;
+          path += `M${xx} ${yy}h${ms}v${ms}h-${ms}z `;
+        }
+      }
+    }
+
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="QR code">
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <path d="${path.trim()}" fill="#000000"/>
+      </svg>
+    `.trim();
+  }
+
+  function svgToDataUrl(svg) {
+    const enc = encodeURIComponent(svg)
+      .replace(/%0A/g, "")
+      .replace(/%20/g, " ");
+    return "data:image/svg+xml;charset=utf-8," + enc;
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function renderToCanvas(svg, px, cb) {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      canvas.width = px;
+      canvas.height = px;
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, px, px);
+      ctx.drawImage(img, 0, 0, px, px);
+      canvas.toBlob(function (blob) {
+        cb(blob, canvas);
+      }, "image/png");
+    };
+    img.onerror = function () {
+      cb(null, null);
+    };
+    img.src = svgToDataUrl(svg);
+  }
+
+  let latest = null; // { payload, svg, sizePx, filenameBase }
+
+  function renderResult(payload, ecc, sizePx, margin) {
+    const enc = QR.encode(payload, ecc);
+    // Choose module size to fit requested pixels with margin
+    const n = enc.matrix.length;
+    const totalModules = n + margin * 2;
+    const ms = Math.max(2, Math.floor(sizePx / totalModules));
+    const actualPx = totalModules * ms;
+
+    const svg = renderSVG(enc.matrix, ms, margin);
+
+    previewEl.innerHTML = svg;
+    payloadEl.value = payload;
+
+    const density = pctDensityLabel(ecc, actualPx, margin, payload.length);
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Generated</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${badge(`ECC ${escapeHtml(ecc)}`, "neutral")}
+          ${badge(`${enc.matrix.length}×${enc.matrix.length} modules`, "neutral")}
+          ${badge(`${actualPx}px`, "good")}
+          ${badge(density.label, density.kind)}
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Verify by scanning. For printing, prefer SVG or a larger size.
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px;">
+        <div class="result" style="border-radius:12px;">
+          <strong>Payload type</strong>
+          <div class="note" style="margin-top:6px;">${escapeHtml(String(typeEl.value).toUpperCase())}</div>
+        </div>
+        <div class="result" style="border-radius:12px;">
+          <strong>Payload length</strong>
+          <div class="note" style="margin-top:6px;">${payload.length.toLocaleString()} characters</div>
+        </div>
+        <div class="result" style="border-radius:12px;">
+          <strong>Scan reliability (heuristic)</strong>
+          <div class="note" style="margin-top:6px;">${escapeHtml(density.label)} · Increase size or lower ECC if too dense.</div>
+        </div>
+      </div>
+    `;
+
+    const base = hashName(payload);
+    latest = { payload, svg, sizePx: actualPx, filenameBase: base };
+  }
+
+  function validateAndGenerate() {
+    clearError();
+    try {
+      const ecc = String(eccEl.value);
+      const sizePx = parseInt(String(sizeEl.value), 10);
+      const margin = parseInt(String(marginEl.value), 10);
+
+      if (!["L","M","Q","H"].includes(ecc)) throw new Error("Invalid error correction level.");
+      if (!isFinite(sizePx) || sizePx < 128 || sizePx > 2048) throw new Error("Invalid size.");
+      if (!isFinite(margin) || margin < 0 || margin > 16) throw new Error("Invalid margin.");
+
+      const built = buildPayload();
+      const payload = built.payload;
+
+      // additional UX warning for URL without scheme
+      if (String(typeEl.value) === "url") {
+        const t = payload.trim();
+        const looksUrl = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t) || /^[^\s]+\.[^\s]+$/.test(t);
+        const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t);
+        if (looksUrl && !hasScheme) {
+          summaryEl.innerHTML = `<strong>Note:</strong> Your input looks like a URL. Adding <code>https://</code> improves compatibility.`;
+        }
+      }
+
+      renderResult(payload, ecc, sizePx, margin);
+    } catch (e) {
+      latest = null;
+      previewEl.innerHTML = "<span class='note'>No QR generated yet.</span>";
+      payloadEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      summaryEl.textContent = "Result will appear here.";
+      showError(e && e.message ? e.message : "Could not generate QR code with these inputs.");
+    }
+  }
+
+  async function downloadSVG() {
+    clearError();
+    if (!latest || !latest.svg) { showError("Generate a QR code first."); return; }
+    const blob = new Blob([latest.svg], { type: "image/svg+xml;charset=utf-8" });
+    downloadBlob(blob, latest.filenameBase + ".svg");
+  }
+
+  async function downloadPNG() {
+    clearError();
+    if (!latest || !latest.svg) { showError("Generate a QR code first."); return; }
+    // PNG size: use the actual SVG pixels
+    const px = latest.sizePx;
+    renderToCanvas(latest.svg, px, function (blob) {
+      if (!blob) { showError("Could not render PNG in this browser."); return; }
+      downloadBlob(blob, latest.filenameBase + ".png");
+    });
+  }
+
+  function clearAll() {
+    clearError();
+    typeEl.value = "url";
+    textEl.value = "";
+
+    wifiSsidEl.value = "";
+    wifiAuthEl.value = "WPA";
+    wifiPassEl.value = "";
+    wifiHiddenEl.checked = false;
+
+    emailToEl.value = "";
+    emailSubEl.value = "";
+    emailBodyEl.value = "";
+
+    phoneEl.value = "";
+    smsToEl.value = "";
+    smsBodyEl.value = "";
+
+    sizeEl.value = "256";
+    eccEl.value = "M";
+    marginEl.value = "4";
+
+    latest = null;
+    payloadEl.value = "";
+    previewEl.innerHTML = "<span class='note'>No QR generated yet.</span>";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    summaryEl.textContent = "Result will appear here.";
+    setPanels("url");
+  }
+
+  // Events
+  typeEl.addEventListener("change", function () {
+    setPanels(String(typeEl.value));
+    clearError();
+  });
+
+  wifiAuthEl.addEventListener("change", function () {
+    setPanels("wifi");
+  });
+
+  genBtn.addEventListener("click", validateAndGenerate);
+  dlSvgBtn.addEventListener("click", downloadSVG);
+  dlPngBtn.addEventListener("click", downloadPNG);
+  clearBtn.addEventListener("click", clearAll);
+
+  // keyboard accessibility: generate with Ctrl+Enter inside main text area
+  textEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") validateAndGenerate();
+  });
+
+  clearAll();
+});
+</script>

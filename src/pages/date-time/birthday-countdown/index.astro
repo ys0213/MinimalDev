@@ -1,0 +1,385 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Birthday Countdown",
+  description:
+    "Free birthday countdown. Count down to the next birthday with age, days left, and a live time-remaining timer. Timezone-aware, accessible, with FAQ schema.",
+  href: "/date-time/birthday-countdown/",
+  order: 56,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/birthday-countdown/";
+
+const faqs = [
+  {
+    q: "Does this use my timezone?",
+    a: "Yes. Calculations use your device’s local timezone and update in real time for the live countdown.",
+  },
+  {
+    q: "Do you store my birthday?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+  {
+    q: "What if my birthday is today?",
+    a: "It will show “Today” and the countdown will target the next occurrence (next year) once today has passed.",
+  },
+  {
+    q: "How is age calculated?",
+    a: "Age is shown as the age you will turn on the next birthday (and optionally your current age if your birthday has already occurred this year).",
+  },
+  {
+    q: "What about leap day birthdays (Feb 29)?",
+    a: "You can select Feb 29. In non-leap years, this tool treats the birthday as Feb 28 for the purpose of the next-occurrence countdown (a common convention).",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Birthday Countdown — ${SITE_NAME}`}
+  description="Count down to your next birthday. Shows days left, a live countdown timer, and age information. Runs locally in your browser with accessibility and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Birthday Countdown"
+  intro="Enter your birth date to see how long until your next birthday, plus age and a live time-remaining countdown."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="birthday-countdown">
+    <div class="form" role="form" aria-describedby="bd_help bd_privacy">
+      <div class="field">
+        <label for="bd_birthdate">Birth date</label>
+        <input id="bd_birthdate" type="date" />
+        <p class="note" id="bd_help" style="margin-top:6px;">
+          Uses your local timezone. For Feb 29 birthdays, non-leap years are treated as Feb 28 for the next-occurrence countdown.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="bd_live" type="checkbox" checked />
+          Live countdown (updates every 250ms)
+        </label>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="bd_summary" role="status" style="margin-top:12px;">
+        Enter your birth date to see your next birthday countdown.
+      </div>
+
+      <div class="result" id="bd_cards" style="margin-top:12px; display:none;"></div>
+
+      <div class="result" id="bd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="bd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs or results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool finds the next occurrence of your birthday in your local timezone and computes the remaining time.
+      It also shows age information based on the current date.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Birth date 1995-08-10 → shows next birthday date, days left, and a live countdown</li>
+      <li>Feb 29 birthdays → next occurrence uses Feb 29 on leap years, otherwise Feb 28 (for countdown only)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/countdown-timer/">Countdown Timer</a></li>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/add-subtract-days-calculator/">Add/Subtract Days</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const birthEl = document.getElementById("bd_birthdate");
+  const liveEl = document.getElementById("bd_live");
+  const calcBtn = document.getElementById("bd_calc");
+  const clearBtn = document.getElementById("bd_clear");
+
+  const errEl = document.getElementById("bd_error");
+  const summaryEl = document.getElementById("bd_summary");
+  const cardsEl = document.getElementById("bd_cards");
+  const detailsEl = document.getElementById("bd_details");
+
+  if (!birthEl || !liveEl || !calcBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !detailsEl) return;
+
+  let timerId = null;
+  let lastBirth = null; // {y,m,d}
+  let lastNext = null;  // Date
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:170px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function toISODateLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function parseBirthDate() {
+    const ds = String(birthEl.value || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) return { ok: false, msg: "Please enter a valid birth date." };
+
+    const d = new Date(ds + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return { ok: false, msg: "Please enter a valid birth date." };
+
+    // Validate that date input didn't roll over (e.g., invalid date)
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const [yy, mm, dd] = ds.split("-").map(Number);
+    if (y !== yy || m !== mm || day !== dd) return { ok: false, msg: "Please enter a valid birth date." };
+
+    if (y < 1900 || y > 2100) return { ok: false, msg: "Please enter a birth year between 1900 and 2100." };
+
+    return { ok: true, y: yy, m: mm, d: dd };
+  }
+
+  function isLeapYear(y) {
+    return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+  }
+
+  function nextBirthday(birth, now) {
+    // birth: {y,m,d} (m: 1-12)
+    const nowY = now.getFullYear();
+
+    function occ(year) {
+      // Feb 29 handling:
+      if (birth.m === 2 && birth.d === 29 && !isLeapYear(year)) {
+        // Convention for countdown only: Feb 28 in non-leap years
+        return new Date(year, 1, 28, 0, 0, 0, 0);
+      }
+      return new Date(year, birth.m - 1, birth.d, 0, 0, 0, 0);
+    }
+
+    const thisYear = occ(nowY);
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    // If birthday date is today or in the future (calendar date), use this year.
+    // If it's in the past (calendar date), use next year.
+    if (thisYear.getTime() >= todayMidnight.getTime()) return thisYear;
+    return occ(nowY + 1);
+  }
+
+  function currentAge(birth, now) {
+    // Standard age in years (had birthday already this year?)
+    const y = now.getFullYear();
+    const thisYearBD = new Date(y, birth.m - 1, birth.d, 0, 0, 0, 0);
+
+    // For Feb 29 birthdays, real-world conventions vary; here we keep strict date.
+    // If birth is Feb 29 and current year not leap, JavaScript rolls Mar 1 if set directly.
+    // To avoid silent rollover, we treat Feb 29 as Feb 28 for age comparison in non-leap years.
+    let cmpBD = thisYearBD;
+    if (birth.m === 2 && birth.d === 29 && !isLeapYear(y)) {
+      cmpBD = new Date(y, 1, 28, 0, 0, 0, 0);
+    }
+
+    let age = y - birth.y;
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    if (today.getTime() < cmpBD.getTime()) age -= 1;
+    return age;
+  }
+
+  function stop() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function render(now) {
+    if (!lastBirth || !lastNext) return;
+
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+    const next = lastNext;
+    const msLeft = next.getTime() - now.getTime();
+
+    // Days left (calendar day difference based on midnights)
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const next0 = new Date(next.getFullYear(), next.getMonth(), next.getDate(), 0, 0, 0, 0);
+    const daysLeft = Math.round((next0.getTime() - today0.getTime()) / 86400000);
+
+    const absMs = Math.max(0, msLeft);
+    const totalSec = Math.floor(absMs / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const rem1 = totalSec - d * 86400;
+    const h = Math.floor(rem1 / 3600);
+    const rem2 = rem1 - h * 3600;
+    const mi = Math.floor(rem2 / 60);
+    const s = rem2 - mi * 60;
+
+    const ageNow = currentAge(lastBirth, now);
+    const turns = ageNow + 1; // next birthday age
+
+    const statusBadges = [
+      badge(`Timezone: ${tz}`),
+      badge(liveEl.checked ? "Live: On" : "Live: Off"),
+    ].join(" ");
+
+    const todayLabel = daysLeft === 0 ? "Today" : `${daysLeft.toLocaleString()} day(s) left`;
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Next birthday: ${escapeHtml(toISODateLocal(next))}</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${statusBadges}</div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        ${escapeHtml(todayLabel)} · You will turn <strong>${turns.toLocaleString()}</strong>.
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Days left", `<span>${Math.max(0, daysLeft).toLocaleString()}</span>`, "Calendar days until next birthday")}
+        ${card("You are", `<span>${ageNow.toLocaleString()}</span>`, "Current age (years)")}
+        ${card("You will turn", `<span>${turns.toLocaleString()}</span>`, "Age on next birthday")}
+        ${card("Time left", `<span>${d.toLocaleString()}d ${h}h</span>`, `${mi}m ${s}s remaining (live)`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Live countdown</strong>
+        ${badge(msLeft <= 0 ? "Complete" : "Counting down")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Remaining: <strong>${d.toLocaleString()}</strong> days, <strong>${h}</strong> hours, <strong>${mi}</strong> minutes, <strong>${s}</strong> seconds
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Birth date: <strong>${escapeHtml(String(lastBirth.y))}-${String(lastBirth.m).padStart(2,"0")}-${String(lastBirth.d).padStart(2,"0")}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Note: Feb 29 birthdays use Feb 28 in non-leap years for next-occurrence countdown only.
+      </div>
+    `;
+  }
+
+  function computeOnce() {
+    clearError();
+    const parsed = parseBirthDate();
+    if (!parsed.ok) {
+      stop();
+      cardsEl.style.display = "none";
+      detailsEl.style.display = "none";
+      summaryEl.textContent = "Enter your birth date to see your next birthday countdown.";
+      showError(parsed.msg);
+      return;
+    }
+
+    const now = new Date();
+    const next = nextBirthday(parsed, now);
+
+    lastBirth = parsed;
+    lastNext = next;
+
+    render(now);
+
+    stop();
+    if (liveEl.checked) {
+      timerId = setInterval(function () {
+        render(new Date());
+        // Stop if completed (past midnight of target day)
+        const msLeft = lastNext.getTime() - Date.now();
+        if (msLeft <= 0) stop();
+      }, 250);
+    }
+  }
+
+  function clearAll() {
+    stop();
+    lastBirth = null;
+    lastNext = null;
+    birthEl.value = "";
+    liveEl.checked = true;
+    clearError();
+    summaryEl.textContent = "Enter your birth date to see your next birthday countdown.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+    birthEl.focus();
+  }
+
+  calcBtn.addEventListener("click", computeOnce);
+  clearBtn.addEventListener("click", clearAll);
+
+  // Accessibility: Enter triggers calculation
+  birthEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") computeOnce();
+  });
+
+  // If user toggles live while results exist, rerun
+  liveEl.addEventListener("change", function () {
+    if (birthEl.value) computeOnce();
+  });
+
+  clearAll();
+});
+</script>

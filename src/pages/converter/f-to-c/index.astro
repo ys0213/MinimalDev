@@ -1,0 +1,377 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "F to C",
+  description:
+    "Convert Fahrenheit (°F) to Celsius (°C) instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/f-to-c/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/f-to-c/";
+
+const faqs = [
+  {
+    q: "What is the formula for converting °F to °C?",
+    a: "°C = (°F − 32) × 5/9.",
+  },
+  {
+    q: "Can Fahrenheit values be negative?",
+    a: "Yes. Fahrenheit can be below 0 (e.g., −40°F). The converter supports negative values.",
+  },
+  {
+    q: "Is there a minimum possible temperature?",
+    a: "Yes. Absolute zero is −459.67°F (which equals −273.15°C). Values below that are not physically meaningful; this tool flags them as invalid.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`F to C Converter — ${SITE_NAME}`}
+  description="Convert Fahrenheit (°F) to Celsius (°C) with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="F to C Converter"
+  intro="Convert Fahrenheit (°F) to Celsius (°C). Includes rounding controls, common temperature references, and input validation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="f-to-c">
+    <div class="form" role="form" aria-describedby="f2c_help f2c_privacy">
+      <div class="field">
+        <label for="f2c_f">Temperature (°F)</label>
+        <input
+          id="f2c_f"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 77"
+          aria-describedby="f2c_help"
+        />
+        <p class="note" id="f2c_help" style="margin-top:6px;">
+          Enter °F then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="f2c_round">Rounding</label>
+        <select id="f2c_round">
+          <option value="0">0 decimals</option>
+          <option value="1" selected>1 decimal</option>
+          <option value="2">2 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="f2c_convert">Convert</button>
+        <button class="btn secondary" type="button" id="f2c_swap">Swap (°C → °F)</button>
+        <button class="btn secondary" type="button" id="f2c_clear">Clear</button>
+      </div>
+
+      <div class="result" id="f2c_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="f2c_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="f2c_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">°F</th>
+              <th scope="col">°C</th>
+            </tr>
+          </thead>
+          <tbody id="f2c_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="f2c_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>°C = (°F − 32) × 5/9</strong><br/>
+      Reverse: <strong>°F = (°C × 9/5) + 32</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>32°F</strong> = <strong>0°C</strong></li>
+      <li><strong>77°F</strong> = <strong>25°C</strong></li>
+      <li><strong>212°F</strong> = <strong>100°C</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/c-to-f/">C to F</a></li>
+      <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("f2c_f");
+  const roundEl = document.getElementById("f2c_round");
+  const convertBtn = document.getElementById("f2c_convert");
+  const swapBtn = document.getElementById("f2c_swap");
+  const clearBtn = document.getElementById("f2c_clear");
+  const errEl = document.getElementById("f2c_error");
+  const outEl = document.getElementById("f2c_result");
+  const cardsEl = document.getElementById("f2c_cards");
+  const tbodyEl = document.getElementById("f2c_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Physical limit (Fahrenheit)
+  const ABS_ZERO_F = -459.67;
+
+  // Mode true: F -> C, false: C -> F
+  let modeFtoC = true;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax >= 100) return x.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    if (ax >= 1) return x.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const rounded = Math.round(x * 1e6) / 1e6;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function classifyByC(c) {
+    if (!Number.isFinite(c)) return "—";
+    if (c < -10) return "Very cold";
+    if (c < 5) return "Cold";
+    if (c < 20) return "Cool";
+    if (c < 28) return "Warm";
+    if (c < 35) return "Hot";
+    return "Very hot";
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function cToF(c) {
+    return (c * 9) / 5 + 32;
+  }
+
+  function fToC(f) {
+    return ((f - 32) * 5) / 9;
+  }
+
+  function setUiForMode() {
+    const label = modeFtoC ? "Temperature (°F)" : "Temperature (°C)";
+    const ph = modeFtoC ? "e.g., 77" : "e.g., 25";
+
+    const lbl = document.querySelector('label[for="f2c_f"]');
+    if (lbl) lbl.textContent = label;
+
+    inEl.setAttribute("aria-label", label);
+    inEl.placeholder = ph;
+
+    swapBtn.textContent = modeFtoC ? "Swap (°C → °F)" : "Swap (°F → °C)";
+  }
+
+  function fillTable(inputValue) {
+    tbodyEl.innerHTML = "";
+
+    const refsC = [
+      { name: "Freezing point of water", c: 0 },
+      { name: "Room temperature (approx.)", c: 20 },
+      { name: "Body temperature (approx.)", c: 37 },
+      { name: "Boiling point of water", c: 100 },
+    ];
+
+    let refs = refsC.map((r) => ({
+      name: r.name,
+      f: cToF(r.c),
+      c: r.c,
+    }));
+
+    if (Number.isFinite(inputValue)) {
+      const cVal = modeFtoC ? fToC(inputValue) : inputValue;
+      const fVal = modeFtoC ? inputValue : cToF(inputValue);
+      if (Number.isFinite(cVal) && Number.isFinite(fVal)) {
+        refs.push({ name: "Your input", f: fVal, c: cVal, highlight: true });
+      }
+    }
+
+    for (const r of refs) {
+      const tr = document.createElement("tr");
+      if (r.highlight) tr.style.fontWeight = "900";
+
+      const tdName = document.createElement("td");
+      const tdF = document.createElement("td");
+      const tdC = document.createElement("td");
+
+      tdName.textContent = r.name;
+      tdF.textContent = fmtSmart(r.f);
+      tdC.textContent = fmt(r.c);
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdF);
+      tr.appendChild(tdC);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid temperature.";
+      return;
+    }
+
+    // Clamp extremely large values (avoid UI nonsense / float quirks)
+    const value = Math.max(Math.min(raw, 1e9), -1e9);
+    if (value !== raw) showError("Value is extremely large; output may be rounded due to floating-point limits.");
+
+    let c, f;
+    if (modeFtoC) {
+      f = value;
+      if (f < ABS_ZERO_F) {
+        showError("Below absolute zero (−459.67°F). Please enter a physically valid temperature.");
+        outEl.textContent = "Please enter a valid temperature.";
+        return;
+      }
+      c = fToC(f);
+    } else {
+      c = value;
+      const fTmp = cToF(c);
+      if (fTmp < ABS_ZERO_F) {
+        showError("Below absolute zero (−459.67°F). Please enter a physically valid temperature.");
+        outEl.textContent = "Please enter a valid temperature.";
+        return;
+      }
+      f = fTmp;
+    }
+
+    const category = classifyByC(c);
+
+    outEl.innerHTML =
+      (modeFtoC
+        ? `<strong>Result:</strong> ${fmt(c)} °C<br/><span class="note">${fmt(f)} °F = ${fmt(c)} °C</span>`
+        : `<strong>Result:</strong> ${fmt(f)} °F<br/><span class="note">${fmt(c)} °C = ${fmt(f)} °F</span>`
+      );
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(modeFtoC ? "°F → °C" : "°C → °F")}
+        ${badge("Category: " + category)}
+        ${badge("Absolute zero: −459.67°F")}
+      </div>
+    `;
+
+    fillTable(value);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "1";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    modeFtoC = !modeFtoC;
+    setUiForMode();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeFtoC = true;
+    setUiForMode();
+    reset();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setUiForMode();
+});
+</script>

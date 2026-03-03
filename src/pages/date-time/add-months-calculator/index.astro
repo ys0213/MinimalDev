@@ -1,0 +1,491 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Add Months Calculator",
+  description:
+    "Free add months calculator. Add or subtract months from a start date with end-of-month handling. Optional business-day adjustment and FAQ schema.",
+  href: "/date-time/add-months-calculator/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/add-months-calculator/";
+
+const faqs = [
+  {
+    q: "How does “add months” work?",
+    a: "It shifts the month while keeping the day when possible. If the target month has fewer days (e.g., adding 1 month to Jan 31), it uses the last day of the target month (Feb 28/29).",
+  },
+  {
+    q: "Can I subtract months?",
+    a: "Yes. Enter a negative number of months (e.g., -6).",
+  },
+  {
+    q: "What is “end-of-month alignment”?",
+    a: "If the start date is the last day of its month, enabling this option keeps the result on the last day of the target month.",
+  },
+  {
+    q: "What does “adjust to business day” do?",
+    a: "After computing the calendar date, it moves the result forward or backward to the nearest business day based on your chosen weekend days and optional holidays.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Add Months Calculator — ${SITE_NAME}`}
+  description="Add or subtract months from a date with robust end-of-month handling. Optionally align end-of-month and adjust the result to a business day. Includes validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Add Months Calculator"
+  intro="Add or subtract months from a start date. Handles end-of-month dates correctly and can optionally adjust the result to the nearest business day."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="add-months-calculator">
+    <div class="form" role="form" aria-describedby="am_help am_privacy">
+      <div class="field">
+        <label for="am_start">Start date</label>
+        <input id="am_start" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="am_months">Months to add/subtract</label>
+        <input
+          id="am_months"
+          type="number"
+          inputmode="numeric"
+          placeholder="e.g., 3 (add) or -3 (subtract)"
+        />
+        <p class="note" style="margin-top:6px;">
+          Positive adds months, negative subtracts months.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="am_eom" type="checkbox" checked />
+          End-of-month alignment (if start is month-end, keep month-end)
+        </label>
+        <p class="note" style="margin-top:6px;">
+          Example: Jan 31 + 1 month → Feb 28/29. With alignment on, month-end stays month-end.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="am_biz_mode">Business-day adjustment (optional)</label>
+        <select id="am_biz_mode" aria-describedby="am_help">
+          <option value="none" selected>No adjustment</option>
+          <option value="forward">Adjust forward to next business day</option>
+          <option value="backward">Adjust backward to previous business day</option>
+        </select>
+        <p class="note" id="am_help" style="margin-top:6px;">
+          If enabled, the computed date is moved to the nearest business day using your weekend/holiday settings below.
+        </p>
+      </div>
+
+      <div id="am_business_block" style="display:none; margin-top:6px;">
+        <div class="field">
+          <div style="font-weight:800; margin-bottom:6px;">Weekend days (excluded)</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;" role="group" aria-label="Weekend selection">
+            <label><input type="checkbox" class="am_weekend" value="0" checked /> Sun</label>
+            <label><input type="checkbox" class="am_weekend" value="1" /> Mon</label>
+            <label><input type="checkbox" class="am_weekend" value="2" /> Tue</label>
+            <label><input type="checkbox" class="am_weekend" value="3" /> Wed</label>
+            <label><input type="checkbox" class="am_weekend" value="4" /> Thu</label>
+            <label><input type="checkbox" class="am_weekend" value="5" /> Fri</label>
+            <label><input type="checkbox" class="am_weekend" value="6" checked /> Sat</label>
+          </div>
+          <p class="note" style="margin-top:6px;">
+            Default is Saturday + Sunday.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="am_holidays">Holidays to exclude (optional)</label>
+          <textarea
+            id="am_holidays"
+            rows="4"
+            placeholder="One per line (YYYY-MM-DD)&#10;e.g. 2026-01-01&#10;2026-02-09"
+            spellcheck="false"
+            style="width:100%; resize:vertical;"
+          ></textarea>
+          <p class="note" style="margin-top:6px;">
+            Accepts YYYY-MM-DD tokens separated by new lines, commas, or spaces.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="am_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="am_today">Use today</button>
+        <button class="btn secondary" type="button" id="am_clear">Clear</button>
+      </div>
+
+      <div class="result" id="am_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="am_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="am_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="am_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      1) Compute the target month/year. 2) If the target month has fewer days than the start day, clamp to the last day of the target month.
+      3) If end-of-month alignment is enabled and the start date is the last day of its month, use the last day of the target month.
+      4) Optionally adjust the final date to the nearest business day.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-15 + 2 months → 2026-03-15</li>
+      <li>2026-01-31 + 1 month → 2026-02-28 (or 02-29 in leap years)</li>
+      <li>2026-03-31 - 1 month → 2026-02-28/29</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/add-subtract-days-calculator/">Add/Subtract Days Calculator</a></li>
+      <li><a href="/date-time/business-days-calculator/">Business Days Calculator</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("am_start");
+  const monthsEl = document.getElementById("am_months");
+  const eomEl = document.getElementById("am_eom");
+  const bizModeEl = document.getElementById("am_biz_mode");
+  const bizBlockEl = document.getElementById("am_business_block");
+  const weekendEls = Array.from(document.querySelectorAll(".am_weekend"));
+  const holEl = document.getElementById("am_holidays");
+  const calcBtn = document.getElementById("am_calc");
+  const todayBtn = document.getElementById("am_today");
+  const clearBtn = document.getElementById("am_clear");
+  const errEl = document.getElementById("am_error");
+  const outEl = document.getElementById("am_result");
+  const detailsEl = document.getElementById("am_details");
+
+  if (!startEl || !monthsEl || !eomEl || !bizModeEl || !bizBlockEl || !holEl || !calcBtn || !todayBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+
+    return d;
+  }
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  function daysInMonth(year, monthIndex0) {
+    // monthIndex0: 0..11
+    return new Date(year, monthIndex0 + 1, 0).getDate();
+  }
+  function isLastDayOfMonth(d) {
+    const dim = daysInMonth(d.getFullYear(), d.getMonth());
+    return d.getDate() === dim;
+  }
+
+  function parseMonths() {
+    const raw = String(monthsEl.value || "").trim();
+    if (!raw) return null;
+    const x = Number(raw);
+    if (!Number.isFinite(x)) return NaN;
+
+    // months must be integer for predictable month stepping
+    if (!Number.isInteger(x)) return NaN;
+
+    if (Math.abs(x) > 120000) return NaN; // ~10k years safety cap
+    return x;
+  }
+
+  function addMonthsClamped(start, deltaMonths, alignEOM) {
+    const y0 = start.getFullYear();
+    const m0 = start.getMonth();
+    const d0 = start.getDate();
+
+    const startIsEOM = isLastDayOfMonth(start);
+
+    // compute target year/month with carry
+    const total = (y0 * 12 + m0) + deltaMonths;
+    const y1 = Math.floor(total / 12);
+    const m1 = total % 12;
+
+    const dim = daysInMonth(y1, m1);
+    let day = d0;
+
+    if (alignEOM && startIsEOM) {
+      day = dim;
+    } else if (day > dim) {
+      day = dim;
+    }
+
+    return new Date(y1, m1, day);
+  }
+
+  function weekendSet() {
+    const set = new Set();
+    for (const el of weekendEls) {
+      if (el && el.checked) set.add(Number(el.value));
+    }
+    return set;
+  }
+
+  function parseHolidaySet(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return { set: new Set(), bad: [] };
+
+    const tokens = s
+      .split(/[\s,;]+/g)
+      .map(t => t.trim())
+      .filter(Boolean);
+
+    const set = new Set();
+    const bad = [];
+    for (const t of tokens) {
+      const d = parseISODate(t);
+      if (!d) { bad.push(t); continue; }
+      set.add(t);
+    }
+    return { set, bad };
+  }
+
+  function isBusinessDay(d, wkSet, holSet) {
+    const dow = d.getDay();
+    if (wkSet.has(dow)) return false;
+    const iso = toISO(d);
+    if (holSet.has(iso)) return false;
+    return true;
+  }
+
+  function adjustToBusinessDay(d, direction, wkSet, holSet) {
+    // direction: "forward"|"backward"
+    let cursor = new Date(d.getTime());
+    let steps = 0;
+    while (!isBusinessDay(cursor, wkSet, holSet)) {
+      cursor.setDate(cursor.getDate() + (direction === "forward" ? 1 : -1));
+      steps++;
+      if (steps > 3660) return { date: null, steps }; // safety (~10 years)
+    }
+    return { date: cursor, steps };
+  }
+
+  function toggleBusinessUI() {
+    const on = bizModeEl.value !== "none";
+    bizBlockEl.style.display = on ? "block" : "none";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const s = String(startEl.value || "").trim();
+    const sd = parseISODate(s);
+    if (!sd) {
+      showError("Please enter a valid start date.");
+      return;
+    }
+
+    const m = parseMonths();
+    if (m === null) {
+      showError("Please enter the number of months to add/subtract.");
+      return;
+    }
+    if (!Number.isFinite(m)) {
+      showError("Months must be an integer within a reasonable range (e.g., -120000 to 120000).");
+      return;
+    }
+
+    const alignEOM = !!eomEl.checked;
+
+    const base = addMonthsClamped(sd, m, alignEOM);
+
+    const bizMode = bizModeEl.value; // none|forward|backward
+    let finalDate = base;
+    let bizMeta = null;
+
+    if (bizMode !== "none") {
+      const wk = weekendSet();
+      if (wk.size === 7) {
+        showError("All 7 days are marked as weekend. Uncheck at least one day to allow business-day adjustment.");
+        return;
+      }
+      const parsed = parseHolidaySet(holEl.value);
+      const holSet = parsed.set;
+
+      const adj = adjustToBusinessDay(base, bizMode, wk, holSet);
+      if (!adj.date) {
+        showError("Could not adjust to a business day within a safe limit. Check your weekend/holiday settings.");
+        return;
+      }
+      finalDate = adj.date;
+
+      const wkNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      bizMeta = {
+        mode: bizMode,
+        wkText: wkNames.filter((_, idx) => wk.has(idx)).join(", ") || "None",
+        holidayCount: holSet.size,
+        badHol: parsed.bad,
+        movedDays: adj.steps,
+      };
+    }
+
+    const op = m > 0 ? "Added" : (m < 0 ? "Subtracted" : "No change");
+    const absM = Math.abs(m);
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        ${badge(bizMode === "none" ? "Calendar date" : "Business-adjusted")}
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Result date", `<span>${escapeHtml(toISO(finalDate))}</span>`, `Start ${escapeHtml(toISO(sd))} · ${op} ${absM.toLocaleString()} month(s)`)}
+        ${card("Base date", `<span>${escapeHtml(toISO(base))}</span>`, `After month-shift (end-of-month handling applied)`)}
+      </div>
+    `;
+
+    if (bizMeta) {
+      detailsEl.style.display = "block";
+      const badHolNote = bizMeta.badHol.length
+        ? `<div class="note" style="margin-top:8px;"><strong>Ignored holiday tokens:</strong> ${bizMeta.badHol.map(escapeHtml).slice(0, 30).join(", ")}${bizMeta.badHol.length > 30 ? " …" : ""}</div>`
+        : "";
+
+      detailsEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <strong>Business-day adjustment</strong>
+          ${badge(bizMeta.mode === "forward" ? "Forward" : "Backward")}
+        </div>
+        <div class="note" style="margin-top:8px;">
+          Weekend days excluded: <strong>${escapeHtml(bizMeta.wkText)}</strong>
+        </div>
+        <div class="note" style="margin-top:6px;">
+          Holiday dates excluded: <strong>${bizMeta.holidayCount.toLocaleString()}</strong>
+        </div>
+        <div class="note" style="margin-top:6px;">
+          Days moved to reach a business day: <strong>${bizMeta.movedDays.toLocaleString()}</strong>
+        </div>
+        ${badHolNote}
+      `;
+    }
+  }
+
+  monthsEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  bizModeEl.addEventListener("change", function () {
+    toggleBusinessUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  todayBtn.addEventListener("click", function () {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    startEl.value = `${y}-${m}-${d}`;
+    startEl.focus();
+    resetOutputs();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    monthsEl.value = "";
+    eomEl.checked = true;
+    bizModeEl.value = "none";
+    holEl.value = "";
+
+    // default weekend: Sat + Sun
+    for (const el of weekendEls) {
+      const v = Number(el.value);
+      el.checked = (v === 0 || v === 6);
+    }
+
+    toggleBusinessUI();
+    resetOutputs();
+    startEl.focus();
+  });
+
+  toggleBusinessUI();
+  resetOutputs();
+});
+</script>

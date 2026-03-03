@@ -1,0 +1,329 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Weeks Between Dates Calculator",
+  description:
+    "Free weeks between dates calculator. Calculate full weeks, remaining days, and precise week difference between two dates. Includes FAQ schema, validation, and accessible result cards.",
+  href: "/date-time/weeks-between-dates-calculator/",
+  order: 35,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/weeks-between-dates-calculator/";
+
+const faqs = [
+  {
+    q: "How is “weeks between” calculated?",
+    a: "This tool computes the difference between two calendar dates at midnight (local time), then converts the day difference into weeks. It shows both precise weeks (days ÷ 7) and full weeks with remaining days.",
+  },
+  {
+    q: "Does it include the start date or end date?",
+    a: "By default it measures the time span from the start date to the end date (exclusive of the start instant). If you enable “inclusive,” it counts both endpoints by adding 1 day to the span.",
+  },
+  {
+    q: "What if the end date is before the start date?",
+    a: "The tool still works and will show a negative difference. You can swap dates with one click.",
+  },
+  {
+    q: "Why can results differ around daylight saving time?",
+    a: "Daylight saving transitions can affect hour-based differences. This calculator uses date-only arithmetic at local midnight to avoid DST hour drift for most cases.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Weeks Between Dates Calculator — ${SITE_NAME}`}
+  description="Calculate weeks between two dates: precise week difference, full weeks plus remaining days, and total day span. Includes validation, accessible controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Weeks Between Dates Calculator"
+  intro="Find the number of weeks between two dates. Shows precise weeks, full weeks + remaining days, and total days. Optional inclusive counting."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="weeks-between-dates-calculator">
+    <div class="form" role="form" aria-describedby="wbd_help wbd_privacy">
+      <div class="field">
+        <label for="wbd_start">Start date</label>
+        <input id="wbd_start" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="wbd_end">End date</label>
+        <input id="wbd_end" type="date" />
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="wbd_inclusive" type="checkbox" />
+          Inclusive (count both start and end dates)
+        </label>
+        <p class="note" id="wbd_help" style="margin-top:6px;">
+          Inclusive adds 1 day to the span when both dates are provided (useful for “how many days including both dates?”).
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="wbd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="wbd_swap">Swap</button>
+        <button class="btn secondary" type="button" id="wbd_today">Set end to today</button>
+        <button class="btn secondary" type="button" id="wbd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="wbd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="wbd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="wbd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="wbd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator converts each date to local midnight and computes the day difference. Then:
+      <br />
+      <strong>Precise weeks</strong> = days ÷ 7
+      <br />
+      <strong>Full weeks</strong> = floor(|days| ÷ 7), <strong>Remaining days</strong> = |days| mod 7 (sign preserved separately)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-01 → 2026-01-15 = 14 days = 2.0000 weeks</li>
+      <li>2026-01-01 → 2026-02-01 = 31 days ≈ 4.4286 weeks</li>
+      <li>Inclusive example: 2026-01-01 → 2026-01-01 = 1 day (inclusive), 0 days (non-inclusive)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/months-between-dates-calculator/">Months Between Dates</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("wbd_start");
+  const endEl = document.getElementById("wbd_end");
+  const incEl = document.getElementById("wbd_inclusive");
+  const calcBtn = document.getElementById("wbd_calc");
+  const swapBtn = document.getElementById("wbd_swap");
+  const todayBtn = document.getElementById("wbd_today");
+  const clearBtn = document.getElementById("wbd_clear");
+  const errEl = document.getElementById("wbd_error");
+  const outEl = document.getElementById("wbd_result");
+  const detailsEl = document.getElementById("wbd_details");
+
+  if (!startEl || !endEl || !incEl || !calcBtn || !swapBtn || !todayBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+
+    // round-trip validation
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+
+    return d;
+  }
+
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function diffDaysDateOnly(a, b) {
+    // date-only at local midnight to reduce DST hour drift
+    const aMid = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const bMid = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    const ms = bMid.getTime() - aMid.getTime();
+    // Convert using 24h days; for date-only midnights this is stable for most zones.
+    return Math.round(ms / 86400000);
+  }
+
+  function fmtNumber(n, digits) {
+    if (!Number.isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const sRaw = String(startEl.value || "").trim();
+    const eRaw = String(endEl.value || "").trim();
+    const s = parseISODate(sRaw);
+    const e = parseISODate(eRaw);
+
+    if (!s || !e) {
+      showError("Please enter valid start and end dates.");
+      return;
+    }
+
+    let days = diffDaysDateOnly(s, e);
+
+    const inclusive = !!incEl.checked;
+    if (inclusive) {
+      // inclusive counts both endpoints, but only when both dates exist
+      // Example: same date => 1 day.
+      days = days + (days >= 0 ? 1 : -1);
+    }
+
+    const sign = days < 0 ? -1 : 1;
+    const absDays = Math.abs(days);
+
+    const fullWeeks = Math.floor(absDays / 7);
+    const remDays = absDays % 7;
+
+    const preciseWeeks = days / 7;
+
+    const directionBadge =
+      days === 0 ? badge("No change") : (days > 0 ? badge("End after start") : badge("End before start"));
+
+    const inclusiveText = inclusive ? "Inclusive" : "Non-inclusive";
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${directionBadge}
+          ${badge(inclusiveText)}
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Precise weeks", `<span>${fmtNumber(preciseWeeks, 4)}</span>`, `${days.toLocaleString()} day(s) ÷ 7`)}
+        ${card("Full weeks", `<span>${(sign * fullWeeks).toLocaleString()}</span>`, `Remaining: ${remDays.toLocaleString()} day(s)`)}
+        ${card("Total days", `<span>${days.toLocaleString()}</span>`, `From ${escapeHtml(toISO(s))} to ${escapeHtml(toISO(e))}`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Breakdown</strong>
+        ${badge("Date-only arithmetic")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Start: <strong>${escapeHtml(toISO(s))}</strong> · End: <strong>${escapeHtml(toISO(e))}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Day span (${inclusiveText.toLowerCase()}): <strong>${days.toLocaleString()}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Full weeks: <strong>${fullWeeks.toLocaleString()}</strong> · Remaining days: <strong>${remDays.toLocaleString()}</strong> (sign shown separately)
+      </div>
+    `;
+  }
+
+  function setEndToToday() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    endEl.value = `${y}-${m}-${d}`;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const tmp = startEl.value;
+    startEl.value = endEl.value;
+    endEl.value = tmp;
+    resetOutputs();
+  });
+
+  todayBtn.addEventListener("click", function () {
+    setEndToToday();
+    resetOutputs();
+    endEl.focus();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    incEl.checked = false;
+    resetOutputs();
+    startEl.focus();
+  });
+
+  // usability: Enter triggers calculation
+  startEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+  endEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+
+  resetOutputs();
+});
+</script>

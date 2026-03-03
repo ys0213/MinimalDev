@@ -1,0 +1,547 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Decimal / Percent / Fraction Converter",
+  description:
+    "Free converter between decimal, percentage, and fraction. Convert instantly with simplification and step-by-step explanations.",
+  href: "/converter/decimal-percent-fraction-converter/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/decimal-percent-fraction-converter/";
+
+const faqs = [
+  {
+    q: "What can this converter convert?",
+    a: "It converts between decimals, percentages, and fractions (including mixed numbers). You can enter one format and get the other two.",
+  },
+  {
+    q: "Does it simplify fractions automatically?",
+    a: "Yes. Fraction results are reduced to lowest terms using GCD. Mixed-number form is also shown when the absolute value is at least 1.",
+  },
+  {
+    q: "How does decimal to fraction conversion work?",
+    a: "A decimal with k digits after the decimal point is converted to an integer over 10^k, then simplified (e.g., 1.25 = 125/100 = 5/4).",
+  },
+  {
+    q: "How does percent conversion work?",
+    a: "Percent means “per 100”. Converting decimal → percent multiplies by 100, and percent → decimal divides by 100.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Everything runs locally in your browser and inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Decimal / Percent / Fraction Converter — ${SITE_NAME}`}
+  description="Convert decimals, percentages, and fractions. Includes auto-simplification, mixed-number display, step-by-step output, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Decimal / Percent / Fraction Converter"
+  intro="Enter a decimal, percent, or fraction and convert it to the other formats instantly. Results are simplified and shown with clear steps."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="decimal-percent-fraction-converter">
+    <div class="form" role="form" aria-describedby="dpf_help dpf_privacy">
+      <div class="field">
+        <label for="dpf_mode">Input type</label>
+        <select id="dpf_mode">
+          <option value="auto" selected>Auto-detect</option>
+          <option value="decimal">Decimal</option>
+          <option value="percent">Percent (%)</option>
+          <option value="fraction">Fraction / Mixed</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="dpf_input">Value</label>
+        <input
+          id="dpf_input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          placeholder="e.g., 0.75 or 75% or 3/4 or 1 1/2"
+          aria-describedby="dpf_help"
+        />
+      </div>
+
+      <div class="field" style="margin-top:-4px;">
+        <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="dpf_simplify" type="checkbox" checked />
+          Simplify fraction output (recommended)
+        </label>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dpf_convert">Convert</button>
+        <button class="btn secondary" type="button" id="dpf_swap">Swap input type</button>
+        <button class="btn secondary" type="button" id="dpf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dpf_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="dpf_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="dpf_steps" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="dpf_help" style="margin-top:10px;">
+        Supported inputs: decimals (<strong>1.25</strong>), percents (<strong>12.5%</strong>), fractions (<strong>3/4</strong>),
+        mixed numbers (<strong>2 1/3</strong>), negatives. If using percent, “%” is optional when Input type is “Percent”.
+      </p>
+
+      <p class="note" id="dpf_privacy" style="margin-top:6px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Conversions are computed from an internal exact fraction representation (numerator/denominator) whenever possible, then displayed as:
+      decimal (rounded for display), percent, and simplified fraction/mixed number.
+    </p>
+    <ul>
+      <li><strong>Decimal → Percent:</strong> decimal × 100</li>
+      <li><strong>Percent → Decimal:</strong> percent ÷ 100</li>
+      <li><strong>Decimal → Fraction:</strong> move decimal digits into an integer over 10^k, then simplify</li>
+      <li><strong>Fraction → Decimal/Percent:</strong> numerator ÷ denominator, then × 100 for percent</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>0.75 → 75% → 3/4</li>
+      <li>12.5% → 0.125 → 1/8</li>
+      <li>1 1/2 → 1.5 → 150%</li>
+      <li>-0.2 → -20% → -1/5</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/fraction-calculator/">Fraction Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("dpf_mode");
+  const inputEl = document.getElementById("dpf_input");
+  const simpEl = document.getElementById("dpf_simplify");
+  const convertBtn = document.getElementById("dpf_convert");
+  const swapBtn = document.getElementById("dpf_swap");
+  const clearBtn = document.getElementById("dpf_clear");
+  const errEl = document.getElementById("dpf_error");
+  const outEl = document.getElementById("dpf_result");
+  const stepsEl = document.getElementById("dpf_steps");
+
+  if (!modeEl || !inputEl || !simpEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  // ----- Exact fraction helpers (BigInt) -----
+  function abs(n){ return n < 0n ? -n : n; }
+
+  function gcdBig(a, b) {
+    a = abs(a); b = abs(b);
+    while (b !== 0n) { const t = a % b; a = b; b = t; }
+    return a === 0n ? 1n : a;
+  }
+
+  function normalize(num, den, doSimplify) {
+    if (den === 0n) return null;
+    if (den < 0n) { num = -num; den = -den; }
+    if (!doSimplify) return { n: num, d: den };
+    const g = gcdBig(num, den);
+    return { n: num / g, d: den / g };
+  }
+
+  function fracToString(F) {
+    if (F.d === 1n) return F.n.toString();
+    return `${F.n.toString()}/${F.d.toString()}`;
+  }
+
+  function fracToMixedString(F) {
+    const n = F.n, d = F.d;
+    if (d === 1n) return n.toString();
+
+    const sign = n < 0n ? -1n : 1n;
+    const an = abs(n);
+
+    const whole = an / d;
+    const rem = an % d;
+
+    if (whole === 0n) {
+      return (sign < 0n ? "-" : "") + `${rem.toString()}/${d.toString()}`;
+    }
+    if (rem === 0n) return (sign < 0n ? "-" : "") + whole.toString();
+    return (sign < 0n ? "-" : "") + `${whole.toString()} ${rem.toString()}/${d.toString()}`;
+  }
+
+  function fracToDecimalDisplay(F) {
+    const n = Number(F.n);
+    const d = Number(F.d);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return "—";
+    const v = n / d;
+    const absV = Math.abs(v);
+    if (absV !== 0 && (absV >= 1e15 || absV < 1e-6)) {
+      const e = Math.floor(Math.log10(absV));
+      const m = v / Math.pow(10, e);
+      const mR = Math.round(m * 1e10) / 1e10;
+      return `${mR} × 10^${e}`;
+    }
+    const r = Math.round(v * 1e12) / 1e12;
+    return r.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fracToPercentDisplay(F) {
+    const n = Number(F.n);
+    const d = Number(F.d);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return "—";
+    const v = (n / d) * 100;
+    const r = Math.round(v * 1e8) / 1e8;
+    return `${r.toLocaleString(undefined, { maximumFractionDigits: 8 })}%`;
+  }
+
+  // ----- Parsing -----
+  // fraction: "a/b", mixed: "w a/b", percent: "12.5%" or "12.5", decimal: "1.25"
+  // harden input by allowing only digits, sign, slash, dot, percent, and spaces
+  function basicValidateChars(s) {
+    return /^[\s+\-0-9.%\/.]+$/.test(s);
+  }
+
+  function parseFractionOnly(s) {
+    const m = String(s).trim().match(/^([+\-]?\d+)\/(\d+)$/);
+    if (!m) return null;
+    const n = BigInt(m[1]);
+    const d = BigInt(m[2]);
+    if (d === 0n) return { error: "Denominator cannot be 0." };
+    return { n, d };
+  }
+
+  function parseDecimalToFrac(s, doSimplify) {
+    // exact for up to 18 decimal places
+    const t = String(s).trim();
+    if (!t) return null;
+
+    // integer
+    if (/^[+\-]?\d+$/.test(t)) {
+      const v = Number(t);
+      if (!Number.isFinite(v) || !Number.isInteger(v)) return { error: "Invalid number." };
+      return normalize(BigInt(v), 1n, doSimplify);
+    }
+
+    const m = t.match(/^([+\-]?)(\d+)\.(\d+)$/);
+    if (!m) return { error: "Invalid decimal format." };
+    const sign = m[1] === "-" ? -1n : 1n;
+    const intPart = m[2];
+    const fracPart = m[3];
+
+    if (fracPart.length > 18) return { error: "Too many decimal places (max 18)." };
+
+    const scale = 10n ** BigInt(fracPart.length);
+    const num = BigInt(intPart) * scale + BigInt(fracPart);
+    return normalize(sign * num, scale, doSimplify);
+  }
+
+  function parseMixedOrFraction(s, doSimplify) {
+    const t = String(s).trim().replace(/\s+/g, " ");
+    if (!t) return null;
+
+    if (t.includes(" ")) {
+      const parts = t.split(" ");
+      if (parts.length !== 2) return { error: "Invalid mixed number. Use format like: 2 1/3" };
+      const wholeStr = parts[0];
+      const fracStr = parts[1];
+
+      const wholeNum = Number(wholeStr);
+      if (!Number.isFinite(wholeNum) || !Number.isInteger(wholeNum)) return { error: "Invalid whole part in mixed number." };
+
+      const frac = parseFractionOnly(fracStr);
+      if (!frac) return { error: "Invalid fraction part in mixed number." };
+      if (frac.error) return frac;
+      if (frac.n < 0n) return { error: "Mixed number fraction part must be non-negative." };
+
+      const sign = wholeNum < 0 ? -1n : 1n;
+      const absWhole = BigInt(Math.abs(wholeNum));
+      const num = sign * (absWhole * frac.d + frac.n);
+      return normalize(num, frac.d, doSimplify);
+    }
+
+    if (t.includes("/")) {
+      const frac = parseFractionOnly(t);
+      if (!frac) return { error: "Invalid fraction format. Use a/b." };
+      if (frac.error) return frac;
+      return normalize(frac.n, frac.d, doSimplify);
+    }
+
+    // fallback: allow "5" as fraction input
+    return parseDecimalToFrac(t, doSimplify);
+  }
+
+  function parsePercent(s, doSimplify) {
+    const t0 = String(s).trim();
+    if (!t0) return null;
+    const t = t0.endsWith("%") ? t0.slice(0, -1).trim() : t0;
+    const F = parseDecimalToFrac(t, doSimplify);
+    if (F && F.error) return F;
+    if (!F) return { error: "Invalid percent." };
+    // percent p = p/100
+    return normalize(F.n, F.d * 100n, doSimplify);
+  }
+
+  function detectType(raw) {
+    const s = String(raw ?? "").trim();
+    if (!s) return "unknown";
+    if (s.includes("%")) return "percent";
+    if (s.includes("/")) return "fraction";
+    if (s.includes(" ")) return "fraction"; // likely mixed
+    return "decimal";
+  }
+
+  function parseByMode(mode, raw, doSimplify) {
+    const s = String(raw ?? "").trim();
+    if (!s) return null;
+    if (!basicValidateChars(s)) return { error: "Invalid characters. Use digits, '.', '/', '%', spaces, and an optional leading '-'." };
+
+    if (mode === "auto") mode = detectType(s);
+
+    if (mode === "decimal") return parseDecimalToFrac(s, doSimplify);
+    if (mode === "percent") return parsePercent(s, doSimplify);
+    if (mode === "fraction") return parseMixedOrFraction(s, doSimplify);
+
+    return { error: "Could not detect input type." };
+  }
+
+  function formatInputEcho(modeUsed, raw) {
+    const s = String(raw ?? "").trim();
+    const label = modeUsed === "decimal" ? "Decimal" : modeUsed === "percent" ? "Percent" : "Fraction";
+    return `${badge(label)} <span class="note" style="margin-left:6px;">${escapeHtml(s)}</span>`;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function compute() {
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const raw = String(inputEl.value ?? "").trim();
+    if (!raw) {
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const doSimplify = !!simpEl.checked;
+    const mode = String(modeEl.value);
+
+    const modeUsed = mode === "auto" ? detectType(raw) : mode;
+    const F = parseByMode(mode, raw, doSimplify);
+
+    if (!F) { showError("Please enter a value."); outEl.textContent = "Result will appear here."; return; }
+    if (F.error) { showError(F.error); outEl.textContent = "Result will appear here."; return; }
+
+    // Build results
+    const dec = fracToDecimalDisplay(F);
+    const pct = fracToPercentDisplay(F);
+    const frac = fracToString(F);
+    const mixed = fracToMixedString(F);
+
+    // Emphasize category (based on magnitude for quick UX)
+    // categories: negative, zero, between 0 and 1, >= 1
+    let category = "Value";
+    if (F.n === 0n) category = "Zero";
+    else if (F.n < 0n) category = "Negative";
+    else {
+      // compare |n| and d
+      const an = abs(F.n);
+      if (an < F.d) category = "Between 0 and 1";
+      else category = "At least 1";
+    }
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Converted results</strong>
+        ${badge(category)}
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Decimal", dec, `${badge("Display")} · Rounded for readability`)}
+        ${card("Percent", pct, `${badge("Per 100")} · Exact fraction × 100`)}
+        ${card("Fraction", frac, `${badge(doSimplify ? "Simplified" : "Raw")} · Lowest terms if enabled`)}
+        ${card("Mixed number", mixed, `${badge("Readable")} · Whole + remainder/denominator`)}
+      </div>
+      <div class="note" style="margin-top:10px;">
+        Input: ${formatInputEcho(modeUsed, raw)}
+      </div>
+    `;
+
+    // Steps (mode-specific)
+    const showSteps = true;
+    if (showSteps) {
+      let step = "";
+
+      if (modeUsed === "decimal") {
+        const t = String(raw).trim();
+        if (t.includes(".")) {
+          const parts = t.replace(/^\+/, "").split(".");
+          const k = (parts[1] || "").length;
+          const scale = `10^${k}`;
+          step =
+            `1) Move decimal digits into an integer over ${scale}.<br/>
+             <span class="note">Decimal → Fraction: ${escapeHtml(t)} = (integer) / 10^k</span><br/>
+             2) Simplify using GCD (if enabled).<br/>
+             3) Convert to percent: decimal × 100.`;
+        } else {
+          step =
+            `1) Treat the integer as a fraction over 1.<br/>
+             2) Convert to percent: value × 100.`;
+        }
+      } else if (modeUsed === "percent") {
+        step =
+          `1) Remove “%” if present.<br/>
+           2) Convert percent to decimal: percent ÷ 100.<br/>
+           3) Convert decimal to fraction and simplify (if enabled).`;
+      } else if (modeUsed === "fraction") {
+        step =
+          `1) If mixed number: (whole × denominator + numerator) / denominator (keep sign on whole part).<br/>
+           2) Simplify using GCD (if enabled).<br/>
+           3) Convert to decimal: numerator ÷ denominator; then percent = decimal × 100.`;
+      }
+
+      stepsEl.style.display = "block";
+      stepsEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <strong>How it was converted</strong>
+          ${badge("Steps")}
+        </div>
+        <div class="note" style="margin-top:8px;">
+          ${step}
+        </div>
+      `;
+    }
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+  }
+
+  function setPlaceholder() {
+    const m = String(modeEl.value);
+    if (m === "decimal") inputEl.placeholder = "e.g., 0.75 or -1.25";
+    else if (m === "percent") inputEl.placeholder = "e.g., 75% or 12.5";
+    else if (m === "fraction") inputEl.placeholder = "e.g., 3/4 or 1 1/2";
+    else inputEl.placeholder = "e.g., 0.75 or 75% or 3/4 or 1 1/2";
+  }
+
+  // Better UX: auto-convert on input (debounced)
+  let t = null;
+  function scheduleCompute() {
+    if (t) window.clearTimeout(t);
+    t = window.setTimeout(compute, 120);
+  }
+
+  inputEl.addEventListener("input", function () {
+    if (!String(inputEl.value || "").trim()) { resetOutputs(); return; }
+    scheduleCompute();
+  });
+
+  modeEl.addEventListener("change", function () {
+    setPlaceholder();
+    if (!String(inputEl.value || "").trim()) { resetOutputs(); return; }
+    compute();
+  });
+
+  simpEl.addEventListener("change", function () {
+    if (!String(inputEl.value || "").trim()) { resetOutputs(); return; }
+    compute();
+  });
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    // Cycle through explicit modes for quick conversions
+    const m = String(modeEl.value);
+    if (m === "auto") modeEl.value = "decimal";
+    else if (m === "decimal") modeEl.value = "percent";
+    else if (m === "percent") modeEl.value = "fraction";
+    else modeEl.value = "auto";
+    setPlaceholder();
+    if (String(inputEl.value || "").trim()) compute();
+    else resetOutputs();
+    inputEl.focus();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "auto";
+    simpEl.checked = true;
+    inputEl.value = "";
+    setPlaceholder();
+    resetOutputs();
+    inputEl.focus();
+  });
+
+  setPlaceholder();
+  resetOutputs();
+});
+</script>

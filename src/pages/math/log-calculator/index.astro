@@ -1,0 +1,337 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Log Calculator",
+  description:
+    "Free logarithm calculator. Compute log base 10, natural log (ln), or custom base logs with input validation and step explanation.",
+  href: "/math/log-calculator/",
+  order: 97,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/log-calculator/";
+
+const faqs = [
+  {
+    q: "What is a logarithm?",
+    a: "A logarithm answers: “What exponent do I raise the base to, to get the value?” For example, log10(100) = 2 because 10^2 = 100.",
+  },
+  {
+    q: "What is ln?",
+    a: "ln(x) is the natural logarithm: log base e (e ≈ 2.71828).",
+  },
+  {
+    q: "What inputs are allowed?",
+    a: "The value must be greater than 0. The base must be greater than 0 and not equal to 1. These are required for real-number logs.",
+  },
+  {
+    q: "Can I calculate log base 10 and ln quickly?",
+    a: "Yes. Use the preset mode (log10 or ln), then enter the value.",
+  },
+  {
+    q: "What is the change-of-base formula?",
+    a: "log_b(x) = ln(x) / ln(b). This calculator uses that identity for custom bases.",
+  },
+  {
+    q: "Does this support complex numbers?",
+    a: "No. This tool is for real-number logarithms only.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Log Calculator — ${SITE_NAME}`}
+  description="Compute logarithms: log10, natural log (ln), or custom base. Includes validation, accessible inputs, result cards, and change-of-base steps."
+  canonicalPath={CANONICAL_PATH}
+  h1="Log Calculator"
+  intro="Calculate log10, ln, or log base b. Enter a value (> 0) and optionally a base (b > 0, b ≠ 1)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="log-calculator">
+    <div class="form" role="form" aria-describedby="log_note">
+      <div class="field">
+        <label for="log_mode">Mode</label>
+        <select id="log_mode">
+          <option value="log10" selected>log10(x) — base 10</option>
+          <option value="ln">ln(x) — natural log (base e)</option>
+          <option value="custom">log_b(x) — custom base</option>
+        </select>
+        <p class="note" id="log_mode_help" style="margin-top:6px;">
+          Custom base uses the change-of-base formula: log<sub>b</sub>(x) = ln(x) / ln(b).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="log_value">Value (x)</label>
+        <input
+          id="log_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 100"
+          step="any"
+          aria-describedby="log_value_help"
+        />
+        <p class="note" id="log_value_help" style="margin-top:6px;">
+          Must be <strong>&gt; 0</strong> for real logarithms.
+        </p>
+      </div>
+
+      <div class="field" id="log_base_field" style="display:none;">
+        <label for="log_base">Base (b)</label>
+        <input
+          id="log_base"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 2"
+          step="any"
+          aria-describedby="log_base_help"
+        />
+        <p class="note" id="log_base_help" style="margin-top:6px;">
+          Must be <strong>&gt; 0</strong> and <strong>not 1</strong>.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="log_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="log_clear">Clear</button>
+      </div>
+
+      <div class="result" id="log_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="log_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="log_steps" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="log_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Definitions:</strong><br/>
+      log<sub>10</sub>(x) = log10(x)<br/>
+      ln(x) = log<sub>e</sub>(x)<br/>
+      <strong>Change of base:</strong> log<sub>b</sub>(x) = ln(x) / ln(b)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>log10(100) = 2</li>
+      <li>ln(e) = 1</li>
+      <li>log2(8) = 3</li>
+      <li>log0.5(2) = −1</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/ratio-calculator/">Ratio Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("log_mode");
+  const valueEl = document.getElementById("log_value");
+  const baseField = document.getElementById("log_base_field");
+  const baseEl = document.getElementById("log_base");
+  const calcBtn = document.getElementById("log_calc");
+  const clearBtn = document.getElementById("log_clear");
+  const errEl = document.getElementById("log_error");
+  const outEl = document.getElementById("log_result");
+  const stepsEl = document.getElementById("log_steps");
+
+  if (!modeEl || !valueEl || !baseField || !baseEl || !calcBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function s(v){ return String(v ?? "").trim(); }
+
+  function showError(msg){
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError(){
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function toNum(v){
+    const n = parseFloat(String(v));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n){
+    if (!Number.isFinite(n)) return "—";
+    // readable precision: up to 10 decimals, trim trailing zeros
+    const str = n.toFixed(10).replace(/\.?0+$/,"");
+    // convert "-0" to "0"
+    return (str === "-0") ? "0" : str;
+  }
+
+  function badge(text){
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, big, sub){
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function updateModeUI(){
+    const mode = modeEl.value;
+    const isCustom = mode === "custom";
+    baseField.style.display = isCustom ? "block" : "none";
+
+    // UX: adjust placeholders and aria
+    if (mode === "log10") valueEl.placeholder = "e.g., 100";
+    else if (mode === "ln") valueEl.placeholder = "e.g., 2.71828";
+    else valueEl.placeholder = "e.g., 8";
+
+    if (!isCustom) {
+      baseEl.value = "";
+    }
+  }
+
+  function compute(){
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const mode = modeEl.value;
+    const x = toNum(valueEl.value);
+
+    if (!Number.isFinite(x) || x <= 0) {
+      showError("Please enter a valid value x greater than 0.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    let result;
+    let baseUsed = null;
+
+    if (mode === "log10") {
+      result = Math.log10 ? Math.log10(x) : (Math.log(x) / Math.log(10));
+      baseUsed = 10;
+    } else if (mode === "ln") {
+      result = Math.log(x);
+      baseUsed = "e";
+    } else {
+      const b = toNum(baseEl.value);
+      if (!Number.isFinite(b) || b <= 0) {
+        showError("Please enter a valid base b greater than 0.");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+      if (b === 1) {
+        showError("Base b cannot be 1 (log base 1 is undefined).");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+      // change-of-base
+      result = Math.log(x) / Math.log(b);
+      baseUsed = b;
+    }
+
+    if (!Number.isFinite(result)) {
+      showError("Could not compute a real-number logarithm with these inputs.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const label =
+      mode === "log10" ? "log10(x)" :
+      mode === "ln" ? "ln(x)" :
+      "log_b(x)";
+
+    const baseLabel =
+      mode === "log10" ? "Base 10" :
+      mode === "ln" ? "Base e" :
+      `Base ${fmt(baseUsed)}`;
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Result", `${fmt(result)}`, `${badge(label)} · ${baseLabel}`)}
+        ${card("Inputs", `x = ${fmt(x)}`, mode === "custom" ? `b = ${fmt(baseUsed)}` : "")}
+      </div>
+    `;
+
+    if (mode === "custom") {
+      const b = baseUsed;
+      const lnX = Math.log(x);
+      const lnB = Math.log(b);
+      stepsEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <strong>Steps (change of base)</strong>
+          ${badge("log_b(x) = ln(x)/ln(b)")}
+        </div>
+        <div class="note" style="margin-top:8px;">
+          1) ln(x) = ln(${fmt(x)}) = ${fmt(lnX)}<br/>
+          2) ln(b) = ln(${fmt(b)}) = ${fmt(lnB)}<br/>
+          3) log<sub>${fmt(b)}</sub>(${fmt(x)}) = ${fmt(lnX)} ÷ ${fmt(lnB)} = <strong>${fmt(result)}</strong>
+        </div>
+      `;
+      stepsEl.style.display = "block";
+    }
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  // Accessibility/UX: Enter to compute
+  valueEl.addEventListener("keydown", function(e){ if (e.key === "Enter") compute(); });
+  baseEl.addEventListener("keydown", function(e){ if (e.key === "Enter") compute(); });
+
+  modeEl.addEventListener("change", function(){
+    updateModeUI();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+  });
+
+  clearBtn.addEventListener("click", function(){
+    modeEl.value = "log10";
+    valueEl.value = "";
+    baseEl.value = "";
+    updateModeUI();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+    valueEl.focus();
+  });
+
+  updateModeUI();
+});
+</script>

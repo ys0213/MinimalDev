@@ -1,0 +1,325 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "GB to MB Converter",
+  description:
+    "Convert gigabytes (GB) to megabytes (MB) using decimal (1 GB = 1000 MB) or binary (1 GiB = 1024 MiB) options. Includes validation, accessible UX, result cards, and FAQ schema.",
+  href: "/converter/gb-to-mb/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/gb-to-mb/";
+
+const faqs = [
+  {
+    q: "Is 1 GB equal to 1000 MB or 1024 MB?",
+    a: "Both are used. Decimal units use 1 GB = 1000 MB. Binary units use 1 GiB = 1024 MiB. This tool can show both, depending on your selection.",
+  },
+  {
+    q: "Which option matches what my computer shows?",
+    a: "Many operating systems display storage using binary units (GiB/MiB) even when labeling them as GB/MB. If you are matching an OS display, try the binary-equivalent option.",
+  },
+  {
+    q: "Can I enter decimals (e.g., 1.25 GB)?",
+    a: "Yes. Decimals are supported.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. This converter runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`GB to MB Converter — ${SITE_NAME}`}
+  description="Convert GB to MB instantly. Choose decimal (1 GB = 1000 MB) or binary (GiB→MiB, 1 GiB = 1024 MiB). Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="GB to MB Converter"
+  intro="Convert gigabytes (GB) to megabytes (MB). Choose decimal or binary interpretation to match how storage is labeled or displayed."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="gb-to-mb">
+    <div class="form" role="form" aria-describedby="g2m_hint g2m_privacy">
+      <div class="field">
+        <label for="g2m_gb">Gigabytes</label>
+        <input id="g2m_gb" type="number" inputmode="decimal" placeholder="e.g., 1.5" />
+        <p class="note" id="g2m_hint" style="margin-top:6px;">
+          Enter GB, then choose decimal vs binary to match your context.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="g2m_mode">Conversion standard</label>
+        <select id="g2m_mode">
+          <option value="decimal" selected>Decimal (GB→MB): 1 GB = 1000 MB</option>
+          <option value="binary">Binary (GiB→MiB): 1 GiB = 1024 MiB</option>
+          <option value="both">Show both</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="g2m_round">Rounding</label>
+        <select id="g2m_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="g2m_calc">Convert</button>
+        <button class="btn secondary" type="button" id="g2m_clear">Clear</button>
+      </div>
+
+      <div class="result" id="g2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="g2m_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="g2m_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="g2m_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="g2m_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Decimal:</strong> MB = GB × 1000<br/>
+      <strong>Binary:</strong> MiB = GiB × 1024<br/>
+      If your GB value is a decimal-labeled size but you want an OS-style binary display,
+      convert GB → bytes (×1,000,000,000) then bytes → MiB (÷1,048,576).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1.5 GB</strong> → <strong>1500 MB</strong> (decimal)</li>
+      <li><strong>1.5 GB</strong> → <strong>1536 MiB</strong> (binary GiB→MiB)</li>
+      <li><strong>0.25 GB</strong> → <strong>250 MB</strong> (decimal)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/mb-to-gb/">MB to GB Converter</a></li>
+      <li><a href="/converter/data/">Data Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const gbEl = document.getElementById("g2m_gb");
+  const modeEl = document.getElementById("g2m_mode");
+  const roundEl = document.getElementById("g2m_round");
+  const calcBtn = document.getElementById("g2m_calc");
+  const clearBtn = document.getElementById("g2m_clear");
+  const errEl = document.getElementById("g2m_error");
+  const outEl = document.getElementById("g2m_result");
+  const cardsEl = document.getElementById("g2m_cards");
+  const tbodyEl = document.getElementById("g2m_tbody");
+
+  if (!gbEl || !modeEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const MB_PER_GB_DEC = 1000; // 1 GB = 1000 MB (decimal)
+  const MIB_PER_GIB_BIN = 1024; // 1 GiB = 1024 MiB (binary)
+  const BYTES_PER_GB_DEC = 1e9; // 1 GB (decimal) = 1,000,000,000 bytes
+  const BYTES_PER_MIB_BIN = 1024 * 1024; // 1 MiB = 1,048,576 bytes
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e9) return (Math.round(x * 1e6) / 1e6).toLocaleString();
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toString();
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setRow(unit, value) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    const td2 = document.createElement("td");
+    td1.textContent = unit;
+    td2.textContent = value;
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbodyEl.appendChild(tr);
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(gbEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number of GB.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const gb = Math.min(raw, 1e18);
+    if (gb !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const mode = String(modeEl.value);
+
+    // Decimal GB -> Decimal MB
+    const mbDec = gb * MB_PER_GB_DEC;
+
+    // Binary mode here is “GiB -> MiB” (direct binary units)
+    const mibFromGib = gb * MIB_PER_GIB_BIN;
+
+    // Also useful: decimal GB -> bytes -> MiB (binary-equivalent)
+    const bytes = gb * BYTES_PER_GB_DEC;
+    const mibFromBytes = bytes / BYTES_PER_MIB_BIN;
+
+    const showDec = (mode === "decimal" || mode === "both");
+    const showBin = (mode === "binary" || mode === "both");
+
+    let primaryLine = "";
+    if (mode === "decimal") primaryLine = `<strong>Result:</strong> ${fmt(mbDec)} MB`;
+    else if (mode === "binary") primaryLine = `<strong>Result:</strong> ${fmt(mibFromGib)} MiB`;
+    else primaryLine = `<strong>Result:</strong> ${fmt(mbDec)} MB · ${fmt(mibFromGib)} MiB`;
+
+    outEl.innerHTML =
+      primaryLine +
+      `<br/><span class="note">${fmt(gb)} GB input</span>`;
+
+    const label = mode === "decimal"
+      ? "Decimal (MB)"
+      : mode === "binary"
+      ? "Binary (MiB)"
+      : "Both";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Input: GB", "neutral")}
+        ${badge("Mode: " + label, (mode === "both") ? "good" : "neutral")}
+        ${badge("Optional: GB→bytes→MiB shown", "warn")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Assumptions: 1 GB = 1000 MB · 1 GiB = 1024 MiB · 1 GB = 1,000,000,000 bytes · 1 MiB = 1,048,576 bytes
+      </div>
+    `;
+
+    if (showDec) setRow("MB (decimal)", `${fmt(mbDec)} MB`);
+    if (showBin) setRow("MiB (binary, GiB→MiB)", `${fmt(mibFromGib)} MiB`);
+
+    // Extra rows for clarity
+    setRow("MiB (binary-equivalent, GB→bytes→MiB)", `${fmt(mibFromBytes)} MiB`);
+    setRow("Bytes (from GB)", `${fmtSmart(bytes)} B`);
+  }
+
+  function reset() {
+    clearError();
+    gbEl.value = "";
+    modeEl.value = "decimal";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  modeEl.addEventListener("change", function () {
+    if (String(gbEl.value || "").trim()) compute();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(gbEl.value || "").trim()) compute();
+  });
+
+  gbEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  gbEl.addEventListener("input", function () {
+    if (!String(gbEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

@@ -1,0 +1,532 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Case Converter",
+  description:
+    "Free case converter. Convert text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, and kebab-case. Runs locally with accessibility and FAQ schema.",
+  href: "/converter/case-converter/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/case-converter/";
+
+const faqs = [
+  {
+    q: "What does this case converter do?",
+    a: "It converts your text into common casing styles: uppercase, lowercase, title case, sentence case, camelCase, PascalCase, snake_case, kebab-case, and more. It also shows character/word counts and lets you copy results.",
+  },
+  {
+    q: "Does it support non-English text?",
+    a: "Basic conversions like uppercase/lowercase rely on your browser’s Unicode casing rules. Some languages have special casing rules and may differ from expectations. Title/sentence case behavior is heuristic-based and may not be perfect for every language.",
+  },
+  {
+    q: "Does it preserve punctuation and numbers?",
+    a: "Yes. Conversions primarily affect letters and spacing. Delimiters are normalized when producing snake/kebab/camel/Pascal cases.",
+  },
+  {
+    q: "Is my text stored anywhere?",
+    a: "No. Everything runs locally in your browser. No text is sent to a server or stored.",
+  },
+  {
+    q: "Why does camelCase or snake_case remove extra symbols?",
+    a: "Identifier-style cases treat non-alphanumeric separators as word boundaries. This helps produce valid-looking identifiers, but it can reduce or remove certain symbols.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Case Converter — ${SITE_NAME}`}
+  description="Convert text casing instantly: uppercase, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case. Includes copy buttons, accessibility, result cards, input validation, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="Case Converter"
+  intro="Convert text to common case styles (UPPERCASE, lowercase, Title Case, camelCase, snake_case, kebab-case) instantly. Useful for writing, coding identifiers, and formatting."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="case-converter">
+    <div class="form" role="form" aria-describedby="ccv_privacy ccv_help">
+      <div class="field">
+        <label for="ccv_input">Input text</label>
+        <textarea
+          id="ccv_input"
+          rows="9"
+          placeholder="Paste or type text here..."
+          style="width:100%; resize:vertical;"
+          aria-describedby="ccv_help"
+        ></textarea>
+        <p class="note" id="ccv_help" style="margin-top:6px;">
+          Tip: For code-style conversions, this tool treats spaces, hyphens, underscores, punctuation as word separators.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="min-width:260px;">
+          <label for="ccv_mode">Word detection</label>
+          <select id="ccv_mode">
+            <option value="smart" selected>Smart (recommended)</option>
+            <option value="strict">Strict (letters/digits only)</option>
+          </select>
+          <p class="note" style="margin-top:6px;">
+            Smart keeps common separators; Strict treats anything except letters/digits as separators.
+          </p>
+        </div>
+
+        <div class="field" style="min-width:260px;">
+          <label>
+            <input id="ccv_preserve_newlines" type="checkbox" checked />
+            Preserve newlines (multi-line output)
+          </label>
+          <p class="note" style="margin-top:6px;">
+            For identifier cases (camel/snake/kebab), output is single-line by design.
+          </p>
+        </div>
+
+        <div class="field" style="min-width:260px;">
+          <label>
+            <input id="ccv_trim" type="checkbox" checked />
+            Trim leading/trailing whitespace
+          </label>
+          <p class="note" style="margin-top:6px;">
+            Helps remove accidental spaces from copy/paste.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="btn" type="button" id="ccv_copy_best">Copy selected</button>
+        <button class="btn secondary" type="button" id="ccv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ccv_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="ccv_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="ccv_cards" style="margin-top:12px; display:none;"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="ccv_output">Selected output</label>
+        <textarea id="ccv_output" rows="5" readonly style="width:100%; resize:vertical;"></textarea>
+        <p class="note" style="margin-top:6px;">
+          Select a case style below to populate this output box.
+        </p>
+      </div>
+
+      <p class="note" id="ccv_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Supported outputs:
+    </p>
+    <ul>
+      <li><strong>UPPERCASE / lowercase</strong>: basic casing</li>
+      <li><strong>Title Case / Sentence case</strong>: heuristic formatting for prose</li>
+      <li><strong>camelCase / PascalCase</strong>: common programming identifier formats</li>
+      <li><strong>snake_case / SCREAMING_SNAKE_CASE</strong>: underscore-separated identifiers</li>
+      <li><strong>kebab-case</strong>: hyphen-separated identifiers / slugs</li>
+      <li><strong>Dot.case</strong>: dot-separated tokens</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>"hello world"</strong> → camelCase: <strong>helloWorld</strong></li>
+      <li><strong>"API response code"</strong> → snake_case: <strong>api_response_code</strong></li>
+      <li><strong>"title case example"</strong> → Title Case: <strong>Title Case Example</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/word-counter/">Word Counter</a></li>
+      <li><a href="/utility/character-counter/">Character Counter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("ccv_input");
+  const modeEl = document.getElementById("ccv_mode");
+  const nlEl = document.getElementById("ccv_preserve_newlines");
+  const trimEl = document.getElementById("ccv_trim");
+  const copyBtn = document.getElementById("ccv_copy_best");
+  const clearBtn = document.getElementById("ccv_clear");
+  const errEl = document.getElementById("ccv_error");
+  const summaryEl = document.getElementById("ccv_summary");
+  const cardsEl = document.getElementById("ccv_cards");
+  const outEl = document.getElementById("ccv_output");
+
+  if (!inputEl || !modeEl || !nlEl || !trimEl || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function normalizeInput(raw) {
+    let t = String(raw ?? "");
+    // normalize newlines to \n
+    t = t.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    if (trimEl.checked) t = t.trim();
+    return t;
+  }
+
+  function wordTokensFromLine(line) {
+    // Split into tokens for identifier-style cases.
+    // smart: treat common separators as boundaries but keep letters/digits from any script where possible.
+    // strict: letters/digits only; everything else becomes boundary.
+    const strict = String(modeEl.value) === "strict";
+
+    // Replace common separators with spaces.
+    // In smart mode, keep apostrophes inside words for prose conversions (handled elsewhere), but for tokens treat as separators.
+    let s = String(line);
+
+    if (strict) {
+      // Anything except letters/digits -> space
+      // Unicode property escapes if supported, else fallback to ASCII.
+      let useUnicodeProps = false;
+      try { useUnicodeProps = !!"a".match(/\p{L}/u); } catch(e) { useUnicodeProps = false; }
+      if (useUnicodeProps) s = s.replace(/[^\p{L}\p{N}]+/gu, " ");
+      else s = s.replace(/[^A-Za-z0-9]+/g, " ");
+    } else {
+      // smart: treat these as separators
+      s = s.replace(/[_\-–—./\\|,:;(){}\[\]"“”'’]+/g, " ");
+      s = s.replace(/\s+/g, " ");
+    }
+
+    const raw = s.trim();
+    if (!raw) return [];
+    return raw.split(" ").filter(Boolean);
+  }
+
+  function isAllUpper(token) {
+    // Heuristic: token has letters and all letters are uppercase
+    // Works best for ASCII; still OK as a hint.
+    const hasLetter = /[A-Za-z]/.test(token);
+    if (!hasLetter) return false;
+    return token === token.toUpperCase() && token !== token.toLowerCase();
+  }
+
+  function lowerFirst(s) {
+    if (!s) return s;
+    return s.charAt(0).toLowerCase() + s.slice(1);
+  }
+  function upperFirst(s) {
+    if (!s) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function toTitleCase(text) {
+    // Heuristic title case:
+    // - split by whitespace, keep punctuation as-is
+    // - lowercase small words unless first/last
+    const small = new Set(["a","an","and","as","at","but","by","for","from","in","into","nor","of","on","or","over","per","the","to","up","via","with"]);
+    const parts = text.split(/(\s+)/); // preserve whitespace
+    const words = parts.filter((_, i) => i % 2 === 0);
+    const totalWords = words.length;
+
+    let wIndex = 0;
+    for (let i = 0; i < parts.length; i += 2) {
+      const w = parts[i];
+      if (!w) { wIndex++; continue; }
+      // strip surrounding punctuation for decision but preserve original in output
+      const m = w.match(/^([^A-Za-z0-9]*)(.+?)([^A-Za-z0-9]*)$/);
+      const lead = m ? m[1] : "";
+      const core = m ? m[2] : w;
+      const trail = m ? m[3] : "";
+
+      const lower = core.toLowerCase();
+      const isFirst = wIndex === 0;
+      const isLast = wIndex === totalWords - 1;
+
+      let outCore = core;
+      if (core.length) {
+        if (!isFirst && !isLast && small.has(lower)) outCore = lower;
+        else outCore = upperFirst(lower);
+      }
+
+      parts[i] = lead + outCore + trail;
+      wIndex++;
+    }
+    return parts.join("");
+  }
+
+  function toSentenceCase(text) {
+    // Heuristic sentence case:
+    // - lowercase everything
+    // - uppercase first letter after start or after .!? plus whitespace/newline
+    const lower = text.toLowerCase();
+    let out = "";
+    let capNext = true;
+    for (let i = 0; i < lower.length; i++) {
+      const ch = lower[i];
+      if (capNext && /[A-Za-z]/.test(ch)) {
+        out += ch.toUpperCase();
+        capNext = false;
+      } else {
+        out += ch;
+      }
+      if (/[.!?]/.test(ch)) capNext = true;
+      if (ch === "\n") capNext = true;
+    }
+    return out;
+  }
+
+  function toCamelPascal(text, pascal) {
+    const lines = text.split("\n");
+    const tokens = [];
+    for (const ln of lines) tokens.push(...wordTokensFromLine(ln));
+    if (!tokens.length) return "";
+
+    const mapped = tokens.map((t, idx) => {
+      // If token looks like an acronym (API), keep as is for middle segments in Pascal/camel
+      if (isAllUpper(t) && t.length <= 6) return idx === 0 && !pascal ? t.toLowerCase() : t;
+      const lower = t.toLowerCase();
+      return idx === 0 && !pascal ? lower : upperFirst(lower);
+    });
+
+    const joined = mapped.join("");
+    return pascal ? upperFirst(joined) : lowerFirst(joined);
+  }
+
+  function toDelimited(text, delim, upperAll) {
+    const lines = text.split("\n");
+    const tokens = [];
+    for (const ln of lines) tokens.push(...wordTokensFromLine(ln));
+    const s = tokens.map(t => t.toLowerCase()).join(delim);
+    return upperAll ? s.toUpperCase() : s;
+  }
+
+  function preserveNewlinesTransform(text, fnPerLine) {
+    const lines = text.split("\n");
+    return lines.map(fnPerLine).join("\n");
+  }
+
+  function counts(text) {
+    // simple counts for UX
+    const trimmed = text.trim();
+    const chars = text.length;
+    const charsNoSpace = text.replace(/\s/g, "").length;
+    const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
+    const lines = text ? text.split("\n").length : 0;
+    return { chars, charsNoSpace, words, lines };
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, value, sub, key) {
+    return `
+      <button
+        type="button"
+        data-ccv-pick="${escapeHtml(key)}"
+        class="btn secondary"
+        style="text-align:left; width:100%; border-radius:12px; padding:12px; display:block;"
+        aria-label="Select ${escapeHtml(title)} output"
+      >
+        <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+          <strong>${escapeHtml(title)}</strong>
+          ${badge("Select", "neutral")}
+        </div>
+        <div style="margin-top:8px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:13px; line-height:1.35; white-space:pre-wrap; word-break:break-word;">
+          ${escapeHtml(value || "")}
+        </div>
+        <div class="note" style="margin-top:8px;">${sub}</div>
+      </button>
+    `;
+  }
+
+  let latest = null;
+
+  function computeAndRender() {
+    clearError();
+
+    const raw = String(inputEl.value ?? "");
+    const txt = normalizeInput(raw);
+
+    if (!txt) {
+      summaryEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      outEl.value = "";
+      latest = null;
+      return;
+    }
+
+    // Prose outputs can preserve newlines, identifier outputs are single-line
+    const preserveNL = !!nlEl.checked;
+
+    const upper = preserveNL ? preserveNewlinesTransform(txt, (ln) => ln.toUpperCase()) : txt.toUpperCase();
+    const lower = preserveNL ? preserveNewlinesTransform(txt, (ln) => ln.toLowerCase()) : txt.toLowerCase();
+    const title = preserveNL ? preserveNewlinesTransform(txt, toTitleCase) : toTitleCase(txt);
+    const sentence = preserveNL ? preserveNewlinesTransform(txt, toSentenceCase) : toSentenceCase(txt);
+
+    const camel = toCamelPascal(txt, false);
+    const pascal = toCamelPascal(txt, true);
+    const snake = toDelimited(txt, "_", false);
+    const screamSnake = toDelimited(txt, "_", true);
+    const kebab = toDelimited(txt, "-", false);
+    const dot = toDelimited(txt, ".", false);
+
+    latest = {
+      upper, lower, title, sentence,
+      camel, pascal, snake, screamSnake, kebab, dot
+    };
+
+    const c = counts(txt);
+
+    // category highlight (heuristic)
+    let cat = "Short";
+    let kind = "good";
+    if (c.chars > 600) { cat = "Long"; kind = "warn"; }
+    else if (c.chars > 140) { cat = "Medium"; kind = "neutral"; }
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Summary</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${badge(`${c.words.toLocaleString()} words`, "neutral")}
+          ${badge(`${c.chars.toLocaleString()} chars`, "good")}
+          ${badge(`${c.lines.toLocaleString()} lines`, "neutral")}
+          ${badge(cat, kind)}
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Choose a case below to populate “Selected output”, then copy it.
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px;">
+        ${card("UPPERCASE", upper, "Best for emphasis or labels.", "upper")}
+        ${card("lowercase", lower, "Common for normalizing text.", "lower")}
+        ${card("Title Case", title, "Heuristic formatting for headings.", "title")}
+        ${card("Sentence case", sentence, "Heuristic formatting for prose.", "sentence")}
+        ${card("camelCase", camel, "Identifier style for variables/functions.", "camel")}
+        ${card("PascalCase", pascal, "Identifier style for types/classes.", "pascal")}
+        ${card("snake_case", snake, "Identifier style with underscores.", "snake")}
+        ${card("SCREAMING_SNAKE_CASE", screamSnake, "Common for constants.", "screamSnake")}
+        ${card("kebab-case", kebab, "Common for slugs/URLs.", "kebab")}
+        ${card("dot.case", dot, "Useful for namespaces/keys.", "dot")}
+      </div>
+    `;
+
+    // Default selection: Title Case for prose-like, camelCase if it looks like identifier-ish (no spaces?).
+    const looksIdentifier = /^[A-Za-z0-9_\- ]+$/.test(txt) && (txt.includes("_") || txt.includes("-"));
+    setSelected(looksIdentifier ? "camel" : "title");
+  }
+
+  function setSelected(key) {
+    if (!latest) return;
+    const v = latest[key];
+    outEl.value = String(v ?? "");
+    outEl.setAttribute("data-selected", key);
+  }
+
+  async function copySelected() {
+    clearError();
+    const key = outEl.getAttribute("data-selected");
+    const v = String(outEl.value ?? "");
+
+    if (!v) {
+      showError("Enter text and select an output first.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(v);
+      summaryEl.innerHTML = `
+        <strong>Copied.</strong>
+        <div class="note" style="margin-top:6px;">Selected output copied to clipboard.</div>
+      `;
+    } catch (e) {
+      showError("Could not copy. Your browser may block clipboard access on this page.");
+    }
+  }
+
+  function clearAll() {
+    clearError();
+    inputEl.value = "";
+    modeEl.value = "smart";
+    nlEl.checked = true;
+    trimEl.checked = true;
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outEl.value = "";
+    outEl.removeAttribute("data-selected");
+    latest = null;
+    inputEl.focus();
+  }
+
+  // Events
+  let timer = null;
+  function schedule() {
+    if (timer) window.clearTimeout(timer);
+    timer = window.setTimeout(computeAndRender, 120);
+  }
+
+  inputEl.addEventListener("input", schedule);
+  modeEl.addEventListener("change", schedule);
+  nlEl.addEventListener("change", schedule);
+  trimEl.addEventListener("change", schedule);
+
+  cardsEl.addEventListener("click", function (e) {
+    const btn = e.target && e.target.closest ? e.target.closest("[data-ccv-pick]") : null;
+    if (!btn) return;
+    const key = btn.getAttribute("data-ccv-pick");
+    if (!key) return;
+    setSelected(key);
+  });
+
+  copyBtn.addEventListener("click", copySelected);
+  clearBtn.addEventListener("click", clearAll);
+
+  clearAll();
+});
+</script>

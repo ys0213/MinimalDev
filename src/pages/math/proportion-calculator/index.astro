@@ -1,0 +1,366 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Proportion Calculator",
+  description:
+    "Free proportion calculator. Solve A:B = C:D with cross multiplication. Find the missing value instantly with clear steps.",
+  href: "/math/proportion-calculator/",
+  order: 95,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/proportion-calculator/";
+
+const faqs = [
+  { q: "What is a proportion?", a: "A proportion states that two ratios are equal, written as A:B = C:D." },
+  { q: "How do you solve a proportion?", a: "Use cross multiplication: A×D = B×C. If one value is missing, rearrange to solve for it." },
+  { q: "How many blanks can I leave?", a: "Leave exactly one field blank. If more than one is blank, the problem is underdetermined." },
+  { q: "Can I use decimals and negative numbers?", a: "Yes. Decimals and negatives are supported. Negative values can represent directional changes or signed quantities." },
+  { q: "What if a divisor would be 0?", a: "Some cases are undefined (division by zero). The tool will warn you if the missing value cannot be solved with the given inputs." },
+  { q: "Is this the same as percentage?", a: "Not always. Proportions compare ratios. Percent is a ratio out of 100. You can convert a proportion to percent in some cases (e.g., part/whole)." },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Proportion Calculator — ${SITE_NAME}`}
+  description="Solve proportions (A:B = C:D) with cross multiplication. Leave one field blank to calculate it. Includes validation, result cards, and accessible UX."
+  canonicalPath={CANONICAL_PATH}
+  h1="Proportion Calculator"
+  intro="Solve A:B = C:D. Leave exactly one field blank, then calculate the missing value using cross multiplication."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  {/* ✅ 이 툴에만 적용되는 오버플로우/모바일 레이아웃 보정 */}
+  <style>
+    {`
+      [data-tool="proportion-calculator"]{
+        max-width: 100%;
+        overflow-x: hidden;  /* 가로 튐 방지 */
+      }
+      [data-tool="proportion-calculator"] *{
+        min-width: 0; /* grid/flex 내부 텍스트 때문에 튀는 현상 방지 */
+      }
+
+      [data-tool="proportion-calculator"] .pp-grid{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      [data-tool="proportion-calculator"] .pp-actions{
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      [data-tool="proportion-calculator"] .pp-actions .btn{
+        flex: 1 1 160px; /* 좁아지면 줄바꿈 */
+      }
+
+      /* 결과 카드 래퍼: flex 대신 grid로 (모바일에서 안정적으로 줄바꿈) */
+      [data-tool="proportion-calculator"] .pp-cardwrap{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+      [data-tool="proportion-calculator"] .pp-card{
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0; /* 중요 */
+      }
+      [data-tool="proportion-calculator"] .pp-big{
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        word-break: break-word; /* 값이 길어도 튀지 않게 */
+      }
+      [data-tool="proportion-calculator"] .pp-sub{
+        margin-top: 4px;
+      }
+
+      /* ✅ 폰 폭에서 2열 입력을 1열로 전환 */
+      @media (max-width: 420px){
+        [data-tool="proportion-calculator"] .pp-grid{
+          grid-template-columns: 1fr;
+        }
+        [data-tool="proportion-calculator"] h2{
+          font-size: 18px;
+        }
+        /* 버튼도 세로 스택이 더 안정적이면 아래처럼 */
+        [data-tool="proportion-calculator"] .pp-actions{
+          flex-direction: column;
+        }
+        [data-tool="proportion-calculator"] .pp-actions .btn{
+          width: 100%;
+        }
+        /* 카드 min폭을 더 낮춰서 초소형 화면 대응 */
+        [data-tool="proportion-calculator"] .pp-cardwrap{
+          grid-template-columns: 1fr;
+        }
+      }
+    `}
+  </style>
+
+  <div slot="tool" data-tool="proportion-calculator">
+    <div class="form" role="form" aria-describedby="pp_note">
+      <h2 style="margin:0 0 10px;">A : B = C : D</h2>
+
+      <div class="note" style="margin-bottom:10px;">
+        Leave exactly <strong>one</strong> field blank to solve it.
+      </div>
+
+      <div class="pp-grid">
+        <div class="field">
+          <label for="pp_a">A</label>
+          <input id="pp_a" type="number" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+
+        <div class="field">
+          <label for="pp_b">B</label>
+          <input id="pp_b" type="number" inputmode="decimal" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="pp_c">C</label>
+          <input id="pp_c" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        </div>
+
+        <div class="field">
+          <label for="pp_d">D</label>
+          <input id="pp_d" type="number" inputmode="decimal" placeholder="(leave blank to solve)" />
+        </div>
+      </div>
+
+      <div class="pp-actions">
+        <button class="btn" type="button" id="pp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pp_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="pp_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="pp_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Cross multiplication:</strong> A:B = C:D ⇒ A×D = B×C<br/>
+      Solve the missing term by rearranging:
+    </p>
+    <ul>
+      <li>If <strong>A</strong> is missing: A = (B×C) ÷ D</li>
+      <li>If <strong>B</strong> is missing: B = (A×D) ÷ C</li>
+      <li>If <strong>C</strong> is missing: C = (A×D) ÷ B</li>
+      <li>If <strong>D</strong> is missing: D = (B×C) ÷ A</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2:3 = 10:D → D = 15</li>
+      <li>A:8 = 3:12 → A = 2</li>
+      <li>5:B = 20:4 → B = 1</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/ratio-calculator/">Ratio Calculator</a></li>
+      <li><a href="/math/reverse-percentage-calculator/">Reverse Percentage Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("pp_a");
+  const bEl = document.getElementById("pp_b");
+  const cEl = document.getElementById("pp_c");
+  const dEl = document.getElementById("pp_d");
+  const calcBtn = document.getElementById("pp_calc");
+  const clearBtn = document.getElementById("pp_clear");
+  const errEl = document.getElementById("pp_error");
+  const outEl = document.getElementById("pp_result");
+
+  if (!aEl || !bEl || !cEl || !dEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  function s(v) { return String(v ?? "").trim(); }
+  function has(el) { return s(el.value) !== ""; }
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function roundSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const abs = Math.abs(x);
+    const maxFD = abs >= 1000 ? 2 : abs >= 1 ? 6 : 8;
+    const safe = Object.is(x, -0) ? 0 : x;
+    return safe.toLocaleString(undefined, { maximumFractionDigits: maxFD });
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:800;">${text}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div class="pp-card">
+        <strong>${title}</strong>
+        <div class="pp-big">${big}</div>
+        <div class="note pp-sub">${sub}</div>
+      </div>
+    `;
+  }
+
+  function compute() {
+    clearError();
+
+    const blanks = [aEl, bEl, cEl, dEl].filter(el => !has(el));
+    if (blanks.length !== 1) {
+      showError("Leave exactly one field blank to solve for it.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const missing =
+      !has(aEl) ? "A" :
+      !has(bEl) ? "B" :
+      !has(cEl) ? "C" : "D";
+
+    const A = has(aEl) ? num(aEl.value) : NaN;
+    const B = has(bEl) ? num(bEl.value) : NaN;
+    const C = has(cEl) ? num(cEl.value) : NaN;
+    const D = has(dEl) ? num(dEl.value) : NaN;
+
+    if ((missing !== "A" && !Number.isFinite(A)) ||
+        (missing !== "B" && !Number.isFinite(B)) ||
+        (missing !== "C" && !Number.isFinite(C)) ||
+        (missing !== "D" && !Number.isFinite(D))) {
+      showError("Please enter valid numbers in the filled fields.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    let solved = NaN;
+    let formula = "";
+    let denom = NaN;
+
+    if (missing === "A") {
+      denom = D;
+      if (denom === 0) { showError("Cannot solve for A because D is 0 (division by zero)."); return; }
+      solved = (B * C) / D;
+      formula = "A = (B×C) ÷ D";
+    } else if (missing === "B") {
+      denom = C;
+      if (denom === 0) { showError("Cannot solve for B because C is 0 (division by zero)."); return; }
+      solved = (A * D) / C;
+      formula = "B = (A×D) ÷ C";
+    } else if (missing === "C") {
+      denom = B;
+      if (denom === 0) { showError("Cannot solve for C because B is 0 (division by zero)."); return; }
+      solved = (A * D) / B;
+      formula = "C = (A×D) ÷ B";
+    } else {
+      denom = A;
+      if (denom === 0) { showError("Cannot solve for D because A is 0 (division by zero)."); return; }
+      solved = (B * C) / A;
+      formula = "D = (B×C) ÷ A";
+    }
+
+    if (!Number.isFinite(solved)) {
+      showError("Could not compute the missing value with these inputs.");
+      return;
+    }
+
+    const A2 = missing === "A" ? solved : A;
+    const B2 = missing === "B" ? solved : B;
+    const C2 = missing === "C" ? solved : C;
+    const D2 = missing === "D" ? solved : D;
+
+    const left = (B2 === 0) ? null : (A2 / B2);
+    const right = (D2 === 0) ? null : (C2 / D2);
+    const ok = (left !== null && right !== null) ? (Math.abs(left - right) < 1e-9) : null;
+
+    const status =
+      ok === null ? badge("Check undefined", "warn") :
+      ok ? badge("Proportion holds", "good") : badge("Check rounding/inputs", "warn");
+
+    outEl.innerHTML = `
+      <div class="pp-cardwrap">
+        ${card("Solved", `${missing} = ${roundSmart(solved)}`, `${status} · ${formula}`)}
+        ${card("Left ratio (A/B)", (left === null ? "undefined" : roundSmart(left)), `A=${roundSmart(A2)}, B=${roundSmart(B2)}`)}
+        ${card("Right ratio (C/D)", (right === null ? "undefined" : roundSmart(right)), `C=${roundSmart(C2)}, D=${roundSmart(D2)}`)}
+      </div>
+      <div class="note" style="margin-top:10px;">
+        Cross-multiplication check: A×D vs B×C → ${roundSmart(A2)}×${roundSmart(D2)} vs ${roundSmart(B2)}×${roundSmart(C2)}.
+      </div>
+    `;
+
+    if (missing === "A") aEl.value = String(solved);
+    if (missing === "B") bEl.value = String(solved);
+    if (missing === "C") cEl.value = String(solved);
+    if (missing === "D") dEl.value = String(solved);
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  [aEl, bEl, cEl, dEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    dEl.value = "";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    aEl.focus();
+  });
+});
+</script>

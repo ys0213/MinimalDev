@@ -1,0 +1,485 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fraction Calculator",
+  description:
+    "Free fraction calculator. Add, subtract, multiply, divide fractions and mixed numbers with simplification and step-by-step results.",
+  href: "/math/fraction-calculator/",
+  order: 98,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/fraction-calculator/";
+
+const faqs = [
+  {
+    q: "What inputs does this fraction calculator support?",
+    a: "It supports fractions (e.g., 3/4), whole numbers (e.g., 5), decimals (e.g., 1.25), and mixed numbers (e.g., 2 1/3). You can also use a leading minus sign for negatives.",
+  },
+  {
+    q: "Does it simplify fractions automatically?",
+    a: "Yes. Results are reduced to lowest terms using GCD, and mixed-number form is shown when the absolute value is at least 1.",
+  },
+  {
+    q: "How does division work for fractions?",
+    a: "Dividing by a fraction means multiplying by its reciprocal. For example, (a/b) ÷ (c/d) = (a/b) × (d/c), provided c ≠ 0.",
+  },
+  {
+    q: "What if the denominator is zero?",
+    a: "A denominator of 0 is invalid. The calculator will show an error and no result.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. The calculation runs locally in your browser and does not store or transmit your inputs.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Fraction Calculator — ${SITE_NAME}`}
+  description="Add, subtract, multiply, and divide fractions and mixed numbers. Includes simplification, mixed-number output, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fraction Calculator"
+  intro="Compute with fractions (and mixed numbers) instantly. Results are simplified, shown as fraction + mixed number + decimal, with clear steps."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="fraction-calculator">
+    <div class="form" role="form" aria-describedby="fc_privacy fc_help">
+      <div class="field">
+        <label for="fc_a">First value</label>
+        <input
+          id="fc_a"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          placeholder="e.g., 2 1/3 or 3/4 or 1.25"
+          aria-describedby="fc_help"
+        />
+      </div>
+
+      <div class="field">
+        <label for="fc_op">Operation</label>
+        <select id="fc_op" aria-label="Operation">
+          <option value="add" selected>+</option>
+          <option value="sub">−</option>
+          <option value="mul">×</option>
+          <option value="div">÷</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fc_b">Second value</label>
+        <input
+          id="fc_b"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          placeholder="e.g., 5/6 or 1 3/8 or -2"
+        />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="fc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="fc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="fc_steps" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="fc_help" style="margin-top:10px;">
+        Supported: <strong>fractions</strong> (3/4), <strong>mixed</strong> (2 1/3), <strong>whole</strong> (5), <strong>decimals</strong> (1.25), negatives.
+        Use spaces only for mixed numbers (e.g., “2 1/3”).
+      </p>
+
+      <p class="note" id="fc_privacy" style="margin-top:6px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Fractions are computed exactly using integer arithmetic, then simplified using the greatest common divisor (GCD).
+      Mixed numbers are displayed as: whole + remainder/denominator (when |value| ≥ 1).
+    </p>
+    <ul>
+      <li><strong>Add/Subtract:</strong> a/b ± c/d = (ad ± bc) / bd</li>
+      <li><strong>Multiply:</strong> (a/b) × (c/d) = (ac) / (bd)</li>
+      <li><strong>Divide:</strong> (a/b) ÷ (c/d) = (a/b) × (d/c), c ≠ 0</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2 1/3 + 3/4 = 3 1/12</li>
+      <li>5/6 − 1/3 = 1/2</li>
+      <li>7/8 × 4 = 3 1/2</li>
+      <li>1 ÷ 2/5 = 2 1/2</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/gcd-lcm-calculator/">GCD/LCM Calculator</a></li>
+      <li><a href="/math/ratio-calculator/">Ratio Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("fc_a");
+  const bEl = document.getElementById("fc_b");
+  const opEl = document.getElementById("fc_op");
+  const calcBtn = document.getElementById("fc_calc");
+  const clearBtn = document.getElementById("fc_clear");
+  const errEl = document.getElementById("fc_error");
+  const outEl = document.getElementById("fc_result");
+  const stepsEl = document.getElementById("fc_steps");
+
+  if (!aEl || !bEl || !opEl || !calcBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  // ---- Fraction helpers (exact arithmetic) ----
+
+  function abs(n){ return n < 0n ? -n : n; }
+
+  function gcdBig(a, b) {
+    a = abs(a); b = abs(b);
+    while (b !== 0n) {
+      const t = a % b;
+      a = b;
+      b = t;
+    }
+    return a === 0n ? 1n : a;
+  }
+
+  function normalize(num, den) {
+    if (den === 0n) return null;
+    if (den < 0n) { num = -num; den = -den; }
+    const g = gcdBig(num, den);
+    return { n: num / g, d: den / g };
+  }
+
+  function addFrac(A, B) { return normalize(A.n * B.d + B.n * A.d, A.d * B.d); }
+  function subFrac(A, B) { return normalize(A.n * B.d - B.n * A.d, A.d * B.d); }
+  function mulFrac(A, B) { return normalize(A.n * B.n, A.d * B.d); }
+  function divFrac(A, B) {
+    if (B.n === 0n) return null;
+    return normalize(A.n * B.d, A.d * B.n);
+  }
+
+  function toDecimalString(F) {
+    // Safe-ish decimal: use Number for display only.
+    const n = Number(F.n);
+    const d = Number(F.d);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return "—";
+    const v = n / d;
+    const absV = Math.abs(v);
+    if (absV !== 0 && (absV >= 1e15 || absV < 1e-6)) {
+      // scientific
+      const e = Math.floor(Math.log10(absV));
+      const m = v / Math.pow(10, e);
+      const mR = Math.round(m * 1e10) / 1e10;
+      return `${mR} × 10^${e}`;
+    }
+    const r = Math.round(v * 1e12) / 1e12;
+    return r.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fracToString(F) {
+    if (F.d === 1n) return F.n.toString();
+    return `${F.n.toString()}/${F.d.toString()}`;
+  }
+
+  function fracToMixedString(F) {
+    const n = F.n;
+    const d = F.d;
+    if (d === 1n) return n.toString();
+
+    const sign = n < 0n ? -1n : 1n;
+    const an = abs(n);
+
+    const whole = an / d;
+    const rem = an % d;
+
+    if (whole === 0n) {
+      // proper fraction
+      return (sign < 0n ? "-" : "") + `${rem.toString()}/${d.toString()}`;
+    }
+
+    if (rem === 0n) {
+      return (sign < 0n ? "-" : "") + whole.toString();
+    }
+
+    return (sign < 0n ? "-" : "") + `${whole.toString()} ${rem.toString()}/${d.toString()}`;
+  }
+
+  // Parse: whole, fraction, decimal, mixed.
+  // Supported examples: "3/4", "2 1/3", "-2 1/3", "5", "-0.75", "+1.25"
+  function parseInput(raw) {
+    const s0 = String(raw ?? "").trim();
+    if (!s0) return null;
+
+    // Normalize multiple spaces
+    const s = s0.replace(/\s+/g, " ");
+
+    // Reject weird chars (basic hardening)
+    if (!/^[+\-]?[0-9]+(\.[0-9]+)?(\/[0-9]+)?(\s[0-9]+\/[0-9]+)?$/.test(s)) {
+      // Accept also pure fraction with sign: -3/4, or mixed: -2 1/3
+      // This regex already covers those; if it fails, give a clear message.
+      return { error: "Invalid format. Use 3/4, 2 1/3, 5, or 1.25 (optional leading -)." };
+    }
+
+    // Mixed number?
+    // Handle sign only on the whole part: "-2 1/3"
+    if (s.includes(" ")) {
+      const parts = s.split(" ");
+      if (parts.length !== 2) return { error: "Invalid mixed number. Use format like: 2 1/3" };
+      const wholeStr = parts[0];
+      const fracStr = parts[1];
+
+      const whole = Number(wholeStr);
+      if (!Number.isFinite(whole) || !Number.isInteger(whole)) return { error: "Invalid whole part in mixed number." };
+
+      const frac = parseFractionOnly(fracStr);
+      if (frac && frac.error) return frac;
+      if (!frac) return { error: "Invalid fraction part in mixed number." };
+
+      // whole can be negative; fraction part must be non-negative
+      if (frac.n < 0n) return { error: "Mixed number fraction part must be non-negative (use - on the whole part only)." };
+
+      const sign = whole < 0 ? -1n : 1n;
+      const absWhole = BigInt(Math.abs(whole));
+      const num = sign * (absWhole * frac.d + frac.n);
+      return normalize(num, frac.d);
+    }
+
+    // Fraction with "/"
+    if (s.includes("/")) {
+      const frac = parseFractionOnly(s);
+      if (frac && frac.error) return frac;
+      if (!frac) return { error: "Invalid fraction." };
+      return normalize(frac.n, frac.d);
+    }
+
+    // Decimal or integer
+    if (s.includes(".")) {
+      return parseDecimal(s);
+    }
+
+    // Integer
+    const intVal = Number(s);
+    if (!Number.isFinite(intVal) || !Number.isInteger(intVal)) return { error: "Invalid number." };
+    return normalize(BigInt(intVal), 1n);
+  }
+
+  function parseFractionOnly(s) {
+    const m = String(s).trim().match(/^([+\-]?\d+)\/(\d+)$/);
+    if (!m) return null;
+    const n = BigInt(m[1]);
+    const d = BigInt(m[2]);
+    if (d === 0n) return { error: "Denominator cannot be 0." };
+    return { n, d };
+  }
+
+  function parseDecimal(s) {
+    // Convert decimal string to fraction exactly, limited by string length (reasonable for UI input)
+    const m = String(s).trim().match(/^([+\-]?)(\d+)\.(\d+)$/);
+    if (!m) return { error: "Invalid decimal." };
+    const sign = m[1] === "-" ? -1n : 1n;
+    const intPart = m[2];
+    const fracPart = m[3];
+
+    // Limit digits to avoid huge BigInt from extreme pastes
+    if (fracPart.length > 18) return { error: "Too many decimal places. Please use 18 or fewer." };
+
+    const scale = 10n ** BigInt(fracPart.length);
+    const num = BigInt(intPart) * scale + BigInt(fracPart);
+    return normalize(sign * num, scale);
+  }
+
+  function opSymbol(op){
+    if (op === "add") return "+";
+    if (op === "sub") return "−";
+    if (op === "mul") return "×";
+    if (op === "div") return "÷";
+    return "?";
+  }
+
+  function compute() {
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const A = parseInput(aEl.value);
+    if (!A) { showError("Please enter the first value."); outEl.textContent = "Result will appear here."; return; }
+    if (A.error) { showError(A.error); outEl.textContent = "Result will appear here."; return; }
+
+    const B = parseInput(bEl.value);
+    if (!B) { showError("Please enter the second value."); outEl.textContent = "Result will appear here."; return; }
+    if (B.error) { showError(B.error); outEl.textContent = "Result will appear here."; return; }
+
+    const op = String(opEl.value);
+    let R = null;
+
+    if (op === "add") R = addFrac(A, B);
+    else if (op === "sub") R = subFrac(A, B);
+    else if (op === "mul") R = mulFrac(A, B);
+    else if (op === "div") R = divFrac(A, B);
+
+    if (!R) {
+      showError(op === "div" ? "Cannot divide by zero." : "Could not compute with these inputs.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    // If result exists but normalize returned null (shouldn't happen here), guard:
+    if (!R || !("n" in R) || !("d" in R)) {
+      showError("Could not compute result.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const fracStr = fracToString(R);
+    const mixedStr = fracToMixedString(R);
+    const decStr = toDecimalString(R);
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Simplified fraction", fracStr, `${badge("Exact")} · Reduced to lowest terms`)}
+        ${card("Mixed number", mixedStr, `${badge("Readable")} · Whole + remainder/denominator`)}
+        ${card("Decimal", decStr, `${badge("Approx")} · Rounded display`)}
+      </div>
+    `;
+
+    // Steps (show standard algebra on normalized inputs)
+    const A_str = fracToString(A);
+    const B_str = fracToString(B);
+    const sym = opSymbol(op);
+
+    // Step details per operation
+    let stepMain = "";
+    if (op === "add" || op === "sub") {
+      // (a/b) ± (c/d) = (ad ± bc) / bd
+      const a = A.n, b = A.d, c = B.n, d = B.d;
+      const num = (op === "add") ? (a*d + c*b) : (a*d - c*b);
+      const den = b*d;
+      const pre = normalize(num, den); // should equal R
+      stepMain =
+        `1) Convert to a common denominator:<br/>
+         <span class="note">(${A_str}) ${sym} (${B_str}) = (${a.toString()}/${b.toString()}) ${sym} (${c.toString()}/${d.toString()})</span><br/>
+         2) Combine numerators:<br/>
+         <span class="note">= (${a.toString()}×${d.toString()} ${op === "add" ? "+" : "−"} ${c.toString()}×${b.toString()}) / (${b.toString()}×${d.toString()})</span><br/>
+         <span class="note">= ${num.toString()}/${den.toString()}</span><br/>
+         3) Simplify using GCD → ${pre ? fracToString(pre) : fracStr}`;
+    } else if (op === "mul") {
+      const a = A.n, b = A.d, c = B.n, d = B.d;
+      const num = a*c;
+      const den = b*d;
+      const pre = normalize(num, den);
+      stepMain =
+        `1) Multiply numerators and denominators:<br/>
+         <span class="note">(${A_str}) × (${B_str}) = (${a.toString()}×${c.toString()}) / (${b.toString()}×${d.toString()})</span><br/>
+         <span class="note">= ${num.toString()}/${den.toString()}</span><br/>
+         2) Simplify using GCD → ${pre ? fracToString(pre) : fracStr}`;
+    } else if (op === "div") {
+      const a = A.n, b = A.d, c = B.n, d = B.d;
+      stepMain =
+        `1) Divide by multiplying by the reciprocal:<br/>
+         <span class="note">(${A_str}) ÷ (${B_str}) = (${a.toString()}/${b.toString()}) × (${d.toString()}/${c.toString()})</span><br/>
+         2) Multiply:<br/>
+         <span class="note">= (${a.toString()}×${d.toString()}) / (${b.toString()}×${c.toString()})</span><br/>
+         3) Simplify using GCD → ${fracStr}`;
+    }
+
+    stepsEl.style.display = "block";
+    stepsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Steps</strong>
+        ${badge("Simplify")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        ${stepMain}
+      </div>
+    `;
+  }
+
+  function resetOutputs(){
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+  }
+
+  // Accessibility: Enter to calculate in either input
+  function onEnter(el){
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter") compute();
+    });
+  }
+  onEnter(aEl);
+  onEnter(bEl);
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function(){
+    aEl.value = "";
+    bEl.value = "";
+    opEl.value = "add";
+    resetOutputs();
+    aEl.focus();
+  });
+
+  resetOutputs();
+});
+</script>

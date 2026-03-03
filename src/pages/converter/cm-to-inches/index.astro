@@ -1,0 +1,289 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CM to Inches Converter",
+  description: "Convert centimeters (cm) to inches (in) instantly. Includes validation, accessible UX, and FAQ schema.",
+  href: "/converter/cm-to-inches/",
+  order: 20,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/cm-to-inches/";
+
+const faqs = [
+  {
+    q: "What is the cm to inches formula?",
+    a: "inches = centimeters ÷ 2.54. (Because 1 inch = 2.54 cm exactly.)",
+  },
+  {
+    q: "Is the conversion exact?",
+    a: "Yes for the base relationship: 1 inch equals exactly 2.54 centimeters. Display rounding can affect shown digits.",
+  },
+  {
+    q: "Can I convert inches to cm here?",
+    a: "Yes. Switch the direction to “Inches → Centimeters”.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CM to Inches Converter — ${SITE_NAME}`}
+  description="Convert centimeters (cm) to inches (in) instantly, with an option to reverse (in → cm). Includes validation, accessible controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="CM to Inches Converter"
+  intro="Convert centimeters to inches (and inches to centimeters) using the exact 2.54 conversion."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="cm-to-inches">
+    <div class="form" role="form" aria-describedby="c2i_privacy c2i_help">
+      <div class="field">
+        <label for="c2i_value">Value</label>
+        <input
+          id="c2i_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 170"
+          aria-describedby="c2i_help"
+        />
+        <p class="note" id="c2i_help" style="margin-top:6px;">
+          Uses the exact conversion: <strong>1 in = 2.54 cm</strong>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="c2i_mode">Direction</label>
+        <select id="c2i_mode">
+          <option value="cm_to_in" selected>Centimeters → Inches</option>
+          <option value="in_to_cm">Inches → Centimeters</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="c2i_calc">Convert</button>
+        <button class="btn secondary" type="button" id="c2i_swap" aria-label="Swap direction">Swap</button>
+        <button class="btn secondary" type="button" id="c2i_clear">Clear</button>
+      </div>
+
+      <div class="result" id="c2i_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="c2i_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="c2i_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Quick conversions</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody id="c2i_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="c2i_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>cm → in:</strong> inches = centimeters ÷ 2.54<br/>
+      <strong>in → cm:</strong> centimeters = inches × 2.54
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>170 cm</strong> → <strong>66.929 in</strong> (approx.)</li>
+      <li><strong>72 in</strong> → <strong>182.88 cm</strong> (exact)</li>
+      <li><strong>10 cm</strong> → <strong>3.937 in</strong> (approx.)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("c2i_value");
+  const modeEl = document.getElementById("c2i_mode");
+  const calcBtn = document.getElementById("c2i_calc");
+  const swapBtn = document.getElementById("c2i_swap");
+  const clearBtn = document.getElementById("c2i_clear");
+  const errEl = document.getElementById("c2i_error");
+  const resEl = document.getElementById("c2i_result");
+  const cardsEl = document.getElementById("c2i_cards");
+  const tbodyEl = document.getElementById("c2i_table");
+
+  if (!valueEl || !modeEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  const FACTOR = 2.54;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (x === 0) return "0";
+    const ax = Math.abs(x);
+    if (ax >= 1e9 || ax < 1e-6) return x.toExponential(6);
+    // up to 8 decimal places, trimmed
+    const s = (Math.round(x * 1e8) / 1e8).toString();
+    return s;
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const v = toNum(valueEl.value);
+    if (!Number.isFinite(v)) {
+      resEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (Math.abs(v) > 1e18) {
+      showError("Value is too large for reliable display. Use a smaller magnitude.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const mode = String(modeEl.value);
+    let out, fromUnit, toUnit;
+
+    if (mode === "cm_to_in") {
+      out = v / FACTOR;
+      fromUnit = "cm";
+      toUnit = "in";
+    } else {
+      out = v * FACTOR;
+      fromUnit = "in";
+      toUnit = "cm";
+    }
+
+    resEl.innerHTML =
+      "<strong>Result:</strong> " + fmt(out) + " " + toUnit + "<br/>" +
+      "<span class='note'>" + fmt(v) + " " + fromUnit + " = " + fmt(out) + " " + toUnit + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromUnit, "neutral")}
+        ${badge("To: " + toUnit, "neutral")}
+        ${badge("1 in = 2.54 cm", "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+    `;
+
+    // Quick conversions around the entered value (UX)
+    const steps = mode === "cm_to_in"
+      ? [v, v + 1, v + 5, v + 10]
+      : [v, v + 0.5, v + 1, v + 2];
+
+    for (const s of steps) {
+      const o = mode === "cm_to_in" ? (s / FACTOR) : (s * FACTOR);
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = fmt(s) + " " + fromUnit;
+      td2.textContent = fmt(o) + " " + toUnit;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    modeEl.value = "cm_to_in";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    modeEl.value = modeEl.value === "cm_to_in" ? "in_to_cm" : "cm_to_in";
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  modeEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  // Ctrl/Cmd+Enter to convert
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  // Optional: keep result cleared when input is empty
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

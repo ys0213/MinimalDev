@@ -1,0 +1,324 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "KB to MB Converter",
+  description:
+    "Convert kilobytes (KB) to megabytes (MB) using decimal (1 MB = 1000 KB) or binary (1 MiB = 1024 KiB) options. Includes validation, accessible UX, result cards, and FAQ schema.",
+  href: "/converter/kb-to-mb/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/kb-to-mb/";
+
+const faqs = [
+  {
+    q: "Is 1 MB equal to 1000 KB or 1024 KB?",
+    a: "Both are used. Decimal units use 1 MB = 1000 KB. Binary units use 1 MiB = 1024 KiB. This tool can show both, depending on your selection.",
+  },
+  {
+    q: "Which option matches what my computer shows?",
+    a: "Many systems and apps display file sizes using binary units (KiB/MiB) even when labeling them as KB/MB. If you are matching an OS display, try the binary-equivalent option.",
+  },
+  {
+    q: "Can I enter decimals (e.g., 512.5 KB)?",
+    a: "Yes. Decimals are supported.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. This converter runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`KB to MB Converter — ${SITE_NAME}`}
+  description="Convert KB to MB instantly. Choose decimal (1 MB = 1000 KB) or binary (KiB→MiB, 1 MiB = 1024 KiB). Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="KB to MB Converter"
+  intro="Convert kilobytes (KB) to megabytes (MB). Choose decimal or binary interpretation to match how file sizes are labeled or displayed."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="kb-to-mb">
+    <div class="form" role="form" aria-describedby="k2m_hint k2m_privacy">
+      <div class="field">
+        <label for="k2m_kb">Kilobytes</label>
+        <input id="k2m_kb" type="number" inputmode="decimal" placeholder="e.g., 2048" />
+        <p class="note" id="k2m_hint" style="margin-top:6px;">
+          Enter KB, then choose decimal vs binary to match your context.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="k2m_mode">Conversion standard</label>
+        <select id="k2m_mode">
+          <option value="decimal" selected>Decimal (KB→MB): 1 MB = 1000 KB</option>
+          <option value="binary">Binary (KiB→MiB): 1 MiB = 1024 KiB</option>
+          <option value="both">Show both</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="k2m_round">Rounding</label>
+        <select id="k2m_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="k2m_calc">Convert</button>
+        <button class="btn secondary" type="button" id="k2m_clear">Clear</button>
+      </div>
+
+      <div class="result" id="k2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="k2m_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="k2m_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="k2m_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="k2m_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Decimal:</strong> MB = KB ÷ 1000<br/>
+      <strong>Binary:</strong> MiB = KiB ÷ 1024<br/>
+      If your KB is decimal-labeled but you want an OS-style binary display,
+      convert KB → bytes (×1000) then bytes → MiB (÷1,048,576).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2048 KB</strong> → <strong>2.048 MB</strong> (decimal)</li>
+      <li><strong>2048 KB</strong> → <strong>2.000 MiB</strong> (binary KiB→MiB)</li>
+      <li><strong>512 KB</strong> → <strong>0.512 MB</strong> (decimal)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/mb-to-kb/">MB to KB Converter</a></li>
+      <li><a href="/converter/data/">Data Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const kbEl = document.getElementById("k2m_kb");
+  const modeEl = document.getElementById("k2m_mode");
+  const roundEl = document.getElementById("k2m_round");
+  const calcBtn = document.getElementById("k2m_calc");
+  const clearBtn = document.getElementById("k2m_clear");
+  const errEl = document.getElementById("k2m_error");
+  const outEl = document.getElementById("k2m_result");
+  const cardsEl = document.getElementById("k2m_cards");
+  const tbodyEl = document.getElementById("k2m_tbody");
+
+  if (!kbEl || !modeEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const KB_PER_MB_DEC = 1000; // 1 MB = 1000 KB (decimal)
+  const KIB_PER_MIB_BIN = 1024; // 1 MiB = 1024 KiB (binary)
+  const BYTES_PER_KB_DEC = 1000; // 1 KB (decimal) = 1000 bytes
+  const BYTES_PER_MIB_BIN = 1024 * 1024; // 1 MiB = 1,048,576 bytes
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e9) return (Math.round(x * 1e6) / 1e6).toLocaleString();
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toString();
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setRow(unit, value) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    const td2 = document.createElement("td");
+    td1.textContent = unit;
+    td2.textContent = value;
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbodyEl.appendChild(tr);
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(kbEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number of KB.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const kb = Math.min(raw, 1e18);
+    if (kb !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const mode = String(modeEl.value);
+
+    // Decimal KB -> Decimal MB
+    const mbDec = kb / KB_PER_MB_DEC;
+
+    // Binary mode here is “KiB -> MiB” (direct binary units)
+    const mibFromKib = kb / KIB_PER_MIB_BIN;
+
+    // Also useful: decimal KB -> bytes -> MiB (binary-equivalent)
+    const bytes = kb * BYTES_PER_KB_DEC;
+    const mibFromBytes = bytes / BYTES_PER_MIB_BIN;
+
+    const showDec = (mode === "decimal" || mode === "both");
+    const showBin = (mode === "binary" || mode === "both");
+
+    let primaryLine = "";
+    if (mode === "decimal") primaryLine = `<strong>Result:</strong> ${fmt(mbDec)} MB`;
+    else if (mode === "binary") primaryLine = `<strong>Result:</strong> ${fmt(mibFromKib)} MiB`;
+    else primaryLine = `<strong>Result:</strong> ${fmt(mbDec)} MB · ${fmt(mibFromKib)} MiB`;
+
+    outEl.innerHTML =
+      primaryLine +
+      `<br/><span class="note">${fmt(kb)} KB input</span>`;
+
+    const label = mode === "decimal"
+      ? "Decimal (MB)"
+      : mode === "binary"
+      ? "Binary (MiB)"
+      : "Both";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Input: KB", "neutral")}
+        ${badge("Mode: " + label, (mode === "both") ? "good" : "neutral")}
+        ${badge("Optional: KB→bytes→MiB shown", "warn")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Assumptions: 1 MB = 1000 KB · 1 MiB = 1024 KiB · 1 KB = 1000 bytes · 1 MiB = 1,048,576 bytes
+      </div>
+    `;
+
+    if (showDec) setRow("MB (decimal)", `${fmt(mbDec)} MB`);
+    if (showBin) setRow("MiB (binary, KiB→MiB)", `${fmt(mibFromKib)} MiB`);
+
+    setRow("MiB (binary-equivalent, KB→bytes→MiB)", `${fmt(mibFromBytes)} MiB`);
+    setRow("Bytes (from KB)", `${fmtSmart(bytes)} B`);
+  }
+
+  function reset() {
+    clearError();
+    kbEl.value = "";
+    modeEl.value = "decimal";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  modeEl.addEventListener("change", function () {
+    if (String(kbEl.value || "").trim()) compute();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(kbEl.value || "").trim()) compute();
+  });
+
+  kbEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  kbEl.addEventListener("input", function () {
+    if (!String(kbEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

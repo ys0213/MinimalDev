@@ -1,0 +1,355 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Speed Converter",
+  description:
+    "Convert speed between km/h, mph, m/s, and knots. Validated, accessible UX with result cards, reference table, and FAQ schema.",
+  href: "/converter/speed-converter/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/speed-converter/";
+
+const faqs = [
+  {
+    q: "Which speed units are supported?",
+    a: "This converter supports kilometers per hour (km/h), miles per hour (mph), meters per second (m/s), and knots (kt).",
+  },
+  {
+    q: "How accurate are the conversions?",
+    a: "Conversions use standard unit definitions and are shown with your chosen rounding. Minor differences can come from rounding or display precision.",
+  },
+  {
+    q: "Can I convert negative speeds?",
+    a: "Yes. Negative values are allowed for calculations (e.g., relative velocity).",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Speed Converter — ${SITE_NAME}`}
+  description="Convert speed between km/h, mph, m/s, and knots with validation, accessible UX, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Speed Converter"
+  intro="Convert speed between common units (km/h, mph, m/s, knots). Includes quick comparisons and a reference table."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="speed-converter">
+    <div class="form" role="form" aria-describedby="sp_help sp_privacy">
+      <div class="field">
+        <label for="sp_value">Value</label>
+        <input id="sp_value" type="number" inputmode="decimal" placeholder="e.g., 60" />
+        <p class="note" id="sp_help" style="margin-top:6px;">
+          Enter a number, choose units, then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="sp_from">From</label>
+        <select id="sp_from">
+          <option value="kmh" selected>km/h</option>
+          <option value="mph">mph</option>
+          <option value="ms">m/s</option>
+          <option value="kt">knots (kt)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sp_to">To</label>
+        <select id="sp_to">
+          <option value="mph" selected>mph</option>
+          <option value="kmh">km/h</option>
+          <option value="ms">m/s</option>
+          <option value="kt">knots (kt)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sp_round">Rounding</label>
+        <select id="sp_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="sp_convert">Convert</button>
+        <button class="btn secondary" type="button" id="sp_swap">Swap</button>
+        <button class="btn secondary" type="button" id="sp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sp_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="sp_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="sp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Converted value</th>
+            </tr>
+          </thead>
+          <tbody id="sp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sp_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts by translating the input into a base unit (<strong>m/s</strong>), then converting to the target unit.
+      Standard factors are used (e.g., 1 mph = 0.44704 m/s, 1 knot = 0.514444… m/s).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>60 km/h</strong> ≈ <strong>37.282 mph</strong></li>
+      <li><strong>100 mph</strong> ≈ <strong>160.934 km/h</strong></li>
+      <li><strong>10 m/s</strong> = <strong>36 km/h</strong></li>
+      <li><strong>20 knots</strong> ≈ <strong>10.289 m/s</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length-converter/">Length Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("sp_value");
+  const fromEl = document.getElementById("sp_from");
+  const toEl = document.getElementById("sp_to");
+  const roundEl = document.getElementById("sp_round");
+  const convertBtn = document.getElementById("sp_convert");
+  const swapBtn = document.getElementById("sp_swap");
+  const clearBtn = document.getElementById("sp_clear");
+  const errEl = document.getElementById("sp_error");
+  const outEl = document.getElementById("sp_result");
+  const cardsEl = document.getElementById("sp_cards");
+  const tbodyEl = document.getElementById("sp_tbody");
+
+  if (!valueEl || !fromEl || !toEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Base unit: meters per second (m/s)
+  const TO_MS = {
+    kmh: 1 / 3.6,              // km/h -> m/s
+    mph: 0.44704,              // mph  -> m/s
+    ms: 1,                     // m/s  -> m/s
+    kt: 0.5144444444444445,    // knots-> m/s (1 nautical mile/hour)
+  };
+
+  const LABEL = {
+    kmh: "km/h",
+    mph: "mph",
+    ms: "m/s",
+    kt: "knots (kt)",
+  };
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1000) return x.toLocaleString(undefined, { maximumFractionDigits: 3 });
+    if (ax >= 1) return x.toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function convert(value, from, to) {
+    const f = TO_MS[from];
+    const t = TO_MS[to];
+    if (!Number.isFinite(f) || !Number.isFinite(t)) return NaN;
+    const ms = value * f;
+    return ms / t;
+  }
+
+  function classify(msAbs) {
+    if (!Number.isFinite(msAbs)) return "—";
+    if (msAbs === 0) return "Stationary";
+    // Broad, non-medical, non-legal labels (avoid claiming exact thresholds).
+    if (msAbs < 1.5) return "Walking pace";
+    if (msAbs < 4.5) return "Running pace";
+    if (msAbs < 15) return "Vehicle speed";
+    if (msAbs < 250) return "High speed";
+    return "Very high speed";
+  }
+
+  function fillTable(value, fromUnit) {
+    tbodyEl.innerHTML = "";
+    const units = ["kmh", "mph", "ms", "kt"];
+    for (const u of units) {
+      const v = convert(value, fromUnit, u);
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = LABEL[u];
+      td2.textContent = fmt(v);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(valueEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    const from = String(fromEl.value);
+    const to = String(toEl.value);
+
+    if (!TO_MS[from] || !TO_MS[to]) {
+      outEl.textContent = "Please select valid units.";
+      return;
+    }
+
+    const value = Math.max(Math.min(raw, 1e15), -1e15);
+    if (value !== raw) showError("Value is extremely large; output may be rounded due to floating-point limits.");
+
+    const res = convert(value, from, to);
+    const ms = convert(value, from, "ms");
+    const msAbs = Math.abs(ms);
+
+    outEl.innerHTML =
+      `<strong>Result:</strong> ${fmt(res)} ${LABEL[to]}<br/>` +
+      `<span class="note">${fmt(value)} ${LABEL[from]} = ${fmt(res)} ${LABEL[to]}</span>`;
+
+    const label = classify(msAbs);
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(LABEL[from] + " → " + LABEL[to])}
+        ${badge("Base ≈ " + fmtSmart(ms) + " m/s")}
+        ${badge(label)}
+      </div>
+    `;
+
+    fillTable(value, from);
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    fromEl.value = "kmh";
+    toEl.value = "mph";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  fromEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  toEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

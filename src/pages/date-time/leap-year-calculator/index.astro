@@ -1,0 +1,291 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Leap Year Calculator",
+  description:
+    "Free leap year calculator. Check whether a year is a leap year and understand the rule (divisible by 4, 100, 400). Runs locally with FAQ schema.",
+  href: "/date-time/leap-year-calculator/",
+  order: 59,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/leap-year-calculator/";
+
+const faqs = [
+  {
+    q: "What is a leap year?",
+    a: "A leap year is a year with 366 days (February has 29 days) in the Gregorian calendar.",
+  },
+  {
+    q: "What is the leap year rule?",
+    a: "A year is a leap year if it is divisible by 4, except years divisible by 100 are not leap years unless they are also divisible by 400.",
+  },
+  {
+    q: "Is 1900 a leap year? What about 2000?",
+    a: "1900 is not a leap year (divisible by 100 but not by 400). 2000 is a leap year (divisible by 400).",
+  },
+  {
+    q: "Does this apply to all countries and all history?",
+    a: "This calculator uses the modern Gregorian leap-year rule. Historical calendar usage varies by region and period.",
+  },
+  {
+    q: "Do you store my input?",
+    a: "No. This runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Leap Year Calculator — ${SITE_NAME}`}
+  description="Check whether a year is a leap year using the standard Gregorian rules (4/100/400). Includes clear validation, result cards, accessibility, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="Leap Year Calculator"
+  intro="Enter a year to check if it’s a leap year (366 days). Explains the 4/100/400 rule and shows why a year is or isn’t a leap year."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="leap-year-calculator">
+    <div class="form" role="form" aria-describedby="ly_help ly_privacy">
+      <div class="field">
+        <label for="ly_year">Year</label>
+        <input
+          id="ly_year"
+          type="number"
+          inputmode="numeric"
+          placeholder="e.g., 2024"
+          min="1"
+          step="1"
+          aria-describedby="ly_help"
+        />
+        <p class="note" id="ly_help" style="margin-top:6px;">
+          Enter an integer year (e.g., 2024). This tool uses the Gregorian leap-year rule.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ly_calc">Check</button>
+        <button class="btn secondary" type="button" id="ly_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ly_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="ly_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="ly_cards" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="ly_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs or results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Leap year rule (Gregorian):
+    </p>
+    <ul>
+      <li>Divisible by <strong>4</strong> → leap year</li>
+      <li>But divisible by <strong>100</strong> → <strong>not</strong> a leap year</li>
+      <li>Unless divisible by <strong>400</strong> → leap year again</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2024</strong> → leap year (divisible by 4, not by 100)</li>
+      <li><strong>1900</strong> → not a leap year (divisible by 100, not by 400)</li>
+      <li><strong>2000</strong> → leap year (divisible by 400)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/day-of-week-calculator/">Day of Week</a></li>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const yearEl = document.getElementById("ly_year");
+  const calcBtn = document.getElementById("ly_calc");
+  const clearBtn = document.getElementById("ly_clear");
+  const errEl = document.getElementById("ly_error");
+  const summaryEl = document.getElementById("ly_summary");
+  const cardsEl = document.getElementById("ly_cards");
+
+  if (!yearEl || !calcBtn || !clearBtn || !errEl || !summaryEl || !cardsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    // kind: "good" | "warn" | "neutral"
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, bigHtml, subHtml) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:170px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${bigHtml}</div>
+        <div class="note" style="margin-top:4px;">${subHtml}</div>
+      </div>
+    `;
+  }
+
+  function parseYear() {
+    const raw = String(yearEl.value || "").trim();
+    if (!raw) return { ok: false, msg: "Please enter a year." };
+
+    const y = Number(raw);
+    if (!Number.isFinite(y) || !Number.isInteger(y)) return { ok: false, msg: "Please enter a valid integer year." };
+    if (y < 1) return { ok: false, msg: "Please enter a year ≥ 1." };
+    if (y > 999999) return { ok: false, msg: "Please enter a smaller year (≤ 999,999)." }; // practical guard
+
+    return { ok: true, year: y };
+  }
+
+  function isLeapYearGregorian(y) {
+    const div4 = (y % 4) === 0;
+    const div100 = (y % 100) === 0;
+    const div400 = (y % 400) === 0;
+
+    // Rule:
+    // leap = div4 && (!div100 || div400)
+    const leap = div4 && (!div100 || div400);
+
+    return { leap, div4, div100, div400 };
+  }
+
+  function compute() {
+    clearError();
+
+    const parsed = parseYear();
+    if (!parsed.ok) {
+      summaryEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      showError(parsed.msg);
+      return;
+    }
+
+    const y = parsed.year;
+    const r = isLeapYearGregorian(y);
+
+    const verdict = r.leap ? "Leap year" : "Not a leap year";
+    const verdictKind = r.leap ? "good" : "warn";
+    const days = r.leap ? 366 : 365;
+
+    // Explanation
+    let why = "";
+    if (!r.div4) {
+      why = "Not divisible by 4 → not a leap year.";
+    } else if (r.div100 && !r.div400) {
+      why = "Divisible by 100 but not by 400 → not a leap year.";
+    } else if (r.div400) {
+      why = "Divisible by 400 → leap year.";
+    } else {
+      why = "Divisible by 4 and not by 100 → leap year.";
+    }
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Result</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${badge(verdict, verdictKind)}
+          ${badge(`${days} days`, "neutral")}
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Year: <strong>${escapeHtml(y)}</strong>
+      </div>
+    `;
+
+    const checks = [
+      { label: "Divisible by 4", ok: r.div4 },
+      { label: "Divisible by 100", ok: r.div100 },
+      { label: "Divisible by 400", ok: r.div400 },
+    ];
+
+    const checksHtml = checks.map(c => {
+      const k = c.ok ? "good" : "warn";
+      return badge(`${c.label}: ${c.ok ? "Yes" : "No"}`, k);
+    }).join(" ");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Verdict", `<span>${escapeHtml(verdict)}</span>`, escapeHtml(why))}
+        ${card("Rule checks", `<span style="font-size:14px; font-weight:900;">${checksHtml}</span>`, "Leap = divisible by 4 AND (not divisible by 100 OR divisible by 400)")}
+      </div>
+    `;
+  }
+
+  function clearAll() {
+    clearError();
+    yearEl.value = "";
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    yearEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  // UX: Enter to compute
+  yearEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  // Optional: compute on blur if value exists (reduces noisy recalcs)
+  yearEl.addEventListener("change", function () {
+    if (String(yearEl.value || "").trim()) compute();
+  });
+
+  clearAll();
+});
+</script>

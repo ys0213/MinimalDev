@@ -1,0 +1,322 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Meters to Feet Converter",
+  description:
+    "Convert meters (m) to feet (ft) instantly. Includes validation, accessible UX, result cards, quick table, and FAQ schema.",
+  href: "/converter/meters-to-feet/",
+  order: 22,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/meters-to-feet/";
+
+const faqs = [
+  {
+    q: "What is the meters to feet formula?",
+    a: "feet = meters × 3.280839895. (Because 1 m = 3.280839895 ft.)",
+  },
+  {
+    q: "Is this conversion exact?",
+    a: "It is based on the defined relationship between meters and inches (1 in = 2.54 cm exactly). Displayed results may be rounded.",
+  },
+  {
+    q: "Can I convert feet to meters here?",
+    a: "Yes. Switch the direction to “Feet → Meters”.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Meters to Feet Converter — ${SITE_NAME}`}
+  description="Convert meters (m) to feet (ft) instantly, with an option to reverse (ft → m). Includes validation, accessible controls, result cards, quick conversions, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Meters to Feet Converter"
+  intro="Convert meters to feet (and feet to meters) using standard length conversions."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="meters-to-feet">
+    <div class="form" role="form" aria-describedby="m2f_privacy m2f_help">
+      <div class="field">
+        <label for="m2f_value">Value</label>
+        <input
+          id="m2f_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 1.75"
+          aria-describedby="m2f_help"
+        />
+        <p class="note" id="m2f_help" style="margin-top:6px;">
+          Reference: <strong>1 m = 3.280839895 ft</strong>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="m2f_mode">Direction</label>
+        <select id="m2f_mode">
+          <option value="m_to_ft" selected>Meters → Feet</option>
+          <option value="ft_to_m">Feet → Meters</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="m2f_round">Rounding</label>
+        <select id="m2f_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="8">Up to 8 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="m2f_calc">Convert</button>
+        <button class="btn secondary" type="button" id="m2f_swap" aria-label="Swap direction">Swap</button>
+        <button class="btn secondary" type="button" id="m2f_clear">Clear</button>
+      </div>
+
+      <div class="result" id="m2f_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="m2f_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="m2f_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Quick conversions</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody id="m2f_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="m2f_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>m → ft:</strong> feet = meters × 3.280839895<br/>
+      <strong>ft → m:</strong> meters = feet ÷ 3.280839895
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1.75 m</strong> → <strong>5.741 ft</strong> (approx.)</li>
+      <li><strong>2 m</strong> → <strong>6.562 ft</strong> (approx.)</li>
+      <li><strong>6 ft</strong> → <strong>1.829 m</strong> (approx.)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/feet-to-meters/">Feet to Meters</a></li>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("m2f_value");
+  const modeEl = document.getElementById("m2f_mode");
+  const roundEl = document.getElementById("m2f_round");
+  const calcBtn = document.getElementById("m2f_calc");
+  const swapBtn = document.getElementById("m2f_swap");
+  const clearBtn = document.getElementById("m2f_clear");
+  const errEl = document.getElementById("m2f_error");
+  const resEl = document.getElementById("m2f_result");
+  const cardsEl = document.getElementById("m2f_cards");
+  const tbodyEl = document.getElementById("m2f_table");
+
+  if (!valueEl || !modeEl || !roundEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  const M_TO_FT = 3.280839895013123; // enough precision for display
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clampAbs(x, maxAbs) {
+    if (!Number.isFinite(x)) return x;
+    if (Math.abs(x) > maxAbs) return Math.sign(x) * maxAbs;
+    return x;
+  }
+
+  function fmtFixed(x, decimals) {
+    if (!Number.isFinite(x)) return "—";
+    if (decimals === 8) {
+      const r = Math.round(x * 1e8) / 1e8;
+      // trim trailing zeros
+      return r.toString();
+    }
+    return x.toFixed(decimals);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(valueEl.value);
+    if (!Number.isFinite(raw)) {
+      resEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    // guardrail for extreme magnitudes (display + floating)
+    const v = clampAbs(raw, 1e18);
+    if (v !== raw) {
+      showError("Value is too large for reliable display. Using a clamped value for output.");
+    }
+
+    const mode = String(modeEl.value);
+    const decimals = parseInt(String(roundEl.value), 10);
+
+    let out, fromUnit, toUnit, factorNote;
+
+    if (mode === "m_to_ft") {
+      out = v * M_TO_FT;
+      fromUnit = "m";
+      toUnit = "ft";
+      factorNote = "× 3.280839895";
+    } else {
+      out = v / M_TO_FT;
+      fromUnit = "ft";
+      toUnit = "m";
+      factorNote = "÷ 3.280839895";
+    }
+
+    const outStr = fmtFixed(out, decimals);
+    const inStr = fmtFixed(v, decimals === 8 ? 8 : Math.min(decimals, 6));
+
+    resEl.innerHTML =
+      "<strong>Result:</strong> " + outStr + " " + toUnit + "<br/>" +
+      "<span class='note'>" + inStr + " " + fromUnit + " " + factorNote + " = " + outStr + " " + toUnit + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromUnit, "neutral")}
+        ${badge("To: " + toUnit, "neutral")}
+        ${badge("Rounding: " + (decimals === 8 ? "up to 8" : decimals) + " dp", "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+    `;
+
+    // Quick conversions table (sensible defaults per direction)
+    const steps = mode === "m_to_ft"
+      ? [0.5, 1, 1.5, 2, 3].map(d => v + d - 1) // centered-ish around v
+      : [1, 2, 3, 6, 10].map(d => v + d - 3);
+
+    for (const s of steps) {
+      if (!Number.isFinite(s)) continue;
+      const o = mode === "m_to_ft" ? (s * M_TO_FT) : (s / M_TO_FT);
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = fmtFixed(s, decimals === 8 ? 8 : Math.min(decimals, 4)) + " " + fromUnit;
+      td2.textContent = fmtFixed(o, decimals) + " " + toUnit;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    modeEl.value = "m_to_ft";
+    roundEl.value = "3";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    modeEl.value = modeEl.value === "m_to_ft" ? "ft_to_m" : "m_to_ft";
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  modeEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

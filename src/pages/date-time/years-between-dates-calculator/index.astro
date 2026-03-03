@@ -1,0 +1,404 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Years Between Dates Calculator",
+  description:
+    "Free years between dates calculator. Get calendar-year difference, full years + remaining months/days, and an inclusive option. Includes FAQ schema, validation, accessible result cards.",
+  href: "/date-time/years-between-dates-calculator/",
+  order: 35,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/years-between-dates-calculator/";
+
+const faqs = [
+  {
+    q: "What does “years between” mean?",
+    a: "This tool uses calendar-year logic (not average days per year). It shows a calendar-year difference and also a “full years + remaining months/days” breakdown.",
+  },
+  {
+    q: "Why can year results differ from “days ÷ 365”?",
+    a: "Years have leap days and different month lengths. Dividing days by 365 is an average-based approximation; this calculator uses calendar steps, which is typically better for anniversaries and age-like calculations.",
+  },
+  {
+    q: "How are “full years” computed?",
+    a: "It steps whole calendar years from the start date without passing the end date, then reports the remaining months and days from the anchor date to the end date.",
+  },
+  {
+    q: "Does it include the start/end date?",
+    a: "By default it measures from start to end. If you enable “inclusive,” it adds 1 day to the span before computing the breakdown (useful when you want to count both endpoints).",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Years Between Dates Calculator — ${SITE_NAME}`}
+  description="Calculate years between two dates using calendar-year logic. Shows year difference, full years plus remaining months/days, optional inclusive counting, validation, accessible result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Years Between Dates Calculator"
+  intro="Find the number of years between two dates. Shows calendar-year difference, full years plus remaining months and days, and total days. Optional inclusive counting."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="years-between-dates-calculator">
+    <div class="form" role="form" aria-describedby="ybd_help ybd_privacy">
+      <div class="field">
+        <label for="ybd_start">Start date</label>
+        <input id="ybd_start" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="ybd_end">End date</label>
+        <input id="ybd_end" type="date" />
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="ybd_inclusive" type="checkbox" />
+          Inclusive (count both start and end dates)
+        </label>
+        <p class="note" id="ybd_help" style="margin-top:6px;">
+          Inclusive adds 1 day to the span when both dates are provided (useful for “including both dates” counts).
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ybd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ybd_swap">Swap</button>
+        <button class="btn secondary" type="button" id="ybd_today">Set end to today</button>
+        <button class="btn secondary" type="button" id="ybd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ybd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="ybd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="ybd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="ybd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses <strong>calendar-year</strong> arithmetic (not average days/year).
+      It reports:
+      <br/>
+      1) <strong>Calendar years difference</strong> (year boundaries between dates)
+      <br/>
+      2) <strong>Full years + remaining months + remaining days</strong> by anchoring from the start date and stepping whole years, then whole months, without passing the end date
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2024-03-01 → 2026-03-01 = 2 calendar years, 2 full years + 0 months + 0 days</li>
+      <li>2024-02-29 → 2025-02-28 = 1 calendar year boundary, but full-years breakdown depends on clamping (leap day)</li>
+      <li>Inclusive example: same date → 1 day span (inclusive), 0 days (non-inclusive)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/months-between-dates-calculator/">Months Between Dates</a></li>
+      <li><a href="/date-time/weeks-between-dates-calculator/">Weeks Between Dates</a></li>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("ybd_start");
+  const endEl = document.getElementById("ybd_end");
+  const incEl = document.getElementById("ybd_inclusive");
+  const calcBtn = document.getElementById("ybd_calc");
+  const swapBtn = document.getElementById("ybd_swap");
+  const todayBtn = document.getElementById("ybd_today");
+  const clearBtn = document.getElementById("ybd_clear");
+  const errEl = document.getElementById("ybd_error");
+  const outEl = document.getElementById("ybd_result");
+  const detailsEl = document.getElementById("ybd_details");
+
+  if (!startEl || !endEl || !incEl || !calcBtn || !swapBtn || !todayBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+
+    return d;
+  }
+
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function daysInMonth(y, m0) {
+    return new Date(y, m0 + 1, 0).getDate();
+  }
+
+  function addMonthsClamped(date, months) {
+    const y = date.getFullYear();
+    const m = date.getMonth();
+    const d = date.getDate();
+
+    const targetM = m + months;
+    const ty = y + Math.floor(targetM / 12);
+    const tm = ((targetM % 12) + 12) % 12;
+
+    const dim = daysInMonth(ty, tm);
+    const td = Math.min(d, dim);
+
+    return new Date(ty, tm, td);
+  }
+
+  function addYearsClamped(date, years) {
+    return addMonthsClamped(date, years * 12);
+  }
+
+  function diffDaysDateOnly(a, b) {
+    const aMid = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const bMid = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((bMid.getTime() - aMid.getTime()) / 86400000);
+  }
+
+  function calendarYearDiff(a, b) {
+    // year boundary difference (ignores month/day)
+    return b.getFullYear() - a.getFullYear();
+  }
+
+  function computeBreakdown(start, end) {
+    // Signed breakdown: years, months, days (date-only).
+    const forward = end.getTime() >= start.getTime();
+    const s = forward ? start : end;
+    const e = forward ? end : start;
+
+    // Years: initial guess from year boundary difference, then adjust so anchor <= e
+    let yGuess = calendarYearDiff(s, e);
+    let anchorY = addYearsClamped(s, yGuess);
+
+    while (anchorY.getTime() > e.getTime()) {
+      yGuess -= 1;
+      anchorY = addYearsClamped(s, yGuess);
+    }
+    while (addYearsClamped(s, yGuess + 1).getTime() <= e.getTime()) {
+      yGuess += 1;
+      anchorY = addYearsClamped(s, yGuess);
+    }
+
+    // Months: from anchorY to e
+    let mGuess = (e.getFullYear() * 12 + e.getMonth()) - (anchorY.getFullYear() * 12 + anchorY.getMonth());
+    let anchorM = addMonthsClamped(anchorY, mGuess);
+
+    while (anchorM.getTime() > e.getTime()) {
+      mGuess -= 1;
+      anchorM = addMonthsClamped(anchorY, mGuess);
+    }
+    while (addMonthsClamped(anchorY, mGuess + 1).getTime() <= e.getTime()) {
+      mGuess += 1;
+      anchorM = addMonthsClamped(anchorY, mGuess);
+    }
+
+    const dRem = diffDaysDateOnly(anchorM, e);
+
+    if (forward) {
+      return { years: yGuess, months: mGuess, days: dRem, anchorYears: anchorY, anchorMonths: anchorM };
+    }
+    return { years: -yGuess, months: -mGuess, days: -dRem, anchorYears: anchorY, anchorMonths: anchorM };
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const sRaw = String(startEl.value || "").trim();
+    const eRaw = String(endEl.value || "").trim();
+    const s0 = parseISODate(sRaw);
+    const e0 = parseISODate(eRaw);
+
+    if (!s0 || !e0) {
+      showError("Please enter valid start and end dates.");
+      return;
+    }
+
+    let s = s0;
+    let e = e0;
+
+    const inclusive = !!incEl.checked;
+    if (inclusive) {
+      const direction = e.getTime() >= s.getTime() ? 1 : -1;
+      e = new Date(e.getFullYear(), e.getMonth(), e.getDate() + direction);
+    }
+
+    const calYears = calendarYearDiff(s, e);
+    const totalDays = diffDaysDateOnly(s, e);
+    const breakdown = computeBreakdown(s, e);
+
+    const directionBadge =
+      totalDays === 0 ? badge("No change") : (totalDays > 0 ? badge("End after start") : badge("End before start"));
+    const inclusiveText = inclusive ? "Inclusive" : "Non-inclusive";
+
+    const scaleBadge =
+      Math.abs(breakdown.years) >= 10 ? badge("Decade-scale") :
+      (Math.abs(breakdown.years) >= 1 ? badge("Year-scale") : badge("Sub-year"));
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${directionBadge}
+          ${badge(inclusiveText)}
+          ${scaleBadge}
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card(
+          "Calendar years difference",
+          `<span>${calYears.toLocaleString()}</span>`,
+          "Year boundary difference (end year − start year)"
+        )}
+        ${card(
+          "Full years + remaining months/days",
+          `<span>${breakdown.years.toLocaleString()}</span> <span style="font-size:18px; font-weight:900;">yr</span>`,
+          `Remaining: ${breakdown.months.toLocaleString()} mo, ${breakdown.days.toLocaleString()} day(s)`
+        )}
+        ${card(
+          "Total days",
+          `<span>${totalDays.toLocaleString()}</span>`,
+          `From ${escapeHtml(toISO(s0))} to ${escapeHtml(toISO(e0))}`
+        )}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Breakdown</strong>
+        ${badge("Calendar-year logic")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Start: <strong>${escapeHtml(toISO(s0))}</strong> · End: <strong>${escapeHtml(toISO(e0))}</strong> · Mode: <strong>${escapeHtml(inclusiveText)}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Step 1 (full years): <strong>${breakdown.years.toLocaleString()}</strong> year(s) → anchor <strong>${escapeHtml(toISO(breakdown.anchorYears))}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Step 2 (full months): <strong>${breakdown.months.toLocaleString()}</strong> month(s) → anchor <strong>${escapeHtml(toISO(breakdown.anchorMonths))}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Step 3 (remaining days): <strong>${breakdown.days.toLocaleString()}</strong> day(s)
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Calendar years difference: <strong>${calYears.toLocaleString()}</strong> (independent of month/day)
+      </div>
+    `;
+  }
+
+  function setEndToToday() {
+    const now = new Date();
+    endEl.value = toISO(now);
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const tmp = startEl.value;
+    startEl.value = endEl.value;
+    endEl.value = tmp;
+    resetOutputs();
+  });
+
+  todayBtn.addEventListener("click", function () {
+    setEndToToday();
+    resetOutputs();
+    endEl.focus();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    incEl.checked = false;
+    resetOutputs();
+    startEl.focus();
+  });
+
+  startEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+  endEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+
+  resetOutputs();
+});
+</script>

@@ -1,0 +1,337 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Acres to Sq M",
+  description:
+    "Convert acres to square meters (m²). Validated, accessible UX with result cards, reference table, and FAQ schema.",
+  href: "/converter/acres-to-sq-m/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/acres-to-sq-m/";
+
+const faqs = [
+  {
+    q: "How do you convert acres to square meters?",
+    a: "Multiply acres by 4,046.8564224 to get square meters (m² = acres × 4,046.8564224).",
+  },
+  {
+    q: "Are there different acre definitions?",
+    a: "This tool uses the international acre commonly used today. If a source uses a different historical definition, results may differ slightly.",
+  },
+  {
+    q: "Why does my result differ from another site?",
+    a: "Most differences come from rounding. This tool uses a precise conversion factor and lets you choose rounding.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Acres to Sq M Converter — ${SITE_NAME}`}
+  description="Convert acres to square meters (m²) instantly. Includes validation, accessible UX, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Acres to Sq M Converter"
+  intro="Convert land area from acres to square meters (m²). Useful for real estate listings, land plots, and quick comparisons."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="acres-to-sq-m">
+    <div class="form" role="form" aria-describedby="a2m_hint a2m_privacy">
+      <div class="field">
+        <label for="a2m_acres">Acres</label>
+        <input id="a2m_acres" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+        <p class="note" id="a2m_hint" style="margin-top:6px;">
+          Enter a non-negative value. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="a2m_round">Rounding</label>
+        <select id="a2m_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="a2m_convert">Convert</button>
+        <button class="btn secondary" type="button" id="a2m_swap" aria-label="Switch to Sq M to Acres">
+          Reverse (m² → acres)
+        </button>
+        <button class="btn secondary" type="button" id="a2m_clear">Clear</button>
+      </div>
+
+      <div class="result" id="a2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="a2m_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="a2m_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="a2m_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="a2m_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 acre = 4,046.8564224 m²</strong>.<br />
+      Formula: <strong>m² = acres × 4,046.8564224</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 acre</strong> ≈ <strong>4,046.856 m²</strong></li>
+      <li><strong>0.5 acre</strong> ≈ <strong>2,023.428 m²</strong></li>
+      <li><strong>10 acres</strong> ≈ <strong>40,468.564 m²</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/area-converter/">Area Converter</a></li>
+      <li><a href="/converter/sq-ft-to-sq-m/">Sq Ft to Sq M</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("a2m_acres");
+  const roundEl = document.getElementById("a2m_round");
+  const convertBtn = document.getElementById("a2m_convert");
+  const swapBtn = document.getElementById("a2m_swap");
+  const clearBtn = document.getElementById("a2m_clear");
+  const errEl = document.getElementById("a2m_error");
+  const outEl = document.getElementById("a2m_result");
+  const cardsEl = document.getElementById("a2m_cards");
+  const tbodyEl = document.getElementById("a2m_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const ACRE_TO_M2 = 4046.8564224;
+  const M2_TO_ACRE = 1 / ACRE_TO_M2;
+
+  let mode = "acre->m2";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="a2m_acres"]');
+    if (!label) return;
+    if (mode === "acre->m2") {
+      label.textContent = "Acres";
+      inEl.placeholder = "e.g., 2.5";
+      swapBtn.textContent = "Reverse (m² → acres)";
+      swapBtn.setAttribute("aria-label", "Switch to Sq M to Acres");
+    } else {
+      label.textContent = "Square meters (m²)";
+      inEl.placeholder = "e.g., 5000";
+      swapBtn.textContent = "Reverse (acres → m²)";
+      swapBtn.setAttribute("aria-label", "Switch to Acres to Sq M");
+    }
+  }
+
+  function fillTable(fromVal, toVal) {
+    tbodyEl.innerHTML = "";
+
+    const rows = [];
+    if (mode === "acre->m2") {
+      rows.push(["Conversion factor", "1 acre = 4,046.8564224 m²"]);
+      rows.push(["Reverse factor", "1 m² ≈ " + fmtSmart(M2_TO_ACRE) + " acres"]);
+      rows.push(["Input", fmt(fromVal) + " acres"]);
+      rows.push(["Output", fmt(toVal) + " m²"]);
+    } else {
+      rows.push(["Conversion factor", "1 m² ≈ " + fmtSmart(M2_TO_ACRE) + " acres"]);
+      rows.push(["Reverse factor", "1 acre = 4,046.8564224 m²"]);
+      rows.push(["Input", fmt(fromVal) + " m²"]);
+      rows.push(["Output", fmt(toVal) + " acres"]);
+    }
+
+    for (const [k, v] of rows) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "acre->m2" ? (input * ACRE_TO_M2) : (input * M2_TO_ACRE);
+
+    if (mode === "acre->m2") {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} m²<br/>` +
+        `<span class="note">${fmt(input)} acres = ${fmt(output)} m²</span>`;
+    } else {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} acres<br/>` +
+        `<span class="note">${fmt(input)} m² = ${fmt(output)} acres</span>`;
+    }
+
+    // Emphasis using base m²
+    const m2 = mode === "acre->m2" ? output : input;
+    let scale = "Typical";
+    if (m2 >= 1_000_000) scale = "Large land (≥ 1,000,000 m²)";
+    else if (m2 >= 10_000) scale = "Land-scale (≥ 10,000 m²)";
+    else if (m2 < 100) scale = "Small area (< 100 m²)";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "acre->m2" ? "acres → m²" : "m² → acres")}
+        ${badge("Base ≈ " + fmtSmart(m2) + " m²")}
+        ${badge(scale)}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "acre->m2" ? "m2->acre" : "acre->m2";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setLabels();
+});
+</script>

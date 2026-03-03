@@ -1,0 +1,377 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Area Converter",
+  description:
+    "Convert area units (m², ft², yd², acres, hectares, km², mi²). Includes validation, accessible UX, result cards, and FAQ schema.",
+  href: "/converter/area-converter/",
+  order: 30,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/area-converter/";
+
+const faqs = [
+  {
+    q: "What is the difference between square meters and square feet?",
+    a: "They are different area units. 1 m² is the area of a 1 m × 1 m square. 1 ft² is the area of a 1 ft × 1 ft square. This tool converts between them.",
+  },
+  {
+    q: "What are acres and hectares used for?",
+    a: "Acres and hectares are commonly used for land area. 1 hectare equals 10,000 m². 1 acre equals 43,560 ft².",
+  },
+  {
+    q: "Does this converter include rounding?",
+    a: "Yes. You can choose fixed decimal places or a smart rounding option.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Area Converter — ${SITE_NAME}`}
+  description="Convert area units (m², ft², yd², acres, hectares, km², mi²). Accessible, validated, with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Area Converter"
+  intro="Convert between common area units such as square meters, square feet, acres, and hectares. Useful for land, floor plans, and quick comparisons."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="area-converter">
+    <div class="form" role="form" aria-describedby="ac_hint ac_privacy">
+      <div class="field">
+        <label for="ac_value">Value</label>
+        <input id="ac_value" type="number" inputmode="decimal" placeholder="e.g., 100" />
+        <p class="note" id="ac_hint" style="margin-top:6px;">
+          Enter a value, choose “from” and “to” units, then convert. Negative values are not allowed.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="ac_from">From</label>
+        <select id="ac_from">
+          <option value="m2" selected>Square meters (m²)</option>
+          <option value="km2">Square kilometers (km²)</option>
+          <option value="cm2">Square centimeters (cm²)</option>
+          <option value="mm2">Square millimeters (mm²)</option>
+          <option value="ft2">Square feet (ft²)</option>
+          <option value="in2">Square inches (in²)</option>
+          <option value="yd2">Square yards (yd²)</option>
+          <option value="mi2">Square miles (mi²)</option>
+          <option value="acre">Acres (ac)</option>
+          <option value="hectare">Hectares (ha)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ac_to">To</label>
+        <select id="ac_to">
+          <option value="ft2" selected>Square feet (ft²)</option>
+          <option value="m2">Square meters (m²)</option>
+          <option value="km2">Square kilometers (km²)</option>
+          <option value="cm2">Square centimeters (cm²)</option>
+          <option value="mm2">Square millimeters (mm²)</option>
+          <option value="in2">Square inches (in²)</option>
+          <option value="yd2">Square yards (yd²)</option>
+          <option value="mi2">Square miles (mi²)</option>
+          <option value="acre">Acres (ac)</option>
+          <option value="hectare">Hectares (ha)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ac_round">Rounding</label>
+        <select id="ac_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="ac_convert">Convert</button>
+        <button class="btn secondary" type="button" id="ac_swap" aria-label="Swap from and to units">Swap</button>
+        <button class="btn secondary" type="button" id="ac_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ac_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="ac_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="ac_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Converted value</th>
+            </tr>
+          </thead>
+          <tbody id="ac_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ac_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This converter converts the input to a base unit (<strong>m²</strong>) and then converts to the target unit.
+      It also shows a quick reference table for common units.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>100 m²</strong> ≈ <strong>1,076.391 ft²</strong></li>
+      <li><strong>1 hectare</strong> = <strong>10,000 m²</strong></li>
+      <li><strong>1 acre</strong> ≈ <strong>4,046.856 m²</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("ac_value");
+  const fromEl = document.getElementById("ac_from");
+  const toEl = document.getElementById("ac_to");
+  const roundEl = document.getElementById("ac_round");
+  const convertBtn = document.getElementById("ac_convert");
+  const swapBtn = document.getElementById("ac_swap");
+  const clearBtn = document.getElementById("ac_clear");
+  const errEl = document.getElementById("ac_error");
+  const outEl = document.getElementById("ac_result");
+  const cardsEl = document.getElementById("ac_cards");
+  const tbodyEl = document.getElementById("ac_tbody");
+
+  if (!valueEl || !fromEl || !toEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  // Exact conversion factors to square meters (m²)
+  // (These are standard definitions; values are embedded and not fetched.)
+  const TO_M2 = {
+    m2: 1,
+    km2: 1_000_000,
+    cm2: 0.0001,
+    mm2: 0.000001,
+    ft2: 0.09290304,
+    in2: 0.00064516,
+    yd2: 0.83612736,
+    mi2: 2_589_988.110336,
+    acre: 4046.8564224,
+    hectare: 10_000,
+  };
+
+  const LABEL = {
+    m2: "m²",
+    km2: "km²",
+    cm2: "cm²",
+    mm2: "mm²",
+    ft2: "ft²",
+    in2: "in²",
+    yd2: "yd²",
+    mi2: "mi²",
+    acre: "ac",
+    hectare: "ha",
+  };
+
+  const TABLE_UNITS = ["m2", "ft2", "acre", "hectare", "km2", "mi2"];
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    const rounded = Math.round(x * 1e12) / 1e12;
+    return rounded.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return x.toString();
+    return x.toFixed(d);
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const vRaw = toNum(valueEl.value);
+    if (!Number.isFinite(vRaw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (vRaw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const fromU = String(fromEl.value);
+    const toU = String(toEl.value);
+
+    const fFrom = TO_M2[fromU];
+    const fTo = TO_M2[toU];
+
+    if (!Number.isFinite(fFrom) || !Number.isFinite(fTo) || fFrom <= 0 || fTo <= 0) {
+      outEl.textContent = "Unsupported unit selection.";
+      return;
+    }
+
+    const v = Math.min(vRaw, 1e18);
+    if (v !== vRaw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    // Convert: value * (from->m2) / (to->m2)
+    const m2 = v * fFrom;
+    const converted = m2 / fTo;
+
+    const fromLabel = LABEL[fromU] || fromU;
+    const toLabel = LABEL[toU] || toU;
+
+    outEl.innerHTML =
+      `<strong>Result:</strong> ${fmt(converted)} ${toLabel}<br/>` +
+      `<span class="note">${fmt(v)} ${fromLabel} = ${fmt(converted)} ${toLabel}</span>`;
+
+    // Emphasize category/scale
+    let scaleTag = "Typical";
+    let scaleKind = "neutral";
+    if (m2 >= 1_000_000) { scaleTag = "Very large area"; scaleKind = "warn"; }
+    else if (m2 >= 10_000) { scaleTag = "Land-scale (10,000 m²+)"; scaleKind = "good"; }
+    else if (m2 < 1) { scaleTag = "Small area (< 1 m²)"; scaleKind = "neutral"; }
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromLabel, "neutral")}
+        ${badge("To: " + toLabel, "neutral")}
+        ${badge("Base: " + fmtSmart(m2) + " m²", "good")}
+        ${badge(scaleTag, scaleKind)}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Reference table below is computed from the same base conversion (m²).
+      </div>
+    `;
+
+    function addRow(u) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = `${u} (${LABEL[u] || u})`;
+      td2.textContent = `${fmt(m2 / TO_M2[u])} ${LABEL[u] || u}`;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+
+    TABLE_UNITS.forEach(addRow);
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    fromEl.value = "m2";
+    toEl.value = "ft2";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  [fromEl, toEl, roundEl].forEach((el) => {
+    el.addEventListener("change", function () {
+      if (String(valueEl.value || "").trim()) compute();
+    });
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+});
+</script>

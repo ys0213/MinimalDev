@@ -1,0 +1,444 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Character Counter",
+  description:
+    "Free character counter. Count characters with/without spaces, lines, and bytes. Works locally with accessibility and FAQ schema.",
+  href: "/utility/character-counter/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/character-counter/";
+
+const faqs = [
+  {
+    q: "What does this character counter measure?",
+    a: "It counts characters (with spaces), characters without spaces, lines, and estimates UTF-8 byte size. It can also show a basic breakdown of letters, digits, whitespace, and punctuation/symbols.",
+  },
+  {
+    q: "Is the character count the same as bytes?",
+    a: "No. Characters and bytes can differ, especially for emojis and non-ASCII text. This tool estimates UTF-8 bytes to help with limits that are defined in bytes.",
+  },
+  {
+    q: "Do newlines count as characters?",
+    a: "Yes. Newline characters are included in the 'characters (with spaces)' count.",
+  },
+  {
+    q: "Is my text stored or sent anywhere?",
+    a: "No. Everything runs locally in your browser. Text is not stored or transmitted.",
+  },
+  {
+    q: "Why might counts differ from another website?",
+    a: "Different tools may count grapheme clusters (user-perceived characters) vs code units, treat emoji sequences differently, or normalize whitespace. This tool aims to be consistent and practical for common limits.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Character Counter — ${SITE_NAME}`}
+  description="Count characters with/without spaces, lines, and estimated UTF-8 bytes. Includes live updates, input validation, result cards, accessibility, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="Character Counter"
+  intro="Paste or type text to count characters (with/without spaces), lines, and estimated UTF-8 byte size. Useful for social posts, SEO limits, and form constraints."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="character-counter">
+    <div class="form" role="form" aria-describedby="cc_privacy cc_help">
+      <div class="field">
+        <label for="cc_text">Text</label>
+        <textarea
+          id="cc_text"
+          rows="10"
+          placeholder="Paste or type your text here..."
+          style="width:100%; resize:vertical;"
+          aria-describedby="cc_help"
+        ></textarea>
+        <p class="note" id="cc_help" style="margin-top:6px;">
+          Counts update as you type. Newlines are included in character counts.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="min-width:260px;">
+          <label for="cc_count_mode">Counting mode</label>
+          <select id="cc_count_mode">
+            <option value="codeUnits" selected>Standard (JS length / code units)</option>
+            <option value="codePoints">Unicode code points (better for emoji)</option>
+          </select>
+          <p class="note" style="margin-top:6px;">
+            Code points usually match “characters” better for emoji, but complex emoji can still be multiple code points.
+          </p>
+        </div>
+
+        <div class="field" style="min-width:220px;">
+          <label>
+            <input id="cc_normalize_newlines" type="checkbox" checked />
+            Normalize newlines to LF (\n) for counting
+          </label>
+          <p class="note" style="margin-top:6px;">
+            Helps keep counts consistent across Windows (\r\n) and Unix (\n) line breaks.
+          </p>
+        </div>
+
+        <div class="field" style="min-width:220px;">
+          <label>
+            <input id="cc_trim_ends" type="checkbox" />
+            Trim leading/trailing whitespace for counting
+          </label>
+          <p class="note" style="margin-top:6px;">
+            Useful when a platform trims input automatically.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="btn" type="button" id="cc_copy_stats">Copy stats</button>
+        <button class="btn secondary" type="button" id="cc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="cc_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="cc_cards" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="cc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool reports several practical counts:
+    </p>
+    <ul>
+      <li><strong>Characters (with spaces):</strong> counts including whitespace and newlines</li>
+      <li><strong>Characters (no spaces):</strong> removes all whitespace before counting</li>
+      <li><strong>Lines:</strong> number of lines in the text</li>
+      <li><strong>UTF-8 bytes (estimate):</strong> useful for limits defined in bytes; emojis and non-ASCII use more bytes</li>
+      <li><strong>Breakdown:</strong> rough counts for letters, digits, whitespace, punctuation/symbols</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Check post limits (characters) before publishing</li>
+      <li>Validate form inputs with strict constraints</li>
+      <li>Estimate byte length for APIs that cap payload size</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/word-counter/">Word Counter</a></li>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const textEl = document.getElementById("cc_text");
+  const modeEl = document.getElementById("cc_count_mode");
+  const nlEl = document.getElementById("cc_normalize_newlines");
+  const trimEl = document.getElementById("cc_trim_ends");
+  const copyBtn = document.getElementById("cc_copy_stats");
+  const clearBtn = document.getElementById("cc_clear");
+  const errEl = document.getElementById("cc_error");
+  const summaryEl = document.getElementById("cc_summary");
+  const cardsEl = document.getElementById("cc_cards");
+
+  if (!textEl || !modeEl || !nlEl || !trimEl || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function normalizeInput(raw) {
+    let t = String(raw ?? "");
+    if (nlEl.checked) t = t.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    if (trimEl.checked) t = t.trim();
+    return t;
+  }
+
+  function countCodeUnits(s) {
+    return s.length;
+  }
+
+  function countCodePoints(s) {
+    // Counts Unicode code points (better than code units for surrogate pairs).
+    // Still not identical to grapheme clusters (e.g., some emojis are multiple code points).
+    let c = 0;
+    for (const _ch of s) c++;
+    return c;
+  }
+
+  function countChars(s, mode) {
+    return mode === "codePoints" ? countCodePoints(s) : countCodeUnits(s);
+  }
+
+  function countLines(s) {
+    if (!s) return 0;
+    // If ends with \n, split still yields trailing empty; keep consistent with "number of lines shown"
+    const parts = s.split("\n");
+    return parts.length;
+  }
+
+  function utf8ByteLength(s) {
+    // Prefer TextEncoder where available.
+    try {
+      if (typeof TextEncoder !== "undefined") {
+        return new TextEncoder().encode(s).length;
+      }
+    } catch (e) {}
+    // Fallback (approx): encodeURIComponent gives percent-encoding for UTF-8 bytes.
+    // Count bytes by interpreting %XX as one byte and non-escaped as one byte.
+    const enc = encodeURIComponent(s);
+    let bytes = 0;
+    for (let i = 0; i < enc.length; i++) {
+      if (enc[i] === "%") { bytes += 1; i += 2; }
+      else bytes += 1;
+    }
+    return bytes;
+  }
+
+  function breakdown(s) {
+    // Rough ASCII + basic Unicode categories approximation:
+    // letters: A-Z a-z plus other letters using \p{L} if supported
+    // digits: 0-9 plus \p{N} if supported
+    // whitespace: \s
+    // punctuation/symbol: everything else excluding whitespace
+    let letters = 0, digits = 0, whitespace = 0, other = 0;
+
+    let useUnicodeProps = false;
+    try {
+      // Test unicode property escapes support
+      useUnicodeProps = !!"a".match(/\p{L}/u);
+    } catch (e) {
+      useUnicodeProps = false;
+    }
+
+    const reLetter = useUnicodeProps ? /\p{L}/u : /[A-Za-z]/;
+    const reDigit  = useUnicodeProps ? /\p{N}/u : /[0-9]/;
+
+    for (const ch of s) {
+      if (/\s/u.test(ch)) whitespace++;
+      else if (reLetter.test(ch)) letters++;
+      else if (reDigit.test(ch)) digits++;
+      else other++;
+    }
+    return { letters, digits, whitespace, other };
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:170px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${escapeHtml(big)}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function render(stats) {
+    const {
+      chars, charsNoSpaces, lines, bytes,
+      letters, digits, whitespace, other,
+      mode, normalized, trimmed
+    } = stats;
+
+    // Category highlight: "short / medium / long" based on characters (heuristic)
+    let cat = "Medium";
+    let kind = "neutral";
+    if (chars <= 140) { cat = "Short"; kind = "good"; }
+    else if (chars >= 1000) { cat = "Long"; kind = "warn"; }
+    else { cat = "Medium"; kind = "neutral"; }
+
+    const flags = [];
+    if (normalized) flags.push("Newlines normalized");
+    if (trimmed) flags.push("Trim applied");
+    const flagText = flags.length ? flags.join(" · ") : "No preprocessing";
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Summary</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${badge(`${chars.toLocaleString()} chars`, "good")}
+          ${badge(`${bytes.toLocaleString()} bytes (UTF-8)`, "neutral")}
+          ${badge(cat, kind)}
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Mode: <strong>${escapeHtml(mode === "codePoints" ? "Code points" : "Code units")}</strong> · ${escapeHtml(flagText)}
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Characters (with spaces)", chars.toLocaleString(), "Includes whitespace + newlines")}
+        ${card("Characters (no spaces)", charsNoSpaces.toLocaleString(), "Whitespace removed before counting")}
+        ${card("Lines", lines.toLocaleString(), "Separated by \\n")}
+        ${card("UTF-8 bytes (est.)", bytes.toLocaleString(), "Useful for byte-based limits")}
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch; margin-top:10px;">
+        ${card("Letters", letters.toLocaleString(), "A–Z and Unicode letters")}
+        ${card("Digits", digits.toLocaleString(), "0–9 and Unicode digits")}
+        ${card("Whitespace", whitespace.toLocaleString(), "Spaces, tabs, newlines")}
+        ${card("Punct/Symbol", other.toLocaleString(), "Everything else")}
+      </div>
+    `;
+  }
+
+  function compute() {
+    clearError();
+
+    const raw = String(textEl.value ?? "");
+    const mode = String(modeEl.value || "codeUnits");
+
+    const txt = normalizeInput(raw);
+
+    const chars = countChars(txt, mode);
+    const charsNoSpaces = countChars(txt.replace(/\s/g, ""), mode);
+    const lines = countLines(txt);
+    const bytes = utf8ByteLength(txt);
+    const b = breakdown(txt);
+
+    render({
+      chars,
+      charsNoSpaces,
+      lines,
+      bytes,
+      ...b,
+      mode,
+      normalized: !!nlEl.checked,
+      trimmed: !!trimEl.checked
+    });
+  }
+
+  async function copyStats() {
+    clearError();
+    const raw = String(textEl.value ?? "");
+    if (!raw.trim()) {
+      showError("Enter some text first.");
+      return;
+    }
+
+    const mode = String(modeEl.value || "codeUnits");
+    const txt = normalizeInput(raw);
+
+    const chars = countChars(txt, mode);
+    const charsNoSpaces = countChars(txt.replace(/\s/g, ""), mode);
+    const lines = countLines(txt);
+    const bytes = utf8ByteLength(txt);
+    const b = breakdown(txt);
+
+    const payload =
+      `Characters (with spaces): ${chars}\n` +
+      `Characters (no spaces): ${charsNoSpaces}\n` +
+      `Lines: ${lines}\n` +
+      `UTF-8 bytes (estimate): ${bytes}\n` +
+      `Letters: ${b.letters}\n` +
+      `Digits: ${b.digits}\n` +
+      `Whitespace: ${b.whitespace}\n` +
+      `Punct/Symbol: ${b.other}\n` +
+      `Mode: ${mode === "codePoints" ? "code points" : "code units"}\n` +
+      `Normalize newlines: ${nlEl.checked ? "on" : "off"}\n` +
+      `Trim ends: ${trimEl.checked ? "on" : "off"}`;
+
+    try {
+      await navigator.clipboard.writeText(payload);
+      summaryEl.innerHTML = `
+        <strong>Copied.</strong>
+        <div class="note" style="margin-top:6px;">Stats copied to clipboard (not the text).</div>
+      `;
+    } catch (e) {
+      showError("Could not copy. Your browser may block clipboard access on this page.");
+    }
+  }
+
+  function clearAll() {
+    clearError();
+    textEl.value = "";
+    modeEl.value = "codeUnits";
+    nlEl.checked = true;
+    trimEl.checked = false;
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    textEl.focus();
+  }
+
+  // Live updates (debounced)
+  let t = null;
+  function scheduleCompute() {
+    if (t) window.clearTimeout(t);
+    t = window.setTimeout(function () {
+      if (String(textEl.value || "").length) compute();
+      else {
+        clearError();
+        summaryEl.textContent = "Result will appear here.";
+        cardsEl.style.display = "none";
+        cardsEl.innerHTML = "";
+      }
+    }, 120);
+  }
+
+  textEl.addEventListener("input", scheduleCompute);
+  modeEl.addEventListener("change", scheduleCompute);
+  nlEl.addEventListener("change", scheduleCompute);
+  trimEl.addEventListener("change", scheduleCompute);
+
+  copyBtn.addEventListener("click", copyStats);
+  clearBtn.addEventListener("click", clearAll);
+
+  clearAll();
+});
+</script>

@@ -1,0 +1,337 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Heart Rate Zones Calculator",
+  description:
+    "Free heart rate zones calculator. Estimate training zones from age and resting heart rate using Tanaka max HR and Karvonen (HRR) method.",
+  href: "/health/heart-rate/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/heart-rate/";
+
+// FAQ + JSON-LD (auto)
+const faqs = [
+  {
+    q: "What does this heart rate calculator do?",
+    a: "It estimates your maximum heart rate (Max HR) and training zones. It supports two common approaches: percent of Max HR and Heart Rate Reserve (Karvonen) using resting heart rate.",
+  },
+  {
+    q: "Which max heart rate formula is used?",
+    a: "This tool uses the Tanaka equation: Max HR ≈ 208 − 0.7 × age. It is an estimate and can vary by individual.",
+  },
+  {
+    q: "Do I need resting heart rate?",
+    a: "Resting heart rate is optional. If you provide it, the calculator can estimate Heart Rate Reserve zones (Karvonen), which many people find more personalized than Max-HR-only zones.",
+  },
+  {
+    q: "Are these zones medical advice?",
+    a: "No. These are training estimates for informational use. If you have heart conditions or symptoms, consult a clinician before using heart-rate-based training targets.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser. Inputs are not stored or sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Heart Rate Zones Calculator — ${SITE_NAME}`}
+  description="Estimate heart rate training zones from age (Tanaka max HR) and optional resting heart rate (Karvonen HRR). Shows zones with labels and a clear table."
+  canonicalPath={CANONICAL_PATH}
+  h1="Heart Rate Zones Calculator"
+  intro="Estimate training heart rate zones using age and optional resting heart rate. Informational only."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="heart-rate-calculator">
+    <div class="form" role="form" aria-describedby="hr_privacy_note">
+      <div class="field">
+        <label for="hr_age">Age</label>
+        <input id="hr_age" type="number" inputmode="numeric" min="1" max="120" placeholder="e.g., 30" autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <label for="hr_rest">Resting heart rate (optional)</label>
+        <input id="hr_rest" type="number" inputmode="numeric" min="20" max="150" placeholder="e.g., 60" autocomplete="off" />
+        <div class="note">If provided, zones are calculated using Heart Rate Reserve (Karvonen).</div>
+      </div>
+
+      <div class="field">
+        <label for="hr_method">Zone method</label>
+        <select id="hr_method">
+          <option value="auto" selected>Auto (use HRR if resting HR entered)</option>
+          <option value="max">Percent of Max HR</option>
+          <option value="hrr">Heart Rate Reserve (Karvonen)</option>
+        </select>
+        <div class="note">Auto is recommended for most users.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="hr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hr_error" role="alert" aria-live="assertive" style="display:none;"></div>
+
+      <div class="result" id="hr_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="hr_privacy_note" style="margin-top:10px;">
+        Informational only (not medical advice). Heart rate targets vary by fitness, medication, and health.
+        Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool estimates <strong>Max HR</strong> from age, then builds training zones.
+      If you provide <strong>resting HR</strong>, it can also compute zones using <strong>Heart Rate Reserve (HRR)</strong>.
+    </p>
+
+    <ul>
+      <li><strong>Max HR (Tanaka):</strong> 208 − 0.7 × age</li>
+      <li><strong>Percent of Max HR:</strong> zone = MaxHR × %</li>
+      <li><strong>Karvonen (HRR):</strong> zone = RestHR + (MaxHR − RestHR) × %</li>
+    </ul>
+
+    <p class="note">
+      Zones shown use a common 5-zone model:
+      Z1 50–60%, Z2 60–70%, Z3 70–80%, Z4 80–90%, Z5 90–100%.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Age 30 → Max HR ≈ 187 bpm (estimate), zones computed from that value</li>
+      <li>Age 30 + Resting HR 60 → HRR zones are usually lower at the bottom end vs Max-only zones</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/bmr-calculator/">BMR Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ageEl = document.getElementById("hr_age");
+  const restEl = document.getElementById("hr_rest");
+  const methodEl = document.getElementById("hr_method");
+  const calcBtn = document.getElementById("hr_calc");
+  const clearBtn = document.getElementById("hr_clear");
+  const errEl = document.getElementById("hr_error");
+  const outEl = document.getElementById("hr_result");
+
+  if (!ageEl || !restEl || !methodEl || !calcBtn || !clearBtn || !errEl || !outEl) return;
+
+  // Common 5-zone model (percent intensity boundaries)
+  const ZONES = [
+    { key: "z1", name: "Zone 1", label: "Easy / recovery",   lo: 0.50, hi: 0.60, tone: "neutral" },
+    { key: "z2", name: "Zone 2", label: "Aerobic base",      lo: 0.60, hi: 0.70, tone: "good" },
+    { key: "z3", name: "Zone 3", label: "Tempo",             lo: 0.70, hi: 0.80, tone: "warn" },
+    { key: "z4", name: "Zone 4", label: "Threshold",         lo: 0.80, hi: 0.90, tone: "warn" },
+    { key: "z5", name: "Zone 5", label: "VO₂ max / hard",    lo: 0.90, hi: 1.00, tone: "warn" },
+  ];
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function round0(n) {
+    return Math.round(n);
+  }
+
+  function badgeHTML(tone, text) {
+    const base =
+      "display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid rgba(255,255,255,0.14);";
+    const bg =
+      tone === "good"
+        ? "background: rgba(34,197,94,0.12);"
+        : tone === "warn"
+          ? "background: rgba(245,158,11,0.14);"
+          : "background: rgba(255,255,255,0.06);";
+    return "<span style='" + base + bg + "'>" + text + "</span>";
+  }
+
+  function card(title, main, sub, tone) {
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badgeHTML(tone, title) +
+        "</div>" +
+        "<div style='font-size:26px; margin-top:6px; font-weight:900;'>" + main + "</div>" +
+        "<div class='note' style='margin-top:6px;'>" + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function tanakaMaxHr(age) {
+    return 208 - 0.7 * age;
+  }
+
+  function compute() {
+    clearError();
+
+    const age = toNum(ageEl.value);
+    const rest = String(restEl.value || "").trim() === "" ? NaN : toNum(restEl.value);
+    const method = String(methodEl.value);
+
+    if (!Number.isFinite(age) || age <= 0 || age > 120) return showError("Please enter a valid age (1–120).");
+
+    const maxHr = tanakaMaxHr(age);
+    if (!Number.isFinite(maxHr) || maxHr <= 0) return showError("Could not compute Max HR with this age.");
+
+    const restProvided = Number.isFinite(rest);
+    if (restProvided) {
+      if (rest < 20 || rest > 150) return showError("Resting heart rate looks out of range. Please check your input.");
+      if (rest >= maxHr) return showError("Resting heart rate must be lower than estimated Max HR to compute HRR zones.");
+    }
+
+    let use = method;
+    if (use === "auto") use = restProvided ? "hrr" : "max";
+    if (use === "hrr" && !restProvided) return showError("To use HRR (Karvonen), please enter resting heart rate.");
+
+    const hrr = restProvided ? (maxHr - rest) : NaN;
+
+    // Header cards
+    const cardsHtml =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;'>" +
+        card("Max HR (est.)", round0(maxHr).toLocaleString() + " bpm", "Tanaka: 208 − 0.7 × age", "neutral") +
+        (restProvided
+          ? card("Resting HR", round0(rest).toLocaleString() + " bpm", "Used for HRR method if selected", "good")
+          : card("Method", (use === "max" ? "Max HR %" : "HRR"), (use === "max" ? "Percent of Max HR zones" : "Karvonen HRR zones"), "neutral")
+        ) +
+        (restProvided
+          ? card("HR Reserve", round0(hrr).toLocaleString() + " bpm", "Max HR − Resting HR", "neutral")
+          : ""
+        ) +
+      "</div>";
+
+    const methodNote =
+      "<div class='note' style='margin-bottom:10px;'>" +
+        "<strong>Zones computed using:</strong> " +
+        (use === "hrr"
+          ? "Heart Rate Reserve (Karvonen): RestHR + (MaxHR − RestHR) × %"
+          : "Percent of Max HR: MaxHR × %") +
+      "</div>";
+
+    // Table
+    const tableHead =
+      "<div style='overflow:auto;'>" +
+        "<table style='width:100%; border-collapse:collapse;'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th style='text-align:left; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>Zone</th>" +
+              "<th style='text-align:left; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>Focus</th>" +
+              "<th style='text-align:right; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>% range</th>" +
+              "<th style='text-align:right; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>Target HR</th>" +
+            "</tr>" +
+          "</thead><tbody>";
+
+    const rows = ZONES.map((z) => {
+      const loPct = z.lo;
+      const hiPct = z.hi;
+
+      let lo, hi;
+      if (use === "hrr") {
+        lo = rest + hrr * loPct;
+        hi = rest + hrr * hiPct;
+      } else {
+        lo = maxHr * loPct;
+        hi = maxHr * hiPct;
+      }
+
+      const loR = round0(lo);
+      const hiR = round0(hi);
+
+      return (
+        "<tr>" +
+          "<td style='padding:8px; border-bottom:1px solid rgba(255,255,255,0.08);'>" +
+            "<div style='display:flex; gap:8px; align-items:center;'>" +
+              "<strong>" + z.name + "</strong>" +
+              badgeHTML(z.tone, z.label) +
+            "</div>" +
+          "</td>" +
+          "<td style='padding:8px; border-bottom:1px solid rgba(255,255,255,0.08);'>" + z.label + "</td>" +
+          "<td style='padding:8px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.08);'>" +
+            Math.round(loPct * 100) + "–" + Math.round(hiPct * 100) + "%" +
+          "</td>" +
+          "<td style='padding:8px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.08);'>" +
+            loR.toLocaleString() + "–" + hiR.toLocaleString() + " bpm" +
+          "</td>" +
+        "</tr>"
+      );
+    }).join("");
+
+    const tableTail = "</tbody></table></div>";
+
+    const footer =
+      "<div class='note' style='margin-top:10px;'>" +
+        "These zones are estimates. Your true Max HR can differ from formulas, and heart rate response is affected by heat, fatigue, altitude, caffeine, and medication." +
+      "</div>";
+
+    outEl.innerHTML = cardsHtml + methodNote + tableHead + rows + tableTail + footer;
+  }
+
+  function clearAll() {
+    clearError();
+    ageEl.value = "";
+    restEl.value = "";
+    methodEl.value = "auto";
+    outEl.textContent = "Result will appear here.";
+    ageEl.focus();
+  }
+
+  // Enter triggers calculate
+  [ageEl, restEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

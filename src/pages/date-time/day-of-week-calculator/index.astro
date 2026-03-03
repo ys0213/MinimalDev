@@ -1,0 +1,280 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Day of Week Calculator",
+  description:
+    "Free day of week calculator. Enter a date to get the weekday instantly, with locale-friendly formatting and FAQ schema. Runs locally.",
+  href: "/date-time/day-of-week-calculator/",
+  order: 58,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/day-of-week-calculator/";
+
+const faqs = [
+  {
+    q: "Does this use my locale?",
+    a: "Yes. The weekday name is formatted using your browser’s locale settings (for example, English or Korean).",
+  },
+  {
+    q: "Does this use my timezone?",
+    a: "Yes. The date is interpreted in your device’s local timezone (midnight local time).",
+  },
+  {
+    q: "Do you store any dates I enter?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+  {
+    q: "What date formats are supported?",
+    a: "Use the date picker (YYYY-MM-DD). It avoids ambiguity across regions.",
+  },
+  {
+    q: "Can I calculate for past or future dates?",
+    a: "Yes. Any valid date supported by your browser can be used.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Day of Week Calculator — ${SITE_NAME}`}
+  description="Enter a date to get the day of the week instantly. Locale-aware weekday name, accessible UI, input validation, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="Day of Week Calculator"
+  intro="Pick a date to find the weekday (Monday, Tuesday, etc.). Uses your local timezone and formats weekday names using your browser locale."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="day-of-week-calculator">
+    <div class="form" role="form" aria-describedby="dow_help dow_privacy">
+      <div class="field">
+        <label for="dow_date">Date</label>
+        <input id="dow_date" type="date" />
+        <p class="note" id="dow_help" style="margin-top:6px;">
+          Tip: use the date picker to avoid ambiguous formats. The calculation uses local time (midnight).
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="dow_locale">Output language (locale)</label>
+        <select id="dow_locale">
+          <option value="auto" selected>Auto (browser default)</option>
+          <option value="en-US">English (en-US)</option>
+          <option value="en-GB">English (en-GB)</option>
+          <option value="ko-KR">Korean (ko-KR)</option>
+          <option value="ja-JP">Japanese (ja-JP)</option>
+          <option value="de-DE">German (de-DE)</option>
+          <option value="fr-FR">French (fr-FR)</option>
+          <option value="es-ES">Spanish (es-ES)</option>
+        </select>
+        <p class="note" style="margin-top:6px;">
+          “Auto” uses your browser locale. A fixed locale can be useful for screenshots or consistent output.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dow_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="dow_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dow_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="dow_summary" role="status" style="margin-top:12px;">
+        Select a date to see the weekday.
+      </div>
+
+      <div class="result" id="dow_cards" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="dow_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs or results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool interprets the chosen date as local midnight and uses your selected locale to format the weekday name.
+      That avoids region-specific ambiguity from manual date formats.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-03-02 → shows the weekday for that date</li>
+      <li>Change locale to “ko-KR” to display 요일 in Korean</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/add-subtract-days-calculator/">Add/Subtract Days</a></li>
+      <li><a href="/date-time/weeks-between-dates-calculator/">Weeks Between</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dateEl = document.getElementById("dow_date");
+  const localeEl = document.getElementById("dow_locale");
+  const calcBtn = document.getElementById("dow_calc");
+  const clearBtn = document.getElementById("dow_clear");
+  const errEl = document.getElementById("dow_error");
+  const summaryEl = document.getElementById("dow_summary");
+  const cardsEl = document.getElementById("dow_cards");
+
+  if (!dateEl || !localeEl || !calcBtn || !clearBtn || !errEl || !summaryEl || !cardsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:170px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(ds) {
+    const s = String(ds || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return { ok: false, msg: "Please select a valid date." };
+
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return { ok: false, msg: "Please select a valid date." };
+
+    // Guard against rollover: ensure components match
+    const [yy, mm, dd] = s.split("-").map(Number);
+    const y = d.getFullYear();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    if (y !== yy || m !== mm || day !== dd) return { ok: false, msg: "Please select a valid date." };
+
+    return { ok: true, date: d, iso: s };
+  }
+
+  function resolveLocale() {
+    const v = String(localeEl.value || "auto");
+    return v === "auto" ? undefined : v;
+  }
+
+  function compute() {
+    clearError();
+
+    const parsed = parseISODate(dateEl.value);
+    if (!parsed.ok) {
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      summaryEl.textContent = "Select a date to see the weekday.";
+      showError(parsed.msg);
+      return;
+    }
+
+    const loc = resolveLocale();
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+
+    // Weekday name (localized)
+    let weekday = "";
+    try {
+      weekday = new Intl.DateTimeFormat(loc, { weekday: "long" }).format(parsed.date);
+    } catch (e) {
+      // Fallback: browser default
+      weekday = new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(parsed.date);
+    }
+
+    // Extra details: numeric weekday index (0=Sun..6=Sat)
+    const idx = parsed.date.getDay();
+    const idxLabel = String(idx); // keep simple/transparent
+
+    summaryEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Result</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${badge(`Timezone: ${tz}`)}
+          ${badge(`Locale: ${loc || "Auto"}`)}
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Date: <strong>${escapeHtml(parsed.iso)}</strong>
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Weekday", `<span>${escapeHtml(weekday)}</span>`, "Localized weekday name")}
+        ${card("Weekday index", `<span>${escapeHtml(idxLabel)}</span>`, "JavaScript getDay(): 0=Sun … 6=Sat")}
+      </div>
+    `;
+  }
+
+  function clearAll() {
+    clearError();
+    dateEl.value = "";
+    localeEl.value = "auto";
+    summaryEl.textContent = "Select a date to see the weekday.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    dateEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  // UX: recompute when user changes inputs (if date is present)
+  dateEl.addEventListener("change", function () {
+    if (String(dateEl.value || "").trim()) compute();
+  });
+  localeEl.addEventListener("change", function () {
+    if (String(dateEl.value || "").trim()) compute();
+  });
+
+  // Accessibility: Enter triggers calculation
+  dateEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearAll();
+});
+</script>

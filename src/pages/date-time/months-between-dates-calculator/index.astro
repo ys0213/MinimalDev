@@ -1,0 +1,399 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Months Between Dates Calculator",
+  description:
+    "Free months between dates calculator. Get calendar-month difference, full months + remaining days, and an inclusive option. Includes FAQ schema, validation, accessible result cards.",
+  href: "/date-time/months-between-dates-calculator/",
+  order: 34,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/months-between-dates-calculator/";
+
+const faqs = [
+  {
+    q: "What does “months between” mean?",
+    a: "This tool reports a calendar-month difference: how many month boundaries you move when going from the start date to the end date. It also shows “full months + remaining days” using an anchor-date method.",
+  },
+  {
+    q: "Why can month results differ between calculators?",
+    a: "Months have different lengths. Some calculators use average days per month; this one uses calendar months, which is usually the most intuitive for date ranges like billing cycles or anniversaries.",
+  },
+  {
+    q: "How are “full months” computed?",
+    a: "It first counts whole months by moving the start date forward (or backward) by that many months without passing the end date, then reports the remaining day difference.",
+  },
+  {
+    q: "Does it include the start/end date?",
+    a: "By default it measures from the start date to the end date. If you enable “inclusive,” it adds 1 day to the span before computing the breakdown, which is useful for counts that include both endpoints.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Months Between Dates Calculator — ${SITE_NAME}`}
+  description="Calculate months between two dates using calendar-month logic. Shows month difference, full months + remaining days, optional inclusive counting, validation, accessible result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Months Between Dates Calculator"
+  intro="Find the number of months between two dates. Shows calendar-month difference, full months plus remaining days, and total days. Optional inclusive counting."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="months-between-dates-calculator">
+    <div class="form" role="form" aria-describedby="mbd_help mbd_privacy">
+      <div class="field">
+        <label for="mbd_start">Start date</label>
+        <input id="mbd_start" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="mbd_end">End date</label>
+        <input id="mbd_end" type="date" />
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="mbd_inclusive" type="checkbox" />
+          Inclusive (count both start and end dates)
+        </label>
+        <p class="note" id="mbd_help" style="margin-top:6px;">
+          Inclusive adds 1 day to the span when both dates are provided (useful for “including both dates” counts).
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mbd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mbd_swap">Swap</button>
+        <button class="btn secondary" type="button" id="mbd_today">Set end to today</button>
+        <button class="btn secondary" type="button" id="mbd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mbd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="mbd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="mbd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="mbd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses <strong>calendar-month</strong> arithmetic (not average days/month).
+      It reports:
+      <br/>
+      1) <strong>Calendar months difference</strong> (month boundaries between dates)
+      <br/>
+      2) <strong>Full months + remaining days</strong> by anchoring from the start date and stepping whole months without passing the end date
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-15 → 2026-03-15 = 2 calendar months, 2 full months + 0 days</li>
+      <li>2026-01-31 → 2026-02-28 = 1 calendar month, 0 full months + 28 days (end-of-month edge case)</li>
+      <li>Inclusive example: same date → 1 day span (inclusive), 0 days (non-inclusive)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/weeks-between-dates-calculator/">Weeks Between Dates</a></li>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/add-months-calculator/">Add Months</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("mbd_start");
+  const endEl = document.getElementById("mbd_end");
+  const incEl = document.getElementById("mbd_inclusive");
+  const calcBtn = document.getElementById("mbd_calc");
+  const swapBtn = document.getElementById("mbd_swap");
+  const todayBtn = document.getElementById("mbd_today");
+  const clearBtn = document.getElementById("mbd_clear");
+  const errEl = document.getElementById("mbd_error");
+  const outEl = document.getElementById("mbd_result");
+  const detailsEl = document.getElementById("mbd_details");
+
+  if (!startEl || !endEl || !incEl || !calcBtn || !swapBtn || !todayBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+
+    return d;
+  }
+
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function daysInMonth(y, m0) {
+    // m0: 0-11
+    return new Date(y, m0 + 1, 0).getDate();
+  }
+
+  function addMonthsClamped(date, months) {
+    // Add calendar months, clamping day to end-of-month if needed.
+    const y = date.getFullYear();
+    const m = date.getMonth();
+    const d = date.getDate();
+
+    const targetM = m + months;
+    const ty = y + Math.floor(targetM / 12);
+    const tm = ((targetM % 12) + 12) % 12;
+
+    const dim = daysInMonth(ty, tm);
+    const td = Math.min(d, dim);
+
+    return new Date(ty, tm, td);
+  }
+
+  function diffDaysDateOnly(a, b) {
+    const aMid = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const bMid = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((bMid.getTime() - aMid.getTime()) / 86400000);
+  }
+
+  function monthIndex(d) {
+    return d.getFullYear() * 12 + d.getMonth();
+  }
+
+  function calendarMonthDiff(a, b) {
+    // Simple month boundary difference (ignores day-of-month).
+    return monthIndex(b) - monthIndex(a);
+  }
+
+  function computeFullMonthsAndRemainder(start, end) {
+    // Returns signed fullMonths and signed remainingDays such that:
+    // start + fullMonths(months) then + remainingDays(days) reaches end (date-only),
+    // with fullMonths chosen as large as possible in magnitude without crossing end.
+    const forward = end.getTime() >= start.getTime();
+    const s = forward ? start : end;
+    const e = forward ? end : start;
+
+    // initial guess by month boundaries
+    let mGuess = calendarMonthDiff(s, e);
+
+    // Adjust guess so that s + mGuess months does not pass e
+    let anchor = addMonthsClamped(s, mGuess);
+
+    while (anchor.getTime() > e.getTime()) {
+      mGuess -= 1;
+      anchor = addMonthsClamped(s, mGuess);
+    }
+    while (addMonthsClamped(s, mGuess + 1).getTime() <= e.getTime()) {
+      mGuess += 1;
+      anchor = addMonthsClamped(s, mGuess);
+    }
+
+    const remDays = diffDaysDateOnly(anchor, e);
+
+    if (forward) {
+      return { fullMonths: mGuess, remDays: remDays, anchor: anchor };
+    }
+    // reverse direction
+    return { fullMonths: -mGuess, remDays: -remDays, anchor: anchor };
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const sRaw = String(startEl.value || "").trim();
+    const eRaw = String(endEl.value || "").trim();
+    const s0 = parseISODate(sRaw);
+    const e0 = parseISODate(eRaw);
+
+    if (!s0 || !e0) {
+      showError("Please enter valid start and end dates.");
+      return;
+    }
+
+    // Inclusive: convert to an effective end by adding (or subtracting) 1 day in date-only terms
+    // so that same-date inclusive yields 1 day.
+    let s = s0;
+    let e = e0;
+
+    const inclusive = !!incEl.checked;
+    if (inclusive) {
+      const direction = e.getTime() >= s.getTime() ? 1 : -1;
+      e = new Date(e.getFullYear(), e.getMonth(), e.getDate() + direction);
+    }
+
+    const calMonths = calendarMonthDiff(s, e);
+    const totalDays = diffDaysDateOnly(s, e);
+
+    const breakdown = computeFullMonthsAndRemainder(s, e);
+
+    const directionBadge =
+      totalDays === 0 ? badge("No change") : (totalDays > 0 ? badge("End after start") : badge("End before start"));
+    const inclusiveText = inclusive ? "Inclusive" : "Non-inclusive";
+
+    // category emphasis
+    const monthEmphasis =
+      Math.abs(breakdown.fullMonths) >= 12 ? badge("Year-scale") : (Math.abs(breakdown.fullMonths) >= 1 ? badge("Month-scale") : badge("Day-scale"));
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          ${directionBadge}
+          ${badge(inclusiveText)}
+          ${monthEmphasis}
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card(
+          "Calendar months difference",
+          `<span>${calMonths.toLocaleString()}</span>`,
+          "Month boundary difference (year×12 + month)"
+        )}
+        ${card(
+          "Full months + remaining days",
+          `<span>${breakdown.fullMonths.toLocaleString()}</span> <span style="font-size:18px; font-weight:900;">mo</span>`,
+          `Remaining: ${breakdown.remDays.toLocaleString()} day(s)`
+        )}
+        ${card(
+          "Total days",
+          `<span>${totalDays.toLocaleString()}</span>`,
+          `From ${escapeHtml(toISO(s0))} to ${escapeHtml(toISO(e0))}`
+        )}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    const anchorIso = toISO(breakdown.anchor);
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Breakdown</strong>
+        ${badge("Calendar-month logic")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Start: <strong>${escapeHtml(toISO(s0))}</strong> · End: <strong>${escapeHtml(toISO(e0))}</strong> · Mode: <strong>${escapeHtml(inclusiveText)}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Step 1 (full months): <strong>${breakdown.fullMonths.toLocaleString()}</strong> month(s) → anchor date <strong>${escapeHtml(anchorIso)}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Step 2 (remaining days): <strong>${breakdown.remDays.toLocaleString()}</strong> day(s)
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Calendar months difference: <strong>${calMonths.toLocaleString()}</strong> (independent of day-of-month)
+      </div>
+    `;
+  }
+
+  function setEndToToday() {
+    const now = new Date();
+    endEl.value = toISO(now);
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const tmp = startEl.value;
+    startEl.value = endEl.value;
+    endEl.value = tmp;
+    resetOutputs();
+  });
+
+  todayBtn.addEventListener("click", function () {
+    setEndToToday();
+    resetOutputs();
+    endEl.focus();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    incEl.checked = false;
+    resetOutputs();
+    startEl.focus();
+  });
+
+  startEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+  endEl.addEventListener("keydown", (e) => { if (e.key === "Enter") compute(); });
+
+  resetOutputs();
+});
+</script>

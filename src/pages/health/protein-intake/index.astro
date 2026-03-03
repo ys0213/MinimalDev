@@ -1,0 +1,379 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Protein Intake Calculator",
+  description:
+    "Free protein intake calculator. Estimate daily protein needs in grams based on goal and body weight (kg or lb).",
+  href: "/health/protein-intake/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/protein-intake/";
+
+// FAQ content + JSON-LD (auto)
+const faqs = [
+  {
+    q: "What does this protein intake calculator do?",
+    a: "It estimates a daily protein target in grams using a body-weight guideline (g/kg) based on your goal and activity. It’s a starting point, not medical advice.",
+  },
+  {
+    q: "Which guideline does it use?",
+    a: "It uses a grams-per-kilogram range by goal (maintenance, fat loss, muscle gain, endurance). You can also choose a custom g/kg value.",
+  },
+  {
+    q: "Can I enter my weight in pounds?",
+    a: "Yes. The calculator converts lb to kg internally (1 lb = 0.45359237 kg).",
+  },
+  {
+    q: "Why does it show a range?",
+    a: "Protein needs vary by training volume, body composition, age, and diet. A range is more realistic than a single number for most people.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser. Inputs are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Protein Intake Calculator — ${SITE_NAME}`}
+  description="Estimate daily protein intake in grams from your body weight and goal. Supports kg/lb, shows a target range, and runs locally in your browser."
+  canonicalPath={CANONICAL_PATH}
+  h1="Protein Intake Calculator"
+  intro="Estimate a daily protein target (grams/day) from your weight and goal. Informational only."
+>
+  {/* FAQ Schema (auto from faqs[]) */}
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="protein-intake-calculator">
+    <div class="form" role="form" aria-describedby="pi_privacy_note">
+      <div class="field">
+        <label for="pi_unit">Units</label>
+        <select id="pi_unit">
+          <option value="metric" selected>Metric (kg)</option>
+          <option value="imperial">Imperial (lb)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pi_weight">Body weight</label>
+        <input
+          id="pi_weight"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder="e.g., 70"
+          autocomplete="off"
+          aria-describedby="pi_weight_help"
+        />
+        <div class="note" id="pi_weight_help">kg</div>
+      </div>
+
+      <div class="field">
+        <label for="pi_goal">Goal</label>
+        <select id="pi_goal" aria-describedby="pi_goal_help">
+          <option value="general" selected>General health / maintenance</option>
+          <option value="fatloss">Fat loss (dieting)</option>
+          <option value="muscle">Muscle gain / strength training</option>
+          <option value="endurance">Endurance training</option>
+          <option value="custom">Custom (choose g/kg)</option>
+        </select>
+        <div class="note" id="pi_goal_help">
+          You can use a preset range or choose a custom grams-per-kg value.
+        </div>
+      </div>
+
+      <div class="field" id="pi_custom_wrap" style="display:none;">
+        <label for="pi_custom_gkg">Custom protein target (g/kg/day)</label>
+        <input
+          id="pi_custom_gkg"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="5"
+          step="0.05"
+          placeholder="e.g., 1.8"
+          autocomplete="off"
+          aria-describedby="pi_custom_help"
+        />
+        <div class="note" id="pi_custom_help">
+          Typical practical range is roughly 0.8–2.2 g/kg/day for many adults, depending on goal.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pi_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pi_clear">Clear</button>
+      </div>
+
+      {/* Error region */}
+      <div class="result" id="pi_error" role="alert" aria-live="assertive" style="display:none;"></div>
+
+      {/* Result region */}
+      <div class="result" id="pi_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="pi_privacy_note" style="margin-top:10px;">
+        Informational only (not medical advice). Protein needs vary by individual and medical conditions.
+        Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool estimates daily protein using a body-weight guideline:
+      <strong>protein (g/day) = body weight (kg) × target (g/kg/day)</strong>.
+      If you enter pounds, it converts to kilograms using <strong>1 lb = 0.45359237 kg</strong>.
+    </p>
+
+    <p class="note">
+      Presets in this tool use a range (min–max) to reflect individual variability:
+    </p>
+
+    <ul>
+      <li><strong>General / maintenance:</strong> 0.8–1.2 g/kg/day</li>
+      <li><strong>Fat loss:</strong> 1.6–2.2 g/kg/day</li>
+      <li><strong>Muscle gain / strength:</strong> 1.6–2.2 g/kg/day</li>
+      <li><strong>Endurance:</strong> 1.2–1.7 g/kg/day</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>70 kg, general → about 56–84 g/day</li>
+      <li>70 kg, fat loss → about 112–154 g/day</li>
+      <li>150 lb (≈ 68.0 kg), endurance → about 82–116 g/day</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/macro/">Macro Calculator</a></li>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/bmr-calculator/">BMR Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("pi_unit");
+  const wEl = document.getElementById("pi_weight");
+  const wHelp = document.getElementById("pi_weight_help");
+
+  const goalEl = document.getElementById("pi_goal");
+  const customWrap = document.getElementById("pi_custom_wrap");
+  const customEl = document.getElementById("pi_custom_gkg");
+
+  const calcBtn = document.getElementById("pi_calc");
+  const clearBtn = document.getElementById("pi_clear");
+
+  const errEl = document.getElementById("pi_error");
+  const outEl = document.getElementById("pi_result");
+
+  if (
+    !unitEl || !wEl || !wHelp ||
+    !goalEl || !customWrap || !customEl ||
+    !calcBtn || !clearBtn || !errEl || !outEl
+  ) return;
+
+  const LB_TO_KG = 0.45359237;
+
+  // Preset ranges in g/kg/day
+  const PRESETS = {
+    general: { min: 0.8, max: 1.2, label: "General / maintenance" },
+    fatloss: { min: 1.6, max: 2.2, label: "Fat loss" },
+    muscle:  { min: 1.6, max: 2.2, label: "Muscle gain / strength" },
+    endurance:{ min: 1.2, max: 1.7, label: "Endurance training" },
+  };
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function setUnitUX() {
+    const u = String(unitEl.value);
+    wHelp.textContent = (u === "imperial") ? "lb" : "kg";
+    wEl.placeholder = (u === "imperial") ? "e.g., 150" : "e.g., 70";
+  }
+
+  function toggleCustom() {
+    const isCustom = String(goalEl.value) === "custom";
+    customWrap.style.display = isCustom ? "block" : "none";
+  }
+
+  function round0(n) {
+    return Math.round(n).toLocaleString();
+  }
+
+  function round2(n) {
+    const r = Math.round(n * 100) / 100;
+    return r.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  }
+
+  function badgeHTML(tone, text) {
+    const base = "display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid rgba(255,255,255,0.14);";
+    const bg = tone === "good"
+      ? "background: rgba(34,197,94,0.12);"
+      : tone === "warn"
+        ? "background: rgba(245,158,11,0.14);"
+        : "background: rgba(255,255,255,0.06);";
+    return "<span style='" + base + bg + "'>" + text + "</span>";
+  }
+
+  function card(title, main, sub, tone) {
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badgeHTML(tone, title) +
+        "</div>" +
+        "<div style='font-size:26px; margin-top:6px; font-weight:900;'>" + main + "</div>" +
+        "<div class='note' style='margin-top:6px;'>" + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function compute() {
+    clearError();
+
+    const unit = String(unitEl.value);
+    const w = toNum(wEl.value);
+    const goal = String(goalEl.value);
+
+    if (!Number.isFinite(w) || w <= 0) return showError("Please enter a valid body weight.");
+
+    const kg = (unit === "imperial") ? (w * LB_TO_KG) : w;
+    if (!Number.isFinite(kg) || kg <= 0) return showError("Could not interpret your weight input.");
+
+    let minGkg, maxGkg, label, isCustom = false;
+
+    if (goal === "custom") {
+      isCustom = true;
+      const gkg = toNum(customEl.value);
+      if (!Number.isFinite(gkg) || gkg <= 0) return showError("Please enter a valid custom target (g/kg/day).");
+      if (gkg > 5) return showError("Custom target is too high. Please enter a realistic g/kg/day value.");
+      minGkg = gkg;
+      maxGkg = gkg;
+      label = "Custom";
+    } else {
+      const preset = PRESETS[goal];
+      if (!preset) return showError("Please choose a valid goal.");
+      minGkg = preset.min;
+      maxGkg = preset.max;
+      label = preset.label;
+    }
+
+    const minG = kg * minGkg;
+    const maxG = kg * maxGkg;
+
+    const shownWeight =
+      unit === "imperial"
+        ? (round0(w) + " lb (≈ " + round2(kg) + " kg)")
+        : (round2(kg) + " kg");
+
+    const rangeText = (isCustom)
+      ? (round0(minG) + " g/day")
+      : (round0(minG) + "–" + round0(maxG) + " g/day");
+
+    const midpoint = (minG + maxG) / 2;
+    const midText = round0(midpoint) + " g/day";
+
+    const summary =
+      "<div style='margin-bottom:12px;'>" +
+        "<strong>Estimated protein target:</strong> " + rangeText + "<br/>" +
+        "<span class='note'>Weight: " + shownWeight + " · Goal: " + label + " · Guideline: " +
+        (isCustom ? (round2(minGkg) + " g/kg/day") : (round2(minGkg) + "–" + round2(maxGkg) + " g/kg/day")) +
+        "</span>" +
+      "</div>";
+
+    const cards =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap;'>" +
+        card("Target range", rangeText, "Main recommendation for planning meals", "good") +
+        card("Simple target", midText, "Midpoint (useful as a single-number goal)", "neutral") +
+      "</div>";
+
+    const note =
+      "<div class='note' style='margin-top:10px;'>" +
+        "Note: This tool does not account for medical conditions (e.g., kidney disease) or special populations. If unsure, consult a clinician or dietitian." +
+      "</div>";
+
+    outEl.innerHTML = summary + cards + note;
+  }
+
+  function clearAll() {
+    clearError();
+    unitEl.value = "metric";
+    goalEl.value = "general";
+    wEl.value = "";
+    customEl.value = "";
+    toggleCustom();
+    setUnitUX();
+    outEl.textContent = "Result will appear here.";
+  }
+
+  // Enter key triggers calculate (a11y/UX)
+  [wEl, customEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  unitEl.addEventListener("change", function () {
+    setUnitUX();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+  });
+
+  goalEl.addEventListener("change", function () {
+    toggleCustom();
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    if (String(goalEl.value) === "custom") customEl.focus();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  // init
+  setUnitUX();
+  toggleCustom();
+});
+</script>

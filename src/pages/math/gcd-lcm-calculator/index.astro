@@ -1,0 +1,364 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "GCD / LCM Calculator",
+  description:
+    "Free GCD/LCM calculator. Find greatest common divisor and least common multiple for two or more integers with steps.",
+  href: "/math/gcd-lcm-calculator/",
+  order: 96,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/gcd-lcm-calculator/";
+
+const faqs = [
+  {
+    q: "What is GCD (greatest common divisor)?",
+    a: "GCD is the largest positive integer that divides each number with no remainder. It is also called HCF.",
+  },
+  {
+    q: "What is LCM (least common multiple)?",
+    a: "LCM is the smallest positive integer that is a multiple of each number.",
+  },
+  {
+    q: "Can I enter more than two numbers?",
+    a: "Yes. Enter a comma-separated list like 12, 18, 30. The calculator reduces pairwise across the list.",
+  },
+  {
+    q: "Do negative numbers work?",
+    a: "Yes. GCD and LCM are computed using absolute values. LCM is reported as a positive number.",
+  },
+  {
+    q: "What about zeros?",
+    a: "GCD(a, 0) = |a|. LCM(a, 0) is 0 by convention. If all inputs are 0, both results are 0.",
+  },
+  {
+    q: "How are GCD and LCM related?",
+    a: "For two integers a and b (not both 0), |a×b| = GCD(a,b) × LCM(a,b).",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`GCD / LCM Calculator — ${SITE_NAME}`}
+  description="Compute GCD (HCF) and LCM for two or more integers. Includes validation, result cards, and step-by-step Euclidean algorithm (for two numbers)."
+  canonicalPath={CANONICAL_PATH}
+  h1="GCD / LCM Calculator"
+  intro="Enter integers to calculate GCD (HCF) and LCM. Supports multiple numbers (comma-separated) and shows Euclidean steps for the first two."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="gcd-lcm-calculator">
+    <div class="form" role="form" aria-describedby="gl_note">
+      <div class="field">
+        <label for="gl_nums">Numbers (comma-separated)</label>
+        <input
+          id="gl_nums"
+          type="text"
+          inputmode="text"
+          placeholder="e.g., 12, 18"
+          aria-describedby="gl_help"
+        />
+        <p class="note" id="gl_help" style="margin-top:6px;">
+          Integers only. Examples: <code>12,18</code> · <code>24, 60, 90</code> · negatives allowed.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="gl_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="gl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="gl_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="gl_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="gl_steps" style="margin-top:12px; display:none;">
+        <!-- steps injected -->
+      </div>
+
+      <p class="note" id="gl_note" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>GCD (Euclidean algorithm):</strong> repeatedly apply division with remainder until remainder is 0.<br/>
+      <strong>LCM:</strong> for two numbers, LCM(a,b) = |a×b| ÷ GCD(a,b) (when not both 0).<br/>
+      For multiple numbers, compute pairwise: GCD(a,b,c) = GCD(GCD(a,b),c), similarly for LCM.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>12, 18 → GCD = 6, LCM = 36</li>
+      <li>24, 60, 90 → GCD = 6, LCM = 360</li>
+      <li>-8, 12 → GCD = 4, LCM = 24</li>
+      <li>10, 0 → GCD = 10, LCM = 0</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/ratio-calculator/">Ratio Calculator</a></li>
+      <li><a href="/math/proportion-calculator/">Proportion Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const numsEl = document.getElementById("gl_nums");
+  const calcBtn = document.getElementById("gl_calc");
+  const clearBtn = document.getElementById("gl_clear");
+  const errEl = document.getElementById("gl_error");
+  const outEl = document.getElementById("gl_result");
+  const stepsEl = document.getElementById("gl_steps");
+
+  if (!numsEl || !calcBtn || !clearBtn || !errEl || !outEl || !stepsEl) return;
+
+  function s(v){ return String(v ?? "").trim(); }
+
+  function showError(msg){
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function clearError(){
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  // Safe integer parsing (no scientific notation, no decimals)
+  function parseIntegers(raw){
+    const text = s(raw);
+    if (!text) return [];
+
+    const parts = text.split(",").map(p => s(p)).filter(Boolean);
+    if (!parts.length) return [];
+
+    const vals = [];
+    for (const p of parts) {
+      // allow leading +/-, digits only
+      if (!/^[+-]?\d+$/.test(p)) return null;
+      const n = Number(p);
+      // require safe integer range to avoid precision surprises in JS
+      if (!Number.isSafeInteger(n)) return null;
+      vals.push(n);
+    }
+    return vals;
+  }
+
+  function abs(n){ return Math.abs(n); }
+
+  // Euclidean algorithm, returns [g, steps]
+  function gcdWithSteps(a, b){
+    let x = abs(a);
+    let y = abs(b);
+    const steps = [];
+
+    // Handle gcd(0,0)
+    if (x === 0 && y === 0) return [0, steps];
+
+    while (y !== 0) {
+      const q = Math.trunc(x / y);
+      const r = x % y;
+      steps.push({ x, y, q, r });
+      x = y;
+      y = r;
+    }
+    return [x, steps];
+  }
+
+  function gcd(a, b){
+    return gcdWithSteps(a, b)[0];
+  }
+
+  function lcmTwo(a, b){
+    const x = abs(a);
+    const y = abs(b);
+    if (x === 0 || y === 0) return 0;
+    const g = gcd(x, y);
+    // Reduce before multiply to avoid overflow in safe integer space as much as possible.
+    const reduced = x / g;
+    const prod = reduced * y;
+    // Even if prod exceeds Number.MAX_SAFE_INTEGER, we still return it (but warn).
+    return prod;
+  }
+
+  function fmtInt(n){
+    if (!Number.isFinite(n)) return "—";
+    // show as integer string (may be large, may be unsafe)
+    const isInt = Number.isInteger(n);
+    return isInt ? n.toLocaleString() : String(n);
+  }
+
+  function badge(text){
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700;">${text}</span>`;
+  }
+
+  function card(title, big, sub){
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:240px;">
+        <strong>${title}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function renderStepsForTwo(a, b, steps, g){
+    if (!steps.length) {
+      return `
+        <div class="note">
+          Euclidean steps are empty (this can happen when one input is 0). GCD = ${fmtInt(g)}.
+        </div>
+      `;
+    }
+
+    const rows = steps.map((st, i) => {
+      const eq = `${st.x} = ${st.y} × ${st.q} + ${st.r}`;
+      return `<tr>
+        <td>${i + 1}</td>
+        <td>${fmtInt(st.x)}</td>
+        <td>${fmtInt(st.y)}</td>
+        <td>${fmtInt(st.q)}</td>
+        <td>${fmtInt(st.r)}</td>
+        <td style="white-space:nowrap;">${eq}</td>
+      </tr>`;
+    }).join("");
+
+    return `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Euclidean algorithm steps (first two numbers)</strong>
+        ${badge("A mod B repeated")}
+      </div>
+      <div style="margin-top:10px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>x</th>
+              <th>y</th>
+              <th>q</th>
+              <th>r</th>
+              <th>Equation</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Final non-zero remainder step ends with r = 0. The last non-zero y is the GCD.
+      </div>
+    `;
+  }
+
+  function compute(){
+    clearError();
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+
+    const vals = parseIntegers(numsEl.value);
+    if (vals === null) {
+      showError("Please enter integers only (comma-separated). Decimals/scientific notation are not allowed.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+    if (!vals.length) {
+      showError("Enter at least two integers, e.g., 12, 18.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+    if (vals.length < 2) {
+      showError("Enter at least two integers to compute GCD/LCM.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    // Compute pairwise across list
+    let gAll = abs(vals[0]);
+    let lAll = abs(vals[0]);
+
+    for (let i = 1; i < vals.length; i++) {
+      gAll = gcd(gAll, vals[i]);
+      lAll = lcmTwo(lAll, vals[i]);
+    }
+
+    // For steps: show gcd steps for first two only
+    const [g2, steps] = gcdWithSteps(vals[0], vals[1]);
+
+    // Relationship check for first two (when not both 0)
+    const a = vals[0], b = vals[1];
+    let relation = "—";
+    if (!(a === 0 && b === 0)) {
+      const l2 = lcmTwo(a, b);
+      const left = abs(a) * abs(b);
+      const right = g2 * l2;
+      // Might be unsafe integer; compare with tolerance if large
+      relation = (Number.isFinite(left) && Number.isFinite(right) && left === right)
+        ? "Holds (|a×b| = gcd×lcm)"
+        : "May not hold exactly in JS for very large integers";
+    }
+
+    const unsafeWarn =
+      (vals.some(v => Math.abs(v) > Number.MAX_SAFE_INTEGER / 10) || (!Number.isSafeInteger(lAll) && Number.isFinite(lAll)))
+        ? "Note: very large numbers may exceed JavaScript safe-integer precision."
+        : "";
+
+    outEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("GCD (HCF)", fmtInt(gAll), `${badge("Greatest divisor")} · Works with negatives & zeros`)}
+        ${card("LCM", fmtInt(lAll), `${badge("Least multiple")} · LCM is reported as positive`)}
+        ${card("Quick check (first two)", relation, `Inputs: ${fmtInt(a)}, ${fmtInt(b)}`)}
+      </div>
+      ${unsafeWarn ? `<div class="note" style="margin-top:10px;">${unsafeWarn}</div>` : ""}
+      <div class="note" style="margin-top:8px;">
+        Inputs: ${vals.map(v => fmtInt(v)).join(", ")}
+      </div>
+    `;
+
+    stepsEl.innerHTML = renderStepsForTwo(a, b, steps, g2);
+    stepsEl.style.display = "block";
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  numsEl.addEventListener("keydown", function(e){
+    if (e.key === "Enter") compute();
+  });
+
+  clearBtn.addEventListener("click", function(){
+    numsEl.value = "";
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    stepsEl.style.display = "none";
+    stepsEl.innerHTML = "";
+    numsEl.focus();
+  });
+});
+</script>

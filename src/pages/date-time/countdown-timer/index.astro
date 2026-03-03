@@ -1,0 +1,479 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Countdown Timer",
+  description:
+    "Free countdown timer. Count down to a target date & time with live updates, optional business-day view, timezone-aware display, accessible controls, result cards, and FAQ schema.",
+  href: "/date-time/countdown-timer/",
+  order: 55,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/countdown-timer/";
+
+const faqs = [
+  {
+    q: "Does this countdown use my timezone?",
+    a: "Yes. The target date/time is interpreted in your device’s local timezone and the countdown updates in real time.",
+  },
+  {
+    q: "What is the difference between “time remaining” and “calendar breakdown”?",
+    a: "Time remaining is a pure duration (days/hours/minutes/seconds). Calendar breakdown estimates remaining calendar days and time based on the local clock; it’s best used as a friendly display rather than a legal/contractual measure.",
+  },
+  {
+    q: "What happens when the countdown reaches zero?",
+    a: "The timer stops at zero and shows “Complete.” You can reset or set a new target.",
+  },
+  {
+    q: "Can I count down by business days only?",
+    a: "This page can show an estimated business-days-left count (Mon–Fri). It does not account for country-specific holidays.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser. Inputs are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Countdown Timer — ${SITE_NAME}`}
+  description="Set a target date and time to start a live countdown. Shows time remaining cards (days, hours, minutes, seconds), optional business-days-left estimate, input validation, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Countdown Timer"
+  intro="Count down to a target date and time with live updates. Includes quick presets, validation, and optional business-days-left estimate (Mon–Fri)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="countdown-timer">
+    <div class="form" role="form" aria-describedby="cd_help cd_privacy">
+      <div class="field">
+        <label for="cd_target_date">Target date</label>
+        <input id="cd_target_date" type="date" />
+      </div>
+
+      <div class="field">
+        <label for="cd_target_time">Target time</label>
+        <input id="cd_target_time" type="time" step="1" />
+        <p class="note" id="cd_help" style="margin-top:6px;">
+          The countdown uses your device’s local timezone. If you leave time empty, it defaults to 00:00:00.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="cd_show_business" type="checkbox" />
+          Show business days left (Mon–Fri, no holidays)
+        </label>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cd_start">Start</button>
+        <button class="btn secondary" type="button" id="cd_pause">Pause</button>
+        <button class="btn secondary" type="button" id="cd_reset">Reset</button>
+        <button class="btn secondary" type="button" id="cd_set_today">Set target to today</button>
+        <button class="btn secondary" type="button" id="cd_set_1h">+1 hour</button>
+        <button class="btn secondary" type="button" id="cd_set_1d">+1 day</button>
+        <button class="btn secondary" type="button" id="cd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="cd_status" role="status" style="margin-top:12px;">
+        Set a target date and time, then press Start.
+      </div>
+
+      <div class="result" id="cd_cards" style="margin-top:12px; display:none;"></div>
+
+      <div class="result" id="cd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="cd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs or results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool counts down to a target timestamp in your local timezone. It computes the remaining milliseconds and displays
+      days, hours, minutes, and seconds. Business-days-left is an estimate using Mon–Fri only.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Set target to a meeting time → live countdown for preparation</li>
+      <li>Use +1 hour / +1 day presets for quick timers</li>
+      <li>Enable business-days-left to estimate weekdays remaining (holidays not included)</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates-calculator/">Days Between Dates</a></li>
+      <li><a href="/date-time/weeks-between-dates-calculator/">Weeks Between Dates</a></li>
+      <li><a href="/date-time/add-subtract-days-calculator/">Add/Subtract Days</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dateEl = document.getElementById("cd_target_date");
+  const timeEl = document.getElementById("cd_target_time");
+  const bizEl = document.getElementById("cd_show_business");
+
+  const startBtn = document.getElementById("cd_start");
+  const pauseBtn = document.getElementById("cd_pause");
+  const resetBtn = document.getElementById("cd_reset");
+  const todayBtn = document.getElementById("cd_set_today");
+  const plus1hBtn = document.getElementById("cd_set_1h");
+  const plus1dBtn = document.getElementById("cd_set_1d");
+  const clearBtn = document.getElementById("cd_clear");
+
+  const errEl = document.getElementById("cd_error");
+  const statusEl = document.getElementById("cd_status");
+  const cardsEl = document.getElementById("cd_cards");
+  const detailsEl = document.getElementById("cd_details");
+
+  if (!dateEl || !timeEl || !bizEl || !startBtn || !pauseBtn || !resetBtn || !todayBtn || !plus1hBtn || !plus1dBtn || !clearBtn || !errEl || !statusEl || !cardsEl || !detailsEl) return;
+
+  let timerId = null;
+  let running = false;
+  let lastTargetMs = null; // epoch ms
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:160px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function toISODateLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function toTimeLocalHHMMSS(d) {
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  function parseTargetMs() {
+    const ds = String(dateEl.value || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ds)) return { ok: false, msg: "Please select a valid target date." };
+
+    const ts = String(timeEl.value || "").trim(); // can be "" or "HH:MM" or "HH:MM:SS"
+    let hh = 0, mm = 0, ss = 0;
+
+    if (ts) {
+      const parts = ts.split(":");
+      if (parts.length < 2 || parts.length > 3) return { ok: false, msg: "Please enter a valid target time." };
+      hh = Number(parts[0]); mm = Number(parts[1]); ss = parts.length === 3 ? Number(parts[2]) : 0;
+      if (![hh, mm, ss].every(Number.isFinite) || hh < 0 || hh > 23 || mm < 0 || mm > 59 || ss < 0 || ss > 59) {
+        return { ok: false, msg: "Please enter a valid target time." };
+      }
+    }
+
+    const d = new Date(ds + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return { ok: false, msg: "Please select a valid target date." };
+
+    // Local timezone date construction
+    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, mm, ss, 0);
+    const ms = target.getTime();
+    if (!Number.isFinite(ms)) return { ok: false, msg: "Could not parse target date/time." };
+
+    return { ok: true, ms, target };
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+    running = false;
+  }
+
+  function businessDaysBetweenDates(startDate, endDate) {
+    // Count Mon–Fri days between date-only values:
+    // - If end is after start: count weekdays from start (exclusive) to end (inclusive) by day steps.
+    // - If end is before start: returns negative count with symmetric logic.
+    const dir = endDate.getTime() >= startDate.getTime() ? 1 : -1;
+    const s = dir === 1 ? startDate : endDate;
+    const e = dir === 1 ? endDate : startDate;
+
+    const a = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    const b = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+
+    let count = 0;
+    // move from a to b by day
+    for (let cur = new Date(a.getTime()); cur.getTime() < b.getTime(); ) {
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+      const day = cur.getDay(); // 0 Sun ... 6 Sat
+      if (day >= 1 && day <= 5) count += 1;
+    }
+    return dir === 1 ? count : -count;
+  }
+
+  function render(msLeft, targetObj) {
+    const done = msLeft <= 0;
+    const absMs = Math.max(0, msLeft);
+
+    const totalSec = Math.floor(absMs / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const rem1 = totalSec - days * 86400;
+    const hours = Math.floor(rem1 / 3600);
+    const rem2 = rem1 - hours * 3600;
+    const minutes = Math.floor(rem2 / 60);
+    const seconds = rem2 - minutes * 60;
+
+    const now = new Date();
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+
+    const badges = [
+      badge(done ? "Complete" : (running ? "Running" : "Paused")),
+      badge(`Timezone: ${tz}`),
+      bizEl.checked ? badge("Business days: On") : badge("Business days: Off"),
+    ].join(" ");
+
+    statusEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>${done ? "Countdown complete" : "Countdown"}</strong>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${badges}</div>
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Target: <strong>${escapeHtml(toISODateLocal(targetObj))}</strong> <strong>${escapeHtml(toTimeLocalHHMMSS(targetObj))}</strong>
+      </div>
+    `;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Days", `<span>${days.toLocaleString()}</span>`, "24-hour days")}
+        ${card("Hours", `<span>${hours.toLocaleString()}</span>`, "Remaining hours")}
+        ${card("Minutes", `<span>${minutes.toLocaleString()}</span>`, "Remaining minutes")}
+        ${card("Seconds", `<span>${seconds.toLocaleString()}</span>`, "Remaining seconds")}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    const sign = msLeft < 0 ? "-" : "";
+    const msDisplay = `${sign}${Math.abs(msLeft).toLocaleString()} ms`;
+
+    let bizLine = `<span class="note">Business days left: <em>disabled</em></span>`;
+    if (bizEl.checked) {
+      const a = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const b = new Date(targetObj.getFullYear(), targetObj.getMonth(), targetObj.getDate());
+      const bd = businessDaysBetweenDates(a, b);
+      const label = bd === 0 ? "0" : bd.toLocaleString();
+      const direction = bd >= 0 ? "remaining (approx.)" : "past target (approx.)";
+      bizLine = `<span class="note"><strong>Business days:</strong> ${label} ${direction} (Mon–Fri, no holidays)</span>`;
+    }
+
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Details</strong>
+        ${badge("Live duration")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Now: <strong>${escapeHtml(toISODateLocal(now))}</strong> <strong>${escapeHtml(toTimeLocalHHMMSS(now))}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Remaining milliseconds: <strong>${escapeHtml(msDisplay)}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        ${bizLine}
+      </div>
+    `;
+  }
+
+  function tick() {
+    if (lastTargetMs === null) return;
+    const nowMs = Date.now();
+    const msLeft = lastTargetMs - nowMs;
+
+    const parsed = parseTargetMs();
+    if (!parsed.ok) {
+      // If inputs changed mid-run into invalid state, stop.
+      stopTimer();
+      showError(parsed.msg);
+      return;
+    }
+
+    render(msLeft, parsed.target);
+
+    if (msLeft <= 0) {
+      stopTimer();
+    }
+  }
+
+  function start() {
+    clearError();
+    const parsed = parseTargetMs();
+    if (!parsed.ok) {
+      stopTimer();
+      cardsEl.style.display = "none";
+      detailsEl.style.display = "none";
+      statusEl.textContent = "Set a target date and time, then press Start.";
+      showError(parsed.msg);
+      return;
+    }
+
+    lastTargetMs = parsed.ms;
+    if (!running) {
+      running = true;
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(tick, 250);
+    }
+    tick();
+  }
+
+  function pause() {
+    clearError();
+    if (!running) {
+      // if paused already, do nothing but keep current render
+      return;
+    }
+    stopTimer();
+    tick(); // render paused state
+  }
+
+  function reset() {
+    clearError();
+    const parsed = parseTargetMs();
+    if (!parsed.ok) {
+      stopTimer();
+      showError(parsed.msg);
+      return;
+    }
+    lastTargetMs = parsed.ms;
+    tick();
+  }
+
+  function setTargetTo(dateObj) {
+    dateEl.value = toISODateLocal(dateObj);
+    timeEl.value = toTimeLocalHHMMSS(dateObj);
+  }
+
+  function clearAll() {
+    stopTimer();
+    lastTargetMs = null;
+    dateEl.value = "";
+    timeEl.value = "";
+    bizEl.checked = false;
+    clearError();
+    statusEl.textContent = "Set a target date and time, then press Start.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+    dateEl.focus();
+  }
+
+  startBtn.addEventListener("click", start);
+  pauseBtn.addEventListener("click", pause);
+  resetBtn.addEventListener("click", reset);
+
+  todayBtn.addEventListener("click", function () {
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds(), 0);
+    setTargetTo(d);
+    clearError();
+    statusEl.textContent = "Target set to today. Press Start.";
+  });
+
+  plus1hBtn.addEventListener("click", function () {
+    const base = (function () {
+      const p = parseTargetMs();
+      return p.ok ? p.target : new Date();
+    })();
+    const d = new Date(base.getTime() + 3600000);
+    setTargetTo(d);
+    clearError();
+    statusEl.textContent = "Target increased by 1 hour. Press Start.";
+  });
+
+  plus1dBtn.addEventListener("click", function () {
+    const base = (function () {
+      const p = parseTargetMs();
+      return p.ok ? p.target : new Date();
+    })();
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1, base.getHours(), base.getMinutes(), base.getSeconds(), 0);
+    setTargetTo(d);
+    clearError();
+    statusEl.textContent = "Target increased by 1 day. Press Start.";
+  });
+
+  clearBtn.addEventListener("click", clearAll);
+
+  // Enter key support
+  dateEl.addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+  timeEl.addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+
+  // If user edits while running, keep the countdown consistent: restart from new target.
+  function onInputChanged() {
+    clearError();
+    if (running) start();
+  }
+  dateEl.addEventListener("change", onInputChanged);
+  timeEl.addEventListener("change", onInputChanged);
+  bizEl.addEventListener("change", function () {
+    if (lastTargetMs !== null) tick();
+  });
+
+  // Default: set time to current seconds for better UX (but keep date empty).
+  const now = new Date();
+  timeEl.value = toTimeLocalHHMMSS(now);
+
+  // Initial state
+  clearAll();
+});
+</script>

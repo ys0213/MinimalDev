@@ -1,0 +1,435 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Ideal Weight Calculator",
+  description:
+    "Free ideal weight calculator. Estimate ideal body weight using common formulas (Devine, Robinson, Miller, Hamwi) with metric/imperial units.",
+  href: "/health/ideal-weight/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/ideal-weight/";
+
+// FAQ content + JSON-LD (auto)
+const faqs = [
+  {
+    q: "What does this ideal weight calculator do?",
+    a: "It estimates an ideal body weight range using several common reference formulas (Devine, Robinson, Miller, Hamwi). These are general references, not medical advice.",
+  },
+  {
+    q: "Which formulas are included?",
+    a: "Devine, Robinson, Miller, and Hamwi. Results can differ because each uses different assumptions and was developed for different contexts.",
+  },
+  {
+    q: "Is this the same as BMI?",
+    a: "No. BMI uses your actual weight and height to classify weight status. Ideal weight formulas output a reference weight based on height (and sex).",
+  },
+  {
+    q: "Can I use centimeters or inches?",
+    a: "Yes. You can enter height in cm (metric) or feet/inches (imperial). The calculator converts internally.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser. Inputs are not stored or sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Ideal Weight Calculator — ${SITE_NAME}`}
+  description="Estimate ideal body weight using common formulas (Devine, Robinson, Miller, Hamwi). Supports cm or ft/in, shows results side-by-side, and runs locally in your browser."
+  canonicalPath={CANONICAL_PATH}
+  h1="Ideal Weight Calculator"
+  intro="Estimate ideal body weight (IBW) using multiple reference formulas. Informational only."
+>
+  {/* FAQ Schema (auto from faqs[]) */}
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ideal-weight-calculator">
+    <div class="form" role="form" aria-describedby="iw_privacy_note">
+      <div class="field">
+        <label for="iw_unit">Units</label>
+        <select id="iw_unit">
+          <option value="metric" selected>Metric (cm)</option>
+          <option value="imperial">Imperial (ft/in)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="iw_sex">Sex</label>
+        <select id="iw_sex">
+          <option value="male" selected>Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+
+      {/* Metric height */}
+      <div class="field" id="iw_height_cm_wrap">
+        <label for="iw_height_cm">Height</label>
+        <input
+          id="iw_height_cm"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder="e.g., 175"
+          autocomplete="off"
+          aria-describedby="iw_height_help"
+        />
+        <div class="note" id="iw_height_help">cm</div>
+      </div>
+
+      {/* Imperial height */}
+      <div style="display:none;" id="iw_height_imp_wrap">
+        <div class="field">
+          <label for="iw_height_ft">Height (ft)</label>
+          <input
+            id="iw_height_ft"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            placeholder="e.g., 5"
+            autocomplete="off"
+          />
+        </div>
+        <div class="field">
+          <label for="iw_height_in">Height (in)</label>
+          <input
+            id="iw_height_in"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder="e.g., 10"
+            autocomplete="off"
+          />
+          <div class="note">Use inches part only (0–11 is typical).</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="iw_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="iw_clear">Clear</button>
+      </div>
+
+      {/* Error region */}
+      <div class="result" id="iw_error" role="alert" aria-live="assertive" style="display:none;"></div>
+
+      {/* Result region */}
+      <div class="result" id="iw_result" role="status" aria-live="polite" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <p class="note" id="iw_privacy_note" style="margin-top:10px;">
+        Informational only (not medical advice). “Ideal weight” formulas are references and may not apply to all body types.
+        Privacy: runs locally in your browser. No inputs are stored or sent to a server.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool calculates “ideal body weight” (IBW) using several common reference formulas.
+      Most of these formulas use a base weight at <strong>5 ft</strong> (60 in) plus an increment per inch above 5 ft.
+      If height is below 5 ft, they subtract per inch below 5 ft.
+    </p>
+
+    <ul>
+      <li><strong>Devine:</strong> Male 50.0 kg + 2.3 kg/in; Female 45.5 kg + 2.3 kg/in</li>
+      <li><strong>Robinson:</strong> Male 52.0 kg + 1.9 kg/in; Female 49.0 kg + 1.7 kg/in</li>
+      <li><strong>Miller:</strong> Male 56.2 kg + 1.41 kg/in; Female 53.1 kg + 1.36 kg/in</li>
+      <li><strong>Hamwi:</strong> Male 48.0 kg + 2.7 kg/in; Female 45.5 kg + 2.2 kg/in</li>
+    </ul>
+
+    <p class="note">
+      Output is shown in <strong>kg</strong> and <strong>lb</strong>. Use it as a reference point, not a rule.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Male, 175 cm → shows IBW estimates by formula</li>
+      <li>Female, 5 ft 4 in → shows IBW estimates by formula</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li>
+          <strong>{f.q}</strong> {f.a}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/bmi-calculator/">BMI Calculator</a></li>
+      <li><a href="/health/body-fat/">Body Fat Calculator</a></li>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("iw_unit");
+  const sexEl = document.getElementById("iw_sex");
+
+  const cmWrap = document.getElementById("iw_height_cm_wrap");
+  const cmEl = document.getElementById("iw_height_cm");
+
+  const impWrap = document.getElementById("iw_height_imp_wrap");
+  const ftEl = document.getElementById("iw_height_ft");
+  const inEl = document.getElementById("iw_height_in");
+
+  const calcBtn = document.getElementById("iw_calc");
+  const clearBtn = document.getElementById("iw_clear");
+
+  const errEl = document.getElementById("iw_error");
+  const outEl = document.getElementById("iw_result");
+
+  if (
+    !unitEl || !sexEl ||
+    !cmWrap || !cmEl ||
+    !impWrap || !ftEl || !inEl ||
+    !calcBtn || !clearBtn ||
+    !errEl || !outEl
+  ) return;
+
+  const IN_PER_FT = 12;
+  const CM_PER_IN = 2.54;
+  const LB_PER_KG = 2.20462262185;
+
+  // Formula definitions (kg = base + slope * (inches over 5ft))
+  const FORMULAS = {
+    devine: {
+      name: "Devine",
+      male:   { base: 50.0, slope: 2.3 },
+      female: { base: 45.5, slope: 2.3 },
+    },
+    robinson: {
+      name: "Robinson",
+      male:   { base: 52.0, slope: 1.9 },
+      female: { base: 49.0, slope: 1.7 },
+    },
+    miller: {
+      name: "Miller",
+      male:   { base: 56.2, slope: 1.41 },
+      female: { base: 53.1, slope: 1.36 },
+    },
+    hamwi: {
+      name: "Hamwi",
+      male:   { base: 48.0, slope: 2.7 },
+      female: { base: 45.5, slope: 2.2 },
+    },
+  };
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+    outEl.textContent = "Result will appear here.";
+  }
+
+  function setUnitUX() {
+    const u = String(unitEl.value);
+    const isMetric = u === "metric";
+    cmWrap.style.display = isMetric ? "block" : "none";
+    impWrap.style.display = isMetric ? "none" : "block";
+
+    if (isMetric) {
+      cmEl.placeholder = "e.g., 175";
+      cmEl.focus();
+    } else {
+      ftEl.placeholder = "e.g., 5";
+      inEl.placeholder = "e.g., 10";
+      ftEl.focus();
+    }
+  }
+
+  function round1(n) {
+    const r = Math.round(n * 10) / 10;
+    return r.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  function round0(n) {
+    return Math.round(n).toLocaleString();
+  }
+
+  function badgeHTML(tone, text) {
+    const base = "display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid rgba(255,255,255,0.14);";
+    const bg = tone === "good"
+      ? "background: rgba(34,197,94,0.12);"
+      : tone === "warn"
+        ? "background: rgba(245,158,11,0.14);"
+        : "background: rgba(255,255,255,0.06);";
+    return "<span style='" + base + bg + "'>" + text + "</span>";
+  }
+
+  function card(title, main, sub, tone) {
+    return (
+      "<div style='border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px; min-width:220px; flex:1;'>" +
+        "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline;'>" +
+          "<strong>" + title + "</strong>" +
+          badgeHTML(tone, title) +
+        "</div>" +
+        "<div style='font-size:26px; margin-top:6px; font-weight:900;'>" + main + "</div>" +
+        "<div class='note' style='margin-top:6px;'>" + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function computeHeightInches() {
+    const unit = String(unitEl.value);
+
+    if (unit === "metric") {
+      const cm = toNum(cmEl.value);
+      if (!Number.isFinite(cm) || cm <= 0) return { ok: false, msg: "Please enter a valid height (cm)." };
+      // Basic sanity bounds (adult-oriented tools): allow wider than typical but block extremes
+      if (cm < 50 || cm > 272) return { ok: false, msg: "Height looks out of range. Please check your input." };
+      const inches = cm / CM_PER_IN;
+      return { ok: true, inches, display: (round1(cm) + " cm") };
+    }
+
+    const ft = toNum(ftEl.value);
+    const inch = toNum(inEl.value);
+
+    if (!Number.isFinite(ft) || ft <= 0) return { ok: false, msg: "Please enter a valid height (feet)." };
+    if (!Number.isFinite(inch) || inch < 0) return { ok: false, msg: "Please enter a valid inches value (0 or more)." };
+    if (inch >= 12) return { ok: false, msg: "Inches should usually be 0–11 (use feet for the rest)." };
+
+    const totalIn = ft * IN_PER_FT + inch;
+    if (totalIn < 20 || totalIn > 107) return { ok: false, msg: "Height looks out of range. Please check your input." };
+
+    const display = (round0(ft) + " ft " + round0(inch) + " in");
+    return { ok: true, inches: totalIn, display };
+  }
+
+  function ibwKgFor(formulaKey, sex, heightInches) {
+    const f = FORMULAS[formulaKey];
+    const params = sex === "female" ? f.female : f.male;
+    const over5ft = heightInches - 60; // can be negative
+    return params.base + params.slope * over5ft;
+  }
+
+  function compute() {
+    clearError();
+
+    const sex = String(sexEl.value);
+    if (sex !== "male" && sex !== "female") return showError("Please choose a valid sex.");
+
+    const h = computeHeightInches();
+    if (!h.ok) return showError(h.msg);
+
+    const heightIn = h.inches;
+    // If height is very low, some formulas can produce very small numbers; keep but warn gently via note.
+    const results = Object.keys(FORMULAS).map((key) => {
+      const kg = ibwKgFor(key, sex, heightIn);
+      const lb = kg * LB_PER_KG;
+      return { key, name: FORMULAS[key].name, kg, lb };
+    });
+
+    // Compute a simple "range" from min/max of formulas
+    const kgVals = results.map(r => r.kg).filter(Number.isFinite);
+    const minKg = Math.min.apply(null, kgVals);
+    const maxKg = Math.max.apply(null, kgVals);
+    const midKg = (minKg + maxKg) / 2;
+
+    const header =
+      "<div style='margin-bottom:12px;'>" +
+        "<strong>Height:</strong> " + h.display + " · <strong>Sex:</strong> " + (sex === "female" ? "Female" : "Male") + "<br/>" +
+        "<span class='note'>Reference “ideal weight” estimates using multiple formulas.</span>" +
+      "</div>";
+
+    const cards =
+      "<div style='display:flex; gap:10px; flex-wrap:wrap;'>" +
+        card("Estimated range", round1(minKg) + "–" + round1(maxKg) + " kg", "Min–max across included formulas", "good") +
+        card("Middle estimate", round1(midKg) + " kg", "Midpoint of the formula range", "neutral") +
+        card("Range (lb)", round0(minKg * LB_PER_KG) + "–" + round0(maxKg * LB_PER_KG) + " lb", "Converted to pounds", "neutral") +
+      "</div>";
+
+    const tableHead =
+      "<div style='margin-top:12px; overflow:auto;'>" +
+        "<table style='width:100%; border-collapse:collapse;'>" +
+          "<thead>" +
+            "<tr>" +
+              "<th style='text-align:left; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>Formula</th>" +
+              "<th style='text-align:right; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>kg</th>" +
+              "<th style='text-align:right; padding:8px; border-bottom:1px solid rgba(255,255,255,0.12);'>lb</th>" +
+            "</tr>" +
+          "</thead><tbody>";
+
+    const rows = results.map((r) => {
+      return (
+        "<tr>" +
+          "<td style='padding:8px; border-bottom:1px solid rgba(255,255,255,0.08);'>" + r.name + "</td>" +
+          "<td style='padding:8px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.08);'>" + round1(r.kg) + "</td>" +
+          "<td style='padding:8px; text-align:right; border-bottom:1px solid rgba(255,255,255,0.08);'>" + round0(r.lb) + "</td>" +
+        "</tr>"
+      );
+    }).join("");
+
+    const tableTail = "</tbody></table></div>";
+
+    const note =
+      "<div class='note' style='margin-top:10px;'>" +
+        "Note: These formulas were developed as reference estimates and may not reflect optimal weight for health or performance. " +
+        "Body composition, age, and medical context matter." +
+      "</div>";
+
+    outEl.innerHTML = header + cards + tableHead + rows + tableTail + note;
+  }
+
+  function clearAll() {
+    clearError();
+    unitEl.value = "metric";
+    sexEl.value = "male";
+    cmEl.value = "";
+    ftEl.value = "";
+    inEl.value = "";
+    setUnitUX();
+    outEl.textContent = "Result will appear here.";
+  }
+
+  // Enter key triggers calculate (a11y/UX)
+  [cmEl, ftEl, inEl].forEach((el) => {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  unitEl.addEventListener("change", function () {
+    clearError();
+    setUnitUX();
+    outEl.textContent = "Result will appear here.";
+  });
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", clearAll);
+
+  // init
+  setUnitUX();
+});
+</script>

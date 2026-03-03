@@ -1,0 +1,434 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Work Days Calculator",
+  description:
+    "Free work days calculator. Count business days between two dates with weekend and holiday options. Includes validation, accessibility, and FAQ schema.",
+  href: "/date-time/work-days-calculator/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/work-days-calculator/";
+
+const faqs = [
+  {
+    q: "What does this work days calculator count?",
+    a: "It counts weekdays (Monday–Friday) between a start date and an end date, with options to include/exclude the end date and to exclude custom holidays.",
+  },
+  {
+    q: "Are weekends excluded?",
+    a: "Yes. Saturday and Sunday are excluded by default. You can customize which days are treated as weekends.",
+  },
+  {
+    q: "How do holidays work?",
+    a: "You can paste a list of holiday dates (YYYY-MM-DD). Those dates will be excluded if they fall on included weekdays.",
+  },
+  {
+    q: "Is the end date included?",
+    a: "You can choose. Many business-day counters are inclusive; this tool lets you toggle inclusion of the end date.",
+  },
+  {
+    q: "Does this store my dates?",
+    a: "No. Calculations run locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Work Days Calculator — ${SITE_NAME}`}
+  description="Count business days between two dates with weekend selection, holiday exclusion, inclusive/exclusive toggle, input validation, accessible UI, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Work Days Calculator"
+  intro="Count work days (business days) between two dates. Excludes weekends by default and supports custom weekend rules and holiday dates."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="work-days-calculator">
+    <div class="form" role="form" aria-describedby="wd_help wd_privacy">
+      <div class="field">
+        <label for="wd_start">Start date</label>
+        <input id="wd_start" type="date" inputmode="none" />
+      </div>
+
+      <div class="field">
+        <label for="wd_end">End date</label>
+        <input id="wd_end" type="date" inputmode="none" />
+      </div>
+
+      <div class="field">
+        <label style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="wd_include_end" type="checkbox" checked />
+          Include end date
+        </label>
+        <p class="note" style="margin-top:6px;">
+          If enabled, the end date is counted when it is a work day and not a holiday.
+        </p>
+      </div>
+
+      <div class="field">
+        <div style="font-weight:800; margin-bottom:6px;">Weekend days (excluded)</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;" role="group" aria-label="Weekend selection">
+          <label><input type="checkbox" class="wd_weekend" value="0" checked /> Sun</label>
+          <label><input type="checkbox" class="wd_weekend" value="1" /> Mon</label>
+          <label><input type="checkbox" class="wd_weekend" value="2" /> Tue</label>
+          <label><input type="checkbox" class="wd_weekend" value="3" /> Wed</label>
+          <label><input type="checkbox" class="wd_weekend" value="4" /> Thu</label>
+          <label><input type="checkbox" class="wd_weekend" value="5" /> Fri</label>
+          <label><input type="checkbox" class="wd_weekend" value="6" checked /> Sat</label>
+        </div>
+        <p class="note" style="margin-top:6px;">
+          Default is Saturday + Sunday. You can adapt this for regions with different weekends.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="wd_holidays">Holidays to exclude (optional)</label>
+        <textarea
+          id="wd_holidays"
+          rows="4"
+          placeholder="One per line (YYYY-MM-DD)&#10;e.g. 2026-01-01&#10;2026-02-09"
+          spellcheck="false"
+          aria-describedby="wd_help"
+          style="width:100%; resize:vertical;"
+        ></textarea>
+        <p class="note" id="wd_help" style="margin-top:6px;">
+          Accepts one date per line or comma-separated. Format must be YYYY-MM-DD.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="wd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="wd_swap">Swap</button>
+        <button class="btn secondary" type="button" id="wd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="wd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="wd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="wd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="wd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator iterates day-by-day from the start date to the end date and counts days that are:
+      (1) not a selected weekend day, and (2) not in your holiday list.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-03-02 to 2026-03-06 with Sat/Sun weekends → 5 work days (inclusive)</li>
+      <li>Add holiday 2026-03-04 → 4 work days</li>
+      <li>Switch weekend to Fri/Sat → adapts for different regions</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/">All Date &amp; Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("wd_start");
+  const endEl = document.getElementById("wd_end");
+  const includeEndEl = document.getElementById("wd_include_end");
+  const weekendEls = Array.from(document.querySelectorAll(".wd_weekend"));
+  const holEl = document.getElementById("wd_holidays");
+  const calcBtn = document.getElementById("wd_calc");
+  const swapBtn = document.getElementById("wd_swap");
+  const clearBtn = document.getElementById("wd_clear");
+  const errEl = document.getElementById("wd_error");
+  const outEl = document.getElementById("wd_result");
+  const detailsEl = document.getElementById("wd_details");
+
+  if (!startEl || !endEl || !includeEndEl || !holEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px; font-weight:900; margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function parseISODate(s) {
+    // Strict YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+    // Guard against JS date overflow or partial parses
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const back = `${y}-${m}-${day}`;
+    if (back !== s) return null;
+    return d;
+  }
+
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function addDays(d, n) {
+    const x = new Date(d.getTime());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  function weekendSet() {
+    const set = new Set();
+    for (const el of weekendEls) {
+      if (el && el.checked) set.add(Number(el.value));
+    }
+    return set;
+  }
+
+  function parseHolidaySet(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return { set: new Set(), bad: [] };
+
+    const tokens = s
+      .split(/[\s,;]+/g)
+      .map(t => t.trim())
+      .filter(Boolean);
+
+    const set = new Set();
+    const bad = [];
+    for (const t of tokens) {
+      const d = parseISODate(t);
+      if (!d) { bad.push(t); continue; }
+      set.add(t); // store ISO string
+    }
+    return { set, bad };
+  }
+
+  function labelForCount(n) {
+    if (n === 0) return "No work days";
+    if (n === 1) return "1 work day";
+    return `${n.toLocaleString()} work days`;
+  }
+
+  function compute() {
+    clearError();
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+
+    const s = String(startEl.value || "").trim();
+    const e = String(endEl.value || "").trim();
+    const sd = parseISODate(s);
+    const ed = parseISODate(e);
+
+    if (!sd || !ed) {
+      showError("Please enter valid start and end dates.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    // Normalize order (still show direction)
+    const reversed = sd.getTime() > ed.getTime();
+    const a = reversed ? ed : sd;
+    const b = reversed ? sd : ed;
+
+    const includeEnd = !!includeEndEl.checked;
+    const endExclusive = includeEnd ? addDays(b, 1) : b;
+
+    const wk = weekendSet();
+    if (wk.size === 7) {
+      showError("All 7 days are marked as weekend. Uncheck at least one day to count work days.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const { set: holSet, bad: badHol } = parseHolidaySet(holEl.value);
+
+    let totalDays = 0;
+    let workDays = 0;
+    let weekendDays = 0;
+    let holidayExcluded = 0;
+
+    // Iterate from a to endExclusive, day by day
+    for (let d = new Date(a.getTime()); d.getTime() < endExclusive.getTime(); d = addDays(d, 1)) {
+      totalDays++;
+      const dow = d.getDay(); // 0=Sun..6=Sat
+      const iso = toISO(d);
+
+      const isWeekend = wk.has(dow);
+      if (isWeekend) { weekendDays++; continue; }
+
+      if (holSet.has(iso)) { holidayExcluded++; continue; }
+
+      workDays++;
+    }
+
+    // Category emphasis / summary badge
+    const spanLabel = includeEnd ? "inclusive" : "end-exclusive";
+    const badgeText = reversed ? `Reversed range · ${spanLabel}` : spanLabel;
+
+    outEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;">
+        <strong>Results</strong>
+        ${badge(badgeText)}
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Work days", `<span>${workDays.toLocaleString()}</span>`, `${labelForCount(workDays)}`)}
+        ${card("Total days in range", `<span>${totalDays.toLocaleString()}</span>`, `Counted ${includeEnd ? "including" : "excluding"} end date`)}
+        ${card("Excluded", `<span>${(weekendDays + holidayExcluded).toLocaleString()}</span>`, `Weekend ${weekendDays.toLocaleString()} · Holidays ${holidayExcluded.toLocaleString()}`)}
+      </div>
+    `;
+
+    const wkNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const wkList = wkNames.filter((_, idx) => wk.has(idx)).join(", ") || "None";
+
+    const holidayNote = badHol.length
+      ? `<div class="note" style="margin-top:8px;"><strong>Ignored holiday tokens:</strong> ${badHol.map(escapeHtml).slice(0, 30).join(", ")}${badHol.length > 30 ? " …" : ""}</div>`
+      : "";
+
+    const showRangeA = toISO(a);
+    const showRangeB = toISO(b);
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <strong>Details</strong>
+        ${badge("Info")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Range used: <strong>${escapeHtml(showRangeA)}</strong> → <strong>${escapeHtml(showRangeB)}</strong>
+        ${reversed ? "(input order was reversed)" : ""}
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Weekend days excluded: <strong>${escapeHtml(wkList)}</strong>
+      </div>
+      <div class="note" style="margin-top:6px;">
+        Holiday dates excluded: <strong>${holSet.size.toLocaleString()}</strong>
+      </div>
+      ${holidayNote}
+    `;
+  }
+
+  function reset() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  // UX: debounce calculations when editing text
+  let t = null;
+  function schedule() {
+    if (t) window.clearTimeout(t);
+    t = window.setTimeout(compute, 120);
+  }
+
+  startEl.addEventListener("change", function () {
+    if (!startEl.value || !endEl.value) { reset(); return; }
+    compute();
+  });
+  endEl.addEventListener("change", function () {
+    if (!startEl.value || !endEl.value) { reset(); return; }
+    compute();
+  });
+
+  includeEndEl.addEventListener("change", function () {
+    if (!startEl.value || !endEl.value) { reset(); return; }
+    compute();
+  });
+
+  for (const el of weekendEls) {
+    el.addEventListener("change", function () {
+      if (!startEl.value || !endEl.value) { reset(); return; }
+      compute();
+    });
+  }
+
+  holEl.addEventListener("input", function () {
+    if (!startEl.value || !endEl.value) { reset(); return; }
+    schedule();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const a = startEl.value;
+    const b = endEl.value;
+    startEl.value = b;
+    endEl.value = a;
+    if (!startEl.value || !endEl.value) { reset(); return; }
+    compute();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    includeEndEl.checked = true;
+
+    // Default weekend: Sat + Sun
+    for (const el of weekendEls) {
+      const v = Number(el.value);
+      el.checked = (v === 0 || v === 6);
+    }
+
+    holEl.value = "";
+    reset();
+    startEl.focus();
+  });
+
+  reset();
+});
+</script>
