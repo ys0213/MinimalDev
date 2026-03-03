@@ -32,6 +32,18 @@ const withBase = (p: string): string => {
 
   <link rel="stylesheet" href={withBase("/assets/css/main.css")} />
 
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX1L8JRKYJ"></script>
+
+  <script
+    set:html={`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-BX1L8JRKYJ');
+    `}
+  />
+
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebSite",
