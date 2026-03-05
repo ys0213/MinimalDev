@@ -26,12 +26,12 @@ const withBase = (p: string): string => {
     </a>
 
     <nav class="nav" aria-label="Primary">
-      <a href={withBase("/math/")} aria-current={isActive("/math/") ? "page" : undefined}>Math</a>
       <a href={withBase("/converter/")} aria-current={isActive("/converter/") ? "page" : undefined}>Converter</a>
+      <a href={withBase("/math/")} aria-current={isActive("/math/") ? "page" : undefined}>Math</a>
+      <a href={withBase("/finance/")} aria-current={isActive("/finance/") ? "page" : undefined}>Finance</a>
       <a href={withBase("/date-time/")} aria-current={isActive("/date-time/") ? "page" : undefined}>Date-Time</a>
       <a href={withBase("/health/")} aria-current={isActive("/health/") ? "page" : undefined}>Health</a>
       <a href={withBase("/utility/")} aria-current={isActive("/utility/") ? "page" : undefined}>Utility</a>
-      <a href={withBase("/finance/")} aria-current={isActive("/finance/") ? "page" : undefined}>Finance</a>
     </nav>
   </div>
 </header>

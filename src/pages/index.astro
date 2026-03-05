@@ -21,6 +21,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
         <a class="btn" href="/math/">Start with Math</a>
         <a class="btn secondary" href="/converter/">Browse Converters</a>
+        <a class="btn secondary" href="/utility/">Utility Tools</a>
         <a class="btn secondary" href="/legal/privacy-policy/">Privacy</a>
       </div>
     </section>
@@ -45,15 +46,29 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <section class="card">
           <span class="badge">Converter</span>
           <h2>Length Converter</h2>
-          <p>Convert meters, kilometers, miles, feet, inches, and more.</p>
-          <a class="btn" href="/converter/length-converter/">Open</a>
+          <p>Convert mm, cm, m, km, inches, feet, yards, miles.</p>
+          <a class="btn" href="/converter/length/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Finance</span>
           <h2>Loan Calculator</h2>
-          <p>Estimate monthly payments, total interest, and payoff schedule.</p>
-          <a class="btn" href="/finance/">Open</a>
+          <p>Estimate monthly payments, total interest, and payoff timeline.</p>
+          <a class="btn" href="/finance/loan-calculator/">Open</a>
+        </section>
+
+        <section class="card">
+          <span class="badge">Health</span>
+          <h2>BMI Calculator</h2>
+          <p>Calculate BMI quickly and see the category range.</p>
+          <a class="btn" href="/health/bmi-calculator/">Open</a>
+        </section>
+
+        <section class="card">
+          <span class="badge">Utility</span>
+          <h2>Password Generator</h2>
+          <p>Create strong passwords instantly with offline-friendly generation.</p>
+          <a class="btn" href="/utility/password-generator/">Open</a>
         </section>
       </div>
     </section>

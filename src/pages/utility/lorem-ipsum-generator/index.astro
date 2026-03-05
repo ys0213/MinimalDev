@@ -1,0 +1,413 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Lorem Ipsum Generator",
+  description:
+    "Free lorem ipsum generator. Generate placeholder text by paragraphs, sentences, or words. Copy instantly. Runs locally.",
+  href: "/utility/lorem-ipsum-generator/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/lorem-ipsum-generator/";
+
+// FAQ + JSON-LD
+const faqs = [
+  {
+    q: "What is Lorem Ipsum?",
+    a: "Lorem Ipsum is placeholder text commonly used in design and development to preview layout and typography without real content.",
+  },
+  {
+    q: "Is this the standard Lorem Ipsum text?",
+    a: "It uses the commonly used Lorem Ipsum corpus and generates randomized output for variety. You can also choose to start with “Lorem ipsum dolor sit amet…”.",
+  },
+  {
+    q: "Can I generate paragraphs, sentences, or words?",
+    a: "Yes. Choose the mode (paragraphs, sentences, or words) and the amount, then generate and copy the result.",
+  },
+  {
+    q: "Does this store or transmit what I generate?",
+    a: "No. Everything runs locally in your browser. No text is stored or sent to a server.",
+  },
+  {
+    q: "Can I use it commercially?",
+    a: "Lorem Ipsum is generic placeholder text. This tool generates placeholder output; you should replace it with real copy before publishing.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Lorem Ipsum Generator — ${SITE_NAME}`}
+  description="Generate lorem ipsum placeholder text by paragraphs, sentences, or words. Includes options, validation, copy button, and FAQ schema. Runs locally."
+  canonicalPath={CANONICAL_PATH}
+  h1="Lorem Ipsum Generator"
+  intro="Generate placeholder text for mockups and UI previews. Choose paragraphs, sentences, or words, then copy with one click."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="lorem-ipsum-generator">
+    <div class="form" role="form" aria-describedby="li_hint li_privacy">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="li_mode">Generate</label>
+          <select id="li_mode">
+            <option value="paragraphs" selected>Paragraphs</option>
+            <option value="sentences">Sentences</option>
+            <option value="words">Words</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="li_count">Amount</label>
+          <input id="li_count" type="number" inputmode="numeric" min="1" max="200" value="3" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label>
+            <input id="li_start" type="checkbox" checked />
+            Start with “Lorem ipsum dolor sit amet…”
+          </label>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="li_html" type="checkbox" />
+            Output as HTML (wrap paragraphs in &lt;p&gt;)
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="li_len">Sentence length (approx.)</label>
+        <select id="li_len">
+          <option value="short">Short</option>
+          <option value="medium" selected>Medium</option>
+          <option value="long">Long</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="li_generate">Generate</button>
+        <button class="btn secondary" type="button" id="li_copy">Copy</button>
+        <button class="btn secondary" type="button" id="li_clear">Clear</button>
+      </div>
+
+      <div class="result" id="li_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="li_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="li_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="li_output">Output</label>
+        <textarea
+          id="li_output"
+          rows="10"
+          placeholder="Generated lorem ipsum will appear here."
+          style="resize:vertical;"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          readonly
+        ></textarea>
+      </div>
+
+      <p class="note" id="li_hint" style="margin-top:6px;">
+        Tip: Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to generate.
+      </p>
+
+      <p class="note" id="li_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. Nothing is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a mode (paragraphs, sentences, or words) and an amount. The generator builds randomized text from a common Lorem Ipsum word set.
+      If you enable HTML output, paragraphs are wrapped in <code>&lt;p&gt;</code> tags.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>3 paragraphs</strong> → quick layout preview for landing pages</li>
+      <li><strong>20 sentences</strong> → placeholder for article templates</li>
+      <li><strong>120 words</strong> → mock copy for cards and components</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/word-counter/">Word Counter</a></li>
+      <li><a href="/utility/character-counter/">Character Counter</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("li_mode");
+  const countEl = document.getElementById("li_count");
+  const startEl = document.getElementById("li_start");
+  const htmlEl = document.getElementById("li_html");
+  const lenEl = document.getElementById("li_len");
+
+  const genBtn = document.getElementById("li_generate");
+  const copyBtn = document.getElementById("li_copy");
+  const clearBtn = document.getElementById("li_clear");
+
+  const errEl = document.getElementById("li_error");
+  const resEl = document.getElementById("li_result");
+  const cardsEl = document.getElementById("li_cards");
+  const outEl = document.getElementById("li_output");
+
+  if (!modeEl || !countEl || !startEl || !htmlEl || !lenEl || !genBtn || !copyBtn || !clearBtn || !errEl || !resEl || !cardsEl || !outEl) return;
+
+  // Common lorem ipsum corpus words (lowercase), used to build random text.
+  const WORDS = [
+    "lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit","sed","do","eiusmod","tempor","incididunt",
+    "ut","labore","et","dolore","magna","aliqua","ut","enim","ad","minim","veniam","quis","nostrud","exercitation",
+    "ullamco","laboris","nisi","ut","aliquip","ex","ea","commodo","consequat","duis","aute","irure","dolor","in",
+    "reprehenderit","in","voluptate","velit","esse","cillum","dolore","eu","fugiat","nulla","pariatur","excepteur",
+    "sint","occaecat","cupidatat","non","proident","sunt","in","culpa","qui","officia","deserunt","mollit","anim","id","est","laborum"
+  ];
+
+  const START_SENTENCE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function rngInt(min, max) {
+    // inclusive min, inclusive max
+    const a = Math.ceil(min);
+    const b = Math.floor(max);
+    return Math.floor(Math.random() * (b - a + 1)) + a;
+  }
+
+  function pickWord() {
+    return WORDS[rngInt(0, WORDS.length - 1)];
+  }
+
+  function makeSentence(targetLen) {
+    const n = Math.max(4, targetLen);
+    const words = [];
+    for (let i = 0; i < n; i++) words.push(pickWord());
+    // Capitalize first word.
+    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+    // Add commas occasionally for readability.
+    if (n >= 10) {
+      const commaCount = rngInt(0, 2);
+      for (let c = 0; c < commaCount; c++) {
+        const pos = rngInt(3, n - 3);
+        words[pos] = words[pos] + ",";
+      }
+    }
+    return words.join(" ") + ".";
+  }
+
+  function sentenceTarget() {
+    const len = String(lenEl.value);
+    if (len === "short") return rngInt(6, 10);
+    if (len === "long") return rngInt(14, 22);
+    return rngInt(10, 16); // medium
+  }
+
+  function buildParagraph() {
+    // paragraph = 3..6 sentences depending on selected sentence length
+    const len = String(lenEl.value);
+    const sCount = (len === "short") ? rngInt(4, 7) : (len === "long") ? rngInt(2, 4) : rngInt(3, 6);
+    const parts = [];
+    for (let i = 0; i < sCount; i++) parts.push(makeSentence(sentenceTarget()));
+    return parts.join(" ");
+  }
+
+  function safeCount() {
+    const v = parseInt(String(countEl.value), 10);
+    if (!Number.isFinite(v) || v < 1) return null;
+
+    const mode = String(modeEl.value);
+    // Guardrails to avoid huge UI freezes.
+    const max = (mode === "words") ? 5000 : (mode === "sentences") ? 1000 : 200;
+    if (v > max) return { ok: false, msg: "Amount is too large for this mode. Max: " + max + "." };
+    return { ok: true, value: v };
+  }
+
+  function computeStats(text) {
+    const chars = text.length;
+    const words = (text.trim() ? text.trim().split(/\s+/).length : 0);
+    const paragraphs = text.trim() ? text.trim().split(/\n{2,}/).length : 0;
+    return { chars, words, paragraphs };
+  }
+
+  function renderCards(info) {
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Generated", "good")}
+        ${badge(info.mode)}
+        ${badge("Words: " + info.words)}
+        ${badge("Chars: " + info.chars)}
+        ${badge("Paragraphs: " + info.paragraphs)}
+        ${badge(info.html ? "HTML" : "Plain text")}
+      </div>
+    `;
+  }
+
+  function generate() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+
+    const c = safeCount();
+    if (!c || !c.ok) {
+      showError(c ? c.msg : "Please enter a valid amount.");
+      resEl.textContent = "Result will appear here.";
+      outEl.value = "";
+      return;
+    }
+
+    const mode = String(modeEl.value);
+    const count = c.value;
+    const startWith = !!startEl.checked;
+    const asHtml = !!htmlEl.checked;
+
+    let output = "";
+
+    if (mode === "words") {
+      const words = [];
+      for (let i = 0; i < count; i++) words.push(pickWord());
+      if (startWith && words.length > 0) {
+        // Replace the beginning with a common phrase (word-mode approximation).
+        const startWords = START_SENTENCE.replace(/[^\w\s]/g, "").toLowerCase().split(/\s+/);
+        for (let i = 0; i < Math.min(startWords.length, words.length); i++) words[i] = startWords[i];
+      }
+      // Capitalize first word and end with period.
+      if (words.length > 0) words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+      output = words.join(" ") + ".";
+    }
+
+    if (mode === "sentences") {
+      const sentences = [];
+      for (let i = 0; i < count; i++) sentences.push(makeSentence(sentenceTarget()));
+      if (startWith && sentences.length > 0) sentences[0] = START_SENTENCE;
+      output = sentences.join(" ");
+    }
+
+    if (mode === "paragraphs") {
+      const paras = [];
+      for (let i = 0; i < count; i++) paras.push(buildParagraph());
+      if (startWith && paras.length > 0) {
+        // Ensure the first paragraph begins with the canonical sentence.
+        paras[0] = START_SENTENCE + " " + paras[0].replace(/^.+?\.\s*/, "");
+      }
+      if (asHtml) {
+        output = paras.map(p => "<p>" + p + "</p>").join("\n");
+      } else {
+        output = paras.join("\n\n");
+      }
+    }
+
+    outEl.value = output;
+
+    const stats = computeStats(asHtml ? output.replace(/<[^>]*>/g, " ") : output);
+    resEl.innerHTML = "<strong>Done.</strong> <span class='note'>Output is ready below.</span>";
+    renderCards({
+      mode: "Mode: " + mode,
+      words: stats.words,
+      chars: stats.chars,
+      paragraphs: stats.paragraphs,
+      html: asHtml && mode === "paragraphs",
+    });
+  }
+
+  async function copy() {
+    clearError();
+    const text = String(outEl.value || "");
+    if (!text) {
+      showError("Nothing to copy. Generate text first.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      resEl.innerHTML = "<strong>Copied.</strong> <span class='note'>Output copied to clipboard.</span>";
+    } catch (_) {
+      showError("Could not copy. Your browser may block clipboard access.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    modeEl.value = "paragraphs";
+    countEl.value = "3";
+    startEl.checked = true;
+    htmlEl.checked = false;
+    lenEl.value = "medium";
+    outEl.value = "";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  genBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copy);
+  clearBtn.addEventListener("click", reset);
+
+  // Ctrl/Cmd+Enter to generate from input controls
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  };
+  [modeEl, countEl, startEl, htmlEl, lenEl].forEach((el) => el.addEventListener("keydown", keyHandler));
+
+  // Small UX: if output as HTML is checked, ensure paragraph mode is selected
+  htmlEl.addEventListener("change", function () {
+    if (htmlEl.checked && String(modeEl.value) !== "paragraphs") {
+      modeEl.value = "paragraphs";
+    }
+  });
+
+  modeEl.addEventListener("change", function () {
+    // HTML option only meaningful for paragraphs
+    if (String(modeEl.value) !== "paragraphs") htmlEl.checked = false;
+  });
+});
+</script>

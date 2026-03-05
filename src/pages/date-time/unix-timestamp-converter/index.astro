@@ -1,0 +1,552 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Unix Timestamp Converter",
+  description:
+    "Convert Unix timestamps to human-readable dates and convert dates back to Unix time (seconds or milliseconds). Includes validation, timezone options, result cards, and FAQ schema.",
+  href: "/date-time/unix-timestamp-converter/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/unix-timestamp-converter/";
+
+const faqs = [
+  {
+    q: "What is a Unix timestamp?",
+    a: "A Unix timestamp is the number of seconds (or milliseconds) elapsed since 1970-01-01 00:00:00 UTC (the Unix epoch).",
+  },
+  {
+    q: "Seconds vs milliseconds: what’s the difference?",
+    a: "Seconds timestamps are 10 digits for modern dates (e.g., 1700000000). Milliseconds timestamps are 13 digits (e.g., 1700000000000). This tool supports both.",
+  },
+  {
+    q: "Does this show UTC or local time?",
+    a: "You can choose. UTC is consistent across time zones; local time uses your device/browser time zone.",
+  },
+  {
+    q: "Why is my converted date different from another site?",
+    a: "Differences usually come from timezone selection (UTC vs local), or whether the timestamp is interpreted as seconds or milliseconds.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser. No data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Unix Timestamp Converter — ${SITE_NAME}`}
+  description="Convert Unix timestamps to readable date/time, and convert a date/time back to Unix seconds or milliseconds. Supports UTC and local time with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Unix Timestamp Converter"
+  intro="Convert Unix time ↔ date/time. Paste a timestamp (seconds or milliseconds) to decode it, or enter a date/time to generate Unix seconds/ms."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="unix-timestamp-converter">
+    <div class="form" role="form" aria-describedby="utc_hint privacy_hint">
+      <div class="field">
+        <label for="utc_mode">Mode</label>
+        <select id="utc_mode">
+          <option value="ts_to_date" selected>Timestamp → Date/Time</option>
+          <option value="date_to_ts">Date/Time → Timestamp</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="utc_tz">Timezone</label>
+        <select id="utc_tz">
+          <option value="local" selected>Local time (your device)</option>
+          <option value="utc">UTC</option>
+        </select>
+        <p class="note" id="utc_hint" style="margin-top:6px;">
+          Tip: If results look “off by hours”, check UTC vs Local.
+        </p>
+      </div>
+
+      <div class="field" id="utc_ts_block">
+        <label for="utc_ts">Unix timestamp</label>
+        <input id="utc_ts" type="text" inputmode="numeric" placeholder="e.g., 1700000000 or 1700000000000" />
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; align-items:center;">
+          <label style="display:flex; gap:8px; align-items:center; font-weight:650; color: var(--muted);">
+            <input type="checkbox" id="utc_auto" checked />
+            Auto-detect seconds vs milliseconds
+          </label>
+          <select id="utc_unit" aria-label="Timestamp unit">
+            <option value="auto" selected>Auto</option>
+            <option value="s">Seconds</option>
+            <option value="ms">Milliseconds</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" id="utc_date_block" style="display:none;">
+        <label>Date & time</label>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div class="field">
+            <label for="utc_date">Date</label>
+            <input id="utc_date" type="date" />
+          </div>
+
+          <div class="field">
+            <label for="utc_time">Time</label>
+            <input id="utc_time" type="time" step="1" />
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:6px;">
+          <label for="utc_out_unit">Output timestamp unit</label>
+          <select id="utc_out_unit">
+            <option value="s" selected>Seconds</option>
+            <option value="ms">Milliseconds</option>
+          </select>
+        </div>
+
+        <div class="note" style="margin-top:6px;">
+          If time is empty, 00:00:00 is used.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="utc_calc">Convert</button>
+        <button class="btn secondary" type="button" id="utc_now">Use current time</button>
+        <button class="btn secondary" type="button" id="utc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="utc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="utc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="utc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Field</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="utc_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="privacy_hint" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Timestamp → Date:</strong> interpret as seconds or milliseconds since 1970-01-01 00:00:00 UTC, then display as UTC or local time.
+      <br />
+      <strong>Date → Timestamp:</strong> build a date/time in UTC or local time, convert to milliseconds since epoch, then output seconds or milliseconds.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1700000000</strong> (seconds) → date/time</li>
+      <li><strong>1700000000000</strong> (milliseconds) → date/time</li>
+      <li>Convert <strong>2026-01-01 00:00:00</strong> to Unix seconds</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/day-of-week-calculator/">Day of Week</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("utc_mode");
+  const tzEl = document.getElementById("utc_tz");
+
+  const tsBlock = document.getElementById("utc_ts_block");
+  const tsEl = document.getElementById("utc_ts");
+  const autoEl = document.getElementById("utc_auto");
+  const unitEl = document.getElementById("utc_unit");
+
+  const dateBlock = document.getElementById("utc_date_block");
+  const dateEl = document.getElementById("utc_date");
+  const timeEl = document.getElementById("utc_time");
+  const outUnitEl = document.getElementById("utc_out_unit");
+
+  const calcBtn = document.getElementById("utc_calc");
+  const nowBtn = document.getElementById("utc_now");
+  const clearBtn = document.getElementById("utc_clear");
+
+  const errEl = document.getElementById("utc_error");
+  const resEl = document.getElementById("utc_result");
+  const cardsEl = document.getElementById("utc_cards");
+  const tbodyEl = document.getElementById("utc_table");
+
+  if (!modeEl || !tzEl || !tsBlock || !tsEl || !autoEl || !unitEl || !dateBlock || !dateEl || !timeEl || !outUnitEl || !calcBtn || !nowBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setModeUI() {
+    const m = String(modeEl.value);
+    if (m === "ts_to_date") {
+      tsBlock.style.display = "";
+      dateBlock.style.display = "none";
+      tsEl.setAttribute("aria-required", "true");
+      dateEl.removeAttribute("aria-required");
+    } else {
+      tsBlock.style.display = "none";
+      dateBlock.style.display = "";
+      dateEl.setAttribute("aria-required", "true");
+      tsEl.removeAttribute("aria-required");
+    }
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    clearError();
+    resEl.textContent = "Result will appear here.";
+  }
+
+  function normalizeDigits(s) {
+    return String(s || "").trim().replace(/[,\s]/g, "");
+  }
+
+  function detectUnit(tsDigits) {
+    // Heuristic:
+    // - 13+ digits => ms
+    // - 10 digits  => s
+    // - 11-12 digits could be seconds (far future) or ms (early epoch); default to ms if 12+, else s
+    const len = tsDigits.length;
+    if (len >= 13) return "ms";
+    if (len <= 10) return "s";
+    return len >= 12 ? "ms" : "s";
+  }
+
+  function parseTimestamp() {
+    const raw = normalizeDigits(tsEl.value);
+    if (!raw) return { ok: false, msg: "Please enter a Unix timestamp." };
+
+    // allow leading minus for dates before 1970
+    const isNeg = raw.startsWith("-");
+    const digits = isNeg ? raw.slice(1) : raw;
+
+    if (!/^\d+$/.test(digits)) {
+      return { ok: false, msg: "Timestamp must contain only digits (optionally a leading minus sign)." };
+    }
+
+    // Guardrail: very long values become imprecise in JS Date
+    if (digits.length > 16) {
+      return { ok: false, msg: "Timestamp is too long for reliable conversion in the browser." };
+    }
+
+    let unit = String(unitEl.value);
+    const auto = !!autoEl.checked;
+    if (unit === "auto" || auto) unit = detectUnit(digits);
+
+    // Convert to milliseconds as Number
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return { ok: false, msg: "Timestamp is not a valid number." };
+
+    const ms = unit === "ms" ? n : (n * 1000);
+    if (!Number.isFinite(ms)) return { ok: false, msg: "Timestamp is out of range." };
+
+    return { ok: true, ms, unit };
+  }
+
+  function pad2(x) { return String(x).padStart(2, "0"); }
+
+  function formatLocal(d) {
+    const yyyy = d.getFullYear();
+    const mm = pad2(d.getMonth() + 1);
+    const dd = pad2(d.getDate());
+    const hh = pad2(d.getHours());
+    const mi = pad2(d.getMinutes());
+    const ss = pad2(d.getSeconds());
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  }
+
+  function formatUTC(d) {
+    const yyyy = d.getUTCFullYear();
+    const mm = pad2(d.getUTCMonth() + 1);
+    const dd = pad2(d.getUTCDate());
+    const hh = pad2(d.getUTCHours());
+    const mi = pad2(d.getUTCMinutes());
+    const ss = pad2(d.getUTCSeconds());
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} UTC`;
+  }
+
+  function isoUTC(d) {
+    // ISO string is always UTC
+    return d.toISOString();
+  }
+
+  function buildRow(k, v) {
+    const tr = document.createElement("tr");
+    const td1 = document.createElement("td");
+    const td2 = document.createElement("td");
+    td1.textContent = k;
+    td2.textContent = v;
+    tr.appendChild(td1);
+    tr.appendChild(td2);
+    tbodyEl.appendChild(tr);
+  }
+
+  function tsToDate() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const parsed = parseTimestamp();
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const tz = String(tzEl.value);
+    const d = new Date(parsed.ms);
+    if (Number.isNaN(d.getTime())) {
+      showError("Timestamp could not be converted to a valid date.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const shown = tz === "utc" ? formatUTC(d) : formatLocal(d);
+
+    // Provide both seconds and milliseconds for convenience
+    const ms = Math.trunc(parsed.ms);
+    const s = Math.trunc(parsed.ms / 1000);
+
+    resEl.innerHTML =
+      "<strong>Date/Time:</strong> " + shown + "<br/>" +
+      "<span class='note'>ISO (UTC): " + isoUTC(d) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Input: " + parsed.unit, "neutral")}
+        ${badge("Display: " + (tz === "utc" ? "UTC" : "Local"), "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+    `;
+
+    buildRow("Input timestamp", normalizeDigits(tsEl.value));
+    buildRow("Interpreted as", parsed.unit === "ms" ? "milliseconds" : "seconds");
+    buildRow("Unix seconds", String(s));
+    buildRow("Unix milliseconds", String(ms));
+    buildRow("Displayed", shown);
+    buildRow("ISO (UTC)", isoUTC(d));
+  }
+
+  function parseDateTime() {
+    const tz = String(tzEl.value);
+    const dStr = String(dateEl.value || "").trim();
+    if (!dStr) return { ok: false, msg: "Please choose a date." };
+
+    // time may be empty; use 00:00:00
+    const tStr = String(timeEl.value || "").trim();
+    const parts = tStr ? tStr.split(":") : ["0","0","0"];
+
+    const hh = parseInt(parts[0] || "0", 10);
+    const mi = parseInt(parts[1] || "0", 10);
+    const ss = parseInt(parts[2] || "0", 10);
+
+    if (![hh,mi,ss].every(Number.isFinite)) return { ok: false, msg: "Time is invalid." };
+    if (hh < 0 || hh > 23 || mi < 0 || mi > 59 || ss < 0 || ss > 59) return { ok: false, msg: "Time must be within 00:00:00 to 23:59:59." };
+
+    const [Y, M, D] = dStr.split("-").map(x => parseInt(x, 10));
+    if (![Y,M,D].every(Number.isFinite)) return { ok: false, msg: "Date is invalid." };
+
+    // Build Date depending on timezone selection
+    let dt;
+    if (tz === "utc") {
+      dt = new Date(Date.UTC(Y, (M - 1), D, hh, mi, ss, 0));
+    } else {
+      dt = new Date(Y, (M - 1), D, hh, mi, ss, 0);
+    }
+
+    if (Number.isNaN(dt.getTime())) return { ok: false, msg: "Date/time could not be converted." };
+
+    return { ok: true, dt, tz };
+  }
+
+  function dateToTs() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const parsed = parseDateTime();
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const outUnit = String(outUnitEl.value);
+    const ms = Math.trunc(parsed.dt.getTime());
+    const s = Math.trunc(ms / 1000);
+
+    const outVal = outUnit === "ms" ? ms : s;
+
+    resEl.innerHTML =
+      "<strong>Unix timestamp:</strong> " + String(outVal) + "<br/>" +
+      "<span class='note'>Also: " + (outUnit === "ms" ? (s + " seconds") : (ms + " milliseconds")) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("Input: " + (parsed.tz === "utc" ? "UTC" : "Local"), "neutral")}
+        ${badge("Output: " + (outUnit === "ms" ? "milliseconds" : "seconds"), "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+    `;
+
+    const shown = parsed.tz === "utc" ? formatUTC(parsed.dt) : formatLocal(parsed.dt);
+
+    buildRow("Input date/time", shown);
+    buildRow("Unix seconds", String(s));
+    buildRow("Unix milliseconds", String(ms));
+    buildRow("ISO (UTC)", isoUTC(parsed.dt));
+    buildRow("Output", String(outVal) + (outUnit === "ms" ? " (ms)" : " (s)"));
+  }
+
+  function compute() {
+    const m = String(modeEl.value);
+    if (m === "ts_to_date") tsToDate();
+    else dateToTs();
+  }
+
+  function useNow() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const now = new Date();
+    const tz = String(tzEl.value);
+
+    if (String(modeEl.value) === "ts_to_date") {
+      // Fill timestamp in ms (easy, unambiguous)
+      tsEl.value = String(now.getTime());
+      unitEl.value = "ms";
+      autoEl.checked = false;
+      compute();
+      return;
+    }
+
+    // Fill date/time fields from selected TZ
+    let yyyy, mm, dd, hh, mi, ss;
+    if (tz === "utc") {
+      yyyy = now.getUTCFullYear();
+      mm = now.getUTCMonth() + 1;
+      dd = now.getUTCDate();
+      hh = now.getUTCHours();
+      mi = now.getUTCMinutes();
+      ss = now.getUTCSeconds();
+    } else {
+      yyyy = now.getFullYear();
+      mm = now.getMonth() + 1;
+      dd = now.getDate();
+      hh = now.getHours();
+      mi = now.getMinutes();
+      ss = now.getSeconds();
+    }
+    const dStr = `${yyyy}-${pad2(mm)}-${pad2(dd)}`;
+    const tStr = `${pad2(hh)}:${pad2(mi)}:${pad2(ss)}`;
+
+    dateEl.value = dStr;
+    timeEl.value = tStr;
+    compute();
+  }
+
+  function reset() {
+    clearError();
+    tsEl.value = "";
+    autoEl.checked = true;
+    unitEl.value = "auto";
+
+    dateEl.value = "";
+    timeEl.value = "";
+    outUnitEl.value = "s";
+
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  // Events
+  modeEl.addEventListener("change", setModeUI);
+  tzEl.addEventListener("change", function () {
+    // If there is an existing result, recompute
+    const m = String(modeEl.value);
+    if (m === "ts_to_date" && String(tsEl.value || "").trim()) compute();
+    if (m === "date_to_ts" && String(dateEl.value || "").trim()) compute();
+  });
+
+  autoEl.addEventListener("change", function () {
+    unitEl.disabled = !!autoEl.checked;
+    unitEl.value = autoEl.checked ? "auto" : unitEl.value;
+  });
+
+  calcBtn.addEventListener("click", compute);
+  nowBtn.addEventListener("click", useNow);
+  clearBtn.addEventListener("click", reset);
+
+  // Ctrl/Cmd+Enter to convert (both modes)
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  };
+  tsEl.addEventListener("keydown", keyHandler);
+  dateEl.addEventListener("keydown", keyHandler);
+  timeEl.addEventListener("keydown", keyHandler);
+
+  // Initialize
+  unitEl.disabled = !!autoEl.checked;
+  setModeUI();
+});
+</script>

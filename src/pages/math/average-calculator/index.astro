@@ -1,0 +1,402 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Average Calculator",
+  description:
+    "Free average calculator. Compute mean (average), sum, count, min, max, and range from a list of numbers. Includes validation, result cards, and FAQ schema.",
+  href: "/math/average-calculator/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/average-calculator/";
+
+// FAQ + JSON-LD
+const faqs = [
+  {
+    q: "What does “average” mean?",
+    a: "In most contexts, “average” means the arithmetic mean: sum of values divided by how many values there are.",
+  },
+  {
+    q: "Does this calculator support decimals and negative numbers?",
+    a: "Yes. You can enter decimals and negative numbers. Values can be separated by commas, spaces, or new lines.",
+  },
+  {
+    q: "How is the mean calculated?",
+    a: "Mean = (x1 + x2 + … + xn) ÷ n. This tool also shows sum, count, min, max, and range.",
+  },
+  {
+    q: "Can I average percentages?",
+    a: "You can compute the arithmetic mean of percentages, but in some cases (like growth rates) a weighted average may be more appropriate.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Average Calculator — ${SITE_NAME}`}
+  description="Calculate the arithmetic mean (average) from a list of numbers. Shows sum, count, min, max, range, and rounding controls with accessible UX and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Average Calculator"
+  intro="Compute the arithmetic mean (average) from a list of numbers. Paste values separated by commas, spaces, or new lines to get mean, sum, count, min, max, and range."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="average-calculator">
+    <div class="form" role="form" aria-describedby="avg_hint avg_privacy">
+      <div class="field">
+        <label for="avg_values">Numbers</label>
+        <textarea
+          id="avg_values"
+          rows="5"
+          placeholder="e.g., 10, 20, 30&#10;or 1.5 2.5 3.0&#10;or one per line"
+          style="resize:vertical;"
+        ></textarea>
+        <p class="note" id="avg_hint" style="margin-top:6px;">
+          Separators supported: comma, space, tab, new line. Example: <code>10, 20 30</code>. Use <code>-</code> for negatives.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="avg_round">Rounding</label>
+          <select id="avg_round">
+            <option value="auto" selected>Smart</option>
+            <option value="0">0 decimals</option>
+            <option value="2">2 decimals</option>
+            <option value="4">4 decimals</option>
+            <option value="6">6 decimals</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="avg_trim">Input cleanup</label>
+          <select id="avg_trim">
+            <option value="ignore-empty" selected>Ignore empty tokens</option>
+            <option value="strict">Strict (error on invalid token)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="avg_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="avg_copy">Copy mean</button>
+        <button class="btn secondary" type="button" id="avg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="avg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="avg_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="avg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="avg_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="avg_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Mean (average)</strong> is computed as:
+      <br />
+      <strong>mean = (sum of all values) ÷ (count of values)</strong>
+      <br />
+      This calculator also shows sum, count, min, max, and range (max − min).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>10, 20, 30 → mean = 20</li>
+      <li>1.5 2.5 3.0 → mean = 2.333…</li>
+      <li>-5, 5 → mean = 0</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/mean-median-mode-calculator/">Mean / Median / Mode</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("avg_values");
+  const roundEl = document.getElementById("avg_round");
+  const trimEl = document.getElementById("avg_trim");
+
+  const calcBtn = document.getElementById("avg_calc");
+  const copyBtn = document.getElementById("avg_copy");
+  const clearBtn = document.getElementById("avg_clear");
+
+  const errEl = document.getElementById("avg_error");
+  const resEl = document.getElementById("avg_result");
+  const cardsEl = document.getElementById("avg_cards");
+  const tbodyEl = document.getElementById("avg_table");
+
+  if (!valuesEl || !roundEl || !trimEl || !calcBtn || !copyBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function card(title, big, sub) {
+    // min-width keeps desktop nice, but also safe on mobile because of flex-wrap
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; flex:1; min-width:220px;">
+        <strong>${title}</strong>
+        <div style="font-size:26px; font-weight:900; margin-top:6px; overflow-wrap:anywhere;">${big}</div>
+        <div class="note" style="margin-top:4px; overflow-wrap:anywhere;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (Object.is(x, -0)) x = 0;
+
+    const r = String(roundEl.value);
+    if (r !== "auto") {
+      const d = parseInt(r, 10);
+      if (Number.isFinite(d) && d >= 0) return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+    }
+
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e9 || ax < 1e-6) return x.toExponential(6);
+    // up to 10 significant digits, trimmed
+    const s = x.toPrecision(10);
+    return String(Number(s));
+  }
+
+  function parseNumbers(raw) {
+    const strict = String(trimEl.value) === "strict";
+    const text = String(raw || "");
+    // split by comma or whitespace; keep '-' as part of token
+    const tokens = text.split(/[\s,]+/g);
+
+    const nums = [];
+    const bad = [];
+
+    for (const t0 of tokens) {
+      const t = String(t0 || "").trim();
+      if (!t) continue;
+
+      // allow leading +/-, decimals, and exponent (e.g. 1e-3)
+      const n = Number(t);
+      if (Number.isFinite(n)) {
+        nums.push(n);
+      } else {
+        if (strict) bad.push(t);
+        // ignore if not strict
+      }
+    }
+
+    if (strict && bad.length) {
+      return { ok: false, msg: "Invalid token(s): " + bad.slice(0, 6).join(", ") + (bad.length > 6 ? " …" : "") };
+    }
+    if (!nums.length) {
+      return { ok: false, msg: "Please enter at least one valid number." };
+    }
+    if (nums.length > 100000) {
+      return { ok: false, msg: "Too many numbers. Please use 100,000 values or fewer." };
+    }
+    return { ok: true, nums };
+  }
+
+  function stats(nums) {
+    let sum = 0;
+    let min = nums[0];
+    let max = nums[0];
+
+    // Kahan summation for better numeric stability
+    let c = 0;
+    for (const x of nums) {
+      if (x < min) min = x;
+      if (x > max) max = x;
+
+      const y = x - c;
+      const t = sum + y;
+      c = (t - sum) - y;
+      sum = t;
+    }
+
+    const n = nums.length;
+    const mean = sum / n;
+    const range = max - min;
+    return { n, sum, mean, min, max, range };
+  }
+
+  function fillTable(s) {
+    tbodyEl.innerHTML = "";
+
+    const rows = [
+      ["Count", String(s.n)],
+      ["Sum", fmtSmart(s.sum)],
+      ["Mean (average)", fmtSmart(s.mean)],
+      ["Min", fmtSmart(s.min)],
+      ["Max", fmtSmart(s.max)],
+      ["Range (max − min)", fmtSmart(s.range)],
+    ];
+
+    for (const [k, v] of rows) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  let lastMean = "";
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastMean = "";
+
+    const parsed = parseNumbers(valuesEl.value);
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const s = stats(parsed.nums);
+    if (!Number.isFinite(s.mean)) {
+      showError("Could not compute mean from these values.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const meanStr = fmtSmart(s.mean);
+    lastMean = meanStr;
+
+    // Category emphasis (spread)
+    const spread = Math.abs(s.range);
+    let spreadLabel = "Typical spread";
+    if (spread === 0) spreadLabel = "All values equal";
+    else if (spread < 1e-6) spreadLabel = "Very small spread";
+    else if (spread >= 1e6) spreadLabel = "Very large spread";
+
+    resEl.innerHTML =
+      "<strong>Mean (average):</strong> " + meanStr +
+      "<br/><span class='note'>From " + s.n.toLocaleString() + " value(s). Sum = " + fmtSmart(s.sum) + ".</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:stretch;">
+        ${card("Mean (average)", meanStr, badge("Computed", "good") + " · mean = sum ÷ count")}
+        ${card("Count", s.n.toLocaleString(), "How many numbers were used")}
+        ${card("Range", fmtSmart(s.range), badge(spreadLabel, "neutral") + " · range = max − min")}
+      </div>
+    `;
+
+    fillTable(s);
+  }
+
+  async function copyMean() {
+    clearError();
+    if (!lastMean) {
+      showError("Calculate first, then copy the mean.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(String(lastMean));
+      // Non-intrusive feedback in result area
+      resEl.innerHTML = "<strong>Mean copied:</strong> " + String(lastMean) + "<br/><span class='note'>Copied to clipboard.</span>";
+    } catch (e) {
+      showError("Could not copy. Your browser may block clipboard access.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    valuesEl.value = "";
+    roundEl.value = "auto";
+    trimEl.value = "ignore-empty";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastMean = "";
+    valuesEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  copyBtn.addEventListener("click", copyMean);
+  clearBtn.addEventListener("click", reset);
+
+  // Ctrl/Cmd+Enter to calculate
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  roundEl.addEventListener("change", function () {
+    if (String(valuesEl.value || "").trim()) compute();
+  });
+
+  trimEl.addEventListener("change", function () {
+    if (String(valuesEl.value || "").trim()) compute();
+  });
+});
+</script>

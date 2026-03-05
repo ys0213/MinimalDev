@@ -1,0 +1,459 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JSON Formatter",
+  description:
+    "Free JSON formatter and validator. Pretty-print JSON, minify JSON, validate syntax, and copy results locally in your browser.",
+  href: "/utility/json-formatter/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/json-formatter/";
+
+const faqs = [
+  {
+    q: "What does this JSON formatter do?",
+    a: "It formats (pretty-prints) JSON with indentation, validates JSON syntax, and can also minify JSON by removing whitespace.",
+  },
+  {
+    q: "Is my JSON uploaded to a server?",
+    a: "No. Formatting and validation run locally in your browser. Nothing is sent to a server.",
+  },
+  {
+    q: "Why does JSON.parse fail on my input?",
+    a: "Common issues are trailing commas, comments, single quotes, unquoted keys, or invalid numbers like NaN/Infinity. Standard JSON does not allow these.",
+  },
+  {
+    q: "Does it preserve key order?",
+    a: "Most modern JS engines preserve insertion order for object keys, but the JSON standard does not guarantee ordering semantics. This tool does not intentionally reorder keys.",
+  },
+  {
+    q: "Can it format JSON Lines (JSONL)?",
+    a: "This page focuses on a single JSON value. JSONL requires parsing line-by-line and may not validate as one JSON document.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JSON Formatter — ${SITE_NAME}`}
+  description="Format and validate JSON instantly. Pretty-print or minify JSON, see syntax errors with line/column hints, and copy results. Runs locally in your browser."
+  canonicalPath={CANONICAL_PATH}
+  h1="JSON Formatter"
+  intro="Paste JSON to format (pretty-print), minify, and validate. Shows helpful syntax error hints. Everything runs locally in your browser."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="json-formatter">
+    <div class="form" role="form" aria-describedby="jf_hint jf_privacy">
+      <div class="field">
+        <label for="jf_input">Input JSON</label>
+        <textarea
+          id="jf_input"
+          rows="10"
+          placeholder='e.g., {"name":"MinimalDev","tools":100}'
+          style="resize:vertical;"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        ></textarea>
+        <p class="note" id="jf_hint" style="margin-top:6px;">
+          Standard JSON only (no comments, no trailing commas, keys must be in double quotes).
+          Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to format.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="jf_indent">Indent</label>
+          <select id="jf_indent">
+            <option value="2" selected>2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="tab">Tab</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="jf_sort">Key order</label>
+          <select id="jf_sort">
+            <option value="none" selected>Keep as parsed</option>
+            <option value="asc">Sort keys (A → Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="jf_pretty">Pretty print</button>
+        <button class="btn secondary" type="button" id="jf_minify">Minify</button>
+        <button class="btn secondary" type="button" id="jf_validate">Validate</button>
+        <button class="btn secondary" type="button" id="jf_copy">Copy output</button>
+        <button class="btn secondary" type="button" id="jf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jf_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="jf_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="jf_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:10px;">
+        <label for="jf_output">Output</label>
+        <textarea
+          id="jf_output"
+          rows="10"
+          placeholder="Formatted JSON will appear here."
+          style="resize:vertical;"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          readonly
+        ></textarea>
+      </div>
+
+      <p class="note" id="jf_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No JSON is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses the browser’s JSON parser (<code>JSON.parse</code>) to validate input.
+      For formatting, it uses <code>JSON.stringify</code> with your chosen indentation. Minify removes whitespace.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Pretty print: add indentation and new lines for readability</li>
+      <li>Minify: remove whitespace to reduce size (useful for APIs)</li>
+      <li>Validate: check whether the JSON is syntactically valid</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/base64/">Base64 Encoder/Decoder</a></li>
+      <li><a href="/utility/url-encoder-decoder/">URL Encoder/Decoder</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("jf_input");
+  const outEl = document.getElementById("jf_output");
+
+  const indentEl = document.getElementById("jf_indent");
+  const sortEl = document.getElementById("jf_sort");
+
+  const prettyBtn = document.getElementById("jf_pretty");
+  const minifyBtn = document.getElementById("jf_minify");
+  const validateBtn = document.getElementById("jf_validate");
+  const copyBtn = document.getElementById("jf_copy");
+  const clearBtn = document.getElementById("jf_clear");
+
+  const errEl = document.getElementById("jf_error");
+  const resEl = document.getElementById("jf_result");
+  const cardsEl = document.getElementById("jf_cards");
+
+  if (!inEl || !outEl || !indentEl || !sortEl || !prettyBtn || !minifyBtn || !validateBtn || !copyBtn || !clearBtn || !errEl || !resEl || !cardsEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function bytesApprox(str) {
+    // Approx UTF-8 byte length
+    try {
+      return new TextEncoder().encode(str).length;
+    } catch (_) {
+      // fallback: rough estimate
+      return str.length;
+    }
+  }
+
+  function fmtBytes(n) {
+    if (!Number.isFinite(n)) return "—";
+    if (n < 1024) return n + " B";
+    const kb = n / 1024;
+    if (kb < 1024) return (Math.round(kb * 10) / 10) + " KB";
+    const mb = kb / 1024;
+    return (Math.round(mb * 10) / 10) + " MB";
+  }
+
+  function extractLineColFromMessage(msg) {
+    // Typical message: "Unexpected token ... in JSON at position 123"
+    const m = String(msg || "").match(/position\s+(\d+)/i);
+    if (!m) return null;
+    const pos = parseInt(m[1], 10);
+    if (!Number.isFinite(pos) || pos < 0) return null;
+
+    const text = String(inEl.value || "");
+    let line = 1;
+    let col = 1;
+    for (let i = 0; i < text.length && i < pos; i++) {
+      const ch = text[i];
+      if (ch === "\n") { line++; col = 1; }
+      else col++;
+    }
+    return { pos, line, col };
+  }
+
+  function sortKeysDeep(value) {
+    if (Array.isArray(value)) return value.map(sortKeysDeep);
+    if (value && typeof value === "object") {
+      const out = {};
+      const keys = Object.keys(value).sort((a, b) => a.localeCompare(b));
+      for (const k of keys) out[k] = sortKeysDeep(value[k]);
+      return out;
+    }
+    return value;
+  }
+
+  function parseJsonStrict() {
+    const raw = String(inEl.value || "").trim();
+    if (!raw) return { ok: false, msg: "Please paste JSON into the input box." };
+
+    // Guardrail: huge inputs can freeze the UI
+    if (raw.length > 2_000_000) {
+      return { ok: false, msg: "Input is too large (over 2,000,000 characters). Please use a smaller JSON." };
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      return { ok: true, value: parsed, raw };
+    } catch (e) {
+      const msg = (e && e.message) ? e.message : "Invalid JSON.";
+      const lc = extractLineColFromMessage(msg);
+      const hint = lc ? ` (approx line ${lc.line}, col ${lc.col})` : "";
+      return { ok: false, msg: "Invalid JSON: " + msg + hint };
+    }
+  }
+
+  function setCards(info) {
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(info.status, info.statusKind)}
+        ${badge("Input: " + info.inputSize, "neutral")}
+        ${badge("Output: " + info.outputSize, "neutral")}
+        ${badge(info.mode, "neutral")}
+        ${badge(info.keyOrder, "neutral")}
+      </div>
+    `;
+  }
+
+  function setResult(html) {
+    resEl.innerHTML = html;
+  }
+
+  function validateOnly() {
+    clearError();
+    const parsed = parseJsonStrict();
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      setResult("Result will appear here.");
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      return;
+    }
+
+    const inputBytes = bytesApprox(parsed.raw);
+    setResult("<strong>Valid JSON.</strong> <span class='note'>Parsed successfully.</span>");
+    setCards({
+      status: "Valid",
+      statusKind: "good",
+      inputSize: fmtBytes(inputBytes),
+      outputSize: "—",
+      mode: "Validate",
+      keyOrder: (String(sortEl.value) === "asc" ? "Keys: sorted" : "Keys: as parsed"),
+    });
+  }
+
+  function prettyPrint() {
+    clearError();
+    const parsed = parseJsonStrict();
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      setResult("Result will appear here.");
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      return;
+    }
+
+    const sortMode = String(sortEl.value);
+    let value = parsed.value;
+    if (sortMode === "asc") value = sortKeysDeep(value);
+
+    const indentMode = String(indentEl.value);
+    const space = indentMode === "tab" ? "\t" : parseInt(indentMode, 10);
+    const indent = (space === "\t" || Number.isFinite(space)) ? space : 2;
+
+    let out = "";
+    try {
+      out = JSON.stringify(value, null, indent);
+    } catch (_) {
+      showError("Could not stringify this value. (Possible circular structure.)");
+      setResult("Result will appear here.");
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      return;
+    }
+
+    outEl.value = out;
+
+    const inputBytes = bytesApprox(parsed.raw);
+    const outputBytes = bytesApprox(out);
+    setResult("<strong>Formatted.</strong> <span class='note'>Pretty-printed JSON output is ready.</span>");
+    setCards({
+      status: "OK",
+      statusKind: "good",
+      inputSize: fmtBytes(inputBytes),
+      outputSize: fmtBytes(outputBytes),
+      mode: "Pretty print",
+      keyOrder: (sortMode === "asc" ? "Keys: sorted" : "Keys: as parsed"),
+    });
+  }
+
+  function minify() {
+    clearError();
+    const parsed = parseJsonStrict();
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      setResult("Result will appear here.");
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      return;
+    }
+
+    const sortMode = String(sortEl.value);
+    let value = parsed.value;
+    if (sortMode === "asc") value = sortKeysDeep(value);
+
+    let out = "";
+    try {
+      out = JSON.stringify(value);
+    } catch (_) {
+      showError("Could not stringify this value. (Possible circular structure.)");
+      setResult("Result will appear here.");
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      return;
+    }
+
+    outEl.value = out;
+
+    const inputBytes = bytesApprox(parsed.raw);
+    const outputBytes = bytesApprox(out);
+
+    const saved = inputBytes - outputBytes;
+    const savedPct = inputBytes > 0 ? (saved / inputBytes) * 100 : 0;
+
+    const savedText =
+      (saved > 0)
+        ? `Reduced by ${fmtBytes(saved)} (${(Math.round(savedPct * 10) / 10)}%).`
+        : "No reduction (input may already be compact).";
+
+    setResult("<strong>Minified.</strong> <span class='note'>" + savedText + "</span>");
+    setCards({
+      status: "OK",
+      statusKind: "good",
+      inputSize: fmtBytes(inputBytes),
+      outputSize: fmtBytes(outputBytes),
+      mode: "Minify",
+      keyOrder: (sortMode === "asc" ? "Keys: sorted" : "Keys: as parsed"),
+    });
+  }
+
+  async function copyOutput() {
+    clearError();
+    const text = String(outEl.value || "");
+    if (!text) {
+      showError("Nothing to copy. Generate output first.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setResult("<strong>Copied.</strong> <span class='note'>Output copied to clipboard.</span>");
+    } catch (_) {
+      showError("Could not copy. Your browser may block clipboard access.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    outEl.value = "";
+    indentEl.value = "2";
+    sortEl.value = "none";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    inEl.focus();
+  }
+
+  prettyBtn.addEventListener("click", prettyPrint);
+  minifyBtn.addEventListener("click", minify);
+  validateBtn.addEventListener("click", validateOnly);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", reset);
+
+  // Ctrl/Cmd+Enter to pretty print
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") prettyPrint();
+  });
+
+  // If input cleared manually, reset UI
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      outEl.value = "";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+    }
+  });
+});
+</script>

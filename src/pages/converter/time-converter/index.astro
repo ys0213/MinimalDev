@@ -1,0 +1,429 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Time Converter",
+  description:
+    "Convert time units instantly (seconds, minutes, hours, days, weeks, months, years). Validated, accessible UX with result cards, quick table, and FAQ schema.",
+  href: "/converter/time-converter/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/time-converter/";
+
+const units = [
+  { key: "ms", label: "Milliseconds (ms)" },
+  { key: "s", label: "Seconds (s)" },
+  { key: "min", label: "Minutes (min)" },
+  { key: "h", label: "Hours (h)" },
+  { key: "d", label: "Days (d)" },
+  { key: "wk", label: "Weeks (wk)" },
+  { key: "mo", label: "Months (avg)" },
+  { key: "yr", label: "Years (avg)" },
+];
+
+// Base unit: seconds
+// Months/years are average (Gregorian): 1 yr = 365.2425 d, 1 mo = 1/12 yr
+const TO_S = {
+  ms: 0.001,
+  s: 1,
+  min: 60,
+  h: 3600,
+  d: 86400,
+  wk: 604800,
+  mo: 2629746,     // 365.2425/12 * 86400
+  yr: 31556952,    // 365.2425 * 86400
+};
+
+const faqs = [
+  {
+    q: "How do you convert minutes to seconds?",
+    a: "Multiply minutes by 60. Example: 5 minutes = 5 × 60 = 300 seconds.",
+  },
+  {
+    q: "How many seconds are in an hour?",
+    a: "There are 3,600 seconds in one hour (60 minutes × 60 seconds).",
+  },
+  {
+    q: "Are months and years exact?",
+    a: "Months and years vary by calendar. This tool uses average values (Gregorian year 365.2425 days; month = 1/12 of that) for consistent conversions.",
+  },
+  {
+    q: "Does this store my inputs?",
+    a: "No. Conversions run locally in your browser. Nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Time Converter — ${SITE_NAME}`}
+  description="Convert time units instantly (ms, seconds, minutes, hours, days, weeks, months, years). Includes unit UX, input validation, accessible controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Time Converter"
+  intro="Convert between common time units. Choose a value and units, then see the conversion plus a quick reference table."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="time-converter">
+    <div class="form" role="form" aria-describedby="tc_hint tc_privacy">
+      <div class="field">
+        <label for="tc_value">Value</label>
+        <input
+          id="tc_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 90"
+          aria-describedby="tc_hint"
+        />
+        <p class="note" id="tc_hint" style="margin-top:6px;">
+          Tip: Use decimals (e.g., 2.5). Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="tc_from">From</label>
+          <select id="tc_from">
+            {units.map((u) => <option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="tc_to">To</label>
+          <select id="tc_to">
+            {units.map((u) => <option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tc_round">Rounding</label>
+        <select id="tc_round">
+          <option value="2">2 decimals</option>
+          <option value="3">3 decimals</option>
+          <option value="6" selected>6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="tc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="tc_swap" aria-label="Swap units">Swap</button>
+        <button class="btn secondary" type="button" id="tc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="tc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="tc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Equivalent</th>
+            </tr>
+          </thead>
+          <tbody id="tc_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Converts using <strong>seconds</strong> as a base unit:
+      <br />
+      <strong>value_in_seconds = value × (fromUnit → seconds)</strong>
+      <br />
+      <strong>value_in_to = value_in_seconds ÷ (toUnit → seconds)</strong>
+      <br /><br />
+      <strong>Note:</strong> Months and years use average values (Gregorian).
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>90 seconds</strong> → <strong>1.5 minutes</strong></li>
+      <li><strong>2 hours</strong> → <strong>120 minutes</strong></li>
+      <li><strong>1 week</strong> → <strong>604,800 seconds</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/">Date-Time Tools</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+      <li><a href="/math/">Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("tc_value");
+  const fromEl = document.getElementById("tc_from");
+  const toEl = document.getElementById("tc_to");
+  const roundEl = document.getElementById("tc_round");
+
+  const convertBtn = document.getElementById("tc_convert");
+  const swapBtn = document.getElementById("tc_swap");
+  const clearBtn = document.getElementById("tc_clear");
+
+  const errEl = document.getElementById("tc_error");
+  const resEl = document.getElementById("tc_result");
+  const cardsEl = document.getElementById("tc_cards");
+  const tbodyEl = document.getElementById("tc_table");
+
+  if (!valueEl || !fromEl || !toEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  const TO_S = {
+    ms: 0.001,
+    s: 1,
+    min: 60,
+    h: 3600,
+    d: 86400,
+    wk: 604800,
+    mo: 2629746,
+    yr: 31556952
+  };
+
+  const LABEL = {
+    ms: "Milliseconds (ms)",
+    s: "Seconds (s)",
+    min: "Minutes (min)",
+    h: "Hours (h)",
+    d: "Days (d)",
+    wk: "Weeks (wk)",
+    mo: "Months (avg)",
+    yr: "Years (avg)"
+  };
+
+  const ORDER = ["ms","s","min","h","d","wk","mo","yr"];
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (x === 0) return "0";
+    const ax = Math.abs(x);
+    // Use scientific for extreme magnitudes
+    if (ax >= 1e12 || ax < 1e-9) return x.toExponential(6);
+
+    // Otherwise show up to 10 sig digits and trim
+    const s = x.toPrecision(10);
+    const n = Number(s);
+    return n.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value || "auto");
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return fmtSmart(x);
+    // fixed decimals but avoid "-0.000000"
+    const v = Object.is(x, -0) ? 0 : x;
+    return v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function convert(value, fromU, toU) {
+    const f = TO_S[fromU];
+    const t = TO_S[toU];
+    if (!Number.isFinite(f) || !Number.isFinite(t)) return NaN;
+    const s = value * f;
+    return s / t;
+  }
+
+  function classify(seconds) {
+    const ax = Math.abs(seconds);
+    if (ax === 0) return "Zero duration";
+    if (ax < 60) return "Under 1 minute";
+    if (ax < 3600) return "Minutes-scale";
+    if (ax < 86400) return "Hours-scale";
+    if (ax < 604800) return "Days-scale";
+    if (ax < 2629746) return "Weeks-scale";
+    if (ax < 31556952) return "Months-scale (avg)";
+    return "Years-scale (avg)";
+  }
+
+  function buildTable(value, fromU) {
+    tbodyEl.innerHTML = "";
+    for (const u of ORDER) {
+      const v = convert(value, fromU, u);
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.textContent = LABEL[u];
+
+      const td2 = document.createElement("td");
+      td2.textContent = fmtSmart(v);
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const value = toNum(valueEl.value);
+    const fromU = String(fromEl.value);
+    const toU = String(toEl.value);
+
+    if (!Number.isFinite(value)) {
+      resEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    // Guardrail to avoid nonsense UI for extreme values
+    if (Math.abs(value) > 1e18) {
+      showError("Value is too large for reliable display. Use a smaller magnitude.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const out = convert(value, fromU, toU);
+    if (!Number.isFinite(out)) {
+      showError("Could not convert with these units.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const inSeconds = value * TO_S[fromU];
+    const cls = classify(inSeconds);
+
+    resEl.innerHTML =
+      "<strong>Result:</strong> " + fmt(out) + " <span class='note'>(" + toU + ")</span><br/>" +
+      "<span class='note'>" + fmtSmart(value) + " (" + fromU + ") = " + fmtSmart(inSeconds) + " (s) = " + fmtSmart(out) + " (" + toU + ")</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromU, "neutral")}
+        ${badge("To: " + toU, "neutral")}
+        ${badge("Base: seconds", "neutral")}
+        ${badge(cls, "good")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        Months/years are shown using average calendar values for consistent conversions.
+      </div>
+    `;
+
+    buildTable(value, fromU);
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    fromEl.value = "min";
+    toEl.value = "s";
+    roundEl.value = "6";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    valueEl.focus();
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  // recompute on changes if input exists
+  fromEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+  toEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  // lightweight input UX
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  // Ctrl/Cmd+Enter to convert
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  };
+  valueEl.addEventListener("keydown", keyHandler);
+  fromEl.addEventListener("keydown", keyHandler);
+  toEl.addEventListener("keydown", keyHandler);
+  roundEl.addEventListener("keydown", keyHandler);
+
+  // sensible defaults
+  fromEl.value = "min";
+  toEl.value = "s";
+  roundEl.value = "6";
+});
+</script>

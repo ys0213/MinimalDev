@@ -1,0 +1,451 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Volume Converter",
+  description:
+    "Convert volume units instantly (mL, L, tsp, tbsp, fl oz, cup, pint, quart, gallon, in³, ft³, m³). Validated, accessible UX with result cards, quick table, and FAQ schema.",
+  href: "/converter/volume-converter/",
+  order: 45,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/volume-converter/";
+
+// Base unit: liter (L)
+// US customary for tsp/tbsp/fl oz/cup/pint/quart/gallon
+// cubic inches/feet/meters as metric volume
+const units = [
+  { key: "ml", label: "Milliliters (mL)" },
+  { key: "l", label: "Liters (L)" },
+  { key: "tsp", label: "Teaspoons (tsp, US)" },
+  { key: "tbsp", label: "Tablespoons (tbsp, US)" },
+  { key: "floz", label: "Fluid ounces (fl oz, US)" },
+  { key: "cup", label: "Cups (cup, US)" },
+  { key: "pt", label: "Pints (pt, US)" },
+  { key: "qt", label: "Quarts (qt, US)" },
+  { key: "gal", label: "Gallons (gal, US)" },
+  { key: "in3", label: "Cubic inches (in³)" },
+  { key: "ft3", label: "Cubic feet (ft³)" },
+  { key: "m3", label: "Cubic meters (m³)" },
+];
+
+const TO_L = {
+  // metric
+  ml: 0.001,
+  l: 1,
+  m3: 1000,
+
+  // US customary (exact definitions via inch-based gallon)
+  // 1 US gal = 3.785411784 L (exact)
+  gal: 3.785411784,
+  qt: 0.946352946,      // 1/4 gal
+  pt: 0.473176473,      // 1/8 gal
+  cup: 0.2365882365,    // 1/16 gal
+  floz: 0.0295735295625,// 1/128 gal
+  tbsp: 0.01478676478125,// 1/256 gal
+  tsp: 0.00492892159375,// 1/768 gal
+
+  // cubic measures
+  in3: 0.016387064,     // 1 in³ = 16.387064 mL
+  ft3: 28.316846592,    // 1 ft³ = 28.316846592 L
+};
+
+const faqs = [
+  {
+    q: "Which cup does this converter use?",
+    a: "It uses the US legal cup (236.5882365 mL). Other cup sizes exist (metric, imperial), so results may differ if a recipe uses a different standard.",
+  },
+  {
+    q: "Is a US gallon the same as an imperial gallon?",
+    a: "No. This converter uses US customary units. An imperial gallon is larger, so conversions are different.",
+  },
+  {
+    q: "How do you convert liters to milliliters?",
+    a: "Multiply liters by 1,000. Example: 1.5 L = 1,500 mL.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Conversions run locally in your browser. No data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Volume Converter — ${SITE_NAME}`}
+  description="Convert volume units instantly (mL, L, tsp, tbsp, fl oz, cup, pint, quart, gallon, in³, ft³, m³). Includes unit UX, input validation, accessible controls, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Volume Converter"
+  intro="Convert between common volume units. Enter a value, pick “from” and “to” units, and see the converted result plus a quick reference table."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="volume-converter">
+    <div class="form" role="form" aria-describedby="vc_hint vc_privacy vc_note">
+      <div class="field">
+        <label for="vc_value">Value</label>
+        <input
+          id="vc_value"
+          type="number"
+          inputmode="decimal"
+          placeholder="e.g., 2.5"
+          aria-describedby="vc_hint"
+        />
+        <p class="note" id="vc_hint" style="margin-top:6px;">
+          Tip: Use decimals (e.g., 0.75). Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="vc_from">From</label>
+          <select id="vc_from">
+            {units.map((u) => <option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="vc_to">To</label>
+          <select id="vc_to">
+            {units.map((u) => <option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="vc_round">Rounding</label>
+        <select id="vc_round">
+          <option value="2">2 decimals</option>
+          <option value="3">3 decimals</option>
+          <option value="6" selected>6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div class="note" id="vc_note" style="margin-top:-2px;">
+        US customary units are used for tsp/tbsp/fl oz/cup/pint/quart/gallon.
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="vc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="vc_swap" aria-label="Swap units">Swap</button>
+        <button class="btn secondary" type="button" id="vc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="vc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="vc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="vc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Unit</th>
+              <th scope="col">Equivalent</th>
+            </tr>
+          </thead>
+          <tbody id="vc_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="vc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Converts using <strong>liters (L)</strong> as a base unit:
+      <br />
+      <strong>value_in_L = value × (fromUnit → liters)</strong>
+      <br />
+      <strong>value_in_to = value_in_L ÷ (toUnit → liters)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 L</strong> → <strong>1,000 mL</strong></li>
+      <li><strong>2 cups (US)</strong> → <strong>16 fl oz (US)</strong></li>
+      <li><strong>1 ft³</strong> → <strong>28.316846592 L</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/">All Converters</a></li>
+      <li><a href="/math/">Math Tools</a></li>
+      <li><a href="/utility/">Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("vc_value");
+  const fromEl = document.getElementById("vc_from");
+  const toEl = document.getElementById("vc_to");
+  const roundEl = document.getElementById("vc_round");
+
+  const convertBtn = document.getElementById("vc_convert");
+  const swapBtn = document.getElementById("vc_swap");
+  const clearBtn = document.getElementById("vc_clear");
+
+  const errEl = document.getElementById("vc_error");
+  const resEl = document.getElementById("vc_result");
+  const cardsEl = document.getElementById("vc_cards");
+  const tbodyEl = document.getElementById("vc_table");
+
+  if (!valueEl || !fromEl || !toEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
+
+  const TO_L = {
+    ml: 0.001,
+    l: 1,
+    m3: 1000,
+
+    gal: 3.785411784,
+    qt: 0.946352946,
+    pt: 0.473176473,
+    cup: 0.2365882365,
+    floz: 0.0295735295625,
+    tbsp: 0.01478676478125,
+    tsp: 0.00492892159375,
+
+    in3: 0.016387064,
+    ft3: 28.316846592
+  };
+
+  const LABEL = {
+    ml: "Milliliters (mL)",
+    l: "Liters (L)",
+    tsp: "Teaspoons (tsp, US)",
+    tbsp: "Tablespoons (tbsp, US)",
+    floz: "Fluid ounces (fl oz, US)",
+    cup: "Cups (cup, US)",
+    pt: "Pints (pt, US)",
+    qt: "Quarts (qt, US)",
+    gal: "Gallons (gal, US)",
+    in3: "Cubic inches (in³)",
+    ft3: "Cubic feet (ft³)",
+    m3: "Cubic meters (m³)"
+  };
+
+  const ORDER = ["ml","l","tsp","tbsp","floz","cup","pt","qt","gal","in3","ft3","m3"];
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (x === 0) return "0";
+    const ax = Math.abs(x);
+    if (ax >= 1e12 || ax < 1e-9) return x.toExponential(6);
+    const s = x.toPrecision(10);
+    const n = Number(s);
+    return n.toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value || "auto");
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return fmtSmart(x);
+    const v = Object.is(x, -0) ? 0 : x;
+    return v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function groupOf(unit) {
+    if (unit === "ml" || unit === "l" || unit === "m3") return "Metric";
+    if (unit === "in3" || unit === "ft3") return "Cubic";
+    return "US customary";
+  }
+
+  function convert(value, fromU, toU) {
+    const f = TO_L[fromU];
+    const t = TO_L[toU];
+    if (!Number.isFinite(f) || !Number.isFinite(t)) return NaN;
+    const L = value * f;
+    return L / t;
+  }
+
+  function buildTable(value, fromU) {
+    tbodyEl.innerHTML = "";
+    for (const u of ORDER) {
+      const v = convert(value, fromU, u);
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.textContent = LABEL[u];
+
+      const td2 = document.createElement("td");
+      td2.textContent = fmtSmart(v);
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const value = toNum(valueEl.value);
+    const fromU = String(fromEl.value);
+    const toU = String(toEl.value);
+
+    if (!Number.isFinite(value)) {
+      resEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    // Negative volumes are allowed for math, but flag it
+    if (value < 0) {
+      showError("Note: negative volume is uncommon in real-world use. Calculation will still run.");
+    }
+
+    if (Math.abs(value) > 1e18) {
+      showError("Value is too large for reliable display. Use a smaller magnitude.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const out = convert(value, fromU, toU);
+    if (!Number.isFinite(out)) {
+      showError("Could not convert with these units.");
+      resEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const inLiters = value * TO_L[fromU];
+
+    resEl.innerHTML =
+      "<strong>Result:</strong> " + fmt(out) + " <span class='note'>(" + toU + ")</span><br/>" +
+      "<span class='note'>" + fmtSmart(value) + " (" + fromU + ") = " + fmtSmart(inLiters) + " (L) = " + fmtSmart(out) + " (" + toU + ")</span>";
+
+    const gFrom = groupOf(fromU);
+    const gTo = groupOf(toU);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge("From: " + fromU + " (" + gFrom + ")", "neutral")}
+        ${badge("To: " + toU + " (" + gTo + ")", "neutral")}
+        ${badge("Base: liters", "neutral")}
+        ${badge("Converted", "good")}
+      </div>
+      <div class="note" style="margin-top:8px;">
+        US customary results use US definitions (not imperial).
+      </div>
+    `;
+
+    buildTable(value, fromU);
+  }
+
+  function reset() {
+    clearError();
+    valueEl.value = "";
+    fromEl.value = "ml";
+    toEl.value = "l";
+    roundEl.value = "6";
+    resEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    valueEl.focus();
+  }
+
+  convertBtn.addEventListener("click", compute);
+
+  swapBtn.addEventListener("click", function () {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  clearBtn.addEventListener("click", reset);
+
+  // recompute on changes if input exists
+  fromEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+  toEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(valueEl.value || "").trim()) compute();
+  });
+
+  valueEl.addEventListener("input", function () {
+    if (!String(valueEl.value || "").trim()) {
+      clearError();
+      resEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  // Ctrl/Cmd+Enter to convert
+  const keyHandler = function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  };
+  valueEl.addEventListener("keydown", keyHandler);
+  fromEl.addEventListener("keydown", keyHandler);
+  toEl.addEventListener("keydown", keyHandler);
+  roundEl.addEventListener("keydown", keyHandler);
+
+  // sensible defaults
+  fromEl.value = "ml";
+  toEl.value = "l";
+  roundEl.value = "6";
+});
+</script>
