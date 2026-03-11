@@ -45,7 +45,51 @@ async function initToolIfPresent() {
   }
 }
 
+function initCardSearch() {
+  const input = document.getElementById("toolSearch");
+  if (!input) return;
+
+  const grid = document.querySelector(".grid");
+  if (!grid) return;
+
+  const cards = Array.from(grid.querySelectorAll(".card"));
+
+  let emptyMsg = document.getElementById("searchEmpty");
+
+  if (!emptyMsg) {
+    emptyMsg = document.createElement("p");
+    emptyMsg.id = "searchEmpty";
+    emptyMsg.textContent = "No tools found.";
+    emptyMsg.style.display = "none";
+    emptyMsg.className = "note";
+    grid.after(emptyMsg);
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.toLowerCase().trim();
+
+    let visible = 0;
+
+    cards.forEach((card) => {
+
+      const title = card.querySelector("h2")?.innerText.toLowerCase() ?? "";
+      const desc = card.querySelector("p")?.innerText.toLowerCase() ?? "";
+      const text = title + " " + desc;
+
+      if (text.includes(q)) {
+        card.style.display = "";
+        visible++;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    emptyMsg.style.display = visible === 0 ? "" : "none";
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   setYearIfExists();
   initToolIfPresent();
+  initCardSearch();
 });

@@ -1,0 +1,95 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const categories = [
+  {
+    title: "Converters",
+    description: "Unit converters for length, weight, temperature, time, speed, area, volume, and more.",
+    href: "/converter/",
+  },
+  {
+    title: "Math",
+    description: "Calculators for percentages, algebra, geometry, roots, ratios, probability, and more.",
+    href: "/math/",
+  },
+  {
+    title: "Finance",
+    description: "Loan, mortgage, interest, savings, investment, salary, budget, and tax calculators.",
+    href: "/finance/",
+  },
+  {
+    title: "Date-Time",
+    description: "Date difference, business days, timestamps, age, countdown, and time-based tools.",
+    href: "/date-time/",
+  },
+  {
+    title: "Health",
+    description: "BMI, BMR, hydration, calorie, sleep, body metrics, and activity-related calculators.",
+    href: "/health/",
+  },
+  {
+    title: "Utility",
+    description: "General-purpose utility tools including counters, generators, formatters, and helpers.",
+    href: "/utility/",
+  },
+  {
+    title: "Developer Tools",
+    description: "Tools for developers such as validators, formatters, encoders, decoders, and debugging helpers.",
+    href: "/developer-tools/",
+  },
+  {
+    title: "Text Tools",
+    description: "Text formatting, cleanup, counting, transformation, and analysis tools.",
+    href: "/text-tools/",
+  },
+  {
+    title: "Generators",
+    description: "Generate IDs, names, text, placeholders, passwords, slugs, and other useful content.",
+    href: "/generators/",
+  },
+  {
+    title: "Design Tools",
+    description: "Color, gradient, spacing, sizing, and other visual design helper tools.",
+    href: "/design-tools/",
+  },
+];
+---
+
+<BaseLayout
+  title="All Categories — MinimalDev"
+  description="Browse all tool categories on MinimalDev, including converters, math, finance, developer tools, generators, text tools, and design tools."
+  canonicalPath="/categories/"
+>
+  <div class="container">
+    <h1 class="page-title">All Categories</h1>
+    <p class="lead">
+      Browse all tool categories available on MinimalDev. Choose a category to explore its tools.
+    </p>
+
+    <div class="tool-search" style="margin-bottom:16px;">
+    <input
+        id="toolSearch"
+        type="search"
+        placeholder="Search tools..."
+        style="
+        width:100%;
+        padding:10px 12px;
+        border-radius:10px;
+        border:1px solid rgba(0,0,0,0.15);
+        font-size:14px;
+        "
+    />
+    </div>
+
+    <div class="grid">
+      {categories.map((c) => (
+        <section class="card">
+          <span class="badge">Category</span>
+          <h2>{c.title}</h2>
+          <p>{c.description}</p>
+          <a class="btn" href={c.href}>Open</a>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

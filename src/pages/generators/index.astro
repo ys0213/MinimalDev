@@ -8,7 +8,7 @@ type ToolMeta = {
   order?: number;
 };
 
-const CATEGORY = "/health/";
+const CATEGORY = "/generators/";
 
 const modules = await Astro.glob("../**/*.astro");
 
@@ -16,22 +16,17 @@ const tools: ToolMeta[] = modules
   .map((m) => (m as any).tool as ToolMeta | undefined)
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
   .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
-  .sort(
-    (a, b) =>
-      (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
-  );
+  .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
 ---
 
 <BaseLayout
-  title="Health Calculators — MinimalDev"
-  description="Free health calculators including BMI, BMR, calories, water intake, and body metrics."
-  canonicalPath="/health/"
+  title="Generators — MinimalDev"
+  description="Free online generators for passwords, text, names, slugs, IDs, and more."
+  canonicalPath="/generators/"
 >
   <div class="container">
-    <h1 class="page-title">Health Calculators</h1>
-    <p class="lead">
-      Quick body and wellness calculators designed for clarity. Informational use only.
-    </p>
+    <h1 class="page-title">Generators</h1>
+    <p class="lead">Generate passwords, IDs, names, placeholder text, slugs, and other useful content instantly.</p>
 
     <div class="tool-search" style="margin-bottom:16px;">
       <input
@@ -61,13 +56,5 @@ const tools: ToolMeta[] = modules
     ) : (
       <p class="note">No tools found in this category yet.</p>
     )}
-
-    <section class="section">
-      <h2>FAQ</h2>
-      <ul>
-        <li><strong>Is this medical advice?</strong> No. Results are informational only.</li>
-        <li><strong>Which formula is used?</strong> Each tool explains formulas in the “How it works” section.</li>
-      </ul>
-    </section>
   </div>
 </BaseLayout>

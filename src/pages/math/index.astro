@@ -33,6 +33,21 @@ const tools: ToolMeta[] = modules
       Practical calculators for percent, pricing, and everyday math.
     </p>
 
+    <div class="tool-search" style="margin-bottom:16px;">
+      <input
+          id="toolSearch"
+          type="search"
+          placeholder="Search tools..."
+          style="
+          width:100%;
+          padding:10px 12px;
+          border-radius:10px;
+          border:1px solid rgba(0,0,0,0.15);
+          font-size:14px;
+          "
+      />
+    </div>
+
     {tools.length ? (
       <div class="grid">
         {tools.map((t) => (
