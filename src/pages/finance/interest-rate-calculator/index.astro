@@ -1,0 +1,326 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Interest Rate Calculator",
+  description:
+    "Estimate annual interest rate from principal, final amount, and time. Supports simple and compound modes with validation and result cards.",
+  href: "/finance/interest-rate-calculator/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/interest-rate-calculator/";
+
+const faqs = [
+  {
+    q: "What does this interest rate calculator solve?",
+    a: "It estimates the annual interest rate from a starting amount, ending amount, and time period.",
+  },
+  {
+    q: "What is the difference between simple and compound interest?",
+    a: "Simple interest grows only on the principal, while compound interest grows on both principal and accumulated interest.",
+  },
+  {
+    q: "Can I choose compounding frequency?",
+    a: "Yes. In compound mode you can choose yearly, monthly, or daily compounding.",
+  },
+  {
+    q: "Does this calculator guarantee investment returns?",
+    a: "No. It only solves a mathematical rate from the values you enter.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Interest Rate Calculator — ${SITE_NAME}`}
+  description="Estimate annual interest rate from principal, ending value, and time using simple or compound mode."
+  canonicalPath={CANONICAL_PATH}
+  h1="Interest Rate Calculator"
+  intro="Estimate the annual interest rate implied by a starting amount, ending amount, and time period."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="interest-rate-calculator">
+    <div class="form" role="form" aria-describedby="ir_help ir_privacy">
+      <div class="field">
+        <label for="ir_mode">Calculation mode</label>
+        <select id="ir_mode">
+          <option value="simple" selected>Simple interest</option>
+          <option value="compound">Compound interest</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ir_principal">Starting amount</label>
+        <input id="ir_principal" type="number" inputmode="decimal" placeholder="e.g., 1000" />
+      </div>
+
+      <div class="field">
+        <label for="ir_final">Ending amount</label>
+        <input id="ir_final" type="number" inputmode="decimal" placeholder="e.g., 1200" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="ir_years">Years</label>
+          <input id="ir_years" type="number" inputmode="decimal" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="ir_compounds">Compounding frequency</label>
+          <select id="ir_compounds">
+            <option value="1" selected>Yearly</option>
+            <option value="12">Monthly</option>
+            <option value="365">Daily</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ir_round">Rounding</label>
+        <select id="ir_round">
+          <option value="2" selected>2 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="6">6 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="ir_calc" class="btn" type="button">Calculate</button>
+        <button id="ir_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="ir_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="ir_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="ir_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="ir_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ir_help" style="margin-top:10px;">
+        Simple interest uses A = P(1 + rt). Compound interest uses A = P(1 + r/n)^(nt).
+      </p>
+
+      <p class="note" id="ir_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      In simple interest mode, the annual rate is solved from:
+      <strong>r = (A / P − 1) / t</strong>
+    </p>
+
+    <p class="note">
+      In compound mode, the annual nominal rate is solved from:
+      <strong>r = n[(A / P)^(1/(nt)) − 1]</strong>
+      where <strong>n</strong> is the number of compounding periods per year.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$1,000 growing to $1,200 over 2 years → solve the implied annual rate</li>
+      <li>Switch to compound mode to estimate a rate under monthly compounding</li>
+      <li>Use larger compounding frequency if you want a more frequent growth model</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("ir_mode");
+  const principalEl = document.getElementById("ir_principal");
+  const finalEl = document.getElementById("ir_final");
+  const yearsEl = document.getElementById("ir_years");
+  const compoundsEl = document.getElementById("ir_compounds");
+  const roundEl = document.getElementById("ir_round");
+  const calcBtn = document.getElementById("ir_calc");
+  const clearBtn = document.getElementById("ir_clear");
+  const errorEl = document.getElementById("ir_error");
+  const summaryEl = document.getElementById("ir_summary");
+  const cardsEl = document.getElementById("ir_cards");
+  const tbodyEl = document.getElementById("ir_tbody");
+
+  if (!modeEl || !principalEl || !finalEl || !yearsEl || !compoundsEl || !roundEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function pct(v) {
+    const d = parseInt(String(roundEl.value), 10);
+    return (v * 100).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) + "%";
+  }
+
+  function fmt(v) {
+    const d = parseInt(String(roundEl.value), 10);
+    return v.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function toggleCompounds() {
+    compoundsEl.disabled = modeEl.value !== "compound";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const mode = String(modeEl.value || "simple");
+    const P = toNum(principalEl.value);
+    const A = toNum(finalEl.value);
+    const t = toNum(yearsEl.value);
+    const n = toNum(compoundsEl.value);
+
+    if (!Number.isFinite(P) || P <= 0) {
+      showError("Please enter a valid starting amount (> 0).");
+      return;
+    }
+    if (!Number.isFinite(A) || A <= 0) {
+      showError("Please enter a valid ending amount (> 0).");
+      return;
+    }
+    if (!Number.isFinite(t) || t <= 0) {
+      showError("Please enter a valid number of years (> 0).");
+      return;
+    }
+    if (A < P) {
+      showError("Ending amount must be at least as large as starting amount for a non-negative rate.");
+      return;
+    }
+
+    let r = 0;
+
+    if (mode === "simple") {
+      r = (A / P - 1) / t;
+    } else {
+      if (!Number.isFinite(n) || n <= 0) {
+        showError("Please select a valid compounding frequency.");
+        return;
+      }
+      r = n * (Math.pow(A / P, 1 / (n * t)) - 1);
+    }
+
+    if (!Number.isFinite(r) || r < 0) {
+      showError("Could not compute a valid interest rate with these inputs.");
+      return;
+    }
+
+    summaryEl.innerHTML =
+      "<strong>Estimated annual interest rate:</strong> " + pct(r) + "<br/>" +
+      "<strong>Growth multiple:</strong> " + fmt(A / P) + "×";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(mode === "simple" ? "Simple interest" : "Compound interest") + " " +
+      badge(mode === "compound" ? (n === 1 ? "Yearly compounding" : n === 12 ? "Monthly compounding" : "Daily compounding") : "No compounding") + " " +
+      badge(r < 0.05 ? "Lower rate" : r < 0.15 ? "Moderate rate" : "Higher rate");
+
+    const rows = [
+      ["Starting amount", fmt(P)],
+      ["Ending amount", fmt(A)],
+      ["Years", fmt(t)],
+      ["Growth multiple", fmt(A / P)],
+      ["Estimated annual rate", pct(r)],
+    ];
+
+    if (mode === "compound") {
+      rows.splice(3, 0, ["Compounding periods/year", String(n)]);
+    }
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "simple";
+    principalEl.value = "";
+    finalEl.value = "";
+    yearsEl.value = "";
+    compoundsEl.value = "1";
+    roundEl.value = "2";
+    toggleCompounds();
+    clearOut();
+  });
+
+  modeEl.addEventListener("change", toggleCompounds);
+  toggleCompounds();
+});
+</script>

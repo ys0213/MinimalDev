@@ -1,0 +1,348 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Budget Calculator",
+  description:
+    "Estimate monthly savings by comparing income and common expense categories. Includes validation, result cards, and budget breakdown.",
+  href: "/finance/budget-calculator/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/budget-calculator/";
+
+const faqs = [
+  {
+    q: "What does this budget calculator do?",
+    a: "It compares monthly income against common expense categories and estimates how much money remains after spending.",
+  },
+  {
+    q: "Can I use this for personal budgeting?",
+    a: "Yes. It is designed for simple monthly planning and quick spending estimates.",
+  },
+  {
+    q: "Does it save my financial information?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+  {
+    q: "Is this a full budgeting app?",
+    a: "No. This is a lightweight calculator for quick estimates rather than long-term budget tracking.",
+  },
+  {
+    q: "What if my expenses are higher than income?",
+    a: "The calculator will show a negative result, which indicates a monthly deficit.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Budget Calculator — ${SITE_NAME}`}
+  description="Estimate monthly savings by comparing income and common expense categories. Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Budget Calculator"
+  intro="Enter monthly income and common expenses to estimate remaining savings or monthly deficit."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="budget-calculator">
+    <style is:inline>
+      .bg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .bg-grid-2 > * {
+        min-width: 0;
+      }
+
+      #bg_income,
+      #bg_housing,
+      #bg_food,
+      #bg_transport,
+      #bg_utilities,
+      #bg_debt,
+      #bg_other,
+      #bg_currency {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .bg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="bg_help bg_privacy">
+      <div class="field">
+        <label for="bg_income">Monthly income</label>
+        <input id="bg_income" type="number" inputmode="decimal" placeholder="e.g., 4000" />
+      </div>
+
+      <div class="bg-grid-2">
+        <div class="field">
+          <label for="bg_housing">Housing</label>
+          <input id="bg_housing" type="number" inputmode="decimal" placeholder="e.g., 1200" />
+        </div>
+
+        <div class="field">
+          <label for="bg_food">Food</label>
+          <input id="bg_food" type="number" inputmode="decimal" placeholder="e.g., 400" />
+        </div>
+
+        <div class="field">
+          <label for="bg_transport">Transport</label>
+          <input id="bg_transport" type="number" inputmode="decimal" placeholder="e.g., 200" />
+        </div>
+
+        <div class="field">
+          <label for="bg_utilities">Utilities</label>
+          <input id="bg_utilities" type="number" inputmode="decimal" placeholder="e.g., 150" />
+        </div>
+
+        <div class="field">
+          <label for="bg_debt">Debt payments</label>
+          <input id="bg_debt" type="number" inputmode="decimal" placeholder="e.g., 300" />
+        </div>
+
+        <div class="field">
+          <label for="bg_other">Other expenses</label>
+          <input id="bg_other" type="number" inputmode="decimal" placeholder="e.g., 250" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="bg_currency">Currency (display only)</label>
+        <select id="bg_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="bg_calc" class="btn" type="button">Calculate</button>
+        <button id="bg_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="bg_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="bg_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="bg_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="bg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bg_help" style="margin-top:10px;">
+        Remaining budget = income − total expenses. Negative remaining budget means spending exceeds income.
+      </p>
+
+      <p class="note" id="bg_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator totals several common monthly expense categories and subtracts them from monthly income.
+      It helps you quickly estimate whether you are running a surplus or deficit each month.
+    </p>
+
+    <p class="note">
+      For a more realistic plan, include recurring obligations such as debt payments, utilities, subscriptions,
+      transportation, and a catch-all “other” category for anything not listed separately.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$4,000 income and $2,500 total expenses → $1,500 remaining</li>
+      <li>If expenses are greater than income, the calculator shows a monthly deficit</li>
+      <li>Use this as a quick budgeting snapshot rather than a full accounting system</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/paycheck-calculator/">Paycheck Calculator</a></li>
+      <li><a href="/finance/salary-calculator/">Salary Calculator</a></li>
+      <li><a href="/finance/tip-calculator/">Tip Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const incomeEl = document.getElementById("bg_income");
+  const housingEl = document.getElementById("bg_housing");
+  const foodEl = document.getElementById("bg_food");
+  const transportEl = document.getElementById("bg_transport");
+  const utilitiesEl = document.getElementById("bg_utilities");
+  const debtEl = document.getElementById("bg_debt");
+  const otherEl = document.getElementById("bg_other");
+  const currencyEl = document.getElementById("bg_currency");
+  const calcBtn = document.getElementById("bg_calc");
+  const clearBtn = document.getElementById("bg_clear");
+  const errorEl = document.getElementById("bg_error");
+  const summaryEl = document.getElementById("bg_summary");
+  const cardsEl = document.getElementById("bg_cards");
+  const tbodyEl = document.getElementById("bg_tbody");
+
+  if (!incomeEl || !housingEl || !foodEl || !transportEl || !utilitiesEl || !debtEl || !otherEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return 0;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const income = toNum(incomeEl.value);
+    const housing = toNum(housingEl.value);
+    const food = toNum(foodEl.value);
+    const transport = toNum(transportEl.value);
+    const utilities = toNum(utilitiesEl.value);
+    const debt = toNum(debtEl.value);
+    const other = toNum(otherEl.value);
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(income) || income < 0 || income > 1000000000) {
+      showError("Please enter a valid monthly income (0 or more).");
+      return;
+    }
+
+    const expenseValues = [housing, food, transport, utilities, debt, other];
+    if (expenseValues.some((v) => !Number.isFinite(v) || v < 0 || v > 1000000000)) {
+      showError("Please enter valid expense values (0 or more).");
+      return;
+    }
+
+    const totalExpenses = housing + food + transport + utilities + debt + other;
+    const remaining = income - totalExpenses;
+    const savingsRate = income > 0 ? (remaining / income) * 100 : 0;
+    const expenseRatio = income > 0 ? (totalExpenses / income) * 100 : 0;
+
+    summaryEl.innerHTML =
+      "<strong>Total expenses:</strong> " + money(totalExpenses, ccy) + "<br/>" +
+      "<strong>Remaining budget:</strong> " + money(remaining, ccy) + "<br/>" +
+      "<strong>Savings rate:</strong> " + savingsRate.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(remaining >= 0 ? "Budget surplus" : "Budget deficit") + " " +
+      badge(income === 0 ? "No income entered" : (expenseRatio > 80 ? "High expense load" : expenseRatio > 50 ? "Moderate expense load" : "Lower expense load")) + " " +
+      badge("Monthly budget");
+
+    const rows = [
+      ["Monthly income", money(income, ccy)],
+      ["Housing", money(housing, ccy)],
+      ["Food", money(food, ccy)],
+      ["Transport", money(transport, ccy)],
+      ["Utilities", money(utilities, ccy)],
+      ["Debt payments", money(debt, ccy)],
+      ["Other expenses", money(other, ccy)],
+      ["Total expenses", money(totalExpenses, ccy)],
+      ["Remaining budget", money(remaining, ccy)],
+      ["Expense ratio", expenseRatio.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%"],
+      ["Savings rate", savingsRate.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%"],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    incomeEl.value = "";
+    housingEl.value = "";
+    foodEl.value = "";
+    transportEl.value = "";
+    utilitiesEl.value = "";
+    debtEl.value = "";
+    otherEl.value = "";
+    currencyEl.value = "USD";
+    clearOut();
+    incomeEl.focus();
+  });
+
+  clearOut();
+});
+</script>

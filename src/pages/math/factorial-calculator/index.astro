@@ -1,0 +1,263 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Factorial Calculator",
+  description:
+    "Calculate factorial (n!) instantly with validation, result cards, and large-number support.",
+  href: "/math/factorial-calculator/",
+  order: 220,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/factorial-calculator/";
+
+const faqs = [
+  {
+    q: "What is a factorial?",
+    a: "The factorial of n is the product of all positive integers from 1 to n. Example: 5! = 120.",
+  },
+  {
+    q: "What values can factorial use?",
+    a: "Factorials are defined for non-negative integers only.",
+  },
+  {
+    q: "Why do factorials grow quickly?",
+    a: "Each step multiplies by a larger integer, so factorial values increase very rapidly.",
+  },
+  {
+    q: "Why does this calculator limit very large inputs?",
+    a: "Factorials become extremely large very quickly. The limit keeps the page responsive and readable.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  }
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Factorial Calculator — ${SITE_NAME}`}
+  description="Calculate factorial values with validation, result cards, examples, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Factorial Calculator"
+  intro="Enter a non-negative integer to calculate n! and view digit count, notation details, and quick reference information."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="factorial-calculator">
+    <div class="form" role="form" aria-describedby="fac_help fac_privacy">
+      <div class="field">
+        <label for="fac_n">n</label>
+        <input id="fac_n" type="number" inputmode="numeric" placeholder="e.g., 5" />
+        <p class="note" id="fac_help" style="margin-top:6px;">
+          Enter a non-negative integer only. This calculator currently supports values up to 500.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fac_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="fac_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fac_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="fac_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="fac_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="fac_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fac_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Factorial is defined as:
+      <br />
+      <strong>n! = n × (n−1) × (n−2) × ... × 2 × 1</strong>
+    </p>
+
+    <p class="note">
+      Special case:
+      <br />
+      <strong>0! = 1</strong>
+    </p>
+
+    <p class="note">
+      This calculator uses exact integer arithmetic with JavaScript <strong>BigInt</strong>, so the factorial value is not approximated.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>0!</strong> = <strong>1</strong></li>
+      <li><strong>5!</strong> = <strong>120</strong></li>
+      <li><strong>10!</strong> = <strong>3,628,800</strong></li>
+      <li><strong>20!</strong> is already a very large integer</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/permutation-combination-calculator/">Permutation Calculator</a></li>
+      <li><a href="/math/scientific-calculator/">Scientific Calculator</a></li>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("fac_n");
+  const calcBtn = document.getElementById("fac_calc");
+  const clearBtn = document.getElementById("fac_clear");
+  const errorEl = document.getElementById("fac_error");
+  const resultEl = document.getElementById("fac_result");
+  const cardsEl = document.getElementById("fac_cards");
+  const tbodyEl = document.getElementById("fac_tbody");
+
+  if (!inputEl || !calcBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function factorial(n) {
+    let r = 1n;
+    for (let i = 2n; i <= n; i++) {
+      r *= i;
+    }
+    return r;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please enter a non-negative integer.");
+      return;
+    }
+
+    const n = Number(raw);
+
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+      showError("Please enter a valid non-negative integer.");
+      return;
+    }
+
+    if (n > 500) {
+      showError("Value too large. Please enter 500 or less.");
+      return;
+    }
+
+    const value = factorial(BigInt(n));
+    const text = value.toString();
+    const digits = text.length;
+
+    let sizeLabel = "Small factorial";
+    if (n >= 50) sizeLabel = "Very large factorial";
+    else if (n >= 10) sizeLabel = "Large factorial";
+
+    resultEl.innerHTML =
+      "<strong>" + n + "! = " + text + "</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("Digits: " + digits) +
+      badge(sizeLabel) +
+      badge(n === 0 ? "Special case: 0! = 1" : "Exact integer result") +
+      "</div>";
+
+    fillTable([
+      ["Input", String(n)],
+      ["Expression", n <= 12 ? (n === 0 ? "1" : Array.from({ length: n }, (_, i) => String(n - i)).join(" × ")) : "Expanded multiplication omitted for readability"],
+      ["Factorial", text],
+      ["Number of digits", String(digits)],
+      ["Result type", "Exact integer (BigInt)"],
+    ]);
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    inputEl.value = "";
+    clearOutput();
+    inputEl.focus();
+  });
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

@@ -1,0 +1,279 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Waist to Hip Ratio Calculator",
+  description:
+    "Calculate waist-to-hip ratio from waist and hip measurements with validation, category labels, result cards, and FAQ schema.",
+  href: "/health/waist-to-hip-ratio/",
+  order: 65,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/waist-to-hip-ratio/";
+
+const faqs = [
+  {
+    q: "What is waist-to-hip ratio?",
+    a: "Waist-to-hip ratio compares waist circumference to hip circumference by dividing waist measurement by hip measurement.",
+  },
+  {
+    q: "Do both measurements need the same unit?",
+    a: "Yes. Waist and hip measurements must use the same unit, such as centimeters or inches.",
+  },
+  {
+    q: "Is this a diagnosis?",
+    a: "No. This calculator provides a simple ratio and broad reference labels only. It is not a medical diagnosis.",
+  },
+  {
+    q: "Why is sex optional here?",
+    a: "Some broad reference label ranges are commonly shown differently for male and female categories, so the tool can optionally apply those labels.",
+  },
+  {
+    q: "Are my measurements stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Waist to Hip Ratio Calculator — ${SITE_NAME}`}
+  description="Calculate waist-to-hip ratio from waist and hip measurements."
+  canonicalPath={CANONICAL_PATH}
+  h1="Waist to Hip Ratio Calculator"
+  intro="Calculate your waist-to-hip ratio from waist and hip measurements. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="waist-to-hip-ratio">
+    <div class="form" role="form" aria-describedby="whr_help whr_privacy">
+      <div class="field">
+        <label for="whr_unit">Measurement unit</label>
+        <select id="whr_unit">
+          <option value="cm" selected>Centimeters (cm)</option>
+          <option value="in">Inches (in)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="whr_waist">Waist</label>
+        <input id="whr_waist" type="number" inputmode="decimal" min="1" placeholder="e.g., 80" />
+      </div>
+
+      <div class="field">
+        <label for="whr_hip">Hip</label>
+        <input id="whr_hip" type="number" inputmode="decimal" min="1" placeholder="e.g., 95" aria-describedby="whr_help" />
+        <p class="note" id="whr_help" style="margin-top:6px;">
+          Use the same unit for both waist and hip measurements. The ratio itself has no unit.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="whr_sex">Reference labels</label>
+        <select id="whr_sex">
+          <option value="none" selected>General labels only</option>
+          <option value="female">Female reference</option>
+          <option value="male">Male reference</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="whr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="whr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="whr_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="whr_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="whr_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="whr_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No measurements are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Waist-to-hip ratio is calculated as <strong>waist ÷ hip</strong>.  
+      Both measurements must use the same unit. The final ratio does not have a unit.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>80 cm waist and 95 cm hip → ratio ≈ 0.842</li>
+      <li>32 in waist and 40 in hip → ratio = 0.80</li>
+      <li>Useful as a simple body-shape comparison metric</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/body-frame-size-calculator/">Body Frame Size Calculator</a></li>
+      <li><a href="/health/body-fat/">Body Fat Calculator</a></li>
+      <li><a href="/health/ideal-weight/">Ideal Weight Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("whr_unit");
+  const waistEl = document.getElementById("whr_waist");
+  const hipEl = document.getElementById("whr_hip");
+  const sexEl = document.getElementById("whr_sex");
+
+  const calcBtn = document.getElementById("whr_calc");
+  const clearBtn = document.getElementById("whr_clear");
+  const errEl = document.getElementById("whr_error");
+  const outEl = document.getElementById("whr_result");
+  const detailsEl = document.getElementById("whr_details");
+
+  if (!unitEl || !waistEl || !hipEl || !sexEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 3) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function category(ratio, sex) {
+    if (sex === "female") {
+      if (ratio < 0.80) return "Lower ratio";
+      if (ratio < 0.85) return "Moderate ratio";
+      return "Higher ratio";
+    }
+    if (sex === "male") {
+      if (ratio < 0.90) return "Lower ratio";
+      if (ratio < 1.00) return "Moderate ratio";
+      return "Higher ratio";
+    }
+    if (ratio < 0.80) return "Lower ratio";
+    if (ratio < 1.00) return "Moderate ratio";
+    return "Higher ratio";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const waist = toNum(waistEl.value);
+    const hip = toNum(hipEl.value);
+    const unit = String(unitEl.value || "cm");
+    const sex = String(sexEl.value || "none");
+
+    if (!Number.isFinite(waist) || waist <= 0 || waist > 500) {
+      showError("Please enter a valid waist measurement.");
+      return;
+    }
+    if (!Number.isFinite(hip) || hip <= 0 || hip > 500) {
+      showError("Please enter a valid hip measurement.");
+      return;
+    }
+
+    const ratio = waist / hip;
+    const label = category(ratio, sex);
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Waist-to-hip estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Waist-to-hip ratio", `<span>${escapeHtml(fmt(ratio))}</span>`, `${escapeHtml(label)}`)}
+        ${card("Measurements", `<span>${escapeHtml(fmt(waist))} / ${escapeHtml(fmt(hip))}</span>`, `Waist / hip in ${escapeHtml(unit)}`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "cm" ? "Metric input" : "Imperial input")} ${badge(sex === "none" ? "General labels" : (sex === "male" ? "Male reference" : "Female reference"))}
+      </div>
+      <div class="note" style="margin-top:8px;">Waist: <strong>${escapeHtml(fmt(waist))} ${escapeHtml(unit)}</strong></div>
+      <div class="note" style="margin-top:6px;">Hip: <strong>${escapeHtml(fmt(hip))} ${escapeHtml(unit)}</strong></div>
+      <div class="note" style="margin-top:6px;">Waist-to-hip ratio: <strong>${escapeHtml(fmt(ratio))}</strong></div>
+      <div class="note" style="margin-top:6px;">Reference label: <strong>${escapeHtml(label)}</strong></div>
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "cm";
+    waistEl.value = "";
+    hipEl.value = "";
+    sexEl.value = "none";
+    resetOutputs();
+    waistEl.focus();
+  });
+
+  resetOutputs();
+});
+</script>

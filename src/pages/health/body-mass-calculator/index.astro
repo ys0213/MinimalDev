@@ -1,0 +1,293 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Body Mass Calculator",
+  description:
+    "Estimate fat mass and lean body mass from weight and body fat percentage with validation, result cards, and FAQ schema.",
+  href: "/health/body-mass-calculator/",
+  order: 55,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/body-mass-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It estimates fat mass and lean body mass from your body weight and body fat percentage.",
+  },
+  {
+    q: "What is fat mass?",
+    a: "Fat mass is the portion of total body weight that comes from body fat.",
+  },
+  {
+    q: "What is lean body mass?",
+    a: "Lean body mass includes muscle, bone, organs, body water, and other non-fat tissue.",
+  },
+  {
+    q: "Are the results exact?",
+    a: "No. Results are estimates and depend on how accurately body fat percentage was measured.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Body Mass Calculator — ${SITE_NAME}`}
+  description="Estimate fat mass and lean body mass from body weight and body fat percentage."
+  canonicalPath={CANONICAL_PATH}
+  h1="Body Mass Calculator"
+  intro="Estimate fat mass and lean body mass from your weight and body fat percentage. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="body-mass-calculator">
+    <div class="form" role="form" aria-describedby="bmc_help bmc_privacy">
+      <div class="field">
+        <label for="bmc_unit">Units</label>
+        <select id="bmc_unit">
+          <option value="metric" selected>Metric (kg)</option>
+          <option value="imperial">Imperial (lb)</option>
+        </select>
+      </div>
+
+      <div class="field" id="bmc_weight_metric_field">
+        <label for="bmc_weight_kg">Weight (kg)</label>
+        <input id="bmc_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="bmc_weight_imperial_field" style="display:none;">
+        <label for="bmc_weight_lb">Weight (lb)</label>
+        <input id="bmc_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
+      </div>
+
+      <div class="field">
+        <label for="bmc_bodyfat">Body fat (%)</label>
+        <input id="bmc_bodyfat" type="number" inputmode="decimal" min="1" max="70" placeholder="e.g., 18" aria-describedby="bmc_help" />
+        <p class="note" id="bmc_help" style="margin-top:6px;">
+          Enter your estimated body fat percentage. Both very low and very high values may be unrealistic depending on context.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bmc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bmc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bmc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="bmc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="bmc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="bmc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Fat mass is estimated as <strong>body weight × body fat fraction</strong>.  
+      Lean body mass is estimated as <strong>body weight − fat mass</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>70 kg at 20% body fat → fat mass ≈ 14 kg, lean body mass ≈ 56 kg</li>
+      <li>154 lb at 18% body fat → fat mass ≈ 27.72 lb, lean body mass ≈ 126.28 lb</li>
+      <li>Useful for simple body composition tracking, not diagnosis</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/lean-body-mass-calculator/">Lean Body Mass Calculator</a></li>
+      <li><a href="/health/body-fat/">Body Fat Calculator</a></li>
+      <li><a href="/health/bmi-calculator/">BMI Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("bmc_unit");
+  const wKgEl = document.getElementById("bmc_weight_kg");
+  const wLbEl = document.getElementById("bmc_weight_lb");
+  const bfEl = document.getElementById("bmc_bodyfat");
+
+  const wKgField = document.getElementById("bmc_weight_metric_field");
+  const wLbField = document.getElementById("bmc_weight_imperial_field");
+
+  const calcBtn = document.getElementById("bmc_calc");
+  const clearBtn = document.getElementById("bmc_clear");
+  const errEl = document.getElementById("bmc_error");
+  const outEl = document.getElementById("bmc_result");
+  const detailsEl = document.getElementById("bmc_details");
+
+  if (!unitEl || !wKgEl || !wLbEl || !bfEl || !wKgField || !wLbField || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    wKgField.style.display = imp ? "none" : "block";
+    wLbField.style.display = imp ? "block" : "none";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    const bf = toNum(bfEl.value);
+    let weight = NaN;
+    let label = unit === "imperial" ? "lb" : "kg";
+
+    if (!Number.isFinite(bf) || bf <= 0 || bf >= 80) {
+      showError("Please enter a valid body fat percentage between 0 and 80.");
+      return;
+    }
+
+    if (unit === "imperial") {
+      weight = toNum(wLbEl.value);
+      if (!Number.isFinite(weight) || weight <= 0 || weight > 1500) {
+        showError("Please enter a valid weight in pounds.");
+        return;
+      }
+    } else {
+      weight = toNum(wKgEl.value);
+      if (!Number.isFinite(weight) || weight <= 0 || weight > 700) {
+        showError("Please enter a valid weight in kilograms.");
+        return;
+      }
+    }
+
+    const fatMass = weight * (bf / 100);
+    const leanMass = weight - fatMass;
+    const leanPct = (leanMass / weight) * 100;
+
+    let rangeLabel = "Moderate range";
+    if (bf < 10) rangeLabel = "Very low body fat";
+    else if (bf < 20) rangeLabel = "Lower range";
+    else if (bf < 30) rangeLabel = "Moderate range";
+    else rangeLabel = "Higher range";
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Body composition estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Fat mass", `<span>${escapeHtml(fmt(fatMass))} ${label}</span>`, `${escapeHtml(fmt(bf))}% of total weight`)}
+        ${card("Lean body mass", `<span>${escapeHtml(fmt(leanMass))} ${label}</span>`, `${escapeHtml(fmt(leanPct))}% lean mass ratio`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(rangeLabel)}
+      </div>
+      <div class="note" style="margin-top:8px;">Weight: <strong>${escapeHtml(fmt(weight))} ${label}</strong></div>
+      <div class="note" style="margin-top:6px;">Body fat: <strong>${escapeHtml(fmt(bf))}%</strong></div>
+      <div class="note" style="margin-top:6px;">Fat mass: <strong>${escapeHtml(fmt(fatMass))} ${label}</strong></div>
+      <div class="note" style="margin-top:6px;">Lean body mass: <strong>${escapeHtml(fmt(leanMass))} ${label}</strong></div>
+      <div class="note" style="margin-top:6px;">Lean mass ratio: <strong>${escapeHtml(fmt(leanPct))}%</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    wKgEl.value = "";
+    wLbEl.value = "";
+    bfEl.value = "";
+    setUnitUI();
+    resetOutputs();
+    wKgEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

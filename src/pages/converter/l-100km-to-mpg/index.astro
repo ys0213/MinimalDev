@@ -1,0 +1,151 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "L/100 km to MPG",
+  description:
+    "Convert liters per 100 kilometers to US MPG with validation, result cards, and FAQ schema.",
+  href: "/converter/l-100km-to-mpg/",
+  order: 410,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/l-100km-to-mpg/";
+const FACTOR = 235.214583;
+
+const faqs = [
+  { q: "How do you convert L/100 km to MPG?", a: "Divide 235.214583 by L/100 km." },
+  { q: "What standard is used?", a: "This tool uses US MPG." },
+  { q: "Why is lower L/100 km better?", a: "Because it means less fuel is used to travel 100 kilometers." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`L/100 km to MPG Converter — ${SITE_NAME}`}
+  description="Convert liters per 100 kilometers to US MPG with validation, accessible UX, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="L/100 km to MPG Converter"
+  intro="Convert liters per 100 kilometers to US miles per gallon (MPG)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <div slot="tool" data-tool="l100-to-mpg">
+    <div class="form" role="form" aria-describedby="l2m_help l2m_privacy">
+      <div class="field">
+        <label for="l2m_l100">Fuel consumption (L/100 km)</label>
+        <input id="l2m_l100" type="number" inputmode="decimal" placeholder="e.g., 7.8" aria-describedby="l2m_help" />
+        <p class="note" id="l2m_help" style="margin-top:6px;">Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.</p>
+      </div>
+      <div class="field">
+        <label for="l2m_round">Rounding</label>
+        <select id="l2m_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="l2m_convert">Convert</button>
+        <button class="btn secondary" type="button" id="l2m_swap">Swap (MPG → L/100 km)</button>
+        <button class="btn secondary" type="button" id="l2m_clear">Clear</button>
+      </div>
+      <div class="result" id="l2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="l2m_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="l2m_cards" style="display:none; margin-top:12px;"></div>
+      <p class="note" id="l2m_privacy" style="margin-top:10px;">Privacy: runs locally in your browser. No inputs are stored or transmitted.</p>
+    </div>
+  </div>
+  <div slot="how"><p class="note"><strong>MPG = 235.214583 ÷ L/100 km</strong></p></div>
+  <div slot="examples">
+    <ul>
+      <li><strong>5 L/100 km</strong> ≈ <strong>47.043 MPG</strong></li>
+      <li><strong>8 L/100 km</strong> ≈ <strong>29.402 MPG</strong></li>
+      <li><strong>10 L/100 km</strong> ≈ <strong>23.521 MPG</strong></li>
+    </ul>
+  </div>
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/mpg-to-l-100km/">MPG to L/100 km</a></li>
+      <li><a href="/converter/fuel-consumption-converter/">Fuel Consumption Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",function(){
+  const inEl=document.getElementById("l2m_l100");
+  const roundEl=document.getElementById("l2m_round");
+  const convertBtn=document.getElementById("l2m_convert");
+  const swapBtn=document.getElementById("l2m_swap");
+  const clearBtn=document.getElementById("l2m_clear");
+  const errEl=document.getElementById("l2m_error");
+  const outEl=document.getElementById("l2m_result");
+  const cardsEl=document.getElementById("l2m_cards");
+  if(!inEl||!roundEl||!convertBtn||!swapBtn||!clearBtn||!errEl||!outEl||!cardsEl) return;
+
+  const FACTOR=235.214583;
+  let modeLtoMpg=true;
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){ if(!Number.isFinite(x)) return "—"; const ax=Math.abs(x); if(ax===0) return "0"; if(ax>=1e9||ax<1e-8) return x.toExponential(6); return String(Number(x.toPrecision(10))); }
+  function fmt(x){ if(!Number.isFinite(x)) return "—"; const r=String(roundEl.value); if(r==="auto") return fmtSmart(x); const d=parseInt(r,10); return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function badge(text){ return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`; }
+
+  function setUi(){
+    const label=document.querySelector('label[for="l2m_l100"]');
+    if(!label) return;
+    if(modeLtoMpg){ label.textContent="Fuel consumption (L/100 km)"; inEl.placeholder="e.g., 7.8"; swapBtn.textContent="Swap (MPG → L/100 km)"; }
+    else { label.textContent="Fuel economy (MPG)"; inEl.placeholder="e.g., 30"; swapBtn.textContent="Swap (L/100 km → MPG)"; }
+  }
+
+  function compute(){
+    clearError(); cardsEl.style.display="none";
+    const raw=toNum(inEl.value);
+    if(!Number.isFinite(raw)){ outEl.textContent="Please enter a valid value."; return; }
+    if(raw<=0){ outEl.textContent="Please enter a value greater than 0."; return; }
+
+    let mpg,l100;
+    if(modeLtoMpg){ l100=raw; mpg=FACTOR/l100; }
+    else { mpg=raw; l100=FACTOR/mpg; }
+
+    outEl.innerHTML=modeLtoMpg
+      ? `<strong>Result:</strong> ${fmt(mpg)} MPG<br/><span class="note">${fmtSmart(l100)} L/100 km = ${fmt(mpg)} MPG</span>`
+      : `<strong>Result:</strong> ${fmt(l100)} L/100 km<br/><span class="note">${fmtSmart(mpg)} MPG = ${fmt(l100)} L/100 km</span>`;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(modeLtoMpg ? "L/100 km → MPG" : "MPG → L/100 km")}
+      ${badge("US MPG")}
+      ${badge(modeLtoMpg ? (l100 <= 6 ? "Efficient vehicle" : l100 <= 10 ? "Typical economy" : "Higher fuel use") : (mpg >= 40 ? "Efficient vehicle" : mpg >= 25 ? "Typical economy" : "Higher fuel use"))}
+    </div>`;
+  }
+
+  function reset(){
+    clearError(); inEl.value=""; roundEl.value="3"; outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none"; cardsEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){ modeLtoMpg=!modeLtoMpg; setUi(); if(String(inEl.value||"").trim()) compute(); else reset(); });
+  clearBtn.addEventListener("click",function(){ modeLtoMpg=true; setUi(); reset(); });
+  roundEl.addEventListener("change",function(){ if(String(inEl.value||"").trim()) compute(); });
+  inEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+
+  setUi();
+});
+</script>

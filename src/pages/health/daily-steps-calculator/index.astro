@@ -1,0 +1,397 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Daily Steps Calculator",
+  description:
+    "Estimate walking distance, step length, and calories burned from daily step count with validation, result cards, and FAQ schema.",
+  href: "/health/daily-steps-calculator/",
+  order: 95,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/daily-steps-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates walking distance, stride length, and calories burned from your daily step count and body measurements.",
+  },
+  {
+    q: "Do I need to enter step length manually?",
+    a: "No. If you leave it blank, the calculator can estimate stride length from your height using a simple rule-of-thumb.",
+  },
+  {
+    q: "Are calories burned exact?",
+    a: "No. They are simplified estimates. Real energy expenditure varies with pace, terrain, body composition, and walking efficiency.",
+  },
+  {
+    q: "Can I use imperial units?",
+    a: "Yes. The calculator supports both metric and imperial units for height, weight, and optional stride length.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Daily Steps Calculator — ${SITE_NAME}`}
+  description="Estimate walking distance, stride length, and calories burned from daily step count."
+  canonicalPath={CANONICAL_PATH}
+  h1="Daily Steps Calculator"
+  intro="Estimate walking distance and calories burned from your daily step count. You can enter stride length directly or let the calculator estimate it from height."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="daily-steps-calculator">
+    <div class="form" role="form" aria-describedby="dsc_help dsc_privacy">
+      <div class="field">
+        <label for="dsc_unit">Units</label>
+        <select id="dsc_unit">
+          <option value="metric" selected>Metric (cm, kg, m)</option>
+          <option value="imperial">Imperial (ft/in, lb, ft)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="dsc_steps">Steps</label>
+        <input id="dsc_steps" type="number" inputmode="numeric" min="1" placeholder="e.g., 8000" />
+      </div>
+
+      <div class="field" id="dsc_height_metric_field">
+        <label for="dsc_height_cm">Height (cm)</label>
+        <input id="dsc_height_cm" type="number" inputmode="decimal" min="1" placeholder="e.g., 170" />
+      </div>
+
+      <div class="field" id="dsc_height_imperial_field" style="display:none;">
+        <label>Height (ft / in)</label>
+        <div style="display:flex; gap:10px;">
+          <input id="dsc_height_ft" type="number" inputmode="numeric" min="0" placeholder="ft" aria-label="Height in feet" style="flex:1;" />
+          <input id="dsc_height_in" type="number" inputmode="numeric" min="0" placeholder="in" aria-label="Height in inches" style="flex:1;" />
+        </div>
+      </div>
+
+      <div class="field" id="dsc_weight_metric_field">
+        <label for="dsc_weight_kg">Weight (kg)</label>
+        <input id="dsc_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="dsc_weight_imperial_field" style="display:none;">
+        <label for="dsc_weight_lb">Weight (lb)</label>
+        <input id="dsc_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
+      </div>
+
+      <div class="field" id="dsc_stride_metric_field">
+        <label for="dsc_stride_m">Stride length (optional, meters)</label>
+        <input id="dsc_stride_m" type="number" inputmode="decimal" min="0" placeholder="e.g., 0.75" aria-describedby="dsc_help" />
+      </div>
+
+      <div class="field" id="dsc_stride_imperial_field" style="display:none;">
+        <label for="dsc_stride_ft">Stride length (optional, feet)</label>
+        <input id="dsc_stride_ft" type="number" inputmode="decimal" min="0" placeholder="e.g., 2.5" aria-describedby="dsc_help" />
+      </div>
+
+      <p class="note" id="dsc_help" style="margin-top:6px;">
+        If stride length is left blank, the calculator estimates it from height using a simple walking rule-of-thumb.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dsc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="dsc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dsc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="dsc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="dsc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="dsc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Distance is estimated as:
+      <strong>steps × stride length</strong>.
+    </p>
+    <p class="note">
+      If stride length is not provided, this calculator estimates walking stride length from height using a common rule-of-thumb:
+      <strong>stride length ≈ height × 0.415</strong>.
+    </p>
+    <p class="note">
+      Calories are then estimated from body weight and walking distance using a simplified walking energy model.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>8,000 steps with an estimated 0.71 m stride → about 5.68 km</li>
+      <li>10,000 steps is often roughly 7–8 km depending on stride length</li>
+      <li>Useful for quick daily activity summaries and walking targets</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/walking-calorie-calculator/">Walking Calorie Calculator</a></li>
+      <li><a href="/health/running-calorie-calculator/">Running Calorie Calculator</a></li>
+      <li><a href="/health/hydration-calculator/">Hydration Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("dsc_unit");
+  const stepsEl = document.getElementById("dsc_steps");
+
+  const hCmField = document.getElementById("dsc_height_metric_field");
+  const hImpField = document.getElementById("dsc_height_imperial_field");
+  const wKgField = document.getElementById("dsc_weight_metric_field");
+  const wLbField = document.getElementById("dsc_weight_imperial_field");
+  const sMField = document.getElementById("dsc_stride_metric_field");
+  const sFtField = document.getElementById("dsc_stride_imperial_field");
+
+  const hCmEl = document.getElementById("dsc_height_cm");
+  const hFtEl = document.getElementById("dsc_height_ft");
+  const hInEl = document.getElementById("dsc_height_in");
+  const wKgEl = document.getElementById("dsc_weight_kg");
+  const wLbEl = document.getElementById("dsc_weight_lb");
+  const sMEl = document.getElementById("dsc_stride_m");
+  const sFtEl = document.getElementById("dsc_stride_ft");
+
+  const calcBtn = document.getElementById("dsc_calc");
+  const clearBtn = document.getElementById("dsc_clear");
+  const errEl = document.getElementById("dsc_error");
+  const outEl = document.getElementById("dsc_result");
+  const detailsEl = document.getElementById("dsc_details");
+
+  if (!unitEl || !stepsEl || !hCmField || !hImpField || !wKgField || !wLbField || !sMField || !sFtField || !hCmEl || !hFtEl || !hInEl || !wKgEl || !wLbEl || !sMEl || !sFtEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    hCmField.style.display = imp ? "none" : "block";
+    hImpField.style.display = imp ? "block" : "none";
+    wKgField.style.display = imp ? "none" : "block";
+    wLbField.style.display = imp ? "block" : "none";
+    sMField.style.display = imp ? "none" : "block";
+    sFtField.style.display = imp ? "block" : "none";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    const steps = toNum(stepsEl.value);
+
+    if (!Number.isFinite(steps) || steps <= 0 || steps > 500000) {
+      showError("Please enter a valid step count.");
+      return;
+    }
+
+    let heightM = NaN;
+    let weightKg = NaN;
+    let strideM = NaN;
+    let strideSource = "Estimated from height";
+
+    if (unit === "imperial") {
+      const ft = toNum(hFtEl.value);
+      const inch = toNum(hInEl.value);
+      const weightLb = toNum(wLbEl.value);
+      const strideFt = toNum(sFtEl.value);
+
+      if (!Number.isFinite(ft) || ft < 0 || !Number.isFinite(inch) || inch < 0) {
+        showError("Please enter a valid height in feet and inches.");
+        return;
+      }
+
+      const totalIn = ft * 12 + inch;
+      if (!(totalIn > 0)) {
+        showError("Height must be greater than 0.");
+        return;
+      }
+
+      if (!Number.isFinite(weightLb) || weightLb <= 0 || weightLb > 1500) {
+        showError("Please enter a valid weight in pounds.");
+        return;
+      }
+
+      heightM = totalIn * 0.0254;
+      weightKg = weightLb * 0.45359237;
+
+      if (Number.isFinite(strideFt) && strideFt > 0) {
+        strideM = strideFt * 0.3048;
+        strideSource = "Manual stride input";
+      }
+    } else {
+      const heightCm = toNum(hCmEl.value);
+      const weight = toNum(wKgEl.value);
+      const stride = toNum(sMEl.value);
+
+      if (!Number.isFinite(heightCm) || heightCm <= 0 || heightCm > 260) {
+        showError("Please enter a valid height in centimeters.");
+        return;
+      }
+
+      if (!Number.isFinite(weight) || weight <= 0 || weight > 700) {
+        showError("Please enter a valid weight in kilograms.");
+        return;
+      }
+
+      heightM = heightCm / 100;
+      weightKg = weight;
+
+      if (Number.isFinite(stride) && stride > 0) {
+        strideM = stride;
+        strideSource = "Manual stride input";
+      }
+    }
+
+    if (heightM < 1.0 || heightM > 2.6) {
+      showError("Please check height. Enter a realistic value.");
+      return;
+    }
+
+    if (!Number.isFinite(strideM)) {
+      strideM = heightM * 0.415;
+    }
+
+    if (!Number.isFinite(strideM) || strideM <= 0 || strideM > 3) {
+      showError("Please enter a realistic stride length.");
+      return;
+    }
+
+    const distanceKm = (steps * strideM) / 1000;
+    const calories = weightKg * distanceKm * 0.75;
+
+    let activityLabel = "Moderate activity";
+    if (steps < 5000) activityLabel = "Lower activity";
+    else if (steps >= 10000) activityLabel = "Higher activity";
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Daily steps estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Estimated distance", `<span>${escapeHtml(fmt(distanceKm, 2))} km</span>`, `${escapeHtml(fmt(steps, 0))} steps at ${escapeHtml(fmt(strideM, 3))} m stride`)}
+        ${card("Estimated calories", `<span>${escapeHtml(fmt(calories, 0))} kcal</span>`, `${escapeHtml(fmt(weightKg, 1))} kg walking estimate`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(activityLabel)} ${badge(strideSource)}
+      </div>
+      <div class="note" style="margin-top:8px;">Steps: <strong>${escapeHtml(fmt(steps, 0))}</strong></div>
+      <div class="note" style="margin-top:6px;">Height: <strong>${escapeHtml(fmt(heightM, 2))} m</strong></div>
+      <div class="note" style="margin-top:6px;">Weight: <strong>${escapeHtml(fmt(weightKg, 2))} kg</strong></div>
+      <div class="note" style="margin-top:6px;">Stride length used: <strong>${escapeHtml(fmt(strideM, 3))} m</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated distance: <strong>${escapeHtml(fmt(distanceKm, 2))} km</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated calories: <strong>${escapeHtml(fmt(calories, 0))} kcal</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    stepsEl.value = "";
+    hCmEl.value = "";
+    hFtEl.value = "";
+    hInEl.value = "";
+    wKgEl.value = "";
+    wLbEl.value = "";
+    sMEl.value = "";
+    sFtEl.value = "";
+    setUnitUI();
+    resetOutputs();
+    stepsEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

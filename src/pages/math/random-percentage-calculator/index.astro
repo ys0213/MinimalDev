@@ -1,0 +1,332 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Percentage Calculator",
+  description:
+    "Generate a random percentage within a chosen range. Includes validation, accessible UX, result cards, quick stats, and FAQ schema.",
+  href: "/math/random-percentage-calculator/",
+  order: 260,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/random-percentage-calculator/";
+
+const faqs = [
+  {
+    q: "What does this random percentage calculator do?",
+    a: "It generates a random percentage between a minimum and maximum value that you choose.",
+  },
+  {
+    q: "Can I generate decimal percentages?",
+    a: "Yes. You can choose the number of decimal places for the generated percentage.",
+  },
+  {
+    q: "What if the minimum is greater than the maximum?",
+    a: "The tool will show an error and ask you to enter a valid range where the minimum is less than or equal to the maximum.",
+  },
+  {
+    q: "Are the generated values stored?",
+    a: "No. Random values are generated locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Percentage Calculator — ${SITE_NAME}`}
+  description="Generate a random percentage within a custom range. Includes validation, decimal controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Percentage Calculator"
+  intro="Generate a random percentage between a minimum and maximum value. Useful for testing, simulations, games, and quick estimates."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-percentage-calculator">
+    <style is:inline>
+      .rpc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .rpc-grid-2 > * {
+        min-width: 0;
+      }
+
+      #rpc_min,
+      #rpc_max,
+      #rpc_decimals,
+      #rpc_mode {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .rpc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rpc_help rpc_privacy">
+      <div class="rpc-grid-2">
+        <div class="field">
+          <label for="rpc_min">Minimum (%)</label>
+          <input id="rpc_min" type="number" inputmode="decimal" placeholder="e.g., 0" aria-describedby="rpc_help" />
+        </div>
+
+        <div class="field">
+          <label for="rpc_max">Maximum (%)</label>
+          <input id="rpc_max" type="number" inputmode="decimal" placeholder="e.g., 100" />
+        </div>
+      </div>
+
+      <div class="rpc-grid-2">
+        <div class="field">
+          <label for="rpc_decimals">Decimal places</label>
+          <select id="rpc_decimals">
+            <option value="0">0 decimals</option>
+            <option value="1">1 decimal</option>
+            <option value="2" selected>2 decimals</option>
+            <option value="3">3 decimals</option>
+            <option value="4">4 decimals</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rpc_mode">Range mode</label>
+          <select id="rpc_mode">
+            <option value="clamp" selected>Clamp to 0–100%</option>
+            <option value="free">Allow any range</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rpc_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rpc_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="rpc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rpc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rpc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rpc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rpc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rpc_help" style="margin-top:6px;">
+        Tip: Use clamp mode to keep results in the usual 0–100% range.
+      </p>
+      <p class="note" id="rpc_privacy" style="margin-top:10px;">
+        Privacy: random values are generated locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool generates a random number uniformly between your minimum and maximum values, then formats it using the selected number of decimal places.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>0% to 100%</strong> → common full-range percentage</li>
+      <li><strong>25% to 75%</strong> → mid-range random percentage</li>
+      <li><strong>90% to 100%</strong> → high-probability style range</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/utility/random-number-generator/">Random Number Generator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const minEl = document.getElementById("rpc_min");
+  const maxEl = document.getElementById("rpc_max");
+  const decimalsEl = document.getElementById("rpc_decimals");
+  const modeEl = document.getElementById("rpc_mode");
+  const generateBtn = document.getElementById("rpc_generate");
+  const copyBtn = document.getElementById("rpc_copy");
+  const clearBtn = document.getElementById("rpc_clear");
+  const errEl = document.getElementById("rpc_error");
+  const outEl = document.getElementById("rpc_result");
+  const cardsEl = document.getElementById("rpc_cards");
+  const tbodyEl = document.getElementById("rpc_tbody");
+
+  if (!minEl || !maxEl || !decimalsEl || !modeEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let lastValue = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(x) {
+    const d = parseInt(String(decimalsEl.value), 10);
+    return Number(x).toLocaleString(undefined, {
+      minimumFractionDigits: d,
+      maximumFractionDigits: d,
+    });
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(min, max, value) {
+    tbodyEl.innerHTML = "";
+    const midpoint = (min + max) / 2;
+    const rows = [
+      ["Minimum", fmt(min) + "%"],
+      ["Maximum", fmt(max) + "%"],
+      ["Range width", fmt(max - min) + "%"],
+      ["Midpoint", fmt(midpoint) + "%"],
+      ["Generated value", fmt(value) + "%"],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = String(row[0]);
+      td2.textContent = String(row[1]);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    let min = toNum(minEl.value);
+    let max = toNum(maxEl.value);
+
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      outEl.textContent = "Please enter valid minimum and maximum percentages.";
+      return;
+    }
+
+    if (String(modeEl.value) === "clamp") {
+      min = Math.max(0, Math.min(100, min));
+      max = Math.max(0, Math.min(100, max));
+    }
+
+    if (min > max) {
+      showError("Minimum must be less than or equal to maximum.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const value = Math.random() * (max - min) + min;
+    lastValue = fmt(value) + "%";
+
+    outEl.innerHTML =
+      "<strong>Random percentage:</strong> " + fmt(value) + "%" +
+      "<br/><span class='note'>Range: " + fmt(min) + "% to " + fmt(max) + "%</span>";
+
+    const midpoint = (min + max) / 2;
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("Decimals: " + decimalsEl.value) +
+      badge(value < midpoint ? "Lower half of range" : value > midpoint ? "Upper half of range" : "At midpoint") +
+      badge(String(modeEl.value) === "clamp" ? "0–100% clamp mode" : "Free range mode") +
+      "</div>";
+
+    fillTable(min, max, value);
+  }
+
+  async function copyResult() {
+    clearError();
+    if (!lastValue) {
+      showError("No result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastValue);
+      outEl.innerHTML = "<strong>Copied:</strong> " + lastValue;
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    minEl.value = "";
+    maxEl.value = "";
+    decimalsEl.value = "2";
+    modeEl.value = "clamp";
+    lastValue = "";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    minEl.focus();
+  }
+
+  generateBtn.addEventListener("click", compute);
+  copyBtn.addEventListener("click", copyResult);
+  clearBtn.addEventListener("click", reset);
+
+  [minEl, maxEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  outEl.textContent = "Result will appear here.";
+});
+</script>

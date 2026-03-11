@@ -1,0 +1,286 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Dividend Calculator",
+  description:
+    "Estimate annual, quarterly, monthly, and yield-based dividend income from shares and dividend per share.",
+  href: "/finance/dividend-calculator/",
+  order: 150,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/dividend-calculator/";
+
+const faqs = [
+  {
+    q: "What does this dividend calculator estimate?",
+    a: "It estimates dividend income based on your number of shares and the dividend amount per share.",
+  },
+  {
+    q: "Can I calculate from dividend yield instead?",
+    a: "This version focuses on dividend per share. If you know yield, you can approximate dividend per share from share price × yield.",
+  },
+  {
+    q: "Does it include taxes?",
+    a: "No. This calculator estimates gross dividend income only.",
+  },
+  {
+    q: "What payout schedules are shown?",
+    a: "It shows annual, quarterly, monthly, and weekly equivalents for planning purposes.",
+  },
+  {
+    q: "Are the inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Dividend Calculator — ${SITE_NAME}`}
+  description="Estimate dividend income from shares and dividend per share. Includes yield estimate, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Dividend Calculator"
+  intro="Estimate dividend income from your share count, dividend per share, and optional share price."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="dividend-calculator">
+    <div class="form" role="form" aria-describedby="dv_help dv_privacy">
+      <div class="field">
+        <label for="dv_shares">Number of shares</label>
+        <input id="dv_shares" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+
+      <div class="field">
+        <label for="dv_dividend">Annual dividend per share</label>
+        <input id="dv_dividend" type="number" inputmode="decimal" placeholder="e.g., 2.40" />
+      </div>
+
+      <div class="field">
+        <label for="dv_price">Share price (optional, for yield estimate)</label>
+        <input id="dv_price" type="number" inputmode="decimal" placeholder="e.g., 50" />
+      </div>
+
+      <div class="field">
+        <label for="dv_currency">Currency</label>
+        <select id="dv_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="dv_calc" class="btn" type="button">Calculate</button>
+        <button id="dv_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="dv_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="dv_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="dv_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="dv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="dv_help" style="margin-top:10px;">
+        Estimated income = shares × annual dividend per share. Share price is only used for yield estimation.
+      </p>
+
+      <p class="note" id="dv_privacy" style="margin-top:10px;">
+        Informational only. Does not include taxes, payout changes, dividend cuts, or reinvestment.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator multiplies your share count by annual dividend per share to estimate annual dividend income.
+      It then breaks that total into quarterly, monthly, and weekly equivalents for easier planning.
+    </p>
+
+    <p class="note">
+      If you also enter share price, the tool estimates dividend yield as:
+      <strong>annual dividend per share ÷ share price</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>100 shares × $2.40 annual dividend per share → $240 annual dividend income</li>
+      <li>$2.40 dividend on a $50 share price → about 4.8% yield</li>
+      <li>Use this for income planning, not guaranteed payouts</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/roi-calculator/">ROI Calculator</a></li>
+      <li><a href="/finance/stock-average-calculator/">Stock Average Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const sharesEl = document.getElementById("dv_shares");
+  const dividendEl = document.getElementById("dv_dividend");
+  const priceEl = document.getElementById("dv_price");
+  const currencyEl = document.getElementById("dv_currency");
+  const calcBtn = document.getElementById("dv_calc");
+  const clearBtn = document.getElementById("dv_clear");
+  const errorEl = document.getElementById("dv_error");
+  const summaryEl = document.getElementById("dv_summary");
+  const cardsEl = document.getElementById("dv_cards");
+  const tbodyEl = document.getElementById("dv_tbody");
+
+  if (!sharesEl || !dividendEl || !priceEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function pct(v) {
+    return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const shares = toNum(sharesEl.value);
+    const dividendPerShare = toNum(dividendEl.value);
+    const price = String(priceEl.value || "").trim() ? toNum(priceEl.value) : NaN;
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(shares) || shares < 0) {
+      showError("Please enter a valid number of shares (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(dividendPerShare) || dividendPerShare < 0) {
+      showError("Please enter a valid annual dividend per share (0 or more).");
+      return;
+    }
+    if (String(priceEl.value || "").trim() && (!Number.isFinite(price) || price <= 0)) {
+      showError("Please enter a valid share price (> 0) or leave it blank.");
+      return;
+    }
+
+    const annualIncome = shares * dividendPerShare;
+    const quarterlyIncome = annualIncome / 4;
+    const monthlyIncome = annualIncome / 12;
+    const weeklyIncome = annualIncome / 52;
+    const yieldPct = Number.isFinite(price) ? (dividendPerShare / price) * 100 : NaN;
+
+    summaryEl.innerHTML =
+      "<strong>Estimated annual dividend income:</strong> " + money(annualIncome, ccy) + "<br/>" +
+      "<strong>Estimated monthly equivalent:</strong> " + money(monthlyIncome, ccy) +
+      (Number.isFinite(yieldPct) ? "<br/><strong>Estimated yield:</strong> " + pct(yieldPct) : "");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(shares.toLocaleString() + " shares") + " " +
+      badge(dividendPerShare.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " dividend/share") + " " +
+      badge(Number.isFinite(yieldPct) ? (yieldPct < 2 ? "Lower yield" : yieldPct < 5 ? "Moderate yield" : "Higher yield") : "Yield not estimated");
+
+    const rows = [
+      ["Number of shares", shares.toLocaleString()],
+      ["Annual dividend per share", money(dividendPerShare, ccy)],
+      ["Annual dividend income", money(annualIncome, ccy)],
+      ["Quarterly equivalent", money(quarterlyIncome, ccy)],
+      ["Monthly equivalent", money(monthlyIncome, ccy)],
+      ["Weekly equivalent", money(weeklyIncome, ccy)],
+    ];
+
+    if (Number.isFinite(price)) {
+      rows.splice(2, 0, ["Share price", money(price, ccy)]);
+      rows.push(["Estimated dividend yield", pct(yieldPct)]);
+    }
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    sharesEl.value = "";
+    dividendEl.value = "";
+    priceEl.value = "";
+    currencyEl.value = "USD";
+    clearOut();
+  });
+});
+</script>

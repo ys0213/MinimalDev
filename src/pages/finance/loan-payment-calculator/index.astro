@@ -1,0 +1,347 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Loan Payment Calculator",
+  description:
+    "Calculate monthly loan payments, total paid, and total interest from loan amount, rate, and term.",
+  href: "/finance/loan-payment-calculator/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/loan-payment-calculator/";
+
+const faqs = [
+  {
+    q: "What does this loan payment calculator estimate?",
+    a: "It estimates periodic loan payments, total amount paid, and total interest using the loan amount, annual interest rate, and loan term.",
+  },
+  {
+    q: "What formula does it use?",
+    a: "It uses the standard amortizing loan payment formula with fixed payments over the selected loan term.",
+  },
+  {
+    q: "Can I choose payment frequency?",
+    a: "Yes. You can calculate monthly, biweekly, or weekly payment estimates.",
+  },
+  {
+    q: "What if my interest rate is 0%?",
+    a: "Then the calculator divides the loan amount evenly across the total number of payments.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Loan Payment Calculator — ${SITE_NAME}`}
+  description="Estimate periodic loan payments, total paid, and total interest with fixed-rate loan assumptions."
+  canonicalPath={CANONICAL_PATH}
+  h1="Loan Payment Calculator"
+  intro="Estimate loan payments from loan amount, annual interest rate, repayment term, and payment frequency."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="loan-payment-calculator">
+    <style is:inline>
+      .lp-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .lp-grid-2 > * {
+        min-width: 0;
+      }
+
+      #lp_amount,
+      #lp_rate,
+      #lp_years,
+      #lp_frequency,
+      #lp_currency {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .lp-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="lp_help lp_privacy">
+      <div class="field">
+        <label for="lp_amount">Loan amount</label>
+        <input id="lp_amount" type="number" inputmode="decimal" placeholder="e.g., 25000" />
+      </div>
+
+      <div class="lp-grid-2">
+        <div class="field">
+          <label for="lp_rate">Annual interest rate (%)</label>
+          <input id="lp_rate" type="number" inputmode="decimal" placeholder="e.g., 6.5" />
+        </div>
+
+        <div class="field">
+          <label for="lp_years">Loan term (years)</label>
+          <input id="lp_years" type="number" inputmode="decimal" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <div class="lp-grid-2">
+        <div class="field">
+          <label for="lp_frequency">Payment frequency</label>
+          <select id="lp_frequency">
+            <option value="12" selected>Monthly</option>
+            <option value="26">Biweekly</option>
+            <option value="52">Weekly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="lp_currency">Currency (display only)</label>
+          <select id="lp_currency">
+            <option value="USD" selected>USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="KRW">KRW (₩)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="lp_calc" class="btn" type="button">Calculate</button>
+        <button id="lp_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="lp_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="lp_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="lp_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="lp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="lp_help" style="margin-top:10px;">
+        Uses a fixed-rate amortizing payment model. Real loans may include fees, taxes, insurance, or changing rates.
+      </p>
+
+      <p class="note" id="lp_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      For a fixed-rate amortizing loan, the periodic payment is:
+      <strong>Pmt = L × r / (1 − (1 + r)^−n)</strong>
+      where <strong>L</strong> is the loan amount, <strong>r</strong> is the periodic interest rate,
+      and <strong>n</strong> is the total number of payments.
+    </p>
+
+    <p class="note">
+      If the interest rate is 0%, the payment is simply the loan amount divided by the total number of payments.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$25,000 loan at 6.5% for 5 years → estimate monthly payment and total interest</li>
+      <li>Switch to weekly or biweekly frequency to compare payment sizes</li>
+      <li>Try 0% interest to see equal principal-only repayment</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
+      <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const amountEl = document.getElementById("lp_amount");
+  const rateEl = document.getElementById("lp_rate");
+  const yearsEl = document.getElementById("lp_years");
+  const freqEl = document.getElementById("lp_frequency");
+  const currencyEl = document.getElementById("lp_currency");
+  const calcBtn = document.getElementById("lp_calc");
+  const clearBtn = document.getElementById("lp_clear");
+  const errorEl = document.getElementById("lp_error");
+  const summaryEl = document.getElementById("lp_summary");
+  const cardsEl = document.getElementById("lp_cards");
+  const tbodyEl = document.getElementById("lp_tbody");
+
+  if (!amountEl || !rateEl || !yearsEl || !freqEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const loan = toNum(amountEl.value);
+    const annualRate = toNum(rateEl.value);
+    const years = toNum(yearsEl.value);
+    const periodsPerYear = toNum(freqEl.value);
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(loan) || loan <= 0 || loan > 1000000000) {
+      showError("Please enter a valid loan amount (> 0).");
+      return;
+    }
+    if (!Number.isFinite(annualRate) || annualRate < 0 || annualRate > 100) {
+      showError("Please enter a valid annual interest rate (0 to 100).");
+      return;
+    }
+    if (!Number.isFinite(years) || years <= 0 || years > 100) {
+      showError("Please enter a valid loan term in years (> 0 and within a realistic range).");
+      return;
+    }
+    if (!Number.isFinite(periodsPerYear) || periodsPerYear <= 0) {
+      showError("Please select a valid payment frequency.");
+      return;
+    }
+
+    const totalPayments = Math.round(years * periodsPerYear);
+
+    if (!Number.isFinite(totalPayments) || totalPayments <= 0) {
+      showError("The total number of payments is invalid. Please check the loan term and payment frequency.");
+      return;
+    }
+
+    const periodicRate = (annualRate / 100) / periodsPerYear;
+
+    let payment = 0;
+    if (periodicRate === 0) {
+      payment = loan / totalPayments;
+    } else {
+      payment = loan * periodicRate / (1 - Math.pow(1 + periodicRate, -totalPayments));
+    }
+
+    const totalPaid = payment * totalPayments;
+    const totalInterest = totalPaid - loan;
+    const interestRatio = loan > 0 ? (totalInterest / loan) * 100 : 0;
+
+    summaryEl.innerHTML =
+      "<strong>Estimated payment:</strong> " + money(payment, ccy) + "<br/>" +
+      "<strong>Total paid:</strong> " + money(totalPaid, ccy) + "<br/>" +
+      "<strong>Total interest:</strong> " + money(totalInterest, ccy);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(periodsPerYear === 12 ? "Monthly payments" : periodsPerYear === 26 ? "Biweekly payments" : "Weekly payments") + " " +
+      badge(annualRate === 0 ? "0% interest" : annualRate < 5 ? "Lower rate" : annualRate < 10 ? "Moderate rate" : "Higher rate") + " " +
+      badge(interestRatio <= 25 ? "Lower interest burden" : "Higher interest burden");
+
+    const rows = [
+      ["Loan amount", money(loan, ccy)],
+      ["Annual interest rate", annualRate.toLocaleString(undefined, { maximumFractionDigits: 4 }) + "%"],
+      ["Loan term", years.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " years"],
+      ["Payments per year", String(periodsPerYear)],
+      ["Total number of payments", String(totalPayments)],
+      ["Estimated payment", money(payment, ccy)],
+      ["Total paid", money(totalPaid, ccy)],
+      ["Total interest", money(totalInterest, ccy)],
+      ["Interest as % of principal", interestRatio.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%"],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    rateEl.value = "";
+    yearsEl.value = "";
+    freqEl.value = "12";
+    currencyEl.value = "USD";
+    clearOut();
+    amountEl.focus();
+  });
+
+  clearOut();
+});
+</script>

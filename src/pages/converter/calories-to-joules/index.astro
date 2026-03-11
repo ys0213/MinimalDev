@@ -1,0 +1,256 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Calories to Joules",
+  description:
+    "Convert calories (cal) to joules (J) instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/calories-to-joules/",
+  order: 350,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/calories-to-joules/";
+const CAL_TO_J = 4.184;
+
+const faqs = [
+  { q: "How do you convert calories to joules?", a: "Multiply calories by 4.184 to get joules." },
+  { q: "What is 1 calorie in joules?", a: "1 calorie equals 4.184 joules." },
+  { q: "Is this kcal?", a: "No. This page uses small calories (cal), not kilocalories (kcal)." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Calories to Joules Converter — ${SITE_NAME}`}
+  description="Convert calories (cal) to joules (J) with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Calories to Joules Converter"
+  intro="Convert energy from calories (cal) to joules (J). Includes rounding controls, quick references, and input validation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="calories-to-joules">
+    <div class="form" role="form" aria-describedby="c2j_help c2j_privacy">
+      <div class="field">
+        <label for="c2j_cal">Energy (calories)</label>
+        <input id="c2j_cal" type="number" inputmode="decimal" placeholder="e.g., 250" aria-describedby="c2j_help" />
+        <p class="note" id="c2j_help" style="margin-top:6px;">
+          Enter calories and convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="c2j_round">Rounding</label>
+        <select id="c2j_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="c2j_convert">Convert</button>
+        <button class="btn secondary" type="button" id="c2j_swap">Swap (J → cal)</button>
+        <button class="btn secondary" type="button" id="c2j_clear">Clear</button>
+      </div>
+
+      <div class="result" id="c2j_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="c2j_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="c2j_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Reference</th><th scope="col">cal</th><th scope="col">J</th></tr>
+          </thead>
+          <tbody id="c2j_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="c2j_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how"><p class="note"><strong>J = cal × 4.184</strong><br />Reverse: <strong>cal = J ÷ 4.184</strong></p></div>
+  <div slot="examples">
+    <ul>
+      <li><strong>1 cal</strong> = <strong>4.184 J</strong></li>
+      <li><strong>100 cal</strong> = <strong>418.4 J</strong></li>
+      <li><strong>250 cal</strong> = <strong>1046 J</strong></li>
+    </ul>
+  </div>
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/joules-to-calories/">Joules to Calories</a></li>
+      <li><a href="/converter/energy-converter/">Energy Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("c2j_cal");
+  const roundEl = document.getElementById("c2j_round");
+  const convertBtn = document.getElementById("c2j_convert");
+  const swapBtn = document.getElementById("c2j_swap");
+  const clearBtn = document.getElementById("c2j_clear");
+  const errEl = document.getElementById("c2j_error");
+  const outEl = document.getElementById("c2j_result");
+  const cardsEl = document.getElementById("c2j_cards");
+  const tbodyEl = document.getElementById("c2j_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let modeCalToJ = true;
+  const J_PER_CAL = 4.184;
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){
+    if(!Number.isFinite(x)) return "—";
+    const ax=Math.abs(x);
+    if(ax===0) return "0";
+    if(ax>=1e9||ax<1e-8) return x.toExponential(6);
+    return String(Number(x.toPrecision(10)));
+  }
+  function fmt(x){
+    if(!Number.isFinite(x)) return "—";
+    const r=String(roundEl.value);
+    if(r==="auto") return fmtSmart(x);
+    const d=parseInt(r,10);
+    return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  }
+  function badge(text){
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+  function calToJ(v){ return v*J_PER_CAL; }
+  function jToCal(v){ return v/J_PER_CAL; }
+
+  function setUi(){
+    const label=document.querySelector('label[for="c2j_cal"]');
+    if(!label) return;
+    if(modeCalToJ){
+      label.textContent="Energy (calories)";
+      inEl.placeholder="e.g., 250";
+      swapBtn.textContent="Swap (J → cal)";
+    }else{
+      label.textContent="Energy (joules)";
+      inEl.placeholder="e.g., 1000";
+      swapBtn.textContent="Swap (cal → J)";
+    }
+  }
+
+  function fillTable(inputValue){
+    tbodyEl.innerHTML="";
+    const refs=[
+      {name:"1 calorie", cal:1},
+      {name:"100 calories", cal:100},
+      {name:"250 calories", cal:250},
+    ];
+    if(Number.isFinite(inputValue)){
+      const calVal=modeCalToJ?inputValue:jToCal(inputValue);
+      refs.push({name:"Your input", cal:calVal, highlight:true});
+    }
+    refs.forEach((r)=>{
+      const tr=document.createElement("tr");
+      if(r.highlight) tr.style.fontWeight="900";
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      const td3=document.createElement("td");
+      td1.textContent=r.name;
+      td2.textContent=fmtSmart(r.cal);
+      td3.textContent=fmt(calToJ(r.cal));
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute(){
+    clearError();
+    cardsEl.style.display="none";
+    tbodyEl.innerHTML="";
+
+    const raw=toNum(inEl.value);
+    if(!Number.isFinite(raw)){
+      outEl.textContent="Please enter a valid energy value.";
+      return;
+    }
+    if(Math.abs(raw)>1e18){
+      showError("Value is too large for reliable display.");
+      outEl.textContent="Result will appear here.";
+      return;
+    }
+
+    let cal,j;
+    if(modeCalToJ){ cal=raw; j=calToJ(cal); }
+    else { j=raw; cal=jToCal(j); }
+
+    outEl.innerHTML=modeCalToJ
+      ? `<strong>Result:</strong> ${fmt(j)} J<br/><span class="note">${fmtSmart(cal)} cal = ${fmt(j)} J</span>`
+      : `<strong>Result:</strong> ${fmt(cal)} cal<br/><span class="note">${fmtSmart(j)} J = ${fmt(cal)} cal</span>`;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${badge(modeCalToJ ? "cal → J" : "J → cal")}
+        ${badge("Reference: 1 cal = 4.184 J")}
+        ${badge(Math.abs(j) < 1000 ? "Small energy" : Math.abs(j) < 100000 ? "Moderate energy" : "Large energy")}
+      </div>
+    `;
+
+    fillTable(raw);
+  }
+
+  function reset(){
+    clearError();
+    inEl.value="";
+    roundEl.value="3";
+    outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none";
+    cardsEl.innerHTML="";
+    tbodyEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){
+    modeCalToJ=!modeCalToJ;
+    setUi();
+    if(String(inEl.value||"").trim()) compute(); else reset();
+  });
+  clearBtn.addEventListener("click",function(){
+    modeCalToJ=true;
+    setUi();
+    reset();
+  });
+  roundEl.addEventListener("change",function(){ if(String(inEl.value||"").trim()) compute(); });
+  inEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+  inEl.addEventListener("input",function(){
+    if(!String(inEl.value||"").trim()){
+      clearError();
+      outEl.textContent="Result will appear here.";
+      cardsEl.style.display="none";
+      cardsEl.innerHTML="";
+      tbodyEl.innerHTML="";
+    }
+  });
+
+  setUi();
+});
+</script>

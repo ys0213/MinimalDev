@@ -1,0 +1,322 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Standard Deviation Calculator",
+  description:
+    "Free standard deviation calculator for a list of numbers. Supports population and sample mode with mean, variance, and accessible UX.",
+  href: "/math/standard-deviation-calculator/",
+  order: 190,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/standard-deviation-calculator/";
+
+const faqs = [
+  {
+    q: "What is standard deviation?",
+    a: "Standard deviation measures how spread out values are around the mean. A larger value means more variation.",
+  },
+  {
+    q: "What is the difference between sample and population standard deviation?",
+    a: "Population standard deviation divides by N. Sample standard deviation divides by N−1 to estimate spread from sample data.",
+  },
+  {
+    q: "What separators can I use?",
+    a: "You can separate numbers with commas, spaces, tabs, or new lines.",
+  },
+  {
+    q: "Are my numbers stored?",
+    a: "No. All calculations run locally in your browser and are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Standard Deviation Calculator — ${SITE_NAME}`}
+  description="Calculate sample or population standard deviation from a list of numbers. Includes validation, mean, variance, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Standard Deviation Calculator"
+  intro="Enter a list of numbers to calculate standard deviation. Choose sample or population mode and see mean, variance, count, min, and max."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="standard-deviation-calculator">
+    <div class="form" role="form" aria-describedby="sd_help sd_privacy">
+      <div class="field">
+        <label for="sd_values">Numbers</label>
+        <textarea
+          id="sd_values"
+          rows="6"
+          placeholder="e.g., 2, 4, 4, 4, 5, 5, 7, 9"
+          aria-describedby="sd_help"
+          style="resize:vertical;"
+        ></textarea>
+        <p class="note" id="sd_help" style="margin-top:6px;">
+          Separate values with commas, spaces, or new lines. Example: <code>10, 12 15 20</code>
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="sd_mode">Mode</label>
+          <select id="sd_mode">
+            <option value="population" selected>Population</option>
+            <option value="sample">Sample</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sd_round">Rounding</label>
+          <select id="sd_round">
+            <option value="4" selected>4 decimals</option>
+            <option value="6">6 decimals</option>
+            <option value="10">10 decimals</option>
+            <option value="auto">Smart</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sd_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="sd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sd_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sd_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sd_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Population SD: <strong>σ = √(Σ(x−μ)² / N)</strong>
+      <br />
+      Sample SD: <strong>s = √(Σ(x−x̄)² / (N−1))</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Population example: 2, 4, 4, 4, 5, 5, 7, 9 → SD = 2</li>
+      <li>Switch to sample mode when your values are a subset of a larger population</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/variance-calculator/">Variance Calculator</a></li>
+      <li><a href="/math/average-calculator/">Average Calculator</a></li>
+      <li><a href="/math/mean-median-mode-calculator/">Mean Median Mode Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("sd_values");
+  const modeEl = document.getElementById("sd_mode");
+  const roundEl = document.getElementById("sd_round");
+  const calcBtn = document.getElementById("sd_calc");
+  const copyBtn = document.getElementById("sd_copy");
+  const clearBtn = document.getElementById("sd_clear");
+  const errEl = document.getElementById("sd_error");
+  const outEl = document.getElementById("sd_result");
+  const cardsEl = document.getElementById("sd_cards");
+  const tbodyEl = document.getElementById("sd_tbody");
+
+  if (!valuesEl || !modeEl || !roundEl || !calcBtn || !copyBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let lastStd = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function parseNumbers(raw) {
+    const tokens = String(raw || "").split(/[\s,]+/).filter(Boolean);
+    if (!tokens.length) return [];
+    return tokens.map((t) => Number(t));
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (Object.is(x, -0)) x = 0;
+    const r = String(roundEl.value);
+    if (r === "auto") {
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e12 || ax < 1e-10) return x.toExponential(8);
+      return String(Number(x.toPrecision(12)));
+    }
+    const d = parseInt(r, 10);
+    return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function computeStats(arr, sampleMode) {
+    const n = arr.length;
+    const sum = arr.reduce((a, b) => a + b, 0);
+    const mean = sum / n;
+    const sqSum = arr.reduce((acc, x) => acc + (x - mean) * (x - mean), 0);
+    const variance = sampleMode ? sqSum / (n - 1) : sqSum / n;
+    const std = Math.sqrt(variance);
+    return {
+      n,
+      sum,
+      mean,
+      variance,
+      std,
+      min: Math.min(...arr),
+      max: Math.max(...arr),
+      range: Math.max(...arr) - Math.min(...arr),
+    };
+  }
+
+  function fillTable(s) {
+    tbodyEl.innerHTML = "";
+    const rows = [
+      ["Count", s.n],
+      ["Sum", fmt(s.sum)],
+      ["Mean", fmt(s.mean)],
+      ["Variance", fmt(s.variance)],
+      ["Standard deviation", fmt(s.std)],
+      ["Min", fmt(s.min)],
+      ["Max", fmt(s.max)],
+      ["Range", fmt(s.range)],
+    ];
+
+    rows.forEach(([k, v]) => {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = String(k);
+      td2.textContent = String(v);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const nums = parseNumbers(valuesEl.value);
+    if (!nums.length) {
+      outEl.textContent = "Please enter at least one number.";
+      return;
+    }
+    if (nums.some((x) => !Number.isFinite(x))) {
+      outEl.textContent = "Please enter only valid numbers.";
+      return;
+    }
+
+    const sampleMode = String(modeEl.value) === "sample";
+    if (sampleMode && nums.length < 2) {
+      showError("Sample standard deviation requires at least 2 numbers.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const s = computeStats(nums, sampleMode);
+    lastStd = String(s.std);
+
+    outEl.innerHTML =
+      "<strong>Standard deviation:</strong> " + fmt(s.std) +
+      "<br/><span class='note'>Mode: " + (sampleMode ? "Sample" : "Population") + " · Mean: " + fmt(s.mean) + " · Variance: " + fmt(s.variance) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Mode: " + (sampleMode ? "Sample" : "Population")) +
+      badge("Count: " + s.n) +
+      badge(Math.abs(s.std) < 1 ? "Low spread" : Math.abs(s.std) < 10 ? "Typical spread" : "High spread") +
+      "</div>";
+
+    fillTable(s);
+  }
+
+  async function copyResult() {
+    clearError();
+    if (!lastStd) {
+      showError("No result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastStd);
+      outEl.innerHTML = "<strong>Copied standard deviation:</strong> " + fmt(Number(lastStd));
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    valuesEl.value = "";
+    modeEl.value = "population";
+    roundEl.value = "4";
+    lastStd = "";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    valuesEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  copyBtn.addEventListener("click", copyResult);
+  clearBtn.addEventListener("click", reset);
+
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+});
+</script>

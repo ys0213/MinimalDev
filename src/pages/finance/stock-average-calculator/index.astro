@@ -1,0 +1,404 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Stock Average Calculator",
+  description:
+    "Calculate average share cost, total shares, total cost, and unrealized gain or loss after multiple stock purchases.",
+  href: "/finance/stock-average-calculator/",
+  order: 160,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/stock-average-calculator/";
+
+const faqs = [
+  {
+    q: "What does this stock average calculator do?",
+    a: "It calculates your weighted average cost per share after multiple stock purchases at different prices.",
+  },
+  {
+    q: "Why is weighted average cost useful?",
+    a: "It helps you understand your true average purchase price across multiple buy orders.",
+  },
+  {
+    q: "Can I estimate unrealized gain or loss?",
+    a: "Yes. Enter the current price to estimate unrealized profit or loss.",
+  },
+  {
+    q: "Does this include fees or taxes?",
+    a: "No. This version does not include commissions, taxes, or other trading costs.",
+  },
+  {
+    q: "Are my trade inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Stock Average Calculator — ${SITE_NAME}`}
+  description="Calculate weighted average share cost after multiple purchases, plus optional unrealized gain/loss."
+  canonicalPath={CANONICAL_PATH}
+  h1="Stock Average Calculator"
+  intro="Estimate your weighted average stock cost basis after up to four purchases. Optionally compare it with a current market price."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="stock-average-calculator">
+    <style is:inline>
+      .sa-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .sa-grid-2 > * {
+        min-width: 0;
+      }
+
+      #sa_shares1,
+      #sa_price1,
+      #sa_shares2,
+      #sa_price2,
+      #sa_shares3,
+      #sa_price3,
+      #sa_shares4,
+      #sa_price4,
+      #sa_current,
+      #sa_currency {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .sa-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="sa_help sa_privacy">
+      <div class="sa-grid-2">
+        <div class="field">
+          <label for="sa_shares1">Shares (purchase 1)</label>
+          <input id="sa_shares1" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        </div>
+
+        <div class="field">
+          <label for="sa_price1">Price per share (purchase 1)</label>
+          <input id="sa_price1" type="number" inputmode="decimal" placeholder="e.g., 50" />
+        </div>
+
+        <div class="field">
+          <label for="sa_shares2">Shares (purchase 2)</label>
+          <input id="sa_shares2" type="number" inputmode="decimal" placeholder="e.g., 15" />
+        </div>
+
+        <div class="field">
+          <label for="sa_price2">Price per share (purchase 2)</label>
+          <input id="sa_price2" type="number" inputmode="decimal" placeholder="e.g., 45" />
+        </div>
+
+        <div class="field">
+          <label for="sa_shares3">Shares (purchase 3, optional)</label>
+          <input id="sa_shares3" type="number" inputmode="decimal" placeholder="e.g., 5" />
+        </div>
+
+        <div class="field">
+          <label for="sa_price3">Price per share (purchase 3, optional)</label>
+          <input id="sa_price3" type="number" inputmode="decimal" placeholder="e.g., 42" />
+        </div>
+
+        <div class="field">
+          <label for="sa_shares4">Shares (purchase 4, optional)</label>
+          <input id="sa_shares4" type="number" inputmode="decimal" placeholder="e.g., 8" />
+        </div>
+
+        <div class="field">
+          <label for="sa_price4">Price per share (purchase 4, optional)</label>
+          <input id="sa_price4" type="number" inputmode="decimal" placeholder="e.g., 40" />
+        </div>
+      </div>
+
+      <div class="sa-grid-2">
+        <div class="field">
+          <label for="sa_current">Current price (optional)</label>
+          <input id="sa_current" type="number" inputmode="decimal" placeholder="e.g., 55" />
+        </div>
+
+        <div class="field">
+          <label for="sa_currency">Currency</label>
+          <select id="sa_currency">
+            <option value="USD" selected>USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="KRW">KRW (₩)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="sa_calc" class="btn" type="button">Calculate</button>
+        <button id="sa_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="sa_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="sa_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="sa_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="sa_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sa_help" style="margin-top:10px;">
+        Weighted average cost = total amount invested ÷ total shares purchased.
+      </p>
+
+      <p class="note" id="sa_privacy" style="margin-top:10px;">
+        Informational only. Does not include commissions, taxes, spreads, or partial lot accounting rules.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator multiplies each purchase quantity by its price, adds the totals together, and divides by total shares.
+      That gives the weighted average cost per share.
+    </p>
+
+    <p class="note">
+      If you enter a current market price, the tool also estimates unrealized gain or loss compared with your average cost basis.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>10 shares at $50 and 15 shares at $45 → weighted average below $50</li>
+      <li>Buying more at lower prices can reduce average cost</li>
+      <li>Enter current price to estimate unrealized position value</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/roi-calculator/">ROI Calculator</a></li>
+      <li><a href="/finance/dividend-calculator/">Dividend Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ids = [
+    ["sa_shares1", "sa_price1"],
+    ["sa_shares2", "sa_price2"],
+    ["sa_shares3", "sa_price3"],
+    ["sa_shares4", "sa_price4"],
+  ];
+
+  const currentEl = document.getElementById("sa_current");
+  const currencyEl = document.getElementById("sa_currency");
+  const calcBtn = document.getElementById("sa_calc");
+  const clearBtn = document.getElementById("sa_clear");
+  const errorEl = document.getElementById("sa_error");
+  const summaryEl = document.getElementById("sa_summary");
+  const cardsEl = document.getElementById("sa_cards");
+  const tbodyEl = document.getElementById("sa_tbody");
+
+  if (!currentEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function getEl(id) {
+    return document.getElementById(id);
+  }
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function pct(v) {
+    return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    let totalShares = 0;
+    let totalCost = 0;
+    let usedRows = 0;
+
+    for (let i = 0; i < ids.length; i++) {
+      const sharesEl = getEl(ids[i][0]);
+      const priceEl = getEl(ids[i][1]);
+      if (!sharesEl || !priceEl) continue;
+
+      const sharesRaw = String(sharesEl.value || "").trim();
+      const priceRaw = String(priceEl.value || "").trim();
+
+      if (!sharesRaw && !priceRaw) continue;
+      if (!sharesRaw || !priceRaw) {
+        showError("For each purchase row, enter both shares and price or leave both blank.");
+        return;
+      }
+
+      const shares = toNum(sharesRaw);
+      const price = toNum(priceRaw);
+
+      if (!Number.isFinite(shares) || shares <= 0 || shares > 1000000000) {
+        showError("Each share quantity must be greater than 0.");
+        return;
+      }
+      if (!Number.isFinite(price) || price < 0 || price > 1000000000) {
+        showError("Each share price must be 0 or more.");
+        return;
+      }
+
+      totalShares += shares;
+      totalCost += shares * price;
+      usedRows += 1;
+    }
+
+    if (usedRows === 0 || totalShares <= 0) {
+      showError("Please enter at least one valid purchase.");
+      return;
+    }
+
+    const currentRaw = String(currentEl.value || "").trim();
+    const current = currentRaw ? toNum(currentRaw) : NaN;
+    if (currentRaw && (!Number.isFinite(current) || current < 0 || current > 1000000000)) {
+      showError("Please enter a valid current price (0 or more) or leave it blank.");
+      return;
+    }
+
+    const averageCost = totalCost / totalShares;
+    const marketValue = Number.isFinite(current) ? current * totalShares : NaN;
+    const unrealized = Number.isFinite(current) ? marketValue - totalCost : NaN;
+    const unrealizedPct = Number.isFinite(current) && totalCost > 0 ? (unrealized / totalCost) * 100 : NaN;
+    const ccy = String(currencyEl.value || "USD");
+
+    summaryEl.innerHTML =
+      "<strong>Average cost per share:</strong> " + money(averageCost, ccy) + "<br/>" +
+      "<strong>Total shares:</strong> " + totalShares.toLocaleString(undefined, { maximumFractionDigits: 4 }) + "<br/>" +
+      "<strong>Total invested:</strong> " + money(totalCost, ccy);
+
+    if (Number.isFinite(current)) {
+      summaryEl.innerHTML +=
+        "<br/><strong>Unrealized gain/loss:</strong> " + money(unrealized, ccy);
+    }
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(usedRows + " purchase row" + (usedRows > 1 ? "s" : "")) + " " +
+      badge(Number.isFinite(current) ? (unrealized >= 0 ? "Unrealized gain" : "Unrealized loss") : "Current price not entered") + " " +
+      badge(averageCost < 20 ? "Lower average cost" : averageCost < 100 ? "Moderate average cost" : "Higher average cost");
+
+    const rows = [
+      ["Purchase rows used", String(usedRows)],
+      ["Total shares", totalShares.toLocaleString(undefined, { maximumFractionDigits: 4 })],
+      ["Total amount invested", money(totalCost, ccy)],
+      ["Average cost per share", money(averageCost, ccy)],
+    ];
+
+    if (Number.isFinite(current)) {
+      rows.push(["Current price", money(current, ccy)]);
+      rows.push(["Market value", money(marketValue, ccy)]);
+      rows.push(["Unrealized gain / loss", money(unrealized, ccy)]);
+      rows.push(["Unrealized return", pct(unrealizedPct)]);
+    }
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    ids.forEach(function (pair) {
+      const a = getEl(pair[0]);
+      const b = getEl(pair[1]);
+      if (a) a.value = "";
+      if (b) b.value = "";
+    });
+    currentEl.value = "";
+    currencyEl.value = "USD";
+    clearOut();
+    const firstEl = getEl("sa_shares1");
+    if (firstEl) firstEl.focus();
+  });
+
+  clearOut();
+});
+</script>

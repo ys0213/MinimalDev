@@ -1,0 +1,282 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "ROI Calculator",
+  description:
+    "Calculate return on investment (ROI), profit, final value, and optional annualized ROI.",
+  href: "/finance/roi-calculator/",
+  order: 125,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/roi-calculator/";
+
+const faqs = [
+  {
+    q: "What is ROI?",
+    a: "ROI stands for return on investment. It measures profit relative to the amount invested.",
+  },
+  {
+    q: "How is ROI calculated?",
+    a: "ROI = (final value − initial investment) ÷ initial investment × 100.",
+  },
+  {
+    q: "What is annualized ROI?",
+    a: "Annualized ROI estimates the equivalent yearly return over a multi-year period.",
+  },
+  {
+    q: "Can ROI be negative?",
+    a: "Yes. A negative ROI means the final value is less than the initial investment.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`ROI Calculator — ${SITE_NAME}`}
+  description="Calculate ROI, profit, and optional annualized return from initial and final values."
+  canonicalPath={CANONICAL_PATH}
+  h1="ROI Calculator"
+  intro="Calculate return on investment (ROI) from your starting investment and final value. Optionally estimate annualized ROI."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="roi-calculator">
+    <div class="form" role="form" aria-describedby="roi_help roi_privacy">
+      <div class="field">
+        <label for="roi_initial">Initial investment</label>
+        <input id="roi_initial" type="number" inputmode="decimal" placeholder="e.g., 10000" />
+      </div>
+
+      <div class="field">
+        <label for="roi_final">Final value</label>
+        <input id="roi_final" type="number" inputmode="decimal" placeholder="e.g., 12500" />
+      </div>
+
+      <div class="field">
+        <label for="roi_years">Holding period in years (optional for annualized ROI)</label>
+        <input id="roi_years" type="number" inputmode="decimal" placeholder="e.g., 3" />
+      </div>
+
+      <div class="field">
+        <label for="roi_currency">Currency</label>
+        <select id="roi_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="roi_calc" class="btn" type="button">Calculate</button>
+        <button id="roi_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="roi_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="roi_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="roi_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="roi_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="roi_help" style="margin-top:10px;">
+        ROI = (final − initial) ÷ initial. Annualized ROI is shown only when a valid holding period is entered.
+      </p>
+
+      <p class="note" id="roi_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Standard ROI measures total return relative to the original investment:
+      <strong>(final value − initial investment) ÷ initial investment</strong>.
+    </p>
+
+    <p class="note">
+      When a holding period is provided, annualized ROI is estimated using:
+      <strong>(final ÷ initial)^(1/years) − 1</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$10,000 growing to $12,500 → 25% ROI</li>
+      <li>If the same result happened over 3 years, annualized ROI is lower than total ROI</li>
+      <li>If final value is below initial investment, ROI is negative</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/dividend-calculator/">Dividend Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/stock-average-calculator/">Stock Average Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const initialEl = document.getElementById("roi_initial");
+  const finalEl = document.getElementById("roi_final");
+  const yearsEl = document.getElementById("roi_years");
+  const currencyEl = document.getElementById("roi_currency");
+  const calcBtn = document.getElementById("roi_calc");
+  const clearBtn = document.getElementById("roi_clear");
+  const errorEl = document.getElementById("roi_error");
+  const summaryEl = document.getElementById("roi_summary");
+  const cardsEl = document.getElementById("roi_cards");
+  const tbodyEl = document.getElementById("roi_tbody");
+
+  if (!initialEl || !finalEl || !yearsEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function pct(v) {
+    return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const initial = toNum(initialEl.value);
+    const finalValue = toNum(finalEl.value);
+    const years = String(yearsEl.value || "").trim() ? toNum(yearsEl.value) : NaN;
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(initial) || initial <= 0) {
+      showError("Please enter a valid initial investment (> 0).");
+      return;
+    }
+    if (!Number.isFinite(finalValue) || finalValue < 0) {
+      showError("Please enter a valid final value (0 or more).");
+      return;
+    }
+    if (String(yearsEl.value || "").trim() && (!Number.isFinite(years) || years <= 0)) {
+      showError("Please enter a valid holding period in years (> 0) or leave it blank.");
+      return;
+    }
+
+    const profit = finalValue - initial;
+    const roi = (profit / initial) * 100;
+    const annualized = Number.isFinite(years) ? (Math.pow(finalValue / initial, 1 / years) - 1) * 100 : NaN;
+
+    summaryEl.innerHTML =
+      "<strong>ROI:</strong> " + pct(roi) + "<br/>" +
+      "<strong>Profit / loss:</strong> " + money(profit, ccy) +
+      (Number.isFinite(annualized) ? "<br/><strong>Annualized ROI:</strong> " + pct(annualized) : "");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(roi < 0 ? "Negative ROI" : roi < 10 ? "Lower ROI" : roi < 30 ? "Moderate ROI" : "Higher ROI") + " " +
+      badge(profit >= 0 ? "Profit" : "Loss") + " " +
+      badge(Number.isFinite(annualized) ? "Annualized shown" : "Annualized not shown");
+
+    const rows = [
+      ["Initial investment", money(initial, ccy)],
+      ["Final value", money(finalValue, ccy)],
+      ["Profit / loss", money(profit, ccy)],
+      ["ROI", pct(roi)],
+    ];
+
+    if (Number.isFinite(years)) {
+      rows.push(["Holding period", years.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " years"]);
+      rows.push(["Annualized ROI", pct(annualized)]);
+    }
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    initialEl.value = "";
+    finalEl.value = "";
+    yearsEl.value = "";
+    currencyEl.value = "USD";
+    clearOut();
+  });
+});
+</script>

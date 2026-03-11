@@ -1,0 +1,254 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Number Base Converter",
+  description:
+    "Convert numbers between binary, decimal, and hexadecimal with validation and result cards.",
+  href: "/math/number-base-converter/",
+  order: 250,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/number-base-converter/";
+
+const faqs = [
+  {
+    q: "What is a number base?",
+    a: "A number base determines how many digits are used in a number system. For example, base-10 uses digits 0–9.",
+  },
+  {
+    q: "What are common number bases?",
+    a: "Binary (base 2), Decimal (base 10), and Hexadecimal (base 16) are the most commonly used bases.",
+  },
+  {
+    q: "Why do developers convert number bases?",
+    a: "Binary and hexadecimal are widely used in programming, memory addressing, and low-level computing.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not transmitted or stored.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Number Base Converter — ${SITE_NAME}`}
+  description="Convert numbers between binary, decimal, and hexadecimal systems."
+  canonicalPath={CANONICAL_PATH}
+  h1="Number Base Converter"
+  intro="Convert values between binary (base 2), decimal (base 10), and hexadecimal (base 16)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base-converter">
+    <div class="form" role="form" aria-describedby="base_help base_privacy">
+
+      <div class="field">
+        <label for="base_val">Value</label>
+        <input
+          id="base_val"
+          placeholder="Enter number"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="field">
+        <label for="base_from">Input base</label>
+        <select id="base_from">
+          <option value="2">Binary (2)</option>
+          <option value="10" selected>Decimal (10)</option>
+          <option value="16">Hexadecimal (16)</option>
+        </select>
+      </div>
+
+      <p class="note" id="base_help">
+        Allowed digits depend on the selected base.
+      </p>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" id="base_calc" type="button">Convert</button>
+        <button class="btn secondary" id="base_clear" type="button">Clear</button>
+      </div>
+
+      <div id="base_error" class="result" role="alert" style="display:none;margin-top:12px;"></div>
+
+      <div id="base_result" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="base_cards" class="result" style="display:none;margin-top:12px;"></div>
+
+      <div style="margin-top:16px;overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Number system</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="base_table"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="base_privacy" style="margin-top:10px;">
+        Privacy: conversions run locally in your browser.
+      </p>
+
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The converter first parses the input number using the selected base,
+      converts it to a decimal value internally, and then formats that value
+      into binary, decimal, and hexadecimal representations.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Binary <strong>1010</strong> → Decimal <strong>10</strong></li>
+      <li>Decimal <strong>255</strong> → Hex <strong>FF</strong></li>
+      <li>Hex <strong>A3</strong> → Decimal <strong>163</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/binary-calculator/">Binary Calculator</a></li>
+      <li><a href="/math/hex-calculator/">Hex Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const valEl = document.getElementById("base_val");
+  const baseEl = document.getElementById("base_from");
+  const calcBtn = document.getElementById("base_calc");
+  const clearBtn = document.getElementById("base_clear");
+  const errorEl = document.getElementById("base_error");
+  const resultEl = document.getElementById("base_result");
+  const cardsEl = document.getElementById("base_cards");
+  const tableEl = document.getElementById("base_table");
+
+  if (!valEl || !baseEl) return;
+
+  function clearError(){
+    errorEl.style.display="none";
+    errorEl.textContent="";
+  }
+
+  function showError(msg){
+    errorEl.style.display="block";
+    errorEl.textContent=msg;
+  }
+
+  function badge(text){
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>"+text+"</span>";
+  }
+
+  function validForBase(str, base){
+    if(base===2) return /^[01]+$/i.test(str);
+    if(base===10) return /^[0-9]+$/i.test(str);
+    if(base===16) return /^[0-9a-f]+$/i.test(str);
+    return false;
+  }
+
+  function clearOutput(){
+    clearError();
+    resultEl.textContent="Result will appear here.";
+    cardsEl.style.display="none";
+    tableEl.innerHTML="";
+  }
+
+  calcBtn.onclick=function(){
+
+    clearOutput();
+
+    const val = valEl.value.trim();
+    const base = parseInt(baseEl.value);
+
+    if(!val){
+      showError("Please enter a value.");
+      return;
+    }
+
+    if(!validForBase(val, base)){
+      showError("Invalid number for the selected base.");
+      return;
+    }
+
+    const num = parseInt(val, base);
+
+    if(!Number.isFinite(num)){
+      showError("Conversion failed.");
+      return;
+    }
+
+    const bin = num.toString(2);
+    const dec = num.toString(10);
+    const hex = num.toString(16).toUpperCase();
+
+    resultEl.innerHTML="<strong>Decimal value:</strong> "+dec;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=
+      badge("Input base "+base)+" "+
+      badge(num===0?"Zero":"Converted")+" "+
+      badge("Valid conversion");
+
+    const rows=[
+      ["Binary (base 2)", bin],
+      ["Decimal (base 10)", dec],
+      ["Hexadecimal (base 16)", hex]
+    ];
+
+    rows.forEach(function(r){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=r[0];
+      td2.textContent=r[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tableEl.appendChild(tr);
+    });
+
+  };
+
+  clearBtn.onclick=function(){
+    valEl.value="";
+    baseEl.value="10";
+    clearOutput();
+    valEl.focus();
+  };
+
+  valEl.addEventListener("keydown",function(e){
+    if(e.key==="Enter") calcBtn.click();
+  });
+
+});
+</script>

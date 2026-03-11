@@ -1,0 +1,278 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hours Between Times",
+  description:
+    "Free hours between times calculator. Calculate decimal hours, minutes, and elapsed time between two times with validation and FAQ schema.",
+  href: "/date-time/hours-between-times/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/hours-between-times/";
+
+const faqs = [
+  {
+    q: "What does this calculator return?",
+    a: "It calculates the time difference between two times and emphasizes the result in decimal hours, while also showing minutes and hours/minutes/seconds.",
+  },
+  {
+    q: "What are decimal hours?",
+    a: "Decimal hours express elapsed time as a single number, such as 8.5 hours instead of 8 hours 30 minutes.",
+  },
+  {
+    q: "Does it support overnight times?",
+    a: "Yes. If enabled, a later time on the next day is handled automatically.",
+  },
+  {
+    q: "Can I use this for work shifts?",
+    a: "Yes. It is useful for work logs, billing, scheduling, and time-tracking where decimal hours are needed.",
+  },
+  {
+    q: "Are my time inputs stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Hours Between Times — ${SITE_NAME}`}
+  description="Calculate the time difference between two times and show the result as decimal hours, total minutes, and elapsed time."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hours Between Times"
+  intro="Calculate how many hours fall between two times. The result includes decimal hours, minutes, and standard elapsed time."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hours-between-times">
+    <div class="form" role="form" aria-describedby="hbt_help hbt_privacy">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="hbt_start">Start time</label>
+          <input id="hbt_start" type="time" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="hbt_end">End time</label>
+          <input id="hbt_end" type="time" step="1" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="hbt_overnight">Overnight handling</label>
+          <select id="hbt_overnight">
+            <option value="yes" selected>Allow crossing midnight</option>
+            <option value="no">Same day only</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="hbt_round">Decimal hour rounding</label>
+          <select id="hbt_round" aria-describedby="hbt_help">
+            <option value="2" selected>2 decimals</option>
+            <option value="3">3 decimals</option>
+            <option value="4">4 decimals</option>
+            <option value="6">6 decimals</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="hbt_help" style="margin-top:6px;">
+        Decimal hours are useful for timesheets, billing, and work logs.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hbt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="hbt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hbt_error" role="alert" style="display:none;"></div>
+      <div class="result" id="hbt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hbt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="hbt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hbt_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No times are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator first finds elapsed seconds between the two times, then divides by 3600 to convert the result into decimal hours.
+      It also shows the equivalent in total minutes and standard H:M:S format.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>08:30 to 17:00 → 8.50 hours</li>
+      <li>09:15 to 12:45 → 3.50 hours</li>
+      <li>22:00 to 01:30 with overnight enabled → 3.50 hours</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/time-between-times/">Time Between Times</a></li>
+      <li><a href="/date-time/time-duration-calculator/">Time Duration Calculator</a></li>
+      <li><a href="/date-time/working-hours-calculator/">Working Hours Calculator</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("hbt_start");
+  const endEl = document.getElementById("hbt_end");
+  const overnightEl = document.getElementById("hbt_overnight");
+  const roundEl = document.getElementById("hbt_round");
+  const calcBtn = document.getElementById("hbt_calc");
+  const clearBtn = document.getElementById("hbt_clear");
+  const errEl = document.getElementById("hbt_error");
+  const outEl = document.getElementById("hbt_result");
+  const cardsEl = document.getElementById("hbt_cards");
+  const tbodyEl = document.getElementById("hbt_tbody");
+
+  if (!startEl || !endEl || !overnightEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseTime(value) {
+    const s = String(value || "").trim();
+    if (!s) return NaN;
+    const parts = s.split(":").map(Number);
+    if (parts.length < 2) return NaN;
+    const h = parts[0];
+    const m = parts[1];
+    const sec = parts[2] || 0;
+    if (![h, m, sec].every(Number.isFinite)) return NaN;
+    if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return NaN;
+    return h * 3600 + m * 60 + sec;
+  }
+
+  function formatHMS(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return h + "h " + m + "m " + s + "s";
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const start = parseTime(startEl.value);
+    const end = parseTime(endEl.value);
+    const allowOvernight = String(overnightEl.value || "yes") === "yes";
+    const decimals = parseInt(String(roundEl.value || "2"), 10);
+
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      showError("Please enter valid start and end times.");
+      return;
+    }
+
+    let diff = end - start;
+    let overnight = false;
+
+    if (diff < 0) {
+      if (!allowOvernight) {
+        showError("End time is earlier than start time. Enable overnight handling or correct the order.");
+        return;
+      }
+      diff += 86400;
+      overnight = true;
+    }
+
+    const decimalHours = diff / 3600;
+    const totalMinutes = diff / 60;
+
+    outEl.innerHTML =
+      "<strong>Decimal hours:</strong> " + decimalHours.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + "<br/>" +
+      "<span class='note'>Elapsed time: " + formatHMS(diff) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(overnight ? "Overnight" : "Same-day") + " " +
+      badge(decimalHours < 1 ? "Under 1 hour" : decimalHours < 8 ? "Typical duration" : "Longer duration");
+
+    render([
+      ["Start time", startEl.value],
+      ["End time", endEl.value],
+      ["Elapsed time", formatHMS(diff)],
+      ["Decimal hours", decimalHours.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })],
+      ["Total minutes", totalMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 })],
+      ["Total seconds", diff.toLocaleString()],
+    ]);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    overnightEl.value = "yes";
+    roundEl.value = "2";
+    clearOut();
+    startEl.focus();
+  });
+});
+</script>

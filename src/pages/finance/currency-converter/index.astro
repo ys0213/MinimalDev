@@ -1,0 +1,315 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Currency Converter",
+  description:
+    "Convert between currencies using a manually entered exchange rate. Includes validation, result cards, reverse rate, and FAQ schema.",
+  href: "/finance/currency-converter/",
+  order: 145,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/currency-converter/";
+
+const faqs = [
+  {
+    q: "How does this currency converter work?",
+    a: "It converts an amount from one currency to another using the exchange rate that you enter manually.",
+  },
+  {
+    q: "Does this use live exchange rates?",
+    a: "No. This version does not fetch live market data. You enter the rate yourself, which keeps the tool fast and privacy-friendly.",
+  },
+  {
+    q: "What exchange rate should I enter?",
+    a: "Enter the rate as: 1 unit of the 'from' currency equals how many units of the 'to' currency.",
+  },
+  {
+    q: "Can I reverse the currencies?",
+    a: "Yes. The tool includes a swap action and also shows the reverse exchange rate.",
+  },
+  {
+    q: "Are my amounts or rates stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Currency Converter — ${SITE_NAME}`}
+  description="Convert between currencies using a manually entered exchange rate. Includes validation, reverse rate, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Currency Converter"
+  intro="Convert an amount from one currency to another using a manually entered exchange rate. Useful when you already know the rate you want to apply."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="currency-converter">
+    <div class="form" role="form" aria-describedby="ccv_help ccv_privacy">
+      <div class="field">
+        <label for="ccv_amount">Amount</label>
+        <input id="ccv_amount" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:end;">
+        <div class="field">
+          <label for="ccv_from">From currency</label>
+          <select id="ccv_from">
+            <option value="USD" selected>USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="KRW">KRW</option>
+            <option value="JPY">JPY</option>
+            <option value="CAD">CAD</option>
+            <option value="AUD">AUD</option>
+            <option value="CNY">CNY</option>
+          </select>
+        </div>
+
+        <div>
+          <button id="ccv_swap" class="btn secondary" type="button" aria-label="Swap currencies">Swap</button>
+        </div>
+
+        <div class="field">
+          <label for="ccv_to">To currency</label>
+          <select id="ccv_to">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="KRW" selected>KRW</option>
+            <option value="JPY">JPY</option>
+            <option value="CAD">CAD</option>
+            <option value="AUD">AUD</option>
+            <option value="CNY">CNY</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ccv_rate">Exchange rate</label>
+        <input id="ccv_rate" type="number" inputmode="decimal" placeholder="e.g., 1350" />
+        <p class="note" style="margin-top:6px;">
+          Enter the rate as: <strong>1 From = X To</strong>. Example: if 1 USD = 1350 KRW, enter <strong>1350</strong>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="ccv_round">Rounding</label>
+        <select id="ccv_round">
+          <option value="2" selected>2 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="6">6 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="ccv_calc" class="btn" type="button">Convert</button>
+        <button id="ccv_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="ccv_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="ccv_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="ccv_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="ccv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ccv_help" style="margin-top:10px;">
+        Converted amount = amount × exchange rate. Reverse rate = 1 ÷ exchange rate.
+      </p>
+
+      <p class="note" id="ccv_privacy" style="margin-top:10px;">
+        Privacy: this converter uses only the values you type. No rates or amounts are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses a direct exchange rate that you enter manually. If the rate is entered as
+      <strong>1 From = X To</strong>, then the converted amount is:
+      <strong>amount × X</strong>.
+    </p>
+
+    <p class="note">
+      It also shows the reverse exchange rate so you can interpret the conversion in both directions.
+      This version is useful when you want full control over which rate is applied.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>100 USD at a rate of 1350 KRW per USD → 135,000 KRW</li>
+      <li>50 EUR at a rate of 1.08 USD per EUR → 54 USD</li>
+      <li>Use Swap if you want to reverse the conversion direction and enter the opposite rate</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/tax-calculator/">Tax Calculator</a></li>
+      <li><a href="/finance/roi-calculator/">ROI Calculator</a></li>
+      <li><a href="/finance/budget-calculator/">Budget Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const amountEl = document.getElementById("ccv_amount");
+  const fromEl = document.getElementById("ccv_from");
+  const toEl = document.getElementById("ccv_to");
+  const rateEl = document.getElementById("ccv_rate");
+  const roundEl = document.getElementById("ccv_round");
+  const calcBtn = document.getElementById("ccv_calc");
+  const clearBtn = document.getElementById("ccv_clear");
+  const swapBtn = document.getElementById("ccv_swap");
+  const errorEl = document.getElementById("ccv_error");
+  const summaryEl = document.getElementById("ccv_summary");
+  const cardsEl = document.getElementById("ccv_cards");
+  const tbodyEl = document.getElementById("ccv_tbody");
+
+  if (!amountEl || !fromEl || !toEl || !rateEl || !roundEl || !calcBtn || !clearBtn || !swapBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(v) {
+    const d = parseInt(String(roundEl.value), 10);
+    return v.toLocaleString(undefined, {
+      minimumFractionDigits: d,
+      maximumFractionDigits: d,
+    });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const amount = toNum(amountEl.value);
+    const from = String(fromEl.value || "USD");
+    const to = String(toEl.value || "KRW");
+    const rate = toNum(rateEl.value);
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      showError("Please enter a valid amount (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(rate) || rate <= 0) {
+      showError("Please enter a valid exchange rate greater than 0.");
+      return;
+    }
+    if (from === to) {
+      showError("Choose two different currencies or use an exchange rate of 1 manually if needed.");
+      return;
+    }
+
+    const converted = amount * rate;
+    const reverseRate = 1 / rate;
+
+    summaryEl.innerHTML =
+      "<strong>Converted amount:</strong> " + fmt(converted) + " " + to + "<br/>" +
+      "<strong>Applied rate:</strong> 1 " + from + " = " + fmt(rate) + " " + to;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(from + " → " + to) + " " +
+      badge(rate < 1 ? "Sub-unit rate" : rate < 100 ? "Typical rate scale" : "Large rate scale") + " " +
+      badge("Manual rate mode");
+
+    const rows = [
+      ["Input amount", fmt(amount) + " " + from],
+      ["Exchange rate", "1 " + from + " = " + fmt(rate) + " " + to],
+      ["Reverse rate", "1 " + to + " = " + fmt(reverseRate) + " " + from],
+      ["Converted amount", fmt(converted) + " " + to],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  swapBtn.addEventListener("click", function () {
+    const from = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = from;
+
+    const rate = toNum(rateEl.value);
+    if (Number.isFinite(rate) && rate > 0) {
+      rateEl.value = String(1 / rate);
+    }
+  });
+
+  clearBtn.addEventListener("click", function () {
+    amountEl.value = "";
+    fromEl.value = "USD";
+    toEl.value = "KRW";
+    rateEl.value = "";
+    roundEl.value = "2";
+    clearOut();
+  });
+});
+</script>

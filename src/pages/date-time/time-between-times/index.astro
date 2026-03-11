@@ -1,0 +1,272 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Time Between Times",
+  description:
+    "Free time between times calculator. Calculate elapsed time between two times with overnight handling, validation, result cards, and FAQ schema.",
+  href: "/date-time/time-between-times/",
+  order: 75,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/time-between-times/";
+
+const faqs = [
+  {
+    q: "What is the difference between this and a general time duration calculator?",
+    a: "This tool focuses specifically on the elapsed time between two times of day and emphasizes the start-to-end comparison.",
+  },
+  {
+    q: "Can the result cross midnight?",
+    a: "Yes. If the second time is earlier than the first and overnight handling is enabled, the tool treats it as the next day.",
+  },
+  {
+    q: "Does it show total hours and minutes?",
+    a: "Yes. It shows the elapsed duration in multiple formats, including total hours and total minutes.",
+  },
+  {
+    q: "Can I use seconds?",
+    a: "Yes. Seconds are supported when your browser allows time inputs with seconds.",
+  },
+  {
+    q: "Is any time data stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Time Between Times — ${SITE_NAME}`}
+  description="Calculate elapsed time between two times with optional overnight handling, validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Time Between Times"
+  intro="Calculate the elapsed time between two times of day. Useful for schedules, shift checks, and quick time comparisons."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="time-between-times">
+    <div class="form" role="form" aria-describedby="tbt_help tbt_privacy">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="tbt_from">From time</label>
+          <input id="tbt_from" type="time" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="tbt_to">To time</label>
+          <input id="tbt_to" type="time" step="1" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tbt_overnight">Overnight handling</label>
+        <select id="tbt_overnight" aria-describedby="tbt_help">
+          <option value="yes" selected>Allow crossing midnight</option>
+          <option value="no">Do not allow crossing midnight</option>
+        </select>
+        <p class="note" id="tbt_help" style="margin-top:6px;">
+          When enabled, a later clock time on the next day is supported automatically.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tbt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="tbt_swap">Swap times</button>
+        <button class="btn secondary" type="button" id="tbt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tbt_error" role="alert" style="display:none;"></div>
+      <div class="result" id="tbt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tbt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="tbt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tbt_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No time values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator compares the second time with the first time. If overnight mode is enabled and the second time is earlier,
+      it adds 24 hours to treat the second time as the next day.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>07:45 to 12:15 → 4 hours 30 minutes</li>
+      <li>23:30 to 01:00 with overnight mode → 1 hour 30 minutes</li>
+      <li>Swap times if you entered them in the wrong order</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/time-duration-calculator/">Time Duration Calculator</a></li>
+      <li><a href="/date-time/hours-between-times/">Hours Between Times</a></li>
+      <li><a href="/date-time/working-hours-calculator/">Working Hours Calculator</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fromEl = document.getElementById("tbt_from");
+  const toEl = document.getElementById("tbt_to");
+  const overnightEl = document.getElementById("tbt_overnight");
+  const calcBtn = document.getElementById("tbt_calc");
+  const swapBtn = document.getElementById("tbt_swap");
+  const clearBtn = document.getElementById("tbt_clear");
+  const errEl = document.getElementById("tbt_error");
+  const outEl = document.getElementById("tbt_result");
+  const cardsEl = document.getElementById("tbt_cards");
+  const tbodyEl = document.getElementById("tbt_tbody");
+
+  if (!fromEl || !toEl || !overnightEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseTime(value) {
+    const s = String(value || "").trim();
+    if (!s) return NaN;
+    const parts = s.split(":").map(Number);
+    if (parts.length < 2) return NaN;
+    const h = parts[0];
+    const m = parts[1];
+    const sec = parts[2] || 0;
+    if (![h, m, sec].every(Number.isFinite)) return NaN;
+    if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return NaN;
+    return h * 3600 + m * 60 + sec;
+  }
+
+  function formatHMS(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return h + "h " + m + "m " + s + "s";
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const from = parseTime(fromEl.value);
+    const to = parseTime(toEl.value);
+    const allowOvernight = String(overnightEl.value || "yes") === "yes";
+
+    if (!Number.isFinite(from) || !Number.isFinite(to)) {
+      showError("Please enter valid start and end times.");
+      return;
+    }
+
+    let diff = to - from;
+    let overnight = false;
+
+    if (diff < 0) {
+      if (!allowOvernight) {
+        showError("The second time is earlier than the first time. Enable overnight handling or change the order.");
+        return;
+      }
+      diff += 86400;
+      overnight = true;
+    }
+
+    const totalHours = diff / 3600;
+    const totalMinutes = diff / 60;
+
+    outEl.innerHTML =
+      "<strong>Elapsed time:</strong> " + formatHMS(diff) + "<br/>" +
+      "<span class='note'>" + totalHours.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " total hours</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(overnight ? "Crosses midnight" : "Same day") + " " +
+      badge(diff === 0 ? "Zero elapsed time" : diff < 7200 ? "Short interval" : diff < 28800 ? "Medium interval" : "Long interval");
+
+    render([
+      ["From time", fromEl.value],
+      ["To time", toEl.value],
+      ["Overnight handling", allowOvernight ? "Enabled" : "Disabled"],
+      ["Elapsed time", formatHMS(diff)],
+      ["Total hours", totalHours.toLocaleString(undefined, { maximumFractionDigits: 4 })],
+      ["Total minutes", totalMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 })],
+      ["Total seconds", diff.toLocaleString()],
+    ]);
+  });
+
+  swapBtn.addEventListener("click", function () {
+    const x = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = x;
+    clearOut();
+  });
+
+  clearBtn.addEventListener("click", function () {
+    fromEl.value = "";
+    toEl.value = "";
+    overnightEl.value = "yes";
+    clearOut();
+    fromEl.focus();
+  });
+});
+</script>

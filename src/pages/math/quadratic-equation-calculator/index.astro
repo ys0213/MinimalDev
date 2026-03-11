@@ -1,0 +1,365 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Quadratic Equation Calculator",
+  description:
+    "Solve quadratic equations of the form ax² + bx + c = 0. Includes validation, discriminant, root type, result cards, and FAQ schema.",
+  href: "/math/quadratic-equation-calculator/",
+  order: 330,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/quadratic-equation-calculator/";
+
+const faqs = [
+  {
+    q: "What is a quadratic equation?",
+    a: "A quadratic equation is a second-degree equation of the form ax² + bx + c = 0, where a ≠ 0.",
+  },
+  {
+    q: "How are the roots found?",
+    a: "Using the quadratic formula: x = (-b ± √(b² − 4ac)) / (2a).",
+  },
+  {
+    q: "What does the discriminant mean?",
+    a: "The discriminant is b² − 4ac. It determines whether the equation has two real roots, one repeated real root, or two complex roots.",
+  },
+  {
+    q: "Can this calculator show complex roots?",
+    a: "Yes. If the discriminant is negative, the calculator shows complex roots in a + bi form.",
+  },
+  {
+    q: "Are my coefficients stored?",
+    a: "No. Calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Quadratic Equation Calculator — ${SITE_NAME}`}
+  description="Solve ax² + bx + c = 0 with discriminant, root classification, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Quadratic Equation Calculator"
+  intro="Enter coefficients a, b, and c to solve a quadratic equation of the form ax² + bx + c = 0."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="quadratic-equation-calculator">
+    <style is:inline>
+      .qe-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .qe-grid-3 > * {
+        min-width: 0;
+      }
+
+      #qe_a,
+      #qe_b,
+      #qe_c,
+      #qe_round {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .qe-grid-3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="qe_help qe_privacy">
+      <div class="qe-grid-3">
+        <div class="field">
+          <label for="qe_a">a</label>
+          <input id="qe_a" type="number" inputmode="decimal" placeholder="e.g., 1" />
+        </div>
+
+        <div class="field">
+          <label for="qe_b">b</label>
+          <input id="qe_b" type="number" inputmode="decimal" placeholder="e.g., -3" />
+        </div>
+
+        <div class="field">
+          <label for="qe_c">c</label>
+          <input id="qe_c" type="number" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="qe_round">Rounding</label>
+        <select id="qe_round">
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="10">10 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="qe_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="qe_clear">Clear</button>
+      </div>
+
+      <div class="result" id="qe_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="qe_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="qe_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="qe_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="qe_help" style="margin-top:6px;">
+        Uses the quadratic formula:
+        <strong>x = (-b ± √(b² − 4ac)) / (2a)</strong>
+      </p>
+
+      <p class="note" id="qe_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No coefficients are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      First compute the discriminant:
+      <br />
+      <strong>D = b² − 4ac</strong>
+      <br />
+      Then apply:
+      <br />
+      <strong>x = (-b ± √D) / (2a)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>x² − 3x + 2 = 0</strong> → roots: <strong>1</strong> and <strong>2</strong></li>
+      <li><strong>x² + 2x + 1 = 0</strong> → repeated root: <strong>-1</strong></li>
+      <li><strong>x² + x + 1 = 0</strong> → complex roots</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/square-root-calculator/">Square Root Calculator</a></li>
+      <li><a href="/math/scientific-calculator/">Scientific Calculator</a></li>
+      <li><a href="/math/slope-calculator/">Slope Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("qe_a");
+  const bEl = document.getElementById("qe_b");
+  const cEl = document.getElementById("qe_c");
+  const roundEl = document.getElementById("qe_round");
+  const calcBtn = document.getElementById("qe_calc");
+  const clearBtn = document.getElementById("qe_clear");
+  const errEl = document.getElementById("qe_error");
+  const outEl = document.getElementById("qe_result");
+  const cardsEl = document.getElementById("qe_cards");
+  const tbodyEl = document.getElementById("qe_tbody");
+
+  if (!aEl || !bEl || !cEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") {
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e12 || ax < 1e-10) return x.toExponential(8);
+      return String(Number(x.toPrecision(12)));
+    }
+    const d = parseInt(r, 10);
+    return x.toLocaleString(undefined, {
+      maximumFractionDigits: d,
+      minimumFractionDigits: 0,
+    });
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function complexToText(real, imag) {
+    const sign = imag < 0 ? " - " : " + ";
+    return fmt(real) + sign + fmt(Math.abs(imag)) + "i";
+  }
+
+  function fillTable(a, b, c, D, axis) {
+    tbodyEl.innerHTML = "";
+    const rows = [
+      ["a", fmt(a)],
+      ["b", fmt(b)],
+      ["c", fmt(c)],
+      ["Discriminant (D)", fmt(D)],
+      ["Axis of symmetry", fmt(axis)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const a = toNum(aEl.value);
+    const b = toNum(bEl.value);
+    const c = toNum(cEl.value);
+
+    if (![a, b, c].every(Number.isFinite)) {
+      outEl.textContent = "Please enter valid coefficients a, b, and c.";
+      return;
+    }
+
+    if (a === 0) {
+      outEl.textContent = "Coefficient a must not be 0 for a quadratic equation.";
+      return;
+    }
+
+    const D = b * b - 4 * a * c;
+    const axis = -b / (2 * a);
+
+    if (D > 0) {
+      const sqrtD = Math.sqrt(D);
+      const x1 = (-b + sqrtD) / (2 * a);
+      const x2 = (-b - sqrtD) / (2 * a);
+
+      outEl.innerHTML =
+        "<strong>Two real roots:</strong> x₁ = " + fmt(x1) + ", x₂ = " + fmt(x2) +
+        "<br/><span class='note'>D = " + fmt(D) + " > 0</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Two real roots") +
+        badge("Discriminant > 0") +
+        badge(a > 0 ? "Opens upward" : "Opens downward") +
+        "</div>";
+    } else if (D === 0) {
+      const x = -b / (2 * a);
+
+      outEl.innerHTML =
+        "<strong>One repeated real root:</strong> x = " + fmt(x) +
+        "<br/><span class='note'>D = 0</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Repeated root") +
+        badge("Discriminant = 0") +
+        badge(a > 0 ? "Opens upward" : "Opens downward") +
+        "</div>";
+    } else {
+      const real = -b / (2 * a);
+      const imag = Math.sqrt(-D) / (2 * a);
+
+      outEl.innerHTML =
+        "<strong>Two complex roots:</strong><br/>" +
+        "<span>x₁ = " + complexToText(real, imag) + "</span><br/>" +
+        "<span>x₂ = " + complexToText(real, -imag) + "</span><br/>" +
+        "<span class='note'>D = " + fmt(D) + " < 0</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Complex roots") +
+        badge("Discriminant < 0") +
+        badge(a > 0 ? "Opens upward" : "Opens downward") +
+        "</div>";
+    }
+
+    fillTable(a, b, c, D, axis);
+  }
+
+  function reset() {
+    clearError();
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl, cEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  outEl.textContent = "Result will appear here.";
+});
+</script>

@@ -1,0 +1,293 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Time Duration Calculator",
+  description:
+    "Free time duration calculator. Calculate the duration between two times with optional overnight handling, validation, result cards, and FAQ schema.",
+  href: "/date-time/time-duration-calculator/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/time-duration-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It calculates the duration between a start time and an end time, and shows the result in hours, minutes, seconds, total minutes, and total seconds.",
+  },
+  {
+    q: "Does it support overnight time ranges?",
+    a: "Yes. If the end time is earlier than the start time, the calculator can treat it as crossing midnight.",
+  },
+  {
+    q: "Can I enter seconds?",
+    a: "Yes. The calculator supports HH:MM and HH:MM:SS style input through the browser time field when seconds are enabled.",
+  },
+  {
+    q: "Is the start time included?",
+    a: "The tool measures elapsed time from the start time to the end time. It does not count endpoints separately.",
+  },
+  {
+    q: "Are my times stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Time Duration Calculator — ${SITE_NAME}`}
+  description="Calculate the duration between two times with optional overnight handling. Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Time Duration Calculator"
+  intro="Calculate the duration between two times. Optionally treat the end time as the next day when it is earlier than the start time."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="time-duration-calculator">
+    <div class="form" role="form" aria-describedby="td_help td_privacy">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="td_start">Start time</label>
+          <input id="td_start" type="time" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="td_end">End time</label>
+          <input id="td_end" type="time" step="1" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="td_mode">Duration mode</label>
+        <select id="td_mode" aria-describedby="td_help">
+          <option value="auto" selected>Auto-detect overnight</option>
+          <option value="same-day">Same day only</option>
+          <option value="overnight">Force overnight if needed</option>
+        </select>
+        <p class="note" id="td_help" style="margin-top:6px;">
+          Auto-detect treats an earlier end time as the next day.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="td_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="td_now">Use current time as start</button>
+        <button class="btn secondary" type="button" id="td_clear">Clear</button>
+      </div>
+
+      <div class="result" id="td_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="td_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="td_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="td_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="td_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No times are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator converts both times into seconds since midnight and subtracts the start from the end.
+      If overnight handling is enabled and the end time is earlier than the start time, it adds 24 hours.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>08:30 to 17:00 → 8 hours 30 minutes</li>
+      <li>22:15 to 01:45 with overnight handling → 3 hours 30 minutes</li>
+      <li>09:00 to 09:00 → 0 duration on the same day</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/time-between-times/">Time Between Times</a></li>
+      <li><a href="/date-time/hours-between-times/">Hours Between Times</a></li>
+      <li><a href="/date-time/working-hours-calculator/">Working Hours Calculator</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("td_start");
+  const endEl = document.getElementById("td_end");
+  const modeEl = document.getElementById("td_mode");
+  const calcBtn = document.getElementById("td_calc");
+  const nowBtn = document.getElementById("td_now");
+  const clearBtn = document.getElementById("td_clear");
+  const errEl = document.getElementById("td_error");
+  const outEl = document.getElementById("td_result");
+  const cardsEl = document.getElementById("td_cards");
+  const tbodyEl = document.getElementById("td_tbody");
+
+  if (!startEl || !endEl || !modeEl || !calcBtn || !nowBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function parseTime(value) {
+    const s = String(value || "").trim();
+    if (!s) return NaN;
+    const parts = s.split(":").map(Number);
+    if (parts.length < 2) return NaN;
+    const h = parts[0];
+    const m = parts[1];
+    const sec = parts[2] || 0;
+    if (![h, m, sec].every(Number.isFinite)) return NaN;
+    if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return NaN;
+    return h * 3600 + m * 60 + sec;
+    }
+
+  function formatHMS(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return h + "h " + m + "m " + s + "s";
+  }
+
+  function formatClock(seconds) {
+    const h = Math.floor(seconds / 3600) % 24;
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+
+  function renderTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const startSec = parseTime(startEl.value);
+    const endSec = parseTime(endEl.value);
+    const mode = String(modeEl.value || "auto");
+
+    if (!Number.isFinite(startSec) || !Number.isFinite(endSec)) {
+      showError("Please enter valid start and end times.");
+      return;
+    }
+
+    let adjustedEnd = endSec;
+    let overnight = false;
+
+    if (mode === "auto" && endSec < startSec) {
+      adjustedEnd += 86400;
+      overnight = true;
+    } else if (mode === "overnight" && endSec <= startSec) {
+      adjustedEnd += 86400;
+      overnight = true;
+    } else if (mode === "same-day" && endSec < startSec) {
+      showError("End time is earlier than start time. Use Auto-detect or Overnight mode if the duration crosses midnight.");
+      return;
+    }
+
+    const diff = adjustedEnd - startSec;
+    const totalMinutes = diff / 60;
+    const totalHours = diff / 3600;
+
+    outEl.innerHTML =
+      "<strong>Duration:</strong> " + formatHMS(diff) + "<br/>" +
+      "<span class='note'>Total hours: " + totalHours.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " · Total minutes: " + totalMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(overnight ? "Overnight" : "Same-day") + " " +
+      badge(diff === 0 ? "Zero duration" : diff < 3600 ? "Under 1 hour" : diff < 28800 ? "Typical range" : "Long duration");
+
+    renderTable([
+      ["Start time", formatClock(startSec)],
+      ["End time", formatClock(endSec)],
+      ["Adjusted end time", overnight ? formatClock(adjustedEnd % 86400) + " (+1 day)" : formatClock(endSec)],
+      ["Duration (H:M:S)", formatHMS(diff)],
+      ["Total hours", totalHours.toLocaleString(undefined, { maximumFractionDigits: 4 })],
+      ["Total minutes", totalMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 })],
+      ["Total seconds", diff.toLocaleString()],
+    ]);
+  });
+
+  nowBtn.addEventListener("click", function () {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    startEl.value = hh + ":" + mm + ":" + ss;
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    modeEl.value = "auto";
+    clearOut();
+    startEl.focus();
+  });
+});
+</script>

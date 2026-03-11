@@ -1,0 +1,295 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hydration Calculator",
+  description:
+    "Estimate daily water intake from body weight with metric or imperial input, validation, result cards, and FAQ schema.",
+  href: "/health/hydration-calculator/",
+  order: 105,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/hydration-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates daily water intake from body weight using a simple general hydration guideline.",
+  },
+  {
+    q: "What formula does it use?",
+    a: "This calculator uses a common rule-of-thumb of about 35 ml of water per kilogram of body weight.",
+  },
+  {
+    q: "Is the result exact?",
+    a: "No. Hydration needs vary with climate, exercise, diet, health status, and medication use.",
+  },
+  {
+    q: "Can I use pounds instead of kilograms?",
+    a: "Yes. The calculator supports both metric and imperial units.",
+  },
+  {
+    q: "Are my values stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Hydration Calculator — ${SITE_NAME}`}
+  description="Estimate daily water intake from body weight."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hydration Calculator"
+  intro="Estimate daily water intake from body weight using a simple general hydration guideline."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hydration-calculator">
+    <div class="form" role="form" aria-describedby="hc_help hc_privacy">
+      <div class="field">
+        <label for="hc_unit">Units</label>
+        <select id="hc_unit">
+          <option value="metric" selected>Metric (kg)</option>
+          <option value="imperial">Imperial (lb)</option>
+        </select>
+      </div>
+
+      <div class="field" id="hc_weight_metric_field">
+        <label for="hc_weight_kg">Weight (kg)</label>
+        <input id="hc_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="hc_weight_imperial_field" style="display:none;">
+        <label for="hc_weight_lb">Weight (lb)</label>
+        <input id="hc_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
+      </div>
+
+      <div class="field">
+        <label for="hc_multiplier">Water guideline (ml per kg)</label>
+        <input id="hc_multiplier" type="number" inputmode="decimal" min="1" value="35" aria-describedby="hc_help" />
+        <p class="note" id="hc_help" style="margin-top:6px;">
+          A common general guideline is about 30–40 ml per kg. This tool defaults to 35 ml per kg.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="hc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="hc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="hc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="hc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator estimates daily water intake as:
+      <strong>body weight × hydration guideline</strong>.
+    </p>
+    <p class="note">
+      The default guideline used is <strong>35 ml per kg</strong>, which is a common general rule-of-thumb, not a medical prescription.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>70 kg × 35 ml/kg → 2,450 ml/day → about 2.45 liters/day</li>
+      <li>154 lb is converted to kg internally before calculation</li>
+      <li>Useful for simple daily hydration planning</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/water-intake-calculator/">Water Intake Calculator</a></li>
+      <li><a href="/health/daily-steps-calculator/">Daily Steps Calculator</a></li>
+      <li><a href="/health/calorie-needs/">Calorie Needs Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("hc_unit");
+  const wKgField = document.getElementById("hc_weight_metric_field");
+  const wLbField = document.getElementById("hc_weight_imperial_field");
+  const wKgEl = document.getElementById("hc_weight_kg");
+  const wLbEl = document.getElementById("hc_weight_lb");
+  const multEl = document.getElementById("hc_multiplier");
+
+  const calcBtn = document.getElementById("hc_calc");
+  const clearBtn = document.getElementById("hc_clear");
+  const errEl = document.getElementById("hc_error");
+  const outEl = document.getElementById("hc_result");
+  const detailsEl = document.getElementById("hc_details");
+
+  if (!unitEl || !wKgField || !wLbField || !wKgEl || !wLbEl || !multEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    wKgField.style.display = imp ? "none" : "block";
+    wLbField.style.display = imp ? "block" : "none";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    const multiplier = toNum(multEl.value);
+    let weightKg = NaN;
+
+    if (!Number.isFinite(multiplier) || multiplier <= 0 || multiplier > 100) {
+      showError("Please enter a valid hydration guideline in ml per kg.");
+      return;
+    }
+
+    if (unit === "imperial") {
+      const weightLb = toNum(wLbEl.value);
+      if (!Number.isFinite(weightLb) || weightLb <= 0 || weightLb > 1500) {
+        showError("Please enter a valid weight in pounds.");
+        return;
+      }
+      weightKg = weightLb * 0.45359237;
+    } else {
+      weightKg = toNum(wKgEl.value);
+      if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 700) {
+        showError("Please enter a valid weight in kilograms.");
+        return;
+      }
+    }
+
+    const ml = weightKg * multiplier;
+    const liters = ml / 1000;
+    const cups250 = liters / 0.25;
+    const bottles500 = liters / 0.5;
+
+    let hydrationLabel = "Moderate hydration estimate";
+    if (liters < 2) hydrationLabel = "Lower intake estimate";
+    else if (liters > 3.5) hydrationLabel = "Higher intake estimate";
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Hydration estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Daily water target", `<span>${escapeHtml(fmt(liters, 2))} L/day</span>`, `${escapeHtml(fmt(ml, 0))} ml/day`)}
+        ${card("Simple equivalents", `<span>${escapeHtml(fmt(cups250, 1))} cups</span>`, `${escapeHtml(fmt(bottles500, 1))} bottles of 500 ml`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(`${fmt(multiplier, 0)} ml/kg`)} ${badge(hydrationLabel)}
+      </div>
+      <div class="note" style="margin-top:8px;">Weight: <strong>${escapeHtml(fmt(weightKg, 2))} kg</strong></div>
+      <div class="note" style="margin-top:6px;">Guideline used: <strong>${escapeHtml(fmt(multiplier, 0))} ml per kg</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated water target: <strong>${escapeHtml(fmt(ml, 0))} ml/day</strong></div>
+      <div class="note" style="margin-top:6px;">Equivalent liters: <strong>${escapeHtml(fmt(liters, 2))} L/day</strong></div>
+      <div class="note" style="margin-top:6px;">Approximate 250 ml cups: <strong>${escapeHtml(fmt(cups250, 1))}</strong></div>
+      <div class="note" style="margin-top:6px;">Approximate 500 ml bottles: <strong>${escapeHtml(fmt(bottles500, 1))}</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    wKgEl.value = "";
+    wLbEl.value = "";
+    multEl.value = "35";
+    setUnitUI();
+    resetOutputs();
+    wKgEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

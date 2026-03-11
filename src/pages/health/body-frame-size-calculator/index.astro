@@ -1,0 +1,350 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Body Frame Size Calculator",
+  description:
+    "Estimate body frame size from height and wrist circumference with validation, result cards, and FAQ schema.",
+  href: "/health/body-frame-size-calculator/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/body-frame-size-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates body frame size from height and wrist circumference using a simple height-to-wrist ratio.",
+  },
+  {
+    q: "What is body frame size?",
+    a: "Body frame size is a broad reference label such as small, medium, or large, often estimated from skeletal proportions.",
+  },
+  {
+    q: "Is this a medical assessment?",
+    a: "No. It is a general reference estimate only, not a medical diagnosis or full body composition assessment.",
+  },
+  {
+    q: "Can I use imperial measurements?",
+    a: "Yes. This calculator supports both metric and imperial inputs and converts them internally.",
+  },
+  {
+    q: "Are my measurements stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Body Frame Size Calculator — ${SITE_NAME}`}
+  description="Estimate body frame size from height and wrist circumference."
+  canonicalPath={CANONICAL_PATH}
+  h1="Body Frame Size Calculator"
+  intro="Estimate body frame size from height and wrist circumference. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="body-frame-size-calculator">
+    <div class="form" role="form" aria-describedby="bfs_help bfs_privacy">
+      <div class="field">
+        <label for="bfs_unit">Units</label>
+        <select id="bfs_unit">
+          <option value="metric" selected>Metric (cm)</option>
+          <option value="imperial">Imperial (ft/in, in)</option>
+        </select>
+      </div>
+
+      <div class="field" id="bfs_height_metric_field">
+        <label for="bfs_height_cm">Height (cm)</label>
+        <input id="bfs_height_cm" type="number" inputmode="decimal" min="1" placeholder="e.g., 170" />
+      </div>
+
+      <div class="field" id="bfs_height_imperial_field" style="display:none;">
+        <label>Height (ft / in)</label>
+        <div style="display:flex; gap:10px;">
+          <input id="bfs_height_ft" type="number" inputmode="numeric" min="0" placeholder="ft" aria-label="Height in feet" style="flex:1;" />
+          <input id="bfs_height_in" type="number" inputmode="numeric" min="0" placeholder="in" aria-label="Height in inches" style="flex:1;" />
+        </div>
+      </div>
+
+      <div class="field" id="bfs_wrist_metric_field">
+        <label for="bfs_wrist_cm">Wrist circumference (cm)</label>
+        <input id="bfs_wrist_cm" type="number" inputmode="decimal" min="1" placeholder="e.g., 16" aria-describedby="bfs_help" />
+      </div>
+
+      <div class="field" id="bfs_wrist_imperial_field" style="display:none;">
+        <label for="bfs_wrist_in">Wrist circumference (in)</label>
+        <input id="bfs_wrist_in" type="number" inputmode="decimal" min="1" placeholder="e.g., 6.3" aria-describedby="bfs_help" />
+      </div>
+
+      <div class="field">
+        <label for="bfs_sex">Reference labels</label>
+        <select id="bfs_sex">
+          <option value="female" selected>Female reference</option>
+          <option value="male">Male reference</option>
+        </select>
+        <p class="note" id="bfs_help" style="margin-top:6px;">
+          This tool uses a common height-to-wrist ratio method to label frame size as small, medium, or large.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bfs_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bfs_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bfs_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="bfs_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="bfs_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="bfs_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No measurements are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      A simple frame-size estimate compares height to wrist circumference.  
+      Smaller wrists relative to height usually map to a smaller frame label, while larger wrists relative to height usually map to a larger frame label.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>170 cm height and 16 cm wrist → height-to-wrist ratio ≈ 10.63</li>
+      <li>5 ft 7 in height and 6.3 in wrist → imperial values are converted internally</li>
+      <li>Useful as a broad reference alongside other body measurements</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/ideal-weight/">Ideal Weight Calculator</a></li>
+      <li><a href="/health/body-mass-calculator/">Body Mass Calculator</a></li>
+      <li><a href="/health/waist-to-hip-ratio/">Waist to Hip Ratio Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("bfs_unit");
+  const sexEl = document.getElementById("bfs_sex");
+
+  const hCmField = document.getElementById("bfs_height_metric_field");
+  const hImpField = document.getElementById("bfs_height_imperial_field");
+  const wCmField = document.getElementById("bfs_wrist_metric_field");
+  const wInField = document.getElementById("bfs_wrist_imperial_field");
+
+  const hCmEl = document.getElementById("bfs_height_cm");
+  const hFtEl = document.getElementById("bfs_height_ft");
+  const hInEl = document.getElementById("bfs_height_in");
+  const wCmEl = document.getElementById("bfs_wrist_cm");
+  const wInEl = document.getElementById("bfs_wrist_in");
+
+  const calcBtn = document.getElementById("bfs_calc");
+  const clearBtn = document.getElementById("bfs_clear");
+  const errEl = document.getElementById("bfs_error");
+  const outEl = document.getElementById("bfs_result");
+  const detailsEl = document.getElementById("bfs_details");
+
+  if (!unitEl || !sexEl || !hCmField || !hImpField || !wCmField || !wInField || !hCmEl || !hFtEl || !hInEl || !wCmEl || !wInEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    hCmField.style.display = imp ? "none" : "block";
+    hImpField.style.display = imp ? "block" : "none";
+    wCmField.style.display = imp ? "none" : "block";
+    wInField.style.display = imp ? "block" : "none";
+  }
+
+  function classify(ratio, sex) {
+    if (sex === "female") {
+      if (ratio > 11.0) return "Small frame";
+      if (ratio >= 10.1) return "Medium frame";
+      return "Large frame";
+    }
+    if (ratio > 10.4) return "Small frame";
+    if (ratio >= 9.6) return "Medium frame";
+    return "Large frame";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    const sex = String(sexEl.value);
+
+    let heightCm = NaN;
+    let wristCm = NaN;
+
+    if (unit === "imperial") {
+      const ft = toNum(hFtEl.value);
+      const inch = toNum(hInEl.value);
+      const wristIn = toNum(wInEl.value);
+
+      if (!Number.isFinite(ft) || ft < 0 || !Number.isFinite(inch) || inch < 0) {
+        showError("Please enter a valid height in feet and inches.");
+        return;
+      }
+      if (!Number.isFinite(wristIn) || wristIn <= 0) {
+        showError("Please enter a valid wrist circumference in inches.");
+        return;
+      }
+
+      const totalIn = ft * 12 + inch;
+      if (!(totalIn > 0)) {
+        showError("Height must be greater than 0.");
+        return;
+      }
+
+      heightCm = totalIn * 2.54;
+      wristCm = wristIn * 2.54;
+    } else {
+      heightCm = toNum(hCmEl.value);
+      wristCm = toNum(wCmEl.value);
+
+      if (!Number.isFinite(heightCm) || heightCm <= 0) {
+        showError("Please enter a valid height in centimeters.");
+        return;
+      }
+      if (!Number.isFinite(wristCm) || wristCm <= 0) {
+        showError("Please enter a valid wrist circumference in centimeters.");
+        return;
+      }
+    }
+
+    if (heightCm < 100 || heightCm > 260) {
+      showError("Please check height. Enter a realistic value.");
+      return;
+    }
+    if (wristCm < 8 || wristCm > 30) {
+      showError("Please check wrist circumference. Enter a realistic value.");
+      return;
+    }
+
+    const ratio = heightCm / wristCm;
+    const frame = classify(ratio, sex);
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Frame size estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Estimated frame", `<span>${escapeHtml(frame)}</span>`, `${escapeHtml(sex === "female" ? "Female reference" : "Male reference")}`)}
+        ${card("Height-to-wrist ratio", `<span>${escapeHtml(fmt(ratio, 3))}</span>`, `${escapeHtml(fmt(heightCm))} cm / ${escapeHtml(fmt(wristCm))} cm`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(frame)}
+      </div>
+      <div class="note" style="margin-top:8px;">Height: <strong>${escapeHtml(fmt(heightCm))} cm</strong></div>
+      <div class="note" style="margin-top:6px;">Wrist circumference: <strong>${escapeHtml(fmt(wristCm))} cm</strong></div>
+      <div class="note" style="margin-top:6px;">Height-to-wrist ratio: <strong>${escapeHtml(fmt(ratio, 3))}</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated frame size: <strong>${escapeHtml(frame)}</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    sexEl.value = "female";
+    hCmEl.value = "";
+    hFtEl.value = "";
+    hInEl.value = "";
+    wCmEl.value = "";
+    wInEl.value = "";
+    setUnitUI();
+    resetOutputs();
+    hCmEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

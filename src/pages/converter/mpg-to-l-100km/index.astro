@@ -1,0 +1,153 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "MPG to L/100 km",
+  description:
+    "Convert US MPG to liters per 100 kilometers with validation, result cards, reference table, and FAQ schema.",
+  href: "/converter/mpg-to-l-100km/",
+  order: 400,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/mpg-to-l-100km/";
+const FACTOR = 235.214583;
+
+const faqs = [
+  { q: "How do you convert MPG to L/100 km?", a: "Divide 235.214583 by MPG." },
+  { q: "Does this use US MPG?", a: "Yes. This converter uses US miles per gallon." },
+  { q: "Why does higher MPG mean lower L/100 km?", a: "Because MPG measures distance per fuel unit, while L/100 km measures fuel used per distance." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`MPG to L/100 km Converter — ${SITE_NAME}`}
+  description="Convert US MPG to liters per 100 kilometers with validation, accessible UX, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="MPG to L/100 km Converter"
+  intro="Convert US miles per gallon (MPG) to liters per 100 kilometers."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <div slot="tool" data-tool="mpg-to-l100">
+    <div class="form" role="form" aria-describedby="m2l_help m2l_privacy">
+      <div class="field">
+        <label for="m2l_mpg">Fuel economy (MPG)</label>
+        <input id="m2l_mpg" type="number" inputmode="decimal" placeholder="e.g., 30" aria-describedby="m2l_help" />
+        <p class="note" id="m2l_help" style="margin-top:6px;">
+          Uses US MPG. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+      <div class="field">
+        <label for="m2l_round">Rounding</label>
+        <select id="m2l_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="m2l_convert">Convert</button>
+        <button class="btn secondary" type="button" id="m2l_swap">Swap (L/100 km → MPG)</button>
+        <button class="btn secondary" type="button" id="m2l_clear">Clear</button>
+      </div>
+      <div class="result" id="m2l_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="m2l_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="m2l_cards" style="display:none; margin-top:12px;"></div>
+      <p class="note" id="m2l_privacy" style="margin-top:10px;">Privacy: runs locally in your browser. No inputs are stored or transmitted.</p>
+    </div>
+  </div>
+  <div slot="how"><p class="note"><strong>L/100 km = 235.214583 ÷ MPG</strong></p></div>
+  <div slot="examples">
+    <ul>
+      <li><strong>30 MPG</strong> ≈ <strong>7.840 L/100 km</strong></li>
+      <li><strong>40 MPG</strong> ≈ <strong>5.880 L/100 km</strong></li>
+      <li><strong>20 MPG</strong> ≈ <strong>11.761 L/100 km</strong></li>
+    </ul>
+  </div>
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/l-100km-to-mpg/">L/100 km to MPG</a></li>
+      <li><a href="/converter/fuel-consumption-converter/">Fuel Consumption Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",function(){
+  const inEl=document.getElementById("m2l_mpg");
+  const roundEl=document.getElementById("m2l_round");
+  const convertBtn=document.getElementById("m2l_convert");
+  const swapBtn=document.getElementById("m2l_swap");
+  const clearBtn=document.getElementById("m2l_clear");
+  const errEl=document.getElementById("m2l_error");
+  const outEl=document.getElementById("m2l_result");
+  const cardsEl=document.getElementById("m2l_cards");
+  if(!inEl||!roundEl||!convertBtn||!swapBtn||!clearBtn||!errEl||!outEl||!cardsEl) return;
+
+  const FACTOR=235.214583;
+  let modeMpgToL=true;
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){ if(!Number.isFinite(x)) return "—"; const ax=Math.abs(x); if(ax===0) return "0"; if(ax>=1e9||ax<1e-8) return x.toExponential(6); return String(Number(x.toPrecision(10))); }
+  function fmt(x){ if(!Number.isFinite(x)) return "—"; const r=String(roundEl.value); if(r==="auto") return fmtSmart(x); const d=parseInt(r,10); return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function badge(text){ return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`; }
+
+  function setUi(){
+    const label=document.querySelector('label[for="m2l_mpg"]');
+    if(!label) return;
+    if(modeMpgToL){ label.textContent="Fuel economy (MPG)"; inEl.placeholder="e.g., 30"; swapBtn.textContent="Swap (L/100 km → MPG)"; }
+    else { label.textContent="Fuel consumption (L/100 km)"; inEl.placeholder="e.g., 7.8"; swapBtn.textContent="Swap (MPG → L/100 km)"; }
+  }
+
+  function compute(){
+    clearError(); cardsEl.style.display="none";
+    const raw=toNum(inEl.value);
+    if(!Number.isFinite(raw)){ outEl.textContent="Please enter a valid value."; return; }
+    if(raw<=0){ outEl.textContent="Please enter a value greater than 0."; return; }
+
+    let mpg,l100;
+    if(modeMpgToL){ mpg=raw; l100=FACTOR/mpg; }
+    else { l100=raw; mpg=FACTOR/l100; }
+
+    outEl.innerHTML=modeMpgToL
+      ? `<strong>Result:</strong> ${fmt(l100)} L/100 km<br/><span class="note">${fmtSmart(mpg)} MPG = ${fmt(l100)} L/100 km</span>`
+      : `<strong>Result:</strong> ${fmt(mpg)} MPG<br/><span class="note">${fmtSmart(l100)} L/100 km = ${fmt(mpg)} MPG</span>`;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(modeMpgToL ? "MPG → L/100 km" : "L/100 km → MPG")}
+      ${badge("US MPG")}
+      ${badge(modeMpgToL ? (mpg >= 40 ? "Efficient vehicle" : mpg >= 25 ? "Typical economy" : "Higher fuel use") : (l100 <= 6 ? "Efficient vehicle" : l100 <= 10 ? "Typical economy" : "Higher fuel use"))}
+    </div>`;
+  }
+
+  function reset(){
+    clearError(); inEl.value=""; roundEl.value="3"; outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none"; cardsEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){ modeMpgToL=!modeMpgToL; setUi(); if(String(inEl.value||"").trim()) compute(); else reset(); });
+  clearBtn.addEventListener("click",function(){ modeMpgToL=true; setUi(); reset(); });
+  roundEl.addEventListener("change",function(){ if(String(inEl.value||"").trim()) compute(); });
+  inEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+
+  setUi();
+});
+</script>

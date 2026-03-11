@@ -1,0 +1,219 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fuel Consumption Converter",
+  description:
+    "Convert fuel consumption between MPG and L/100 km with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/fuel-consumption-converter/",
+  order: 390,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/fuel-consumption-converter/";
+
+const faqs = [
+  { q: "How do you convert MPG to L/100 km?", a: "Use 235.214583 divided by MPG." },
+  { q: "How do you convert L/100 km to MPG?", a: "Use 235.214583 divided by L/100 km." },
+  { q: "Which MPG standard is used?", a: "This tool uses US MPG." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Fuel Consumption Converter — ${SITE_NAME}`}
+  description="Convert fuel consumption between MPG and L/100 km with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fuel Consumption Converter"
+  intro="Convert between US miles per gallon (MPG) and liters per 100 kilometers (L/100 km)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <div slot="tool" data-tool="fuel-consumption-converter">
+    <div class="form" role="form" aria-describedby="fc_help fc_privacy">
+      <div class="field">
+        <label for="fc_value">Value</label>
+        <input id="fc_value" type="number" inputmode="decimal" placeholder="e.g., 30" aria-describedby="fc_help" />
+        <p class="note" id="fc_help" style="margin-top:6px;">
+          Uses US MPG. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+        </p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field">
+          <label for="fc_from">From</label>
+          <select id="fc_from">
+            <option value="mpg" selected>MPG (US)</option>
+            <option value="l100">L/100 km</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fc_to">To</label>
+          <select id="fc_to">
+            <option value="l100" selected>L/100 km</option>
+            <option value="mpg">MPG (US)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fc_round">Rounding</label>
+        <select id="fc_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="fc_swap">Swap</button>
+        <button class="btn secondary" type="button" id="fc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="fc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="fc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Reference</th><th scope="col">MPG</th><th scope="col">L/100 km</th></tr></thead>
+          <tbody id="fc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fc_privacy" style="margin-top:10px;">Privacy: runs locally in your browser. No inputs are stored or transmitted.</p>
+    </div>
+  </div>
+
+  <div slot="how"><p class="note"><strong>L/100 km = 235.214583 ÷ MPG</strong><br /><strong>MPG = 235.214583 ÷ L/100 km</strong></p></div>
+  <div slot="examples">
+    <ul>
+      <li><strong>30 MPG</strong> ≈ <strong>7.84 L/100 km</strong></li>
+      <li><strong>20 MPG</strong> ≈ <strong>11.76 L/100 km</strong></li>
+      <li><strong>5 L/100 km</strong> ≈ <strong>47.04 MPG</strong></li>
+    </ul>
+  </div>
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/mpg-to-l-100km/">MPG to L/100 km</a></li>
+      <li><a href="/converter/l-100km-to-mpg/">L/100 km to MPG</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",function(){
+  const valueEl=document.getElementById("fc_value");
+  const fromEl=document.getElementById("fc_from");
+  const toEl=document.getElementById("fc_to");
+  const roundEl=document.getElementById("fc_round");
+  const convertBtn=document.getElementById("fc_convert");
+  const swapBtn=document.getElementById("fc_swap");
+  const clearBtn=document.getElementById("fc_clear");
+  const errEl=document.getElementById("fc_error");
+  const outEl=document.getElementById("fc_result");
+  const cardsEl=document.getElementById("fc_cards");
+  const tbodyEl=document.getElementById("fc_tbody");
+  if(!valueEl||!fromEl||!toEl||!roundEl||!convertBtn||!swapBtn||!clearBtn||!errEl||!outEl||!cardsEl||!tbodyEl) return;
+
+  const FACTOR=235.214583;
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){ if(!Number.isFinite(x)) return "—"; const ax=Math.abs(x); if(ax===0) return "0"; if(ax>=1e9||ax<1e-8) return x.toExponential(6); return String(Number(x.toPrecision(10))); }
+  function fmt(x){ if(!Number.isFinite(x)) return "—"; const r=String(roundEl.value); if(r==="auto") return fmtSmart(x); const d=parseInt(r,10); return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function badge(text){ return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`; }
+
+  function convert(v,fromU,toU){
+    if(v<=0) return NaN;
+    if(fromU===toU) return v;
+    if(fromU==="mpg"&&toU==="l100") return FACTOR/v;
+    if(fromU==="l100"&&toU==="mpg") return FACTOR/v;
+    return NaN;
+  }
+
+  function fillTable(inputValue, fromU){
+    tbodyEl.innerHTML="";
+    const refs=[20,30,40,50];
+    refs.forEach((mpg)=>{
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      const td3=document.createElement("td");
+      td1.textContent=`${mpg} MPG reference`;
+      td2.textContent=String(mpg);
+      td3.textContent=fmtSmart(FACTOR/mpg);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    });
+
+    if(Number.isFinite(inputValue)&&inputValue>0){
+      const tr=document.createElement("tr");
+      tr.style.fontWeight="900";
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      const td3=document.createElement("td");
+      const mpg=fromU==="mpg"?inputValue:FACTOR/inputValue;
+      td1.textContent="Your input";
+      td2.textContent=fmtSmart(mpg);
+      td3.textContent=fmtSmart(FACTOR/mpg);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute(){
+    clearError(); cardsEl.style.display="none"; tbodyEl.innerHTML="";
+    const raw=toNum(valueEl.value);
+    const fromU=String(fromEl.value);
+    const toU=String(toEl.value);
+
+    if(!Number.isFinite(raw)){ outEl.textContent="Please enter a valid value."; return; }
+    if(raw<=0){ outEl.textContent="Please enter a value greater than 0."; return; }
+
+    const out=convert(raw,fromU,toU);
+    if(!Number.isFinite(out)){ showError("Could not convert with these values."); outEl.textContent="Result will appear here."; return; }
+
+    outEl.innerHTML=`<strong>Result:</strong> ${fmt(out)} ${toU === "mpg" ? "MPG" : "L/100 km"}<br/><span class="note">${fmtSmart(raw)} ${fromU === "mpg" ? "MPG" : "L/100 km"} = ${fmt(out)} ${toU === "mpg" ? "MPG" : "L/100 km"}</span>`;
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(fromU === "mpg" ? "MPG → L/100 km" : "L/100 km → MPG")}
+      ${badge("US MPG")}
+      ${badge(fromU==="mpg" ? (raw >= 40 ? "Efficient vehicle" : raw >= 25 ? "Typical economy" : "Higher fuel use") : (raw <= 6 ? "Efficient vehicle" : raw <= 10 ? "Typical economy" : "Higher fuel use"))}
+    </div>`;
+    fillTable(raw,fromU);
+  }
+
+  function reset(){
+    clearError();
+    valueEl.value="";
+    fromEl.value="mpg";
+    toEl.value="l100";
+    roundEl.value="3";
+    outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none"; cardsEl.innerHTML=""; tbodyEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){ const a=fromEl.value; fromEl.value=toEl.value; toEl.value=a; if(String(valueEl.value||"").trim()) compute(); });
+  clearBtn.addEventListener("click",reset);
+  fromEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  toEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  roundEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  valueEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+});
+</script>

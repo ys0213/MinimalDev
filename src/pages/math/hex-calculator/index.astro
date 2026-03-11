@@ -1,0 +1,307 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hex Calculator",
+  description:
+    "Calculate hexadecimal numbers with addition, subtraction, multiplication, and division. Includes validation, result cards, and FAQ schema.",
+  href: "/math/hex-calculator/",
+  order: 240,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/hex-calculator/";
+
+const faqs = [
+  {
+    q: "What is hexadecimal?",
+    a: "Hexadecimal is a base-16 number system using digits 0-9 and letters A-F.",
+  },
+  {
+    q: "Why is hexadecimal used?",
+    a: "Hexadecimal is commonly used in programming, memory addresses, machine data, and color codes because it is compact and maps cleanly to binary.",
+  },
+  {
+    q: "Does this calculator also show decimal values?",
+    a: "Yes. It shows both the hexadecimal result and the decimal equivalent.",
+  },
+  {
+    q: "How does division work here?",
+    a: "This calculator uses integer division, so it returns the quotient rounded down toward zero for non-negative values using JavaScript integer truncation behavior.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  }
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Hex Calculator — ${SITE_NAME}`}
+  description="Hexadecimal arithmetic calculator with validation, result cards, decimal conversion, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hex Calculator"
+  intro="Perform arithmetic using hexadecimal numbers and view the result in both hexadecimal and decimal."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hex-calculator">
+    <div class="form" role="form" aria-describedby="hex_help hex_privacy">
+      <div class="field">
+        <label for="hex_a">Hex A</label>
+        <input id="hex_a" placeholder="e.g., A3" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="hex_b">Hex B</label>
+        <input id="hex_b" placeholder="e.g., FF" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="hex_op">Operation</label>
+        <select id="hex_op">
+          <option value="+">Add (+)</option>
+          <option value="-">Subtract (−)</option>
+          <option value="*">Multiply (×)</option>
+          <option value="/">Divide (÷)</option>
+        </select>
+      </div>
+
+      <p class="note" id="hex_help" style="margin-top:6px;">
+        Enter valid hexadecimal numbers using digits 0-9 and letters A-F. Case does not matter.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hex_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="hex_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hex_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="hex_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="hex_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hex_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hex_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts both hexadecimal inputs to decimal, performs the selected arithmetic operation,
+      and then converts the result back to hexadecimal.
+    </p>
+
+    <p class="note">
+      Example:
+      <br />
+      <strong>A3</strong> in hex = <strong>163</strong> in decimal
+      <br />
+      <strong>FF</strong> in hex = <strong>255</strong> in decimal
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>A + 5</strong> → <strong>F</strong></li>
+      <li><strong>10 + 10</strong> → <strong>20</strong> in hex</li>
+      <li><strong>FF − 1</strong> → <strong>FE</strong></li>
+      <li><strong>A × 10</strong> → <strong>A0</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/binary-calculator/">Binary Calculator</a></li>
+      <li><a href="/math/number-base-converter/">Number Base Converter</a></li>
+      <li><a href="/math/scientific-calculator/">Scientific Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("hex_a");
+  const bEl = document.getElementById("hex_b");
+  const opEl = document.getElementById("hex_op");
+  const calcBtn = document.getElementById("hex_calc");
+  const clearBtn = document.getElementById("hex_clear");
+  const errorEl = document.getElementById("hex_error");
+  const resultEl = document.getElementById("hex_result");
+  const cardsEl = document.getElementById("hex_cards");
+  const tbodyEl = document.getElementById("hex_tbody");
+
+  if (!aEl || !bEl || !opEl || !calcBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function isValidHex(s) {
+    return /^[0-9a-fA-F]+$/.test(s);
+  }
+
+  function toSignedHexString(n) {
+    if (!Number.isFinite(n)) return "—";
+    if (n < 0) return "-" + Math.abs(n).toString(16).toUpperCase();
+    return n.toString(16).toUpperCase();
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const aRaw = String(aEl.value || "").trim();
+    const bRaw = String(bEl.value || "").trim();
+    const op = String(opEl.value || "+");
+
+    if (!aRaw || !bRaw) {
+      showError("Please enter both hexadecimal values.");
+      return;
+    }
+
+    if (!isValidHex(aRaw) || !isValidHex(bRaw)) {
+      showError("Enter valid hexadecimal numbers using only 0-9 and A-F.");
+      return;
+    }
+
+    const A = parseInt(aRaw, 16);
+    const B = parseInt(bRaw, 16);
+
+    if (!Number.isFinite(A) || !Number.isFinite(B)) {
+      showError("Could not parse one or both hexadecimal values.");
+      return;
+    }
+
+    if (op === "/" && B === 0) {
+      showError("Division by zero is not allowed.");
+      return;
+    }
+
+    let r;
+    if (op === "+") r = A + B;
+    else if (op === "-") r = A - B;
+    else if (op === "*") r = A * B;
+    else if (op === "/") r = Math.trunc(A / B);
+    else {
+      showError("Invalid operation selected.");
+      return;
+    }
+
+    const hex = toSignedHexString(r);
+    const opLabel =
+      op === "+" ? "Addition" :
+      op === "-" ? "Subtraction" :
+      op === "*" ? "Multiplication" :
+      "Division";
+
+    resultEl.innerHTML =
+      "<strong>Hex result:</strong> " + hex +
+      "<br/><span class='note'>Decimal result: " + r.toLocaleString() + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(opLabel) +
+      badge("A = " + A.toLocaleString()) +
+      badge("B = " + B.toLocaleString()) +
+      badge(r < 0 ? "Negative result" : "Non-negative result") +
+      "</div>";
+
+    fillTable([
+      ["Hex A", aRaw.toUpperCase()],
+      ["Decimal A", A.toLocaleString()],
+      ["Hex B", bRaw.toUpperCase()],
+      ["Decimal B", B.toLocaleString()],
+      ["Operation", op],
+      ["Result (hex)", hex],
+      ["Result (decimal)", r.toLocaleString()],
+    ]);
+  }
+
+  function reset() {
+    aEl.value = "";
+    bEl.value = "";
+    opEl.value = "+";
+    clearOutput();
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

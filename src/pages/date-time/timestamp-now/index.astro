@@ -1,0 +1,217 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Timestamp Now",
+  description:
+    "Free current timestamp tool. Get the current Unix timestamp in seconds and milliseconds, plus UTC and local date/time.",
+  href: "/date-time/timestamp-now/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/timestamp-now/";
+
+const faqs = [
+  {
+    q: "What does this tool show?",
+    a: "It shows the current Unix timestamp in seconds and milliseconds, plus the current UTC and local time.",
+  },
+  {
+    q: "Does it update automatically?",
+    a: "Yes. The display updates live in your browser.",
+  },
+  {
+    q: "Can I copy the timestamp?",
+    a: "Yes. You can copy the current Unix timestamp values directly from the tool.",
+  },
+  {
+    q: "What is the difference between seconds and milliseconds?",
+    a: "Seconds are whole seconds since the Unix epoch, while milliseconds are thousandths of a second since the same epoch.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. The tool runs entirely in your browser and does not store or transmit data.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Timestamp Now — ${SITE_NAME}`}
+  description="Get the current Unix timestamp in seconds and milliseconds, plus live UTC and local date/time."
+  canonicalPath={CANONICAL_PATH}
+  h1="Timestamp Now"
+  intro="View the current Unix timestamp in seconds and milliseconds, along with the current UTC and local time."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="timestamp-now">
+    <div class="form" role="form" aria-describedby="tn_help tn_privacy">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tn_refresh">Refresh now</button>
+        <button class="btn secondary" type="button" id="tn_copy_sec">Copy seconds</button>
+        <button class="btn secondary" type="button" id="tn_copy_ms">Copy milliseconds</button>
+      </div>
+
+      <div class="result" id="tn_result" role="status" style="margin-top:12px;">
+        Loading current timestamp…
+      </div>
+
+      <div class="result" id="tn_cards" style="margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="tn_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tn_help" style="margin-top:10px;">
+        The values update in your browser using the current system clock.
+      </p>
+
+      <p class="note" id="tn_privacy" style="margin-top:10px;">
+        Privacy: this tool runs locally in your browser. No timestamps are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool reads the current time from your browser environment, then displays Unix seconds, Unix milliseconds,
+      UTC time, local time, and ISO 8601 format for quick copy/paste into logs, APIs, or development tools.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Use Unix seconds for many API timestamps</li>
+      <li>Use Unix milliseconds for JavaScript-style time values</li>
+      <li>Use ISO 8601 when you need a readable machine-friendly format</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/unix-time-to-date/">Unix Time to Date</a></li>
+      <li><a href="/date-time/time-zone-converter/">Time Zone Converter</a></li>
+      <li><a href="/date-time/unix-timestamp-converter/">Unix Timestamp Converter</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const refreshBtn = document.getElementById("tn_refresh");
+  const copySecBtn = document.getElementById("tn_copy_sec");
+  const copyMsBtn = document.getElementById("tn_copy_ms");
+  const outEl = document.getElementById("tn_result");
+  const cardsEl = document.getElementById("tn_cards");
+  const tbodyEl = document.getElementById("tn_tbody");
+
+  if (!refreshBtn || !copySecBtn || !copyMsBtn || !outEl || !cardsEl || !tbodyEl) return;
+
+  let lastSec = "";
+  let lastMs = "";
+
+  function fmtUTC(d) {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    const ss = String(d.getUTCSeconds()).padStart(2, "0");
+    return y + "-" + m + "-" + day + " " + hh + ":" + mm + ":" + ss + " UTC";
+  }
+
+  function fmtLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return y + "-" + m + "-" + day + " " + hh + ":" + mm + ":" + ss;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function renderTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function updateView() {
+    const now = new Date();
+    const ms = Date.now();
+    const sec = Math.floor(ms / 1000);
+
+    lastSec = String(sec);
+    lastMs = String(ms);
+
+    outEl.innerHTML =
+      "<strong>Current Unix timestamp (seconds):</strong> " + lastSec + "<br/>" +
+      "<strong>Current Unix timestamp (milliseconds):</strong> " + lastMs;
+
+    cardsEl.innerHTML =
+      badge("Live current time") + " " +
+      badge("Seconds + milliseconds") + " " +
+      badge("UTC + local shown");
+
+    renderTable([
+      ["Unix seconds", lastSec],
+      ["Unix milliseconds", lastMs],
+      ["UTC date/time", fmtUTC(now)],
+      ["Local date/time", fmtLocal(now)],
+      ["ISO 8601", now.toISOString()],
+      ["Timezone offset (minutes)", String(-now.getTimezoneOffset())],
+    ]);
+  }
+
+  async function copyText(value) {
+    try {
+      await navigator.clipboard.writeText(value);
+      outEl.innerHTML = "<strong>Copied:</strong> " + value;
+    } catch (_) {
+      outEl.innerHTML = "<strong>Copy failed.</strong> Your browser blocked clipboard access.";
+    }
+  }
+
+  refreshBtn.addEventListener("click", updateView);
+  copySecBtn.addEventListener("click", function () { copyText(lastSec); });
+  copyMsBtn.addEventListener("click", function () { copyText(lastMs); });
+
+  updateView();
+  setInterval(updateView, 1000);
+});
+</script>

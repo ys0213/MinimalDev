@@ -1,0 +1,339 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Running Calorie Calculator",
+  description:
+    "Estimate calories burned while running from body weight and distance, with optional duration and pace context.",
+  href: "/health/running-calorie-calculator/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/running-calorie-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates calories burned while running based on body weight and distance covered.",
+  },
+  {
+    q: "Does pace matter?",
+    a: "Yes, but this simplified model mainly estimates energy cost from body weight and distance. Duration is used for pace context.",
+  },
+  {
+    q: "Is this exact?",
+    a: "No. Actual calorie burn varies with pace, terrain, weather, efficiency, and body composition.",
+  },
+  {
+    q: "Can I use miles instead of kilometers?",
+    a: "Yes. The calculator supports both metric and imperial inputs.",
+  },
+  {
+    q: "Are my running details stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Running Calorie Calculator — ${SITE_NAME}`}
+  description="Estimate calories burned while running from body weight and distance."
+  canonicalPath={CANONICAL_PATH}
+  h1="Running Calorie Calculator"
+  intro="Estimate calories burned while running from body weight and distance. Optional duration adds pace context."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="running-calorie-calculator">
+    <div class="form" role="form" aria-describedby="rcc_help rcc_privacy">
+      <div class="field">
+        <label for="rcc_unit">Units</label>
+        <select id="rcc_unit">
+          <option value="metric" selected>Metric (kg, km)</option>
+          <option value="imperial">Imperial (lb, miles)</option>
+        </select>
+      </div>
+
+      <div class="field" id="rcc_weight_metric_field">
+        <label for="rcc_weight_kg">Weight (kg)</label>
+        <input id="rcc_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="rcc_weight_imperial_field" style="display:none;">
+        <label for="rcc_weight_lb">Weight (lb)</label>
+        <input id="rcc_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
+      </div>
+
+      <div class="field" id="rcc_distance_metric_field">
+        <label for="rcc_distance_km">Distance (km)</label>
+        <input id="rcc_distance_km" type="number" inputmode="decimal" min="0.01" placeholder="e.g., 5" />
+      </div>
+
+      <div class="field" id="rcc_distance_imperial_field" style="display:none;">
+        <label for="rcc_distance_miles">Distance (miles)</label>
+        <input id="rcc_distance_miles" type="number" inputmode="decimal" min="0.01" placeholder="e.g., 3.1" />
+      </div>
+
+      <div class="field">
+        <label for="rcc_duration_minutes">Duration (optional, minutes)</label>
+        <input id="rcc_duration_minutes" type="number" inputmode="decimal" min="0" placeholder="e.g., 30" aria-describedby="rcc_help" />
+        <p class="note" id="rcc_help" style="margin-top:6px;">
+          Duration is optional. If entered, the calculator also shows estimated pace.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rcc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="rcc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rcc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="rcc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rcc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="rcc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses a simple rule-of-thumb estimate for running energy cost:
+      <strong>about 1 kcal per kg per km</strong>.
+    </p>
+    <p class="note">
+      Optional duration is used to estimate pace, but the calorie estimate itself is mainly based on weight and distance.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>70 kg running 5 km → about 350 kcal estimate</li>
+      <li>154 lb running 3.1 miles → imperial inputs are converted internally</li>
+      <li>Add duration to estimate average pace</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/pace-calculator/">Pace Calculator</a></li>
+      <li><a href="/health/walking-calorie-calculator/">Walking Calorie Calculator</a></li>
+      <li><a href="/health/cycling-calorie-calculator/">Cycling Calorie Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("rcc_unit");
+
+  const wKgField = document.getElementById("rcc_weight_metric_field");
+  const wLbField = document.getElementById("rcc_weight_imperial_field");
+  const dKmField = document.getElementById("rcc_distance_metric_field");
+  const dMiField = document.getElementById("rcc_distance_imperial_field");
+
+  const wKgEl = document.getElementById("rcc_weight_kg");
+  const wLbEl = document.getElementById("rcc_weight_lb");
+  const dKmEl = document.getElementById("rcc_distance_km");
+  const dMiEl = document.getElementById("rcc_distance_miles");
+  const durEl = document.getElementById("rcc_duration_minutes");
+
+  const calcBtn = document.getElementById("rcc_calc");
+  const clearBtn = document.getElementById("rcc_clear");
+  const errEl = document.getElementById("rcc_error");
+  const outEl = document.getElementById("rcc_result");
+  const detailsEl = document.getElementById("rcc_details");
+
+  if (!unitEl || !wKgField || !wLbField || !dKmField || !dMiField || !wKgEl || !wLbEl || !dKmEl || !dMiEl || !durEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    wKgField.style.display = imp ? "none" : "block";
+    wLbField.style.display = imp ? "block" : "none";
+    dKmField.style.display = imp ? "none" : "block";
+    dMiField.style.display = imp ? "block" : "none";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    let weightKg = NaN;
+    let distanceKm = NaN;
+
+    if (unit === "imperial") {
+      const weightLb = toNum(wLbEl.value);
+      const distanceMi = toNum(dMiEl.value);
+
+      if (!Number.isFinite(weightLb) || weightLb <= 0 || weightLb > 1500) {
+        showError("Please enter a valid weight in pounds.");
+        return;
+      }
+      if (!Number.isFinite(distanceMi) || distanceMi <= 0 || distanceMi > 500) {
+        showError("Please enter a valid running distance in miles.");
+        return;
+      }
+
+      weightKg = weightLb * 0.45359237;
+      distanceKm = distanceMi * 1.609344;
+    } else {
+      weightKg = toNum(wKgEl.value);
+      distanceKm = toNum(dKmEl.value);
+
+      if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 700) {
+        showError("Please enter a valid weight in kilograms.");
+        return;
+      }
+      if (!Number.isFinite(distanceKm) || distanceKm <= 0 || distanceKm > 1000) {
+        showError("Please enter a valid running distance in kilometers.");
+        return;
+      }
+    }
+
+    const durationRaw = String(durEl.value || "").trim();
+    const durationMin = durationRaw ? toNum(durEl.value) : NaN;
+
+    if (durationRaw && (!Number.isFinite(durationMin) || durationMin <= 0 || durationMin > 100000)) {
+      showError("Please enter a valid duration in minutes, or leave it blank.");
+      return;
+    }
+
+    const calories = weightKg * distanceKm;
+
+    let paceText = "Not calculated";
+    if (Number.isFinite(durationMin)) {
+      if (unit === "imperial") {
+        const miles = distanceKm / 1.609344;
+        paceText = `${fmt(durationMin / miles, 2)} min/mile`;
+      } else {
+        paceText = `${fmt(durationMin / distanceKm, 2)} min/km`;
+      }
+    }
+
+    const runLabel =
+      distanceKm < 3 ? "Short run" :
+      distanceKm < 10 ? "Moderate run" :
+      "Longer run";
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Running estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Estimated calories", `<span>${escapeHtml(fmt(calories, 0))} kcal</span>`, `${escapeHtml(fmt(weightKg, 1))} kg over ${escapeHtml(fmt(distanceKm, 2))} km`)}
+        ${card("Estimated pace", `<span>${escapeHtml(paceText)}</span>`, Number.isFinite(durationMin) ? `${escapeHtml(fmt(durationMin, 2))} min duration` : "Duration not entered")}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(runLabel)} ${badge(Number.isFinite(durationMin) ? "Pace shown" : "Distance-based estimate")}
+      </div>
+      <div class="note" style="margin-top:8px;">Weight: <strong>${escapeHtml(fmt(weightKg, 2))} kg</strong></div>
+      <div class="note" style="margin-top:6px;">Distance: <strong>${escapeHtml(fmt(distanceKm, 2))} km</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated calories: <strong>${escapeHtml(fmt(calories, 0))} kcal</strong></div>
+      <div class="note" style="margin-top:6px;">Duration: <strong>${Number.isFinite(durationMin) ? escapeHtml(fmt(durationMin, 2)) + " min" : "Not entered"}</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated pace: <strong>${escapeHtml(paceText)}</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    wKgEl.value = "";
+    wLbEl.value = "";
+    dKmEl.value = "";
+    dMiEl.value = "";
+    durEl.value = "";
+    setUnitUI();
+    resetOutputs();
+    wKgEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

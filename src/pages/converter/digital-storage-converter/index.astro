@@ -1,0 +1,234 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Digital Storage Converter",
+  description:
+    "Convert digital storage units instantly (bits, bytes, KB, MB, GB, TB). Validated, accessible UX with result cards, quick table, and FAQ schema.",
+  href: "/converter/digital-storage-converter/",
+  order: 420,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/digital-storage-converter/";
+
+const units = [
+  { key: "bit", label: "Bits (bit)" },
+  { key: "byte", label: "Bytes (B)" },
+  { key: "kb", label: "Kilobytes (KB)" },
+  { key: "mb", label: "Megabytes (MB)" },
+  { key: "gb", label: "Gigabytes (GB)" },
+  { key: "tb", label: "Terabytes (TB)" },
+];
+
+const faqs = [
+  { q: "How many bits are in a byte?", a: "There are 8 bits in 1 byte." },
+  { q: "Does this use decimal or binary storage units?", a: "This page uses decimal units: 1 KB = 1000 bytes, 1 MB = 1000 KB, and so on." },
+  { q: "Can I convert negative values?", a: "The tool can handle them mathematically, but storage sizes are usually non-negative." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Digital Storage Converter — ${SITE_NAME}`}
+  description="Convert bits, bytes, KB, MB, GB, and TB with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Digital Storage Converter"
+  intro="Convert between common digital storage units such as bits, bytes, KB, MB, GB, and TB."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <div slot="tool" data-tool="digital-storage-converter">
+    <div class="form" role="form" aria-describedby="ds_help ds_privacy">
+      <div class="field">
+        <label for="ds_value">Value</label>
+        <input id="ds_value" type="number" inputmode="decimal" placeholder="e.g., 1024" aria-describedby="ds_help" />
+        <p class="note" id="ds_help" style="margin-top:6px;">
+          Decimal units are used here: 1 KB = 1000 bytes. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="ds_from">From</label>
+          <select id="ds_from">
+            {units.map((u)=><option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+        <div class="field">
+          <label for="ds_to">To</label>
+          <select id="ds_to">
+            {units.map((u)=><option value={u.key}>{u.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ds_round">Rounding</label>
+        <select id="ds_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="8">8 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ds_convert">Convert</button>
+        <button class="btn secondary" type="button" id="ds_swap">Swap</button>
+        <button class="btn secondary" type="button" id="ds_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ds_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ds_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ds_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Unit</th><th scope="col">Equivalent</th></tr></thead>
+          <tbody id="ds_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ds_privacy" style="margin-top:10px;">Privacy: runs locally in your browser. No inputs are stored or transmitted.</p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses <strong>bytes</strong> as a base unit and decimal prefixes:
+      <br />
+      <strong>1 byte = 8 bits</strong>
+      <br />
+      <strong>1 KB = 1000 bytes</strong>
+      <br />
+      <strong>1 MB = 1000 KB</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>8 bits</strong> = <strong>1 byte</strong></li>
+      <li><strong>1000 bytes</strong> = <strong>1 KB</strong></li>
+      <li><strong>1 GB</strong> = <strong>1000 MB</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/bytes-converter/">Bytes Converter</a></li>
+      <li><a href="/converter/data/">Data</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",function(){
+  const valueEl=document.getElementById("ds_value");
+  const fromEl=document.getElementById("ds_from");
+  const toEl=document.getElementById("ds_to");
+  const roundEl=document.getElementById("ds_round");
+  const convertBtn=document.getElementById("ds_convert");
+  const swapBtn=document.getElementById("ds_swap");
+  const clearBtn=document.getElementById("ds_clear");
+  const errEl=document.getElementById("ds_error");
+  const outEl=document.getElementById("ds_result");
+  const cardsEl=document.getElementById("ds_cards");
+  const tbodyEl=document.getElementById("ds_tbody");
+  if(!valueEl||!fromEl||!toEl||!roundEl||!convertBtn||!swapBtn||!clearBtn||!errEl||!outEl||!cardsEl||!tbodyEl) return;
+
+  const TO_BYTE={
+    bit:1/8,
+    byte:1,
+    kb:1000,
+    mb:1000000,
+    gb:1000000000,
+    tb:1000000000000
+  };
+
+  const LABEL={
+    bit:"Bits (bit)",
+    byte:"Bytes (B)",
+    kb:"Kilobytes (KB)",
+    mb:"Megabytes (MB)",
+    gb:"Gigabytes (GB)",
+    tb:"Terabytes (TB)"
+  };
+
+  const ORDER=["bit","byte","kb","mb","gb","tb"];
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){ if(!Number.isFinite(x)) return "—"; const ax=Math.abs(x); if(ax===0) return "0"; if(ax>=1e15||ax<1e-10) return x.toExponential(6); return String(Number(x.toPrecision(10))); }
+  function fmt(x){ if(!Number.isFinite(x)) return "—"; const r=String(roundEl.value); if(r==="auto") return fmtSmart(x); const d=parseInt(r,10); return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function badge(text){ return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`; }
+  function convert(v,fromU,toU){ return (v*TO_BYTE[fromU])/TO_BYTE[toU]; }
+
+  function buildTable(v,fromU){
+    tbodyEl.innerHTML="";
+    ORDER.forEach((u)=>{
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=LABEL[u];
+      td2.textContent=fmtSmart(convert(v,fromU,u));
+      tr.appendChild(td1); tr.appendChild(td2); tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute(){
+    clearError(); cardsEl.style.display="none"; tbodyEl.innerHTML="";
+    const raw=toNum(valueEl.value);
+    const fromU=String(fromEl.value);
+    const toU=String(toEl.value);
+
+    if(!Number.isFinite(raw)){ outEl.textContent="Please enter a valid storage value."; return; }
+    if(Math.abs(raw)>1e18){ showError("Value is too large for reliable display."); outEl.textContent="Result will appear here."; return; }
+
+    const out=convert(raw,fromU,toU);
+    const bytes=raw*TO_BYTE[fromU];
+
+    outEl.innerHTML=`<strong>Result:</strong> ${fmt(out)} ${toU}<br/><span class="note">${fmtSmart(raw)} ${fromU} = ${fmtSmart(bytes)} bytes = ${fmtSmart(out)} ${toU}</span>`;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge("From: "+fromU)}
+      ${badge("To: "+toU)}
+      ${badge("Base: bytes")}
+      ${badge(Math.abs(bytes)<1000 ? "Tiny size" : Math.abs(bytes)<1000000 ? "Small size" : Math.abs(bytes)<1000000000 ? "Medium size" : "Large size")}
+    </div>`;
+
+    buildTable(raw,fromU);
+  }
+
+  function reset(){
+    clearError();
+    valueEl.value="";
+    fromEl.value="byte";
+    toEl.value="kb";
+    roundEl.value="4";
+    outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none"; cardsEl.innerHTML=""; tbodyEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){ const a=fromEl.value; fromEl.value=toEl.value; toEl.value=a; if(String(valueEl.value||"").trim()) compute(); });
+  clearBtn.addEventListener("click",reset);
+  fromEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  toEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  roundEl.addEventListener("change",function(){ if(String(valueEl.value||"").trim()) compute(); });
+  valueEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+});
+</script>

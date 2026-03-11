@@ -1,0 +1,393 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Scientific Calculator",
+  description:
+    "Free scientific calculator with support for arithmetic, parentheses, powers, roots, trig, logs, constants, and accessible UX.",
+  href: "/math/scientific-calculator/",
+  order: 180,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/scientific-calculator/";
+
+const faqs = [
+  {
+    q: "What functions does this scientific calculator support?",
+    a: "It supports arithmetic (+, -, ×, ÷), parentheses, powers, square root, trigonometric functions, logarithms, absolute value, and constants like pi and e.",
+  },
+  {
+    q: "Does this calculator use degrees or radians for trig functions?",
+    a: "You can choose either degrees or radians. The selected mode affects sin, cos, and tan calculations.",
+  },
+  {
+    q: "Can I use keyboard input?",
+    a: "Yes. You can type directly in the expression box and press Enter or click Calculate.",
+  },
+  {
+    q: "Are my calculations stored?",
+    a: "No. All calculations run locally in your browser and are not transmitted to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Scientific Calculator — ${SITE_NAME}`}
+  description="Scientific calculator with trig, logs, roots, powers, constants, keyboard input, validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Scientific Calculator"
+  intro="Evaluate scientific expressions with arithmetic, powers, roots, trig functions, logs, parentheses, and constants. Choose degrees or radians for trig."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="scientific-calculator">
+    <div class="form" role="form" aria-describedby="sc_help sc_privacy">
+      <div class="field">
+        <label for="sc_expr">Expression</label>
+        <input
+          id="sc_expr"
+          type="text"
+          inputmode="text"
+          placeholder="e.g., sin(30) + sqrt(16) + 2^3"
+          aria-describedby="sc_help"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <p class="note" id="sc_help" style="margin-top:6px;">
+          Supported: + - * / ^ ( ) sqrt() sin() cos() tan() log() ln() abs() pi e.
+          Use <kbd>Enter</kbd> to calculate.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="sc_angle">Trig mode</label>
+          <select id="sc_angle">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sc_round">Rounding</label>
+          <select id="sc_round">
+            <option value="6" selected>6 decimals</option>
+            <option value="10">10 decimals</option>
+            <option value="14">14 decimals</option>
+            <option value="auto">Smart</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:8px;">
+        <button class="btn secondary" type="button" data-insert="(">(</button>
+        <button class="btn secondary" type="button" data-insert=")">)</button>
+        <button class="btn secondary" type="button" data-insert="^">x^y</button>
+        <button class="btn secondary" type="button" data-insert="sqrt(">sqrt</button>
+        <button class="btn secondary" type="button" data-insert="log(">log</button>
+
+        <button class="btn secondary" type="button" data-insert="sin(">sin</button>
+        <button class="btn secondary" type="button" data-insert="cos(">cos</button>
+        <button class="btn secondary" type="button" data-insert="tan(">tan</button>
+        <button class="btn secondary" type="button" data-insert="ln(">ln</button>
+        <button class="btn secondary" type="button" data-insert="abs(">abs</button>
+
+        <button class="btn secondary" type="button" data-insert="pi">π</button>
+        <button class="btn secondary" type="button" data-insert="e">e</button>
+        <button class="btn secondary" type="button" data-insert="7">7</button>
+        <button class="btn secondary" type="button" data-insert="8">8</button>
+        <button class="btn secondary" type="button" data-insert="9">9</button>
+
+        <button class="btn secondary" type="button" data-insert="4">4</button>
+        <button class="btn secondary" type="button" data-insert="5">5</button>
+        <button class="btn secondary" type="button" data-insert="6">6</button>
+        <button class="btn secondary" type="button" data-insert="*">×</button>
+        <button class="btn secondary" type="button" data-insert="/">÷</button>
+
+        <button class="btn secondary" type="button" data-insert="1">1</button>
+        <button class="btn secondary" type="button" data-insert="2">2</button>
+        <button class="btn secondary" type="button" data-insert="3">3</button>
+        <button class="btn secondary" type="button" data-insert="+">+</button>
+        <button class="btn secondary" type="button" data-insert="-">−</button>
+
+        <button class="btn secondary" type="button" data-insert="0">0</button>
+        <button class="btn secondary" type="button" data-insert=".">.</button>
+        <button class="btn secondary" type="button" id="sc_back">⌫</button>
+        <button class="btn secondary" type="button" id="sc_clear_expr">CE</button>
+        <button class="btn" type="button" id="sc_calc_grid">=</button>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sc_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="sc_clear">Clear All</button>
+      </div>
+
+      <div class="result" id="sc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sc_cards" style="display:none; margin-top:12px;"></div>
+
+      <p class="note" id="sc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No expressions are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Expressions are validated, converted into safe JavaScript math calls, and evaluated locally.
+      Trig functions use the selected angle mode. Example:
+      <br />
+      <strong>sin(30)</strong> in degree mode = <strong>0.5</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2^3 + sqrt(16)</strong> = <strong>12</strong></li>
+      <li><strong>sin(30)</strong> in degrees = <strong>0.5</strong></li>
+      <li><strong>ln(e)</strong> = <strong>1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/square-root-calculator/">Square Root Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const exprEl = document.getElementById("sc_expr");
+  const angleEl = document.getElementById("sc_angle");
+  const roundEl = document.getElementById("sc_round");
+  const calcBtn = document.getElementById("sc_calc");
+  const calcGridBtn = document.getElementById("sc_calc_grid");
+  const copyBtn = document.getElementById("sc_copy");
+  const clearBtn = document.getElementById("sc_clear");
+  const clearExprBtn = document.getElementById("sc_clear_expr");
+  const backBtn = document.getElementById("sc_back");
+  const errEl = document.getElementById("sc_error");
+  const outEl = document.getElementById("sc_result");
+  const cardsEl = document.getElementById("sc_cards");
+
+  if (!exprEl || !angleEl || !roundEl || !calcBtn || !calcGridBtn || !copyBtn || !clearBtn || !clearExprBtn || !backBtn || !errEl || !outEl || !cardsEl) return;
+
+  let lastResult = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    if (Object.is(x, -0)) x = 0;
+    const ax = Math.abs(x);
+    const r = String(roundEl.value);
+    if (r !== "auto") {
+      const d = parseInt(r, 10);
+      return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+    }
+    if (ax === 0) return "0";
+    if (ax >= 1e12 || ax < 1e-10) return x.toExponential(8);
+    return String(Number(x.toPrecision(12)));
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function insertAtCursor(text) {
+    const start = exprEl.selectionStart ?? exprEl.value.length;
+    const end = exprEl.selectionEnd ?? exprEl.value.length;
+    const before = exprEl.value.slice(0, start);
+    const after = exprEl.value.slice(end);
+    exprEl.value = before + text + after;
+    const pos = start + text.length;
+    exprEl.focus();
+    exprEl.setSelectionRange(pos, pos);
+  }
+
+  function safeEvaluate(raw) {
+    const angleMode = String(angleEl.value);
+    let s = String(raw || "").trim();
+
+    if (!s) throw new Error("Please enter an expression.");
+
+    if (s.length > 300) throw new Error("Expression is too long.");
+
+    // Normalize symbols
+    s = s.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/\s+/g, "");
+
+    // Basic allowlist
+    if (!/^[0-9+\-*/^().,a-zA-Z]+$/.test(s)) {
+      throw new Error("Expression contains unsupported characters.");
+    }
+
+    // Replace constants
+    s = s.replace(/\bpi\b/gi, "Math.PI");
+    s = s.replace(/\be\b/g, "Math.E");
+
+    // Replace functions
+    s = s.replace(/\bsqrt\(/gi, "Math.sqrt(");
+    s = s.replace(/\babs\(/gi, "Math.abs(");
+    s = s.replace(/\blog\(/gi, "Math.log10(");
+    s = s.replace(/\bln\(/gi, "Math.log(");
+
+    if (angleMode === "deg") {
+      s = s.replace(/\bsin\(/gi, "SIN_DEG(");
+      s = s.replace(/\bcos\(/gi, "COS_DEG(");
+      s = s.replace(/\btan\(/gi, "TAN_DEG(");
+    } else {
+      s = s.replace(/\bsin\(/gi, "Math.sin(");
+      s = s.replace(/\bcos\(/gi, "Math.cos(");
+      s = s.replace(/\btan\(/gi, "Math.tan(");
+    }
+
+    // Power operator
+    s = s.replace(/\^/g, "**");
+
+    // Disallow obviously dangerous tokens after transformation
+    if (/[^0-9+\-*/().,*A-Za-z_]/.test(s)) {
+      throw new Error("Expression could not be parsed safely.");
+    }
+    if (/(\bwindow\b|\bdocument\b|\beval\b|\bFunction\b|\bconstructor\b)/.test(s)) {
+      throw new Error("Expression contains blocked tokens.");
+    }
+
+    const SIN_DEG = (x) => Math.sin((x * Math.PI) / 180);
+    const COS_DEG = (x) => Math.cos((x * Math.PI) / 180);
+    const TAN_DEG = (x) => Math.tan((x * Math.PI) / 180);
+
+    let result;
+    try {
+      result = Function("Math", "SIN_DEG", "COS_DEG", "TAN_DEG", '"use strict"; return (' + s + ');')(Math, SIN_DEG, COS_DEG, TAN_DEG);
+    } catch (_) {
+      throw new Error("Invalid expression.");
+    }
+
+    if (!Number.isFinite(result)) {
+      throw new Error("Result is undefined or not finite.");
+    }
+
+    return result;
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+
+    const expr = String(exprEl.value || "").trim();
+    try {
+      const result = safeEvaluate(expr);
+      lastResult = String(result);
+
+      outEl.innerHTML =
+        "<strong>Result:</strong> " + fmtSmart(result) +
+        "<br/><span class='note'>Expression: " + expr.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Mode: " + (angleEl.value === "deg" ? "Degrees" : "Radians")) +
+        badge("Rounded: " + (roundEl.value === "auto" ? "Smart" : roundEl.value + " dp")) +
+        badge(Math.abs(result) < 1 ? "Small magnitude" : Math.abs(result) < 1000 ? "Typical magnitude" : "Large magnitude") +
+        "</div>";
+    } catch (e) {
+      outEl.textContent = "Result will appear here.";
+      showError(e && e.message ? e.message : "Could not evaluate expression.");
+    }
+  }
+
+  async function copyResult() {
+    clearError();
+    if (!lastResult) {
+      showError("No result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastResult);
+      outEl.innerHTML = "<strong>Copied:</strong> " + fmtSmart(Number(lastResult));
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    exprEl.value = "";
+    angleEl.value = "deg";
+    roundEl.value = "6";
+    lastResult = "";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    exprEl.focus();
+  }
+
+  document.querySelectorAll("[data-insert]").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      insertAtCursor(String(btn.getAttribute("data-insert") || ""));
+    });
+  });
+
+  backBtn.addEventListener("click", function () {
+    const start = exprEl.selectionStart ?? exprEl.value.length;
+    const end = exprEl.selectionEnd ?? exprEl.value.length;
+    if (start !== end) {
+      exprEl.value = exprEl.value.slice(0, start) + exprEl.value.slice(end);
+      exprEl.setSelectionRange(start, start);
+      return;
+    }
+    if (start > 0) {
+      exprEl.value = exprEl.value.slice(0, start - 1) + exprEl.value.slice(start);
+      exprEl.setSelectionRange(start - 1, start - 1);
+    }
+    exprEl.focus();
+  });
+
+  clearExprBtn.addEventListener("click", function () {
+    exprEl.value = "";
+    exprEl.focus();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  calcGridBtn.addEventListener("click", compute);
+  copyBtn.addEventListener("click", copyResult);
+  clearBtn.addEventListener("click", reset);
+
+  exprEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+});
+</script>

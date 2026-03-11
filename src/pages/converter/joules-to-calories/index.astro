@@ -1,0 +1,301 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Joules to Calories",
+  description:
+    "Convert joules (J) to calories (cal) instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/joules-to-calories/",
+  order: 340,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/joules-to-calories/";
+
+const faqs = [
+  {
+    q: "How do you convert joules to calories?",
+    a: "Divide joules by 4.184 to get calories.",
+  },
+  {
+    q: "What is 1000 joules in calories?",
+    a: "1000 joules equals about 239.006 calories.",
+  },
+  {
+    q: "Is this food Calories or small calories?",
+    a: "This page uses small calories (cal). Food Calories are kilocalories (kcal), which are 1,000 small calories.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Joules to Calories Converter — ${SITE_NAME}`}
+  description="Convert joules (J) to calories (cal) with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Joules to Calories Converter"
+  intro="Convert energy from joules (J) to calories (cal). Includes rounding controls, quick references, and input validation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="joules-to-calories">
+    <div class="form" role="form" aria-describedby="j2c_help j2c_privacy">
+      <div class="field">
+        <label for="j2c_j">Energy (joules)</label>
+        <input id="j2c_j" type="number" inputmode="decimal" placeholder="e.g., 1000" aria-describedby="j2c_help" />
+        <p class="note" id="j2c_help" style="margin-top:6px;">
+          Enter joules and convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="j2c_round">Rounding</label>
+        <select id="j2c_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="j2c_convert">Convert</button>
+        <button class="btn secondary" type="button" id="j2c_swap">Swap (cal → J)</button>
+        <button class="btn secondary" type="button" id="j2c_clear">Clear</button>
+      </div>
+
+      <div class="result" id="j2c_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="j2c_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="j2c_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">J</th>
+              <th scope="col">cal</th>
+            </tr>
+          </thead>
+          <tbody id="j2c_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="j2c_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>cal = J ÷ 4.184</strong><br />
+      Reverse: <strong>J = cal × 4.184</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>4.184 J</strong> = <strong>1 cal</strong></li>
+      <li><strong>100 J</strong> ≈ <strong>23.901 cal</strong></li>
+      <li><strong>1000 J</strong> ≈ <strong>239.006 cal</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/calories-to-joules/">Calories to Joules</a></li>
+      <li><a href="/converter/energy-converter/">Energy Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("j2c_j");
+  const roundEl = document.getElementById("j2c_round");
+  const convertBtn = document.getElementById("j2c_convert");
+  const swapBtn = document.getElementById("j2c_swap");
+  const clearBtn = document.getElementById("j2c_clear");
+  const errEl = document.getElementById("j2c_error");
+  const outEl = document.getElementById("j2c_result");
+  const cardsEl = document.getElementById("j2c_cards");
+  const tbodyEl = document.getElementById("j2c_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let modeJtoCal = true;
+  const J_PER_CAL = 4.184;
+
+  function toNum(v) { const x = parseFloat(String(v)); return Number.isFinite(x) ? x : NaN; }
+  function clearError() { errEl.style.display = "none"; errEl.textContent = ""; }
+  function showError(msg) { errEl.style.display = "block"; errEl.textContent = msg; }
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e9 || ax < 1e-8) return x.toExponential(6);
+    return String(Number(x.toPrecision(10)));
+  }
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    return Number(x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+  function jToCal(v) { return v / J_PER_CAL; }
+  function calToJ(v) { return v * J_PER_CAL; }
+  function classifyJ(j) {
+    const a = Math.abs(j);
+    if (a < 10) return "Very small energy";
+    if (a < 1000) return "Small energy";
+    if (a < 100000) return "Moderate energy";
+    return "Large energy";
+  }
+
+  function setUi() {
+    const label = document.querySelector('label[for="j2c_j"]');
+    if (!label) return;
+    if (modeJtoCal) {
+      label.textContent = "Energy (joules)";
+      inEl.placeholder = "e.g., 1000";
+      swapBtn.textContent = "Swap (cal → J)";
+    } else {
+      label.textContent = "Energy (calories)";
+      inEl.placeholder = "e.g., 250";
+      swapBtn.textContent = "Swap (J → cal)";
+    }
+  }
+
+  function fillTable(inputValue) {
+    tbodyEl.innerHTML = "";
+    const refs = [
+      { name: "1 calorie", j: 4.184 },
+      { name: "100 calories", j: 418.4 },
+      { name: "1000 joules", j: 1000 },
+    ];
+    if (Number.isFinite(inputValue)) {
+      const jVal = modeJtoCal ? inputValue : calToJ(inputValue);
+      refs.push({ name: "Your input", j: jVal, highlight: true });
+    }
+
+    refs.forEach((r) => {
+      const tr = document.createElement("tr");
+      if (r.highlight) tr.style.fontWeight = "900";
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      const td3 = document.createElement("td");
+      td1.textContent = r.name;
+      td2.textContent = fmtSmart(r.j);
+      td3.textContent = fmt(jToCal(r.j));
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid energy value.";
+      return;
+    }
+    if (Math.abs(raw) > 1e18) {
+      showError("Value is too large for reliable display.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    let j, cal;
+    if (modeJtoCal) {
+      j = raw;
+      cal = jToCal(j);
+    } else {
+      cal = raw;
+      j = calToJ(cal);
+    }
+
+    outEl.innerHTML = modeJtoCal
+      ? `<strong>Result:</strong> ${fmt(cal)} cal<br/><span class="note">${fmtSmart(j)} J = ${fmt(cal)} cal</span>`
+      : `<strong>Result:</strong> ${fmt(j)} J<br/><span class="note">${fmtSmart(cal)} cal = ${fmt(j)} J</span>`;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${badge(modeJtoCal ? "J → cal" : "cal → J")}
+        ${badge("Reference: 1 cal = 4.184 J")}
+        ${badge(classifyJ(j))}
+      </div>
+    `;
+
+    fillTable(raw);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    modeJtoCal = !modeJtoCal;
+    setUi();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", function () {
+    modeJtoCal = true;
+    setUi();
+    reset();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setUi();
+});
+</script>

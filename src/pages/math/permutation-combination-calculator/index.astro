@@ -1,0 +1,337 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Permutation and Combination Calculator",
+  description:
+    "Free nPr and nCr calculator. Compute permutations and combinations with validation, formulas, result cards, and FAQ schema.",
+  href: "/math/permutation-combination-calculator/",
+  order: 210,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/permutation-combination-calculator/";
+
+const faqs = [
+  {
+    q: "What is the difference between permutations and combinations?",
+    a: "Permutations count arrangements where order matters. Combinations count selections where order does not matter.",
+  },
+  {
+    q: "What are the formulas?",
+    a: "Permutations: nPr = n! / (n−r)! . Combinations: nCr = n! / (r!(n−r)!).",
+  },
+  {
+    q: "Can n or r be negative or decimal?",
+    a: "No. This calculator requires whole numbers with n ≥ 0, r ≥ 0, and r ≤ n.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser and are not sent to a server.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Permutation and Combination Calculator — ${SITE_NAME}`}
+  description="Calculate nPr and nCr with whole-number validation, formulas, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Permutation and Combination Calculator"
+  intro="Enter n and r to calculate permutations (nPr) and combinations (nCr). Useful for probability, counting, and combinatorics."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="permutation-combination-calculator">
+    <style is:inline>
+      .pc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .pc-grid-2 > * {
+        min-width: 0;
+      }
+
+      #pc_n,
+      #pc_r,
+      #pc_round {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .pc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="pc_help pc_privacy">
+      <div class="pc-grid-2">
+        <div class="field">
+          <label for="pc_n">n</label>
+          <input id="pc_n" type="number" inputmode="numeric" placeholder="e.g., 10" aria-describedby="pc_help" />
+        </div>
+
+        <div class="field">
+          <label for="pc_r">r</label>
+          <input id="pc_r" type="number" inputmode="numeric" placeholder="e.g., 3" />
+        </div>
+      </div>
+
+      <p class="note" id="pc_help" style="margin-top:6px;">
+        Enter whole numbers only. Conditions: <strong>n ≥ 0</strong>, <strong>r ≥ 0</strong>, and <strong>r ≤ n</strong>.
+      </p>
+
+      <div class="field">
+        <label for="pc_round">Display</label>
+        <select id="pc_round">
+          <option value="exact" selected>Exact integer</option>
+          <option value="grouped">Exact integer with separators</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pc_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="pc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Permutation:</strong> nPr = n! / (n−r)!
+      <br />
+      <strong>Combination:</strong> nCr = n! / (r!(n−r)!)
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>10P3</strong> = <strong>720</strong></li>
+      <li><strong>10C3</strong> = <strong>120</strong></li>
+      <li>Combinations are always less than or equal to permutations for the same n and r</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/factorial-calculator/">Factorial Calculator</a></li>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/scientific-calculator/">Scientific Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const nEl = document.getElementById("pc_n");
+  const rEl = document.getElementById("pc_r");
+  const roundEl = document.getElementById("pc_round");
+  const calcBtn = document.getElementById("pc_calc");
+  const copyBtn = document.getElementById("pc_copy");
+  const clearBtn = document.getElementById("pc_clear");
+  const errEl = document.getElementById("pc_error");
+  const outEl = document.getElementById("pc_result");
+  const cardsEl = document.getElementById("pc_cards");
+  const tbodyEl = document.getElementById("pc_tbody");
+
+  if (!nEl || !rEl || !roundEl || !calcBtn || !copyBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let lastCopyText = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function asInt(v) {
+    const x = Number(String(v).trim());
+    return Number.isInteger(x) ? x : NaN;
+  }
+
+  function fmtBigInt(x) {
+    if (String(roundEl.value) === "grouped") {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    return x.toString();
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function nPr(n, r) {
+    let result = 1n;
+    for (let i = 0; i < r; i++) {
+      result *= BigInt(n - i);
+    }
+    return result;
+  }
+
+  function nCr(n, r) {
+    const k = Math.min(r, n - r);
+    let numerator = 1n;
+    let denominator = 1n;
+    for (let i = 1; i <= k; i++) {
+      numerator *= BigInt(n - k + i);
+      denominator *= BigInt(i);
+    }
+    return numerator / denominator;
+  }
+
+  function fillTable(n, r, perm, comb) {
+    tbodyEl.innerHTML = "";
+    const rows = [
+      ["n", String(n)],
+      ["r", String(r)],
+      ["nPr", fmtBigInt(perm)],
+      ["nCr", fmtBigInt(comb)],
+      ["Difference (nPr − nCr)", fmtBigInt(perm - comb)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const n = asInt(nEl.value);
+    const r = asInt(rEl.value);
+
+    if (!Number.isInteger(n) || !Number.isInteger(r)) {
+      outEl.textContent = "Please enter whole numbers for n and r.";
+      return;
+    }
+    if (n < 0 || r < 0) {
+      outEl.textContent = "n and r must be non-negative.";
+      return;
+    }
+    if (r > n) {
+      outEl.textContent = "r must be less than or equal to n.";
+      return;
+    }
+    if (n > 5000) {
+      showError("n is too large for practical browser calculation. Please use 5000 or less.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const perm = nPr(n, r);
+    const comb = nCr(n, r);
+
+    lastCopyText = "n=" + n + ", r=" + r + "\nnPr=" + perm.toString() + "\nnCr=" + comb.toString();
+
+    outEl.innerHTML =
+      "<strong>Permutation (nPr):</strong> " + fmtBigInt(perm) +
+      "<br/><strong>Combination (nCr):</strong> " + fmtBigInt(comb);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("n = " + n) +
+      badge("r = " + r) +
+      badge(r === 0 || r === n ? "Edge case" : "General case") +
+      "</div>";
+
+    fillTable(n, r, perm, comb);
+  }
+
+  async function copyResult() {
+    clearError();
+    if (!lastCopyText) {
+      showError("No result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastCopyText);
+      outEl.innerHTML = "<strong>Copied results.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function reset() {
+    clearError();
+    nEl.value = "";
+    rEl.value = "";
+    roundEl.value = "exact";
+    lastCopyText = "";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    nEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  copyBtn.addEventListener("click", copyResult);
+  clearBtn.addEventListener("click", reset);
+
+  [nEl, rEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  outEl.textContent = "Result will appear here.";
+});
+</script>

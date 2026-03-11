@@ -1,0 +1,312 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Radians to Degrees",
+  description:
+    "Convert radians (rad) to degrees (°) instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/radians-to-degrees/",
+  order: 290,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/radians-to-degrees/";
+
+const faqs = [
+  {
+    q: "What is the formula for radians to degrees?",
+    a: "Degrees = radians × 180 / π.",
+  },
+  {
+    q: "What is π radians in degrees?",
+    a: "π radians equals 180 degrees.",
+  },
+  {
+    q: "Can radians be negative?",
+    a: "Yes. Negative radians are supported and often indicate clockwise or reverse rotation.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Radians to Degrees Converter — ${SITE_NAME}`}
+  description="Convert radians (rad) to degrees (°) with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Radians to Degrees Converter"
+  intro="Convert radians (rad) to degrees (°). Includes rounding controls, common reference angles, and input validation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="radians-to-degrees">
+    <div class="form" role="form" aria-describedby="r2d_help r2d_privacy">
+      <div class="field">
+        <label for="r2d_rad">Angle (radians)</label>
+        <input id="r2d_rad" type="number" inputmode="decimal" placeholder="e.g., 3.14159" aria-describedby="r2d_help" />
+        <p class="note" id="r2d_help" style="margin-top:6px;">
+          Enter radians then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="r2d_round">Rounding</label>
+        <select id="r2d_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="8">8 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn" type="button" id="r2d_convert">Convert</button>
+        <button class="btn secondary" type="button" id="r2d_swap">Swap (° → rad)</button>
+        <button class="btn secondary" type="button" id="r2d_clear">Clear</button>
+      </div>
+
+      <div class="result" id="r2d_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="r2d_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="r2d_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Radians</th>
+              <th scope="col">Degrees</th>
+            </tr>
+          </thead>
+          <tbody id="r2d_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="r2d_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>Degrees = radians × 180 / π</strong><br />
+      Reverse: <strong>Radians = degrees × π / 180</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>π rad</strong> = <strong>180°</strong></li>
+      <li><strong>π/2 rad</strong> = <strong>90°</strong></li>
+      <li><strong>2π rad</strong> = <strong>360°</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/degrees-to-radians/">Degrees to Radians</a></li>
+      <li><a href="/converter/angle-converter/">Angle Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("r2d_rad");
+  const roundEl = document.getElementById("r2d_round");
+  const convertBtn = document.getElementById("r2d_convert");
+  const swapBtn = document.getElementById("r2d_swap");
+  const clearBtn = document.getElementById("r2d_clear");
+  const errEl = document.getElementById("r2d_error");
+  const outEl = document.getElementById("r2d_result");
+  const cardsEl = document.getElementById("r2d_cards");
+  const tbodyEl = document.getElementById("r2d_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let modeRadToDeg = true;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e12 || ax < 1e-12) return x.toExponential(6);
+    return String(Number(x.toPrecision(10)));
+  }
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    if (!Number.isFinite(d) || d < 0) return fmtSmart(x);
+    return (Object.is(x, -0) ? 0 : x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+  function degToRad(d) { return d * Math.PI / 180; }
+  function radToDeg(r) { return r * 180 / Math.PI; }
+
+  function setUi() {
+    const label = document.querySelector('label[for="r2d_rad"]');
+    if (!label) return;
+    if (modeRadToDeg) {
+      label.textContent = "Angle (radians)";
+      inEl.placeholder = "e.g., 3.14159";
+      swapBtn.textContent = "Swap (° → rad)";
+    } else {
+      label.textContent = "Angle (degrees)";
+      inEl.placeholder = "e.g., 180";
+      swapBtn.textContent = "Swap (rad → °)";
+    }
+  }
+
+  function fillTable(inputValue) {
+    tbodyEl.innerHTML = "";
+    const refs = [
+      { name: "Right angle", rad: Math.PI / 2 },
+      { name: "Straight angle", rad: Math.PI },
+      { name: "Full turn", rad: Math.PI * 2 },
+    ];
+
+    if (Number.isFinite(inputValue)) {
+      const radVal = modeRadToDeg ? inputValue : degToRad(inputValue);
+      refs.push({ name: "Your input", rad: radVal, highlight: true });
+    }
+
+    for (const r of refs) {
+      const tr = document.createElement("tr");
+      if (r.highlight) tr.style.fontWeight = "900";
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      const td3 = document.createElement("td");
+      td1.textContent = r.name;
+      td2.textContent = fmtSmart(r.rad);
+      td3.textContent = fmt(radToDeg(r.rad));
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    }
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid angle.";
+      return;
+    }
+
+    if (Math.abs(raw) > 1e18) {
+      showError("Value is too large for reliable display. Use a smaller magnitude.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    let deg, rad;
+    if (modeRadToDeg) {
+      rad = raw;
+      deg = radToDeg(rad);
+    } else {
+      deg = raw;
+      rad = degToRad(deg);
+    }
+
+    outEl.innerHTML =
+      (modeRadToDeg
+        ? `<strong>Result:</strong> ${fmt(deg)} °<br/><span class="note">${fmt(rad)} rad = ${fmt(deg)} °</span>`
+        : `<strong>Result:</strong> ${fmt(rad)} rad<br/><span class="note">${fmt(deg)} ° = ${fmt(rad)} rad</span>`
+      );
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(modeRadToDeg ? "rad → °" : "° → rad")}
+        ${badge("Base: radians")}
+        ${badge(Math.abs(rad) < Math.PI / 2 ? "Acute-range" : Math.abs(rad) < Math.PI ? "Obtuse-range" : "Wide angle")}
+      </div>
+    `;
+
+    fillTable(raw);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    modeRadToDeg = !modeRadToDeg;
+    setUi();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", function () {
+    modeRadToDeg = true;
+    setUi();
+    reset();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setUi();
+});
+</script>

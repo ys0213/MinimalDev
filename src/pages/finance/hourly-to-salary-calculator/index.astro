@@ -1,0 +1,302 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hourly to Salary Calculator",
+  description:
+    "Free hourly to salary calculator. Convert an hourly wage into annual, monthly, biweekly, weekly, and daily pay estimates.",
+  href: "/finance/hourly-to-salary-calculator/",
+  order: 85,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/hourly-to-salary-calculator/";
+
+const faq = [
+  {
+    q: "What does this hourly to salary calculator do?",
+    a: "It converts an hourly wage into estimated annual, monthly, biweekly, weekly, and daily gross pay based on your work schedule.",
+  },
+  {
+    q: "Does this include overtime?",
+    a: "No. This calculator assumes the same hourly rate across all hours entered and does not model overtime multipliers.",
+  },
+  {
+    q: "Can I change the work schedule?",
+    a: "Yes. You can adjust hours per week, days per week, and weeks worked per year.",
+  },
+  {
+    q: "Does it calculate take-home pay?",
+    a: "No. This tool estimates gross earnings only. Use the Paycheck Calculator for more detailed deductions.",
+  },
+  {
+    q: "Are my wage inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+---
+
+<ToolLayout
+  title="Hourly to Salary Calculator — MinimalDev"
+  description="Convert an hourly wage into annual, monthly, biweekly, weekly, and daily gross pay estimates."
+  canonicalPath="/finance/hourly-to-salary-calculator/"
+  h1="Hourly to Salary Calculator"
+  intro="Enter an hourly wage and your work schedule to estimate gross earnings across common pay periods."
+  faq={faq}
+>
+  <div slot="tool" data-tool="hourly-to-salary-calculator">
+    <style is:inline>
+      .h2s-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .h2s-grid-3 > * {
+        min-width: 0;
+      }
+
+      #h2s_hourly,
+      #h2s_hours_week,
+      #h2s_days_week,
+      #h2s_weeks_year,
+      #h2s_currency {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .h2s-grid-3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="h2s_note h2s_privacy">
+      <div class="field">
+        <label for="h2s_hourly">Hourly wage</label>
+        <input id="h2s_hourly" type="number" inputmode="decimal" placeholder="e.g., 25" />
+      </div>
+
+      <div class="h2s-grid-3">
+        <div class="field">
+          <label for="h2s_hours_week">Hours per week</label>
+          <input id="h2s_hours_week" type="number" inputmode="decimal" value="40" />
+        </div>
+
+        <div class="field">
+          <label for="h2s_days_week">Days per week</label>
+          <input id="h2s_days_week" type="number" inputmode="decimal" value="5" />
+        </div>
+
+        <div class="field">
+          <label for="h2s_weeks_year">Weeks per year</label>
+          <input id="h2s_weeks_year" type="number" inputmode="decimal" value="52" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="h2s_currency">Currency (display only)</label>
+        <select id="h2s_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="h2s_calc" class="btn" type="button">Calculate</button>
+        <button id="h2s_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="h2s_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="h2s_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="h2s_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Pay period</th>
+              <th>Estimate</th>
+            </tr>
+          </thead>
+          <tbody id="h2s_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="h2s_note" style="margin-top:10px;">
+        Gross earnings only. Overtime, taxes, and deductions are not included.
+      </p>
+
+      <p class="note" id="h2s_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator multiplies your hourly wage by weekly hours, then scales that result to yearly,
+      monthly, biweekly, weekly, and daily estimates using your chosen work schedule.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$25/hour at 40 hours/week → about $52,000/year gross</li>
+      <li>$20/hour at 30 hours/week → lower annual estimate due to fewer weekly hours</li>
+      <li>Adjust weeks per year if you do not work a full 52-week schedule</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/salary-calculator/">Salary Calculator</a></li>
+      <li><a href="/finance/salary-to-hourly-calculator/">Salary to Hourly Calculator</a></li>
+      <li><a href="/finance/paycheck-calculator/">Paycheck Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const hourlyEl = document.getElementById("h2s_hourly");
+  const hoursWeekEl = document.getElementById("h2s_hours_week");
+  const daysWeekEl = document.getElementById("h2s_days_week");
+  const weeksYearEl = document.getElementById("h2s_weeks_year");
+  const currencyEl = document.getElementById("h2s_currency");
+  const calcBtn = document.getElementById("h2s_calc");
+  const clearBtn = document.getElementById("h2s_clear");
+  const errorEl = document.getElementById("h2s_error");
+  const summaryEl = document.getElementById("h2s_summary");
+  const cardsEl = document.getElementById("h2s_cards");
+  const tbodyEl = document.getElementById("h2s_tbody");
+
+  if (!hourlyEl || !hoursWeekEl || !daysWeekEl || !weeksYearEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const hourly = toNum(hourlyEl.value);
+    const hoursWeek = toNum(hoursWeekEl.value);
+    const daysWeek = toNum(daysWeekEl.value);
+    const weeksYear = toNum(weeksYearEl.value);
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(hourly) || hourly < 0 || hourly > 1000000) {
+      showError("Please enter a valid hourly wage (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(hoursWeek) || hoursWeek <= 0 || hoursWeek > 168) {
+      showError("Please enter valid hours per week (> 0 and up to 168).");
+      return;
+    }
+    if (!Number.isFinite(daysWeek) || daysWeek <= 0 || daysWeek > 7) {
+      showError("Please enter valid days per week (> 0 and up to 7).");
+      return;
+    }
+    if (!Number.isFinite(weeksYear) || weeksYear <= 0 || weeksYear > 366) {
+      showError("Please enter valid weeks per year (> 0 and within a realistic range).");
+      return;
+    }
+    if (hoursWeek < daysWeek) {
+      showError("Hours per week should not be less than days per week for a typical work schedule.");
+      return;
+    }
+
+    const weekly = hourly * hoursWeek;
+    const annual = weekly * weeksYear;
+    const monthly = annual / 12;
+    const biweekly = annual / 26;
+    const daily = weekly / daysWeek;
+
+    summaryEl.innerHTML =
+      "<strong>Annual estimate:</strong> " + money(annual, ccy) + "<br/>" +
+      "<strong>Weekly estimate:</strong> " + money(weekly, ccy);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(money(hourly, ccy) + "/hr") + " " +
+      badge(hoursWeek.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " hrs/week") + " " +
+      badge(weeksYear.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " weeks/year");
+
+    const rows = [
+      ["Hourly", money(hourly, ccy)],
+      ["Daily", money(daily, ccy)],
+      ["Weekly", money(weekly, ccy)],
+      ["Biweekly", money(biweekly, ccy)],
+      ["Monthly", money(monthly, ccy)],
+      ["Annual", money(annual, ccy)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    hourlyEl.value = "";
+    hoursWeekEl.value = "40";
+    daysWeekEl.value = "5";
+    weeksYearEl.value = "52";
+    currencyEl.value = "USD";
+    clearOut();
+    hourlyEl.focus();
+  });
+
+  clearOut();
+});
+</script>

@@ -1,0 +1,272 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sleep Calculator",
+  description:
+    "Estimate suggested bedtime or wake-up times based on 90-minute sleep cycles with validation, result cards, and FAQ schema.",
+  href: "/health/sleep-calculator/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/sleep-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It estimates suggested bedtime or wake-up times using a typical 90-minute sleep cycle model.",
+  },
+  {
+    q: "Are sleep cycles always 90 minutes?",
+    a: "No. Sleep cycles vary by person and by night, but 90 minutes is a common planning estimate.",
+  },
+  {
+    q: "Does it include time to fall asleep?",
+    a: "Yes. This calculator adds a simple 15-minute fall-asleep allowance to bedtime planning.",
+  },
+  {
+    q: "Is this medical advice?",
+    a: "No. It is an informational sleep-planning tool only.",
+  },
+  {
+    q: "Are my times stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Sleep Calculator — ${SITE_NAME}`}
+  description="Estimate suggested bedtime or wake-up times from 90-minute sleep cycles."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sleep Calculator"
+  intro="Estimate suggested bedtime or wake-up times using 90-minute sleep cycles. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="sleep-calculator">
+    <div class="form" role="form" aria-describedby="sc_help sc_privacy">
+      <div class="field">
+        <label for="sc_mode">Mode</label>
+        <select id="sc_mode">
+          <option value="wake" selected>I want to wake up at...</option>
+          <option value="sleep">I plan to fall asleep at...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sc_time">Time</label>
+        <input id="sc_time" type="time" aria-describedby="sc_help" />
+        <p class="note" id="sc_help" style="margin-top:6px;">
+          This calculator uses a 90-minute cycle estimate and a 15-minute fall-asleep allowance when calculating bedtime suggestions.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="sc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="sc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="sc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses a simple 90-minute sleep-cycle model.
+      It suggests times based on 4, 5, or 6 cycles, which roughly correspond to about 6, 7.5, or 9 hours of sleep.
+    </p>
+    <p class="note">
+      When calculating bedtime from a wake-up time, the tool also subtracts an extra 15 minutes as a simple fall-asleep allowance.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Wake at 07:00 → suggested bedtimes around 20:45, 22:15, or 23:45</li>
+      <li>Sleep at 23:00 → suggested wake times around 05:00, 06:30, or 08:00</li>
+      <li>Useful for simple bedtime planning, not sleep diagnosis</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/hydration-calculator/">Hydration Calculator</a></li>
+      <li><a href="/health/calorie-needs/">Calorie Needs Calculator</a></li>
+      <li><a href="/health/bmr-calculator/">BMR Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("sc_mode");
+  const timeEl = document.getElementById("sc_time");
+
+  const calcBtn = document.getElementById("sc_calc");
+  const clearBtn = document.getElementById("sc_clear");
+  const errEl = document.getElementById("sc_error");
+  const outEl = document.getElementById("sc_result");
+  const detailsEl = document.getElementById("sc_details");
+
+  if (!modeEl || !timeEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function formatMinutes(total) {
+    while (total < 0) total += 1440;
+    while (total >= 1440) total -= 1440;
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return `${pad(h)}:${pad(m)}`;
+  }
+
+  function compute() {
+    resetOutputs();
+
+    if (!timeEl.value) {
+      showError("Please enter a valid time.");
+      return;
+    }
+
+    const parts = String(timeEl.value).split(":").map(Number);
+    if (parts.length < 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) {
+      showError("Please enter a valid time.");
+      return;
+    }
+
+    const baseMinutes = parts[0] * 60 + parts[1];
+    const mode = String(modeEl.value || "wake");
+    const cycles = [6, 5, 4];
+    const cycleMinutes = 90;
+    const fallAsleepMinutes = 15;
+
+    let results = [];
+
+    if (mode === "wake") {
+      results = cycles.map((c) => ({
+        cycles: c,
+        time: formatMinutes(baseMinutes - (c * cycleMinutes + fallAsleepMinutes)),
+        totalSleep: c * cycleMinutes,
+      }));
+    } else {
+      results = cycles.map((c) => ({
+        cycles: c,
+        time: formatMinutes(baseMinutes + c * cycleMinutes),
+        totalSleep: c * cycleMinutes,
+      }));
+    }
+
+    const primary = results[0];
+    const secondary = results[1];
+    const tertiary = results[2];
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Suggested times</strong>
+        ${badge(mode === "wake" ? "Bedtime suggestions" : "Wake-up suggestions")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card(`${primary.cycles} cycles`, `<span>${escapeHtml(primary.time)}</span>`, `${primary.totalSleep / 60} hours of sleep cycles`)}
+        ${card(`${secondary.cycles} cycles`, `<span>${escapeHtml(secondary.time)}</span>`, `${secondary.totalSleep / 60} hours of sleep cycles`)}
+        ${card(`${tertiary.cycles} cycles`, `<span>${escapeHtml(tertiary.time)}</span>`, `${tertiary.totalSleep / 60} hours of sleep cycles`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge("90-minute cycle model")} ${badge(mode === "wake" ? "Wake-to-bed planning" : "Sleep-to-wake planning")} ${mode === "wake" ? badge("15-minute fall-asleep allowance") : ""}
+      </div>
+      <div class="note" style="margin-top:8px;">Input time: <strong>${escapeHtml(timeEl.value)}</strong></div>
+      <div class="note" style="margin-top:6px;">Cycle count options: <strong>4, 5, 6 cycles</strong></div>
+      <div class="note" style="margin-top:6px;">Cycle length used: <strong>90 minutes</strong></div>
+      ${mode === "wake" ? '<div class="note" style="margin-top:6px;">Fall-asleep allowance: <strong>15 minutes</strong></div>' : ""}
+    `;
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "wake";
+    timeEl.value = "";
+    resetOutputs();
+    timeEl.focus();
+  });
+
+  resetOutputs();
+});
+</script>

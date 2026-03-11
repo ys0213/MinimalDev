@@ -1,0 +1,181 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Horsepower to Watts",
+  description:
+    "Convert horsepower (hp) to watts (W) instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/horsepower-to-watts/",
+  order: 380,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/horsepower-to-watts/";
+
+const faqs = [
+  { q: "How do you convert horsepower to watts?", a: "Multiply horsepower by 745.699872 to get watts." },
+  { q: "What is 1 horsepower in watts?", a: "1 mechanical horsepower equals 745.699872 watts." },
+  { q: "Can I use decimal horsepower values?", a: "Yes. Decimal values are supported." },
+  { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map((f)=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Horsepower to Watts Converter — ${SITE_NAME}`}
+  description="Convert horsepower to watts with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Horsepower to Watts Converter"
+  intro="Convert power from horsepower (hp) to watts (W)."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <div slot="tool" data-tool="horsepower-to-watts">
+    <div class="form" role="form" aria-describedby="h2w_help h2w_privacy">
+      <div class="field">
+        <label for="h2w_hp">Power (horsepower)</label>
+        <input id="h2w_hp" type="number" inputmode="decimal" placeholder="e.g., 2" aria-describedby="h2w_help" />
+        <p class="note" id="h2w_help" style="margin-top:6px;">
+          Enter horsepower and convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+      <div class="field">
+        <label for="h2w_round">Rounding</label>
+        <select id="h2w_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="h2w_convert">Convert</button>
+        <button class="btn secondary" type="button" id="h2w_swap">Swap (W → hp)</button>
+        <button class="btn secondary" type="button" id="h2w_clear">Clear</button>
+      </div>
+      <div class="result" id="h2w_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="h2w_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="h2w_cards" style="display:none; margin-top:12px;"></div>
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Reference</th><th scope="col">hp</th><th scope="col">W</th></tr></thead>
+          <tbody id="h2w_tbody"></tbody>
+        </table>
+      </div>
+      <p class="note" id="h2w_privacy" style="margin-top:10px;">Privacy: runs locally in your browser. No inputs are stored or transmitted.</p>
+    </div>
+  </div>
+  <div slot="how"><p class="note"><strong>W = hp × 745.699872</strong><br />Reverse: <strong>hp = W ÷ 745.699872</strong></p></div>
+  <div slot="examples">
+    <ul>
+      <li><strong>1 hp</strong> ≈ <strong>745.700 W</strong></li>
+      <li><strong>2 hp</strong> ≈ <strong>1491.400 W</strong></li>
+      <li><strong>5 hp</strong> ≈ <strong>3728.499 W</strong></li>
+    </ul>
+  </div>
+  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/watts-to-horsepower/">Watts to Horsepower</a></li>
+      <li><a href="/converter/power-converter/">Power Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",function(){
+  const inEl=document.getElementById("h2w_hp");
+  const roundEl=document.getElementById("h2w_round");
+  const convertBtn=document.getElementById("h2w_convert");
+  const swapBtn=document.getElementById("h2w_swap");
+  const clearBtn=document.getElementById("h2w_clear");
+  const errEl=document.getElementById("h2w_error");
+  const outEl=document.getElementById("h2w_result");
+  const cardsEl=document.getElementById("h2w_cards");
+  const tbodyEl=document.getElementById("h2w_tbody");
+  if(!inEl||!roundEl||!convertBtn||!swapBtn||!clearBtn||!errEl||!outEl||!cardsEl||!tbodyEl) return;
+
+  let modeHpToW=true;
+  const W_PER_HP=745.699872;
+
+  function toNum(v){ const x=parseFloat(String(v)); return Number.isFinite(x)?x:NaN; }
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function fmtSmart(x){ if(!Number.isFinite(x)) return "—"; const ax=Math.abs(x); if(ax===0) return "0"; if(ax>=1e9||ax<1e-8) return x.toExponential(6); return String(Number(x.toPrecision(10))); }
+  function fmt(x){ if(!Number.isFinite(x)) return "—"; const r=String(roundEl.value); if(r==="auto") return fmtSmart(x); const d=parseInt(r,10); return Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+  function badge(text){ return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`; }
+  function hpToW(v){ return v*W_PER_HP; }
+  function wToHp(v){ return v/W_PER_HP; }
+
+  function setUi(){
+    const label=document.querySelector('label[for="h2w_hp"]');
+    if(!label) return;
+    if(modeHpToW){ label.textContent="Power (horsepower)"; inEl.placeholder="e.g., 2"; swapBtn.textContent="Swap (W → hp)"; }
+    else { label.textContent="Power (watts)"; inEl.placeholder="e.g., 1000"; swapBtn.textContent="Swap (hp → W)"; }
+  }
+
+  function fillTable(inputValue){
+    tbodyEl.innerHTML="";
+    const refs=[{name:"1 horsepower",hp:1},{name:"2 horsepower",hp:2},{name:"5 horsepower",hp:5}];
+    if(Number.isFinite(inputValue)){
+      const hpVal=modeHpToW?inputValue:wToHp(inputValue);
+      refs.push({name:"Your input",hp:hpVal,highlight:true});
+    }
+    refs.forEach((r)=>{
+      const tr=document.createElement("tr");
+      if(r.highlight) tr.style.fontWeight="900";
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      const td3=document.createElement("td");
+      td1.textContent=r.name; td2.textContent=fmtSmart(r.hp); td3.textContent=fmt(hpToW(r.hp));
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute(){
+    clearError(); cardsEl.style.display="none"; tbodyEl.innerHTML="";
+    const raw=toNum(inEl.value);
+    if(!Number.isFinite(raw)){ outEl.textContent="Please enter a valid power value."; return; }
+    if(Math.abs(raw)>1e18){ showError("Value is too large for reliable display."); outEl.textContent="Result will appear here."; return; }
+
+    let hp,w;
+    if(modeHpToW){ hp=raw; w=hpToW(hp); }
+    else { w=raw; hp=wToHp(w); }
+
+    outEl.innerHTML=modeHpToW
+      ? `<strong>Result:</strong> ${fmt(w)} W<br/><span class="note">${fmtSmart(hp)} hp = ${fmt(w)} W</span>`
+      : `<strong>Result:</strong> ${fmt(hp)} hp<br/><span class="note">${fmtSmart(w)} W = ${fmt(hp)} hp</span>`;
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(modeHpToW?"hp → W":"W → hp")}
+      ${badge("Reference: 1 hp = 745.699872 W")}
+      ${badge(Math.abs(w)<1000 ? "Small power" : Math.abs(w)<100000 ? "Moderate power" : "High power")}
+    </div>`;
+    fillTable(raw);
+  }
+
+  function reset(){
+    clearError(); inEl.value=""; roundEl.value="3"; outEl.textContent="Result will appear here.";
+    cardsEl.style.display="none"; cardsEl.innerHTML=""; tbodyEl.innerHTML="";
+  }
+
+  convertBtn.addEventListener("click",compute);
+  swapBtn.addEventListener("click",function(){ modeHpToW=!modeHpToW; setUi(); if(String(inEl.value||"").trim()) compute(); else reset(); });
+  clearBtn.addEventListener("click",function(){ modeHpToW=true; setUi(); reset(); });
+  roundEl.addEventListener("change",function(){ if(String(inEl.value||"").trim()) compute(); });
+  inEl.addEventListener("keydown",function(e){ if((e.ctrlKey||e.metaKey)&&e.key==="Enter") compute(); });
+
+  setUi();
+});
+</script>

@@ -1,0 +1,311 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Paycheck Calculator",
+  description:
+    "Estimate gross paycheck, tax withholding, deductions, and take-home pay with custom pay frequency and display currency.",
+  href: "/finance/paycheck-calculator/",
+  order: 110,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/paycheck-calculator/";
+
+const faqs = [
+  {
+    q: "What does this paycheck calculator estimate?",
+    a: "It estimates gross pay per paycheck, tax withholding, optional other deductions, and take-home pay based on annual salary and pay frequency.",
+  },
+  {
+    q: "Are taxes exact?",
+    a: "No. This tool uses a flat tax percentage for estimation only. Real payroll taxes depend on location, filing status, benefits, and other rules.",
+  },
+  {
+    q: "What pay frequencies are supported?",
+    a: "Weekly, biweekly, semimonthly, and monthly pay schedules are supported.",
+  },
+  {
+    q: "Can I add other deductions?",
+    a: "Yes. You can include an extra deduction amount per paycheck to estimate benefits, insurance, or other recurring payroll deductions.",
+  },
+  {
+    q: "Are my salary details stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Paycheck Calculator — ${SITE_NAME}`}
+  description="Estimate gross paycheck, taxes, deductions, and take-home pay with custom pay frequency and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Paycheck Calculator"
+  intro="Estimate your gross paycheck and take-home pay using annual salary, pay frequency, estimated tax rate, and optional paycheck deductions."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="paycheck-calculator">
+    <div class="form" role="form" aria-describedby="pc_help pc_privacy">
+      <div class="field">
+        <label for="pc_salary">Annual salary</label>
+        <input id="pc_salary" type="number" inputmode="decimal" placeholder="e.g., 65000" aria-describedby="pc_help" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="pc_freq">Pay frequency</label>
+          <select id="pc_freq">
+            <option value="52">Weekly (52)</option>
+            <option value="26" selected>Biweekly (26)</option>
+            <option value="24">Semimonthly (24)</option>
+            <option value="12">Monthly (12)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="pc_tax">Estimated tax rate (%)</label>
+          <input id="pc_tax" type="number" inputmode="decimal" placeholder="e.g., 22" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="pc_other_deduction">Other deductions per paycheck (optional)</label>
+          <input id="pc_other_deduction" type="number" inputmode="decimal" placeholder="e.g., 150" />
+        </div>
+
+        <div class="field">
+          <label for="pc_currency">Currency (display only)</label>
+          <select id="pc_currency">
+            <option value="USD" selected>USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="KRW">KRW (₩)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn secondary" data-tax-preset="10">10%</button>
+        <button type="button" class="btn secondary" data-tax-preset="15">15%</button>
+        <button type="button" class="btn secondary" data-tax-preset="20">20%</button>
+        <button type="button" class="btn secondary" data-tax-preset="25">25%</button>
+        <button type="button" class="btn secondary" data-tax-preset="30">30%</button>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="pc_calc" class="btn" type="button">Calculate</button>
+        <button id="pc_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="pc_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="pc_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="pc_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody id="pc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pc_help" style="margin-top:10px;">
+        Gross paycheck = annual salary ÷ pay periods. Net paycheck = gross − estimated tax − other deductions.
+      </p>
+
+      <p class="note" id="pc_privacy" style="margin-top:10px;">
+        Informational only. This is a simplified gross-to-net estimate and does not replace official payroll calculations.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts annual salary into a per-paycheck gross amount using your selected pay frequency.
+      It then estimates tax withholding using a flat percentage and subtracts any additional per-paycheck deductions
+      you enter to estimate take-home pay.
+    </p>
+
+    <p class="note">
+      Because real payroll systems use brackets, jurisdiction rules, benefits, retirement contributions, and
+      filing status, this result should be treated as a planning estimate rather than an exact paycheck figure.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$65,000 annual salary on a biweekly schedule → about $2,500 gross per paycheck</li>
+      <li>At a 20% estimated tax rate and $100 other deduction → take-home is lower than gross by both amounts</li>
+      <li>Change pay frequency to compare weekly vs monthly paycheck size</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/salary-calculator/">Salary Calculator</a></li>
+      <li><a href="/finance/tax-calculator/">Tax Calculator</a></li>
+      <li><a href="/finance/budget-calculator/">Budget Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const salaryEl = document.getElementById("pc_salary");
+  const freqEl = document.getElementById("pc_freq");
+  const taxEl = document.getElementById("pc_tax");
+  const otherDeductionEl = document.getElementById("pc_other_deduction");
+  const currencyEl = document.getElementById("pc_currency");
+  const calcBtn = document.getElementById("pc_calc");
+  const clearBtn = document.getElementById("pc_clear");
+  const errorEl = document.getElementById("pc_error");
+  const summaryEl = document.getElementById("pc_summary");
+  const cardsEl = document.getElementById("pc_cards");
+  const tbodyEl = document.getElementById("pc_tbody");
+
+  if (!salaryEl || !freqEl || !taxEl || !otherDeductionEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  document.querySelectorAll("[data-tax-preset]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      taxEl.value = String(btn.getAttribute("data-tax-preset") || "");
+    });
+  });
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const salary = toNum(salaryEl.value);
+    const periods = toNum(freqEl.value);
+    const taxRate = toNum(taxEl.value);
+    const otherDeduction = String(otherDeductionEl.value || "").trim() ? toNum(otherDeductionEl.value) : 0;
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(salary) || salary < 0) {
+      showError("Please enter a valid annual salary (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(periods) || periods <= 0) {
+      showError("Please select a valid pay frequency.");
+      return;
+    }
+    if (!Number.isFinite(taxRate) || taxRate < 0 || taxRate > 100) {
+      showError("Please enter a valid estimated tax rate between 0 and 100.");
+      return;
+    }
+    if (!Number.isFinite(otherDeduction) || otherDeduction < 0) {
+      showError("Please enter a valid deduction amount (0 or more).");
+      return;
+    }
+
+    const gross = salary / periods;
+    const taxAmount = gross * (taxRate / 100);
+    const net = gross - taxAmount - otherDeduction;
+
+    summaryEl.innerHTML =
+      "<strong>Estimated take-home pay:</strong> " + money(net, ccy) + "<br/>" +
+      "<strong>Gross paycheck:</strong> " + money(gross, ccy) + "<br/>" +
+      "<strong>Total estimated withheld/deducted:</strong> " + money(taxAmount + otherDeduction, ccy);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(periods === 52 ? "Weekly" : periods === 26 ? "Biweekly" : periods === 24 ? "Semimonthly" : "Monthly") + " " +
+      badge(taxRate.toLocaleString() + "% tax estimate") + " " +
+      badge(otherDeduction > 0 ? "Extra deductions included" : "No extra deductions");
+
+    const rows = [
+      ["Annual salary", money(salary, ccy)],
+      ["Pay periods per year", String(periods)],
+      ["Gross paycheck", money(gross, ccy)],
+      ["Estimated tax withholding", money(taxAmount, ccy)],
+      ["Other deductions", money(otherDeduction, ccy)],
+      ["Estimated take-home pay", money(net, ccy)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    salaryEl.value = "";
+    freqEl.value = "26";
+    taxEl.value = "";
+    otherDeductionEl.value = "";
+    currencyEl.value = "USD";
+    clearOut();
+  });
+});
+</script>

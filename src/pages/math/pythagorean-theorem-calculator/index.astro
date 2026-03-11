@@ -1,0 +1,383 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Pythagorean Theorem Calculator",
+  description:
+    "Solve a right triangle side using the Pythagorean theorem. Find a, b, or c with validation, result cards, and FAQ schema.",
+  href: "/math/pythagorean-theorem-calculator/",
+  order: 300,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/pythagorean-theorem-calculator/";
+
+const faqs = [
+  {
+    q: "What is the Pythagorean theorem?",
+    a: "For a right triangle, a² + b² = c², where c is the hypotenuse.",
+  },
+  {
+    q: "Which value should be the hypotenuse?",
+    a: "The hypotenuse is the longest side and is opposite the right angle. In this calculator, c is always the hypotenuse.",
+  },
+  {
+    q: "Can I leave one side blank?",
+    a: "Yes. Leave exactly one of a, b, or c blank and the calculator will solve for it.",
+  },
+  {
+    q: "What if c is smaller than a or b?",
+    a: "That would be invalid for a right triangle. The calculator checks for impossible values.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Pythagorean Theorem Calculator — ${SITE_NAME}`}
+  description="Solve for a, b, or c in a right triangle using the Pythagorean theorem. Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Pythagorean Theorem Calculator"
+  intro="Enter any two sides of a right triangle and leave one blank to solve it. Uses a² + b² = c²."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="pythagorean-theorem-calculator">
+    <style is:inline>
+      .pt-grid-3,
+      .pt-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .pt-grid-3 > *,
+      .pt-grid-2 > * {
+        min-width: 0;
+      }
+
+      #pt_a,
+      #pt_b,
+      #pt_c,
+      #pt_unit,
+      #pt_round {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .pt-grid-3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .pt-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="pt_help pt_privacy">
+      <div class="note" style="margin-bottom:10px;">
+        Leave exactly <strong>one</strong> field blank. Here, <strong>c</strong> is the hypotenuse.
+      </div>
+
+      <div class="pt-grid-3">
+        <div class="field">
+          <label for="pt_a">a</label>
+          <input id="pt_a" type="number" inputmode="decimal" placeholder="e.g., 3" aria-describedby="pt_help" />
+        </div>
+
+        <div class="field">
+          <label for="pt_b">b</label>
+          <input id="pt_b" type="number" inputmode="decimal" placeholder="e.g., 4" />
+        </div>
+
+        <div class="field">
+          <label for="pt_c">c (hypotenuse)</label>
+          <input id="pt_c" type="number" inputmode="decimal" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <div class="pt-grid-2">
+        <div class="field">
+          <label for="pt_unit">Unit label (optional)</label>
+          <input id="pt_unit" type="text" placeholder="e.g., cm, m, in" />
+        </div>
+
+        <div class="field">
+          <label for="pt_round">Rounding</label>
+          <select id="pt_round">
+            <option value="4" selected>4 decimals</option>
+            <option value="6">6 decimals</option>
+            <option value="10">10 decimals</option>
+            <option value="auto">Smart</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pt_help" style="margin-top:6px;">
+        Uses <strong>a² + b² = c²</strong>. Side lengths must be non-negative.
+      </p>
+      <p class="note" id="pt_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      If <strong>c</strong> is missing: <strong>c = √(a² + b²)</strong><br />
+      If <strong>a</strong> is missing: <strong>a = √(c² − b²)</strong><br />
+      If <strong>b</strong> is missing: <strong>b = √(c² − a²)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>a=3, b=4</strong> → <strong>c=5</strong></li>
+      <li><strong>a=5, c=13</strong> → <strong>b=12</strong></li>
+      <li><strong>b=8, c=17</strong> → <strong>a=15</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/distance-formula-calculator/">Distance Formula Calculator</a></li>
+      <li><a href="/math/triangle-area-calculator/">Triangle Area Calculator</a></li>
+      <li><a href="/math/slope-calculator/">Slope Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("pt_a");
+  const bEl = document.getElementById("pt_b");
+  const cEl = document.getElementById("pt_c");
+  const unitEl = document.getElementById("pt_unit");
+  const roundEl = document.getElementById("pt_round");
+  const calcBtn = document.getElementById("pt_calc");
+  const clearBtn = document.getElementById("pt_clear");
+  const errEl = document.getElementById("pt_error");
+  const outEl = document.getElementById("pt_result");
+  const cardsEl = document.getElementById("pt_cards");
+  const tbodyEl = document.getElementById("pt_tbody");
+
+  if (!aEl || !bEl || !cEl || !unitEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function s(v) {
+    return String(v ?? "").trim();
+  }
+
+  function has(el) {
+    return s(el.value) !== "";
+  }
+
+  function num(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") {
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e12 || ax < 1e-10) return x.toExponential(8);
+      return String(Number(x.toPrecision(12)));
+    }
+    const d = parseInt(r, 10);
+    return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function unitLabel() {
+    const u = s(unitEl.value);
+    return u ? " " + u : "";
+  }
+
+  function fillTable(a, b, c) {
+    tbodyEl.innerHTML = "";
+    const rows = [
+      ["a", fmt(a) + unitLabel()],
+      ["b", fmt(b) + unitLabel()],
+      ["c", fmt(c) + unitLabel()],
+      ["a² + b²", fmt(a * a + b * b)],
+      ["c²", fmt(c * c)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = String(row[0]);
+      td2.textContent = String(row[1]);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const blanks = [aEl, bEl, cEl].filter(function (el) { return !has(el); });
+    if (blanks.length !== 1) {
+      showError("Please leave exactly one side blank.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    const A = has(aEl) ? num(aEl.value) : NaN;
+    const B = has(bEl) ? num(bEl.value) : NaN;
+    const C = has(cEl) ? num(cEl.value) : NaN;
+
+    const unknown = !has(aEl) ? "a" : !has(bEl) ? "b" : "c";
+
+    if ((unknown !== "a" && !Number.isFinite(A)) ||
+        (unknown !== "b" && !Number.isFinite(B)) ||
+        (unknown !== "c" && !Number.isFinite(C))) {
+      outEl.textContent = "Please enter valid numbers for the filled fields.";
+      return;
+    }
+
+    if ((unknown !== "a" && A < 0) || (unknown !== "b" && B < 0) || (unknown !== "c" && C < 0)) {
+      outEl.textContent = "Side lengths must be non-negative.";
+      return;
+    }
+
+    let a = A, b = B, c = C;
+
+    if (unknown === "c") {
+      c = Math.sqrt(a * a + b * b);
+    } else if (unknown === "a") {
+      const inside = c * c - b * b;
+      if (inside < 0) {
+        showError("Invalid values: c must be at least as large as b.");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+      a = Math.sqrt(inside);
+    } else {
+      const inside = c * c - a * a;
+      if (inside < 0) {
+        showError("Invalid values: c must be at least as large as a.");
+        outEl.textContent = "Result will appear here.";
+        return;
+      }
+      b = Math.sqrt(inside);
+    }
+
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c)) {
+      showError("Could not compute a valid triangle side.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    if (c < a || c < b) {
+      showError("The hypotenuse c must be the longest side.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    outEl.innerHTML =
+      "<strong>Solved:</strong> " + unknown + " = " + fmt(unknown === "a" ? a : unknown === "b" ? b : c) + unitLabel() +
+      "<br/><span class='note'>a² + b² = c² → " + fmt(a * a) + " + " + fmt(b * b) + " = " + fmt(c * c) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("Solved " + unknown) +
+      badge(c === 0 ? "Degenerate case" : c < 10 ? "Small triangle" : "Larger triangle") +
+      badge(unitEl.value ? "Unit: " + unitEl.value : "No unit label") +
+      "</div>";
+
+    fillTable(a, b, c);
+  }
+
+  function reset() {
+    clearError();
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    unitEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl, cEl, unitEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  outEl.textContent = "Result will appear here.";
+});
+</script>

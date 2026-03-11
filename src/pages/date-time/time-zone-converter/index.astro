@@ -1,0 +1,333 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Time Zone Converter",
+  description:
+    "Free time zone converter. Convert a date and time between UTC offsets with validation, result cards, and FAQ schema.",
+  href: "/date-time/time-zone-converter/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/time-zone-converter/";
+
+const faqs = [
+  {
+    q: "What does this time zone converter do?",
+    a: "It converts a date and time from one UTC offset to another UTC offset.",
+  },
+  {
+    q: "Does it use named time zones like America/New_York?",
+    a: "This version uses UTC offsets such as UTC+09:00 or UTC-05:00 rather than full IANA time zone rules.",
+  },
+  {
+    q: "Does it account for daylight saving time automatically?",
+    a: "No. You must choose the correct UTC offset yourself if daylight saving time applies.",
+  },
+  {
+    q: "Can the converted date change to the previous or next day?",
+    a: "Yes. Time zone conversion can move the result into the previous day or the next day depending on the offset difference.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+const offsetOptions = [
+  "-12:00","-11:00","-10:00","-09:00","-08:00","-07:00","-06:00","-05:00","-04:00","-03:00","-02:00","-01:00",
+  "+00:00","+01:00","+02:00","+03:00","+04:00","+05:00","+05:30","+06:00","+07:00","+08:00","+09:00","+10:00","+11:00","+12:00","+13:00","+14:00"
+];
+---
+
+<ToolLayout
+  title={`Time Zone Converter — ${SITE_NAME}`}
+  description="Convert a date and time between UTC offsets. Includes validation, date rollover handling, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Time Zone Converter"
+  intro="Convert a local date and time from one UTC offset to another. Useful for planning calls, travel, and cross-region scheduling."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="time-zone-converter">
+    <div class="form" role="form" aria-describedby="tzc_help tzc_privacy">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="tzc_date">Date</label>
+          <input id="tzc_date" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="tzc_time">Time</label>
+          <input id="tzc_time" type="time" step="1" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:end;">
+        <div class="field">
+          <label for="tzc_from">From UTC offset</label>
+          <select id="tzc_from">
+            {offsetOptions.map((o) => <option value={o} selected={o === "+00:00"}>UTC{o}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <button class="btn secondary" type="button" id="tzc_swap" aria-label="Swap offsets">Swap</button>
+        </div>
+
+        <div class="field">
+          <label for="tzc_to">To UTC offset</label>
+          <select id="tzc_to">
+            {offsetOptions.map((o) => <option value={o} selected={o === "+09:00"}>UTC{o}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tzc_calc">Convert</button>
+        <button class="btn secondary" type="button" id="tzc_now">Use current date/time</button>
+        <button class="btn secondary" type="button" id="tzc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tzc_error" role="alert" style="display:none;"></div>
+      <div class="result" id="tzc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tzc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="tzc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tzc_help" style="margin-top:10px;">
+        This tool uses UTC offsets only. It does not automatically apply daylight saving time rules.
+      </p>
+
+      <p class="note" id="tzc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No dates or times are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The converter interprets your input as a local time in the source UTC offset, converts it to UTC,
+      and then applies the destination UTC offset to get the target local time.
+    </p>
+
+    <p class="note">
+      Because different offsets can shift the result forward or backward, the converted result may land on
+      the previous date or the next date.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-03-10 09:00 at UTC+00:00 to UTC+09:00 → 18:00 same date</li>
+      <li>Late-night times can convert into the next day</li>
+      <li>Use the correct seasonal UTC offset if your region observes daylight saving time</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/timestamp-now/">Timestamp Now</a></li>
+      <li><a href="/date-time/unix-time-to-date/">Unix Time to Date</a></li>
+      <li><a href="/date-time/time-between-times/">Time Between Times</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dateEl = document.getElementById("tzc_date");
+  const timeEl = document.getElementById("tzc_time");
+  const fromEl = document.getElementById("tzc_from");
+  const toEl = document.getElementById("tzc_to");
+  const calcBtn = document.getElementById("tzc_calc");
+  const nowBtn = document.getElementById("tzc_now");
+  const clearBtn = document.getElementById("tzc_clear");
+  const swapBtn = document.getElementById("tzc_swap");
+  const errEl = document.getElementById("tzc_error");
+  const outEl = document.getElementById("tzc_result");
+  const cardsEl = document.getElementById("tzc_cards");
+  const tbodyEl = document.getElementById("tzc_tbody");
+
+  if (!dateEl || !timeEl || !fromEl || !toEl || !calcBtn || !nowBtn || !clearBtn || !swapBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseOffset(str) {
+    const s = String(str || "");
+    const m = s.match(/^([+-])(\d{2}):(\d{2})$/);
+    if (!m) return NaN;
+    const sign = m[1] === "-" ? -1 : 1;
+    const hh = parseInt(m[2], 10);
+    const mm = parseInt(m[3], 10);
+    return sign * (hh * 60 + mm);
+  }
+
+  function parseDateTime(dateStr, timeStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ""))) return null;
+    const parts = String(timeStr || "").split(":").map(Number);
+    if (parts.length < 2) return null;
+    const h = parts[0], m = parts[1], s = parts[2] || 0;
+    if (![h, m, s].every(Number.isFinite)) return null;
+    return { h, m, s };
+  }
+
+  function fmtDate(d) {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function fmtTime(d) {
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    const ss = String(d.getUTCSeconds()).padStart(2, "0");
+    return hh + ":" + mm + ":" + ss;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const dateStr = String(dateEl.value || "");
+    const timeStr = String(timeEl.value || "");
+    const fromOffset = parseOffset(fromEl.value);
+    const toOffset = parseOffset(toEl.value);
+    const parsed = parseDateTime(dateStr, timeStr);
+
+    if (!parsed) {
+      showError("Please enter a valid date and time.");
+      return;
+    }
+    if (!Number.isFinite(fromOffset) || !Number.isFinite(toOffset)) {
+      showError("Please select valid UTC offsets.");
+      return;
+    }
+
+    const utcMs = Date.UTC(
+      parseInt(dateStr.slice(0, 4), 10),
+      parseInt(dateStr.slice(5, 7), 10) - 1,
+      parseInt(dateStr.slice(8, 10), 10),
+      parsed.h,
+      parsed.m,
+      parsed.s
+    ) - fromOffset * 60000;
+
+    const targetMs = utcMs + toOffset * 60000;
+    const target = new Date(targetMs);
+
+    const dayShift = Math.round((Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), target.getUTCDate()) - Date.UTC(
+      parseInt(dateStr.slice(0, 4), 10),
+      parseInt(dateStr.slice(5, 7), 10) - 1,
+      parseInt(dateStr.slice(8, 10), 10)
+    )) / 86400000);
+
+    outEl.innerHTML =
+      "<strong>Converted time:</strong> " + fmtDate(target) + " " + fmtTime(target) + "<br/>" +
+      "<span class='note'>From UTC" + fromEl.value + " to UTC" + toEl.value + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge("UTC" + fromEl.value + " → UTC" + toEl.value) + " " +
+      badge(dayShift === 0 ? "Same date" : dayShift > 0 ? "Next day shift" : "Previous day shift") + " " +
+      badge(fromEl.value === toEl.value ? "Same offset" : "Offset conversion");
+
+    render([
+      ["Input date", dateStr],
+      ["Input time", timeStr],
+      ["From offset", "UTC" + fromEl.value],
+      ["To offset", "UTC" + toEl.value],
+      ["Converted date", fmtDate(target)],
+      ["Converted time", fmtTime(target)],
+      ["Date shift", dayShift === 0 ? "Same date" : (dayShift > 0 ? "+" + dayShift + " day" : dayShift + " day")],
+    ]);
+  });
+
+  swapBtn.addEventListener("click", function () {
+    const x = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = x;
+    clearOut();
+  });
+
+  nowBtn.addEventListener("click", function () {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    dateEl.value = y + "-" + m + "-" + day;
+    timeEl.value = hh + ":" + mm + ":" + ss;
+  });
+
+  clearBtn.addEventListener("click", function () {
+    dateEl.value = "";
+    timeEl.value = "";
+    fromEl.value = "+00:00";
+    toEl.value = "+09:00";
+    clearOut();
+    dateEl.focus();
+  });
+});
+</script>

@@ -1,0 +1,347 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Working Hours Calculator",
+  description:
+    "Free working hours calculator. Calculate worked time between start and end with break deduction, decimal hours, overtime comparison, and FAQ schema.",
+  href: "/date-time/working-hours-calculator/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/working-hours-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It calculates working time between a start time and end time, subtracts break time, and shows the result in hours, minutes, and decimal hours.",
+  },
+  {
+    q: "Can it handle overnight shifts?",
+    a: "Yes. If the end time is earlier than the start time, the calculator can treat the shift as crossing midnight.",
+  },
+  {
+    q: "How is break time applied?",
+    a: "Break time is subtracted from the total elapsed shift time after the start/end time difference is calculated.",
+  },
+  {
+    q: "Can I compare against a standard workday?",
+    a: "Yes. The calculator includes a target hours field so you can compare worked hours against a standard shift length.",
+  },
+  {
+    q: "Are my work times stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Working Hours Calculator — ${SITE_NAME}`}
+  description="Calculate working hours between two times, subtract breaks, compare with target hours, and show decimal hours."
+  canonicalPath={CANONICAL_PATH}
+  h1="Working Hours Calculator"
+  intro="Calculate worked time between start and end, subtract break time, and compare the result with a target workday length."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="working-hours-calculator">
+    <style is:inline>
+      .whc-grid-2,
+      .whc-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .whc-grid-2 > *,
+      .whc-grid-3 > * {
+        min-width: 0;
+      }
+
+      #whc_start,
+      #whc_end,
+      #whc_break_minutes,
+      #whc_target_hours,
+      #whc_overnight {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .whc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .whc-grid-3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="whc_help whc_privacy">
+      <div class="whc-grid-2">
+        <div class="field">
+          <label for="whc_start">Start time</label>
+          <input id="whc_start" type="time" step="1" />
+        </div>
+
+        <div class="field">
+          <label for="whc_end">End time</label>
+          <input id="whc_end" type="time" step="1" />
+        </div>
+      </div>
+
+      <div class="whc-grid-3">
+        <div class="field">
+          <label for="whc_break_minutes">Break (minutes)</label>
+          <input id="whc_break_minutes" type="number" inputmode="decimal" placeholder="e.g., 30" value="0" />
+        </div>
+
+        <div class="field">
+          <label for="whc_target_hours">Target hours (optional)</label>
+          <input id="whc_target_hours" type="number" inputmode="decimal" placeholder="e.g., 8" value="8" />
+        </div>
+
+        <div class="field">
+          <label for="whc_overnight">Overnight handling</label>
+          <select id="whc_overnight" aria-describedby="whc_help">
+            <option value="yes" selected>Allow crossing midnight</option>
+            <option value="no">Same day only</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="whc_help" style="margin-top:6px;">
+        Break minutes are subtracted from total elapsed shift time after time difference is calculated.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="whc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="whc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="whc_error" role="alert" style="display:none;"></div>
+      <div class="result" id="whc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="whc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="whc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="whc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No time values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator first finds the elapsed time between start and end. If overnight handling is enabled and the end time is earlier,
+      it adds 24 hours. Then it subtracts break minutes to estimate net worked time.
+    </p>
+
+    <p class="note">
+      If you provide a target hours value, the calculator also shows whether you worked under, over, or exactly at the target.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>09:00 to 18:00 with a 60-minute break → 8.00 worked hours</li>
+      <li>22:00 to 06:00 with a 30-minute break → overnight shift</li>
+      <li>Use target hours to compare actual worked time with a standard workday</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/hours-between-times/">Hours Between Times</a></li>
+      <li><a href="/date-time/time-between-times/">Time Between Times</a></li>
+      <li><a href="/date-time/time-duration-calculator/">Time Duration Calculator</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("whc_start");
+  const endEl = document.getElementById("whc_end");
+  const breakEl = document.getElementById("whc_break_minutes");
+  const targetEl = document.getElementById("whc_target_hours");
+  const overnightEl = document.getElementById("whc_overnight");
+  const calcBtn = document.getElementById("whc_calc");
+  const clearBtn = document.getElementById("whc_clear");
+  const errEl = document.getElementById("whc_error");
+  const outEl = document.getElementById("whc_result");
+  const cardsEl = document.getElementById("whc_cards");
+  const tbodyEl = document.getElementById("whc_tbody");
+
+  if (!startEl || !endEl || !breakEl || !targetEl || !overnightEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseTime(value) {
+    const s = String(value || "").trim();
+    if (!s) return NaN;
+    const parts = s.split(":").map(Number);
+    if (parts.length < 2) return NaN;
+
+    const h = parts[0];
+    const m = parts[1];
+    const sec = parts[2] || 0;
+
+    if (![h, m, sec].every(Number.isFinite)) return NaN;
+    if (h < 0 || h > 23 || m < 0 || m > 59 || sec < 0 || sec > 59) return NaN;
+
+    return h * 3600 + m * 60 + sec;
+  }
+
+  function formatHMS(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = Math.floor(totalSeconds % 60);
+    return h + "h " + m + "m " + s + "s";
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const start = parseTime(startEl.value);
+    const end = parseTime(endEl.value);
+    const breakMinutes = Number(String(breakEl.value || "0"));
+    const targetRaw = String(targetEl.value || "").trim();
+    const targetHours = targetRaw ? Number(targetRaw) : NaN;
+    const allowOvernight = String(overnightEl.value || "yes") === "yes";
+
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      showError("Please enter valid start and end times.");
+      return;
+    }
+
+    if (!Number.isFinite(breakMinutes) || breakMinutes < 0 || breakMinutes > 1440) {
+      showError("Please enter a valid break duration in minutes (0 to 1440).");
+      return;
+    }
+
+    if (targetRaw && (!Number.isFinite(targetHours) || targetHours < 0 || targetHours > 24)) {
+      showError("Please enter a valid target hours value (0 to 24), or leave it blank.");
+      return;
+    }
+
+    let diff = end - start;
+    let overnight = false;
+
+    if (diff < 0) {
+      if (!allowOvernight) {
+        showError("End time is earlier than start time. Enable overnight handling or correct the order.");
+        return;
+      }
+      diff += 86400;
+      overnight = true;
+    }
+
+    const breakSeconds = breakMinutes * 60;
+    const net = diff - breakSeconds;
+
+    if (net < 0) {
+      showError("Break time is longer than the total elapsed time.");
+      return;
+    }
+
+    const decimalHours = net / 3600;
+    const totalMinutes = net / 60;
+    const comparison = Number.isFinite(targetHours) ? decimalHours - targetHours : NaN;
+
+    outEl.innerHTML =
+      "<strong>Worked time:</strong> " + formatHMS(net) + "<br/>" +
+      "<span class='note'>Decimal hours: " + decimalHours.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(overnight ? "Overnight shift" : "Same-day shift") + " " +
+      badge(breakMinutes > 0 ? "Break deducted" : "No break") + " " +
+      badge(Number.isFinite(targetHours) ? (comparison > 0 ? "Above target" : comparison < 0 ? "Below target" : "On target") : "No target comparison");
+
+    render([
+      ["Start time", startEl.value],
+      ["End time", endEl.value],
+      ["Total elapsed time", formatHMS(diff)],
+      ["Break deducted", breakMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " minutes"],
+      ["Net worked time", formatHMS(net)],
+      ["Decimal hours", decimalHours.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })],
+      ["Total worked minutes", totalMinutes.toLocaleString(undefined, { maximumFractionDigits: 2 })],
+      ["Target hours", Number.isFinite(targetHours) ? targetHours.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "Not set"],
+      ["Difference vs target", Number.isFinite(targetHours) ? comparison.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + " hours" : "Not calculated"],
+    ]);
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    breakEl.value = "0";
+    targetEl.value = "8";
+    overnightEl.value = "yes";
+    clearOut();
+    startEl.focus();
+  });
+
+  clearOut();
+});
+</script>

@@ -1,0 +1,313 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "PSI to Bar",
+  description:
+    "Convert PSI to bar instantly with validation, accessible UX, result cards, reference table, and FAQ schema.",
+  href: "/converter/psi-to-bar/",
+  order: 310,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/psi-to-bar/";
+const PSI_TO_BAR = 0.0689475729;
+
+const faqs = [
+  {
+    q: "How do you convert PSI to bar?",
+    a: "Multiply PSI by 0.0689475729 to get bar.",
+  },
+  {
+    q: "What is 1 PSI in bar?",
+    a: "1 PSI equals about 0.06895 bar.",
+  },
+  {
+    q: "Can pressure values be negative?",
+    a: "The converter supports negative values mathematically, but real-world gauge pressure is often non-negative depending on context.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`PSI to Bar Converter — ${SITE_NAME}`}
+  description="Convert PSI to bar with validation, accessible UX, result cards, a reference table, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="PSI to Bar Converter"
+  intro="Convert pressure from pounds per square inch (PSI) to bar. Includes rounding controls, a quick reference table, and input validation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="psi-to-bar">
+    <div class="form" role="form" aria-describedby="p2b_help p2b_privacy">
+      <div class="field">
+        <label for="p2b_psi">Pressure (PSI)</label>
+        <input id="p2b_psi" type="number" inputmode="decimal" placeholder="e.g., 30" aria-describedby="p2b_help" />
+        <p class="note" id="p2b_help" style="margin-top:6px;">
+          Enter PSI and convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="p2b_round">Rounding</label>
+        <select id="p2b_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="p2b_convert">Convert</button>
+        <button class="btn secondary" type="button" id="p2b_swap">Swap (bar → PSI)</button>
+        <button class="btn secondary" type="button" id="p2b_clear">Clear</button>
+      </div>
+
+      <div class="result" id="p2b_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="p2b_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="p2b_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">PSI</th>
+              <th scope="col">bar</th>
+            </tr>
+          </thead>
+          <tbody id="p2b_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="p2b_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      <strong>bar = PSI × 0.0689475729</strong><br />
+      Reverse: <strong>PSI = bar × 14.5037738</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>30 PSI</strong> ≈ <strong>2.068 bar</strong></li>
+      <li><strong>100 PSI</strong> ≈ <strong>6.895 bar</strong></li>
+      <li><strong>14.696 PSI</strong> ≈ <strong>1.013 bar</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/bar-to-psi/">Bar to PSI</a></li>
+      <li><a href="/converter/pressure-converter/">Pressure Converter</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("p2b_psi");
+  const roundEl = document.getElementById("p2b_round");
+  const convertBtn = document.getElementById("p2b_convert");
+  const swapBtn = document.getElementById("p2b_swap");
+  const clearBtn = document.getElementById("p2b_clear");
+  const errEl = document.getElementById("p2b_error");
+  const outEl = document.getElementById("p2b_result");
+  const cardsEl = document.getElementById("p2b_cards");
+  const tbodyEl = document.getElementById("p2b_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let modePsiToBar = true;
+  const PSI_TO_BAR = 0.0689475729;
+  const BAR_TO_PSI = 14.5037738;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1e9 || ax < 1e-8) return x.toExponential(6);
+    return String(Number(x.toPrecision(10)));
+  }
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    return Number(x).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+  function classifyBar(bar) {
+    const a = Math.abs(bar);
+    if (a < 1) return "Low pressure";
+    if (a < 10) return "Typical pressure";
+    if (a < 100) return "High pressure";
+    return "Very high pressure";
+  }
+  function psiToBar(v) { return v * PSI_TO_BAR; }
+  function barToPsi(v) { return v * BAR_TO_PSI; }
+
+  function setUi() {
+    const label = document.querySelector('label[for="p2b_psi"]');
+    if (!label) return;
+    if (modePsiToBar) {
+      label.textContent = "Pressure (PSI)";
+      inEl.placeholder = "e.g., 30";
+      swapBtn.textContent = "Swap (bar → PSI)";
+    } else {
+      label.textContent = "Pressure (bar)";
+      inEl.placeholder = "e.g., 2";
+      swapBtn.textContent = "Swap (PSI → bar)";
+    }
+  }
+
+  function fillTable(inputValue) {
+    tbodyEl.innerHTML = "";
+    const refs = [
+      { name: "Car tire pressure", psi: 32 },
+      { name: "1 atmosphere (approx.)", psi: 14.6959 },
+      { name: "High-pressure air", psi: 100 },
+    ];
+
+    if (Number.isFinite(inputValue)) {
+      const psiVal = modePsiToBar ? inputValue : barToPsi(inputValue);
+      refs.push({ name: "Your input", psi: psiVal, highlight: true });
+    }
+
+    refs.forEach((r) => {
+      const tr = document.createElement("tr");
+      if (r.highlight) tr.style.fontWeight = "900";
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      const td3 = document.createElement("td");
+      td1.textContent = r.name;
+      td2.textContent = fmtSmart(r.psi);
+      td3.textContent = fmt(psiToBar(r.psi));
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid pressure.";
+      return;
+    }
+    if (Math.abs(raw) > 1e18) {
+      showError("Value is too large for reliable display.");
+      outEl.textContent = "Result will appear here.";
+      return;
+    }
+
+    let psi, bar;
+    if (modePsiToBar) {
+      psi = raw;
+      bar = psiToBar(psi);
+    } else {
+      bar = raw;
+      psi = barToPsi(bar);
+    }
+
+    outEl.innerHTML = modePsiToBar
+      ? `<strong>Result:</strong> ${fmt(bar)} bar<br/><span class="note">${fmtSmart(psi)} PSI = ${fmt(bar)} bar</span>`
+      : `<strong>Result:</strong> ${fmt(psi)} PSI<br/><span class="note">${fmtSmart(bar)} bar = ${fmt(psi)} PSI</span>`;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${badge(modePsiToBar ? "PSI → bar" : "bar → PSI")}
+        ${badge("Reference: 1 atm ≈ 1.013 bar")}
+        ${badge(classifyBar(bar))}
+      </div>
+    `;
+
+    fillTable(raw);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    modePsiToBar = !modePsiToBar;
+    setUi();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", function () {
+    modePsiToBar = true;
+    setUi();
+    reset();
+  });
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+  inEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+  inEl.addEventListener("input", function () {
+    if (!String(inEl.value || "").trim()) {
+      clearError();
+      outEl.textContent = "Result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+      tbodyEl.innerHTML = "";
+    }
+  });
+
+  setUi();
+});
+</script>

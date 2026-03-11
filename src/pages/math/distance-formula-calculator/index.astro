@@ -1,0 +1,314 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Distance Formula Calculator",
+  description:
+    "Calculate the distance between two points in 2D using the distance formula. Includes validation, result cards, steps, and FAQ schema.",
+  href: "/math/distance-formula-calculator/",
+  order: 270,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/distance-formula-calculator/";
+
+const faqs = [
+  {
+    q: "What is the distance formula?",
+    a: "For points (x1, y1) and (x2, y2), distance = √((x2−x1)² + (y2−y1)²).",
+  },
+  {
+    q: "Can I use decimals and negative coordinates?",
+    a: "Yes. The calculator supports negative numbers and decimals.",
+  },
+  {
+    q: "What does the calculator return?",
+    a: "It returns the exact squared-distance expression used internally and the final numeric distance.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Distance Formula Calculator — ${SITE_NAME}`}
+  description="Find the distance between two 2D points using the distance formula. Includes validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Distance Formula Calculator"
+  intro="Enter two points (x1, y1) and (x2, y2) to calculate the straight-line distance between them."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="distance-formula-calculator">
+    <style is:inline>
+      .df-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .df-grid-2 > * {
+        min-width: 0;
+      }
+
+      #df_x1,
+      #df_y1,
+      #df_x2,
+      #df_y2,
+      #df_round {
+        width: 100%;
+        min-width: 0;
+      }
+
+      @media (min-width: 700px) {
+        .df-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="df_help df_privacy">
+      <div class="df-grid-2">
+        <div class="field">
+          <label for="df_x1">x1</label>
+          <input id="df_x1" type="number" inputmode="decimal" placeholder="e.g., 1" aria-describedby="df_help" />
+        </div>
+
+        <div class="field">
+          <label for="df_y1">y1</label>
+          <input id="df_y1" type="number" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+
+        <div class="field">
+          <label for="df_x2">x2</label>
+          <input id="df_x2" type="number" inputmode="decimal" placeholder="e.g., 4" />
+        </div>
+
+        <div class="field">
+          <label for="df_y2">y2</label>
+          <input id="df_y2" type="number" inputmode="decimal" placeholder="e.g., 6" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="df_round">Rounding</label>
+        <select id="df_round">
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="10">10 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="df_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="df_clear">Clear</button>
+      </div>
+
+      <div class="result" id="df_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="df_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="df_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="df_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="df_help" style="margin-top:6px;">
+        The tool uses the 2D distance formula based on the Pythagorean theorem.
+      </p>
+      <p class="note" id="df_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No coordinates are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Distance between two points:
+      <br />
+      <strong>d = √((x2−x1)² + (y2−y1)²)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>(1, 2)</strong> to <strong>(4, 6)</strong> → distance = <strong>5</strong></li>
+      <li><strong>(0, 0)</strong> to <strong>(3, 4)</strong> → distance = <strong>5</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/slope-calculator/">Slope Calculator</a></li>
+      <li><a href="/math/pythagorean-theorem-calculator/">Pythagorean Theorem Calculator</a></li>
+      <li><a href="/math/quadratic-equation-calculator/">Quadratic Equation Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const x1El = document.getElementById("df_x1");
+  const y1El = document.getElementById("df_y1");
+  const x2El = document.getElementById("df_x2");
+  const y2El = document.getElementById("df_y2");
+  const roundEl = document.getElementById("df_round");
+  const calcBtn = document.getElementById("df_calc");
+  const clearBtn = document.getElementById("df_clear");
+  const errEl = document.getElementById("df_error");
+  const outEl = document.getElementById("df_result");
+  const cardsEl = document.getElementById("df_cards");
+  const tbodyEl = document.getElementById("df_tbody");
+
+  if (!x1El || !y1El || !x2El || !y2El || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const s = String(v ?? "").trim();
+    if (s === "") return NaN;
+    const x = parseFloat(s);
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") {
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1e12 || ax < 1e-10) return x.toExponential(8);
+      return String(Number(x.toPrecision(12)));
+    }
+    const d = parseInt(r, 10);
+    return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: 0 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function fillTable(dx, dy, squared, distance) {
+    tbodyEl.innerHTML = "";
+    const rows = [
+      ["Δx", fmt(dx)],
+      ["Δy", fmt(dy)],
+      ["(Δx)² + (Δy)²", fmt(squared)],
+      ["Distance", fmt(distance)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = String(row[0]);
+      td2.textContent = String(row[1]);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const x1 = toNum(x1El.value);
+    const y1 = toNum(y1El.value);
+    const x2 = toNum(x2El.value);
+    const y2 = toNum(y2El.value);
+
+    if (![x1, y1, x2, y2].every(Number.isFinite)) {
+      outEl.textContent = "Please enter valid numbers for all coordinates.";
+      return;
+    }
+
+    if ([x1, y1, x2, y2].some(function (v) { return Math.abs(v) > 1e12; })) {
+      showError("One or more coordinates are extremely large. Results may be harder to read.");
+    }
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const squared = dx * dx + dy * dy;
+    const distance = Math.sqrt(squared);
+
+    outEl.innerHTML =
+      "<strong>Distance:</strong> " + fmt(distance) + "<br/>" +
+      "<span class='note'>√((" + fmt(dx) + ")² + (" + fmt(dy) + ")²) = √(" + fmt(squared) + ")</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("Point 1: (" + fmt(x1) + ", " + fmt(y1) + ")") +
+      badge("Point 2: (" + fmt(x2) + ", " + fmt(y2) + ")") +
+      badge(distance === 0 ? "Same point" : distance < 10 ? "Short distance" : "Longer distance") +
+      "</div>";
+
+    fillTable(dx, dy, squared, distance);
+  }
+
+  function reset() {
+    clearError();
+    x1El.value = "";
+    y1El.value = "";
+    x2El.value = "";
+    y2El.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    x1El.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", reset);
+
+  [x1El, y1El, x2El, y2El].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  outEl.textContent = "Result will appear here.";
+});
+</script>

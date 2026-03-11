@@ -1,0 +1,238 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Week Number Calculator",
+  description:
+    "Free week number calculator. Find the ISO week number for any date with validation, result cards, and FAQ schema.",
+  href: "/date-time/week-number-calculator/",
+  order: 85,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/week-number-calculator/";
+
+const faqs = [
+  {
+    q: "What is a week number?",
+    a: "A week number identifies which week of the year a date belongs to. This calculator uses ISO week numbering.",
+  },
+  {
+    q: "What is ISO week numbering?",
+    a: "ISO week numbering starts weeks on Monday, and week 1 is the week that contains the first Thursday of the year.",
+  },
+  {
+    q: "Why can early January belong to the previous ISO year?",
+    a: "Because ISO week years are based on full weeks, some dates near the start or end of a calendar year belong to a neighboring ISO week year.",
+  },
+  {
+    q: "Does this work for leap years?",
+    a: "Yes. The calculation works with real calendar dates, including leap years.",
+  },
+  {
+    q: "Are my dates stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Week Number Calculator — ${SITE_NAME}`}
+  description="Find the ISO week number for any date. Includes validation, ISO week year details, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Week Number Calculator"
+  intro="Enter a date to find its ISO week number and ISO week year."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="week-number-calculator">
+    <div class="form" role="form" aria-describedby="wnc_help wnc_privacy">
+      <div class="field">
+        <label for="wnc_date">Date</label>
+        <input id="wnc_date" type="date" />
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="wnc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="wnc_today">Use today</button>
+        <button class="btn secondary" type="button" id="wnc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="wnc_error" role="alert" style="display:none;"></div>
+      <div class="result" id="wnc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="wnc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="wnc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="wnc_help" style="margin-top:10px;">
+        This tool uses ISO 8601 week numbering: Monday is the first day of the week.
+      </p>
+
+      <p class="note" id="wnc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No dates are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      ISO week numbering assigns dates to week-based years. Week 1 is the week containing the first Thursday of the year.
+      This means some dates near January 1 or December 31 can belong to the previous or next ISO week year.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-01 may not always be in ISO week 1 depending on the calendar alignment</li>
+      <li>Dates in late December can belong to week 1 of the next ISO year</li>
+      <li>Useful for project schedules, reporting, and international planning</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/day-of-week-calculator/">Day of Week Calculator</a></li>
+      <li><a href="/date-time/date-difference-calculator/">Date Difference Calculator</a></li>
+      <li><a href="/date-time/leap-year-calculator/">Leap Year Calculator</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dateEl = document.getElementById("wnc_date");
+  const calcBtn = document.getElementById("wnc_calc");
+  const todayBtn = document.getElementById("wnc_today");
+  const clearBtn = document.getElementById("wnc_clear");
+  const errEl = document.getElementById("wnc_error");
+  const outEl = document.getElementById("wnc_result");
+  const cardsEl = document.getElementById("wnc_cards");
+  const tbodyEl = document.getElementById("wnc_tbody");
+
+  if (!dateEl || !calcBtn || !todayBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseDate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s || ""))) return null;
+    const d = new Date(String(s) + "T00:00:00");
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  function isoWeekData(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const isoYear = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(isoYear, 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return { isoYear, weekNo };
+  }
+
+  function dayName(date) {
+    return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const d = parseDate(dateEl.value);
+    if (!d) {
+      showError("Please enter a valid date.");
+      return;
+    }
+
+    const iso = isoWeekData(d);
+
+    outEl.innerHTML =
+      "<strong>ISO week number:</strong> Week " + iso.weekNo + "<br/>" +
+      "<span class='note'>ISO week year: " + iso.isoYear + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge("Week " + iso.weekNo) + " " +
+      badge("ISO year " + iso.isoYear) + " " +
+      badge(dayName(d));
+
+    render([
+      ["Date", dateEl.value],
+      ["Day of week", dayName(d)],
+      ["ISO week number", "Week " + iso.weekNo],
+      ["ISO week year", String(iso.isoYear)],
+      ["Calendar year", String(d.getFullYear())],
+    ]);
+  });
+
+  todayBtn.addEventListener("click", function () {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    dateEl.value = y + "-" + m + "-" + d;
+  });
+
+  clearBtn.addEventListener("click", function () {
+    dateEl.value = "";
+    clearOut();
+    dateEl.focus();
+  });
+});
+</script>

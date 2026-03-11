@@ -1,0 +1,314 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cycling Calorie Calculator",
+  description:
+    "Estimate calories burned while cycling from body weight and distance with validation, result cards, and FAQ schema.",
+  href: "/health/cycling-calorie-calculator/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/cycling-calorie-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates calories burned while cycling based on body weight and distance covered.",
+  },
+  {
+    q: "Why is cycling different from running?",
+    a: "Cycling often has a lower per-kilometer energy cost than running, so this calculator uses a different simplified coefficient.",
+  },
+  {
+    q: "Is the result exact?",
+    a: "No. Actual calorie burn varies with terrain, wind, speed, posture, bike type, and rider efficiency.",
+  },
+  {
+    q: "Can I use miles instead of kilometers?",
+    a: "Yes. The calculator supports both metric and imperial inputs.",
+  },
+  {
+    q: "Are my ride values stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Cycling Calorie Calculator — ${SITE_NAME}`}
+  description="Estimate calories burned while cycling from weight and distance."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cycling Calorie Calculator"
+  intro="Estimate calories burned while cycling from body weight and distance. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="cycling-calorie-calculator">
+    <div class="form" role="form" aria-describedby="ccc_help ccc_privacy">
+      <div class="field">
+        <label for="ccc_unit">Units</label>
+        <select id="ccc_unit">
+          <option value="metric" selected>Metric (kg, km)</option>
+          <option value="imperial">Imperial (lb, miles)</option>
+        </select>
+      </div>
+
+      <div class="field" id="ccc_weight_metric_field">
+        <label for="ccc_weight_kg">Weight (kg)</label>
+        <input id="ccc_weight_kg" type="number" inputmode="decimal" min="1" placeholder="e.g., 70" />
+      </div>
+
+      <div class="field" id="ccc_weight_imperial_field" style="display:none;">
+        <label for="ccc_weight_lb">Weight (lb)</label>
+        <input id="ccc_weight_lb" type="number" inputmode="decimal" min="1" placeholder="e.g., 154" />
+      </div>
+
+      <div class="field" id="ccc_distance_metric_field">
+        <label for="ccc_distance_km">Distance (km)</label>
+        <input id="ccc_distance_km" type="number" inputmode="decimal" min="0.01" placeholder="e.g., 20" />
+      </div>
+
+      <div class="field" id="ccc_distance_imperial_field" style="display:none;">
+        <label for="ccc_distance_miles">Distance (miles)</label>
+        <input id="ccc_distance_miles" type="number" inputmode="decimal" min="0.01" placeholder="e.g., 12" />
+      </div>
+
+      <p class="note" id="ccc_help" style="margin-top:6px;">
+        This calculator uses a simplified moderate-effort cycling estimate based on weight and distance.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ccc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ccc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ccc_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="ccc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="ccc_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="ccc_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator uses a simple cycling estimate where calorie burn scales with body weight and distance covered.
+    </p>
+    <p class="note">
+      Compared with running, cycling often uses a lower simplified distance coefficient in rough estimates.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>70 kg cycling 20 km → rough calorie estimate</li>
+      <li>154 lb cycling 12 miles → imperial inputs are converted internally</li>
+      <li>Useful for quick ride-planning estimates</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/running-calorie-calculator/">Running Calorie Calculator</a></li>
+      <li><a href="/health/walking-calorie-calculator/">Walking Calorie Calculator</a></li>
+      <li><a href="/health/daily-steps-calculator/">Daily Steps Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const unitEl = document.getElementById("ccc_unit");
+
+  const wKgField = document.getElementById("ccc_weight_metric_field");
+  const wLbField = document.getElementById("ccc_weight_imperial_field");
+  const dKmField = document.getElementById("ccc_distance_metric_field");
+  const dMiField = document.getElementById("ccc_distance_imperial_field");
+
+  const wKgEl = document.getElementById("ccc_weight_kg");
+  const wLbEl = document.getElementById("ccc_weight_lb");
+  const dKmEl = document.getElementById("ccc_distance_km");
+  const dMiEl = document.getElementById("ccc_distance_miles");
+
+  const calcBtn = document.getElementById("ccc_calc");
+  const clearBtn = document.getElementById("ccc_clear");
+  const errEl = document.getElementById("ccc_error");
+  const outEl = document.getElementById("ccc_result");
+  const detailsEl = document.getElementById("ccc_details");
+
+  if (!unitEl || !wKgField || !wLbField || !dKmField || !dMiField || !wKgEl || !wLbEl || !dKmEl || !dMiEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 2) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function setUnitUI() {
+    const imp = unitEl.value === "imperial";
+    wKgField.style.display = imp ? "none" : "block";
+    wLbField.style.display = imp ? "block" : "none";
+    dKmField.style.display = imp ? "none" : "block";
+    dMiField.style.display = imp ? "block" : "none";
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const unit = String(unitEl.value);
+    let weightKg = NaN;
+    let distanceKm = NaN;
+
+    if (unit === "imperial") {
+      const weightLb = toNum(wLbEl.value);
+      const distanceMi = toNum(dMiEl.value);
+
+      if (!Number.isFinite(weightLb) || weightLb <= 0 || weightLb > 1500) {
+        showError("Please enter a valid weight in pounds.");
+        return;
+      }
+      if (!Number.isFinite(distanceMi) || distanceMi <= 0 || distanceMi > 500) {
+        showError("Please enter a valid cycling distance in miles.");
+        return;
+      }
+
+      weightKg = weightLb * 0.45359237;
+      distanceKm = distanceMi * 1.609344;
+    } else {
+      weightKg = toNum(wKgEl.value);
+      distanceKm = toNum(dKmEl.value);
+
+      if (!Number.isFinite(weightKg) || weightKg <= 0 || weightKg > 700) {
+        showError("Please enter a valid weight in kilograms.");
+        return;
+      }
+      if (!Number.isFinite(distanceKm) || distanceKm <= 0 || distanceKm > 2000) {
+        showError("Please enter a valid cycling distance in kilometers.");
+        return;
+      }
+    }
+
+    // simplified moderate cycling estimate
+    const calories = weightKg * distanceKm * 0.30;
+
+    const rideLabel =
+      distanceKm < 10 ? "Short ride" :
+      distanceKm < 40 ? "Moderate ride" :
+      "Long ride";
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Cycling estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Estimated calories", `<span>${escapeHtml(fmt(calories, 0))} kcal</span>`, `${escapeHtml(fmt(weightKg, 1))} kg over ${escapeHtml(fmt(distanceKm, 2))} km`)}
+        ${card("Ride distance", `<span>${escapeHtml(fmt(distanceKm, 2))} km</span>`, `${escapeHtml(rideLabel)}`)}
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "imperial" ? "Imperial input" : "Metric input")} ${badge(rideLabel)} ${badge("Moderate-effort estimate")}
+      </div>
+      <div class="note" style="margin-top:8px;">Weight: <strong>${escapeHtml(fmt(weightKg, 2))} kg</strong></div>
+      <div class="note" style="margin-top:6px;">Distance: <strong>${escapeHtml(fmt(distanceKm, 2))} km</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated calories: <strong>${escapeHtml(fmt(calories, 0))} kcal</strong></div>
+      <div class="note" style="margin-top:6px;">Coefficient used: <strong>0.30 kcal per kg per km</strong></div>
+    `;
+  }
+
+  unitEl.addEventListener("change", function () {
+    setUnitUI();
+    resetOutputs();
+  });
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    unitEl.value = "metric";
+    wKgEl.value = "";
+    wLbEl.value = "";
+    dKmEl.value = "";
+    dMiEl.value = "";
+    setUnitUI();
+    resetOutputs();
+    wKgEl.focus();
+  });
+
+  setUnitUI();
+  resetOutputs();
+});
+</script>

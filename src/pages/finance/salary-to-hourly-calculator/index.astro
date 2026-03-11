@@ -1,0 +1,316 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Salary to Hourly Calculator",
+  description:
+    "Free salary to hourly calculator. Convert annual salary into an estimated hourly wage using your work schedule.",
+  href: "/finance/salary-to-hourly-calculator/",
+  order: 90,
+};
+
+const faq = [
+  {
+    q: "What does this salary to hourly calculator do?",
+    a: "It converts an annual salary into an estimated hourly wage using your hours per week and weeks worked per year.",
+  },
+  {
+    q: "Does this include overtime or bonuses?",
+    a: "No. This calculator estimates a base hourly equivalent from annual salary only.",
+  },
+  {
+    q: "Why do I need hours per week and weeks per year?",
+    a: "Those values determine the total number of hours worked per year, which is used to estimate hourly pay.",
+  },
+  {
+    q: "Does it show daily and weekly pay too?",
+    a: "Yes. It also shows estimated weekly, daily, monthly, and biweekly gross amounts.",
+  },
+  {
+    q: "Are my salary inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+---
+
+<ToolLayout
+  title="Salary to Hourly Calculator — MinimalDev"
+  description="Convert annual salary into an estimated hourly wage based on your work schedule."
+  canonicalPath="/finance/salary-to-hourly-calculator/"
+  h1="Salary to Hourly Calculator"
+  intro="Enter annual salary and your work schedule to estimate hourly gross pay and related pay periods."
+  faq={faq}
+>
+
+<div slot="tool" data-tool="salary-to-hourly-calculator">
+
+<style is:inline>
+
+.s2h-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.s2h-grid > *{
+  min-width:0;
+}
+
+#s2h_annual,
+#s2h_hours_week,
+#s2h_days_week,
+#s2h_weeks_year,
+#s2h_currency{
+  width:100%;
+  min-width:0;
+}
+
+@media (min-width:700px){
+  .s2h-grid{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+}
+
+</style>
+
+<div class="form" role="form" aria-describedby="s2h_note s2h_privacy">
+
+<div class="field">
+<label for="s2h_annual">Annual salary</label>
+<input id="s2h_annual" type="number" inputmode="decimal" placeholder="e.g., 60000">
+</div>
+
+<div class="s2h-grid">
+
+<div class="field">
+<label for="s2h_hours_week">Hours per week</label>
+<input id="s2h_hours_week" type="number" inputmode="decimal" value="40">
+</div>
+
+<div class="field">
+<label for="s2h_days_week">Days per week</label>
+<input id="s2h_days_week" type="number" inputmode="decimal" value="5">
+</div>
+
+<div class="field">
+<label for="s2h_weeks_year">Weeks per year</label>
+<input id="s2h_weeks_year" type="number" inputmode="decimal" value="52">
+</div>
+
+</div>
+
+<div class="field">
+<label for="s2h_currency">Currency (display only)</label>
+<select id="s2h_currency">
+<option value="USD" selected>USD ($)</option>
+<option value="EUR">EUR (€)</option>
+<option value="GBP">GBP (£)</option>
+<option value="KRW">KRW (₩)</option>
+<option value="JPY">JPY (¥)</option>
+</select>
+</div>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+<button id="s2h_calc" class="btn" type="button">Calculate</button>
+<button id="s2h_clear" class="btn secondary" type="button">Clear</button>
+</div>
+
+<div id="s2h_error" class="result" role="alert" style="display:none;"></div>
+
+<div id="s2h_summary" class="result" role="status" style="margin-top:12px;">
+Result will appear here.
+</div>
+
+<div id="s2h_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+<div style="margin-top:16px; overflow:auto;">
+<table style="width:100%; border-collapse:collapse; font-size:14px;">
+<thead>
+<tr>
+<th>Pay period</th>
+<th>Estimate</th>
+</tr>
+</thead>
+<tbody id="s2h_tbody"></tbody>
+</table>
+</div>
+
+<p class="note" id="s2h_note" style="margin-top:10px;">
+Gross earnings only. Taxes, deductions, bonuses, and overtime are not included.
+</p>
+
+<p class="note" id="s2h_privacy" style="margin-top:10px;">
+Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+</p>
+
+</div>
+</div>
+
+<div slot="how">
+<p class="note">
+This tool divides annual salary by total hours worked per year to estimate hourly pay.
+It also shows weekly, daily, monthly, and biweekly equivalents based on the schedule you enter.
+</p>
+</div>
+
+<div slot="examples">
+<ul>
+<li>$60,000/year at 40 hours/week and 52 weeks/year → about $28.85/hour</li>
+<li>Fewer weeks per year increases the hourly equivalent for the same annual salary</li>
+<li>Use the Salary Calculator if you want the same information starting from annual pay</li>
+</ul>
+</div>
+
+<div slot="related">
+<ul>
+<li><a href="/finance/salary-calculator/">Salary Calculator</a></li>
+<li><a href="/finance/hourly-to-salary-calculator/">Hourly to Salary Calculator</a></li>
+<li><a href="/finance/paycheck-calculator/">Paycheck Calculator</a></li>
+<li><a href="/finance/">All Finance Calculators</a></li>
+</ul>
+</div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+
+const annualEl=document.getElementById("s2h_annual");
+const hoursWeekEl=document.getElementById("s2h_hours_week");
+const daysWeekEl=document.getElementById("s2h_days_week");
+const weeksYearEl=document.getElementById("s2h_weeks_year");
+const currencyEl=document.getElementById("s2h_currency");
+
+const calcBtn=document.getElementById("s2h_calc");
+const clearBtn=document.getElementById("s2h_clear");
+
+const errorEl=document.getElementById("s2h_error");
+const summaryEl=document.getElementById("s2h_summary");
+const cardsEl=document.getElementById("s2h_cards");
+const tbodyEl=document.getElementById("s2h_tbody");
+
+if(!annualEl||!hoursWeekEl||!daysWeekEl||!weeksYearEl||!currencyEl||!calcBtn||!clearBtn||!errorEl||!summaryEl||!cardsEl||!tbodyEl)return;
+
+function toNum(v){
+const x=parseFloat(String(v));
+return Number.isFinite(x)?x:NaN;
+}
+
+function money(v,ccy){
+if(!Number.isFinite(v))return"0";
+try{
+return v.toLocaleString(undefined,{style:"currency",currency:ccy});
+}catch{
+return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})+" "+ccy;
+}
+}
+
+function clearError(){
+errorEl.style.display="none";
+errorEl.textContent="";
+}
+
+function showError(msg){
+errorEl.style.display="block";
+errorEl.textContent=msg;
+}
+
+function badge(text){
+return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>"+text+"</span>";
+}
+
+function clearOut(){
+clearError();
+summaryEl.textContent="Result will appear here.";
+cardsEl.style.display="none";
+cardsEl.innerHTML="";
+tbodyEl.innerHTML="";
+}
+
+calcBtn.addEventListener("click",function(){
+
+clearOut();
+
+const annual=toNum(annualEl.value);
+const hoursWeek=toNum(hoursWeekEl.value);
+const daysWeek=toNum(daysWeekEl.value);
+const weeksYear=toNum(weeksYearEl.value);
+const ccy=String(currencyEl.value||"USD");
+
+if(!Number.isFinite(annual)||annual<0){
+showError("Please enter a valid annual salary (0 or more).");
+return;
+}
+
+if(!Number.isFinite(hoursWeek)||hoursWeek<=0){
+showError("Please enter valid hours per week (> 0).");
+return;
+}
+
+if(!Number.isFinite(daysWeek)||daysWeek<=0){
+showError("Please enter valid days per week (> 0).");
+return;
+}
+
+if(!Number.isFinite(weeksYear)||weeksYear<=0){
+showError("Please enter valid weeks per year (> 0).");
+return;
+}
+
+const hourly=annual/(hoursWeek*weeksYear);
+const weekly=annual/weeksYear;
+const daily=weekly/daysWeek;
+const monthly=annual/12;
+const biweekly=annual/26;
+
+summaryEl.innerHTML=
+"<strong>Estimated hourly pay:</strong> "+money(hourly,ccy)+"<br>"+
+"<strong>Weekly estimate:</strong> "+money(weekly,ccy);
+
+cardsEl.style.display="block";
+cardsEl.innerHTML=
+badge(money(annual,ccy)+"/year")+" "+
+badge(hoursWeek+" hrs/week")+" "+
+badge(weeksYear+" weeks/year");
+
+const rows=[
+["Annual",money(annual,ccy)],
+["Monthly",money(monthly,ccy)],
+["Biweekly",money(biweekly,ccy)],
+["Weekly",money(weekly,ccy)],
+["Daily",money(daily,ccy)],
+["Hourly",money(hourly,ccy)]
+];
+
+rows.forEach(function(row){
+
+const tr=document.createElement("tr");
+const td1=document.createElement("td");
+const td2=document.createElement("td");
+
+td1.textContent=row[0];
+td2.textContent=row[1];
+
+tr.appendChild(td1);
+tr.appendChild(td2);
+
+tbodyEl.appendChild(tr);
+
+});
+
+});
+
+clearBtn.addEventListener("click",function(){
+
+annualEl.value="";
+hoursWeekEl.value="40";
+daysWeekEl.value="5";
+weeksYearEl.value="52";
+currencyEl.value="USD";
+
+clearOut();
+
+});
+
+});
+</script>

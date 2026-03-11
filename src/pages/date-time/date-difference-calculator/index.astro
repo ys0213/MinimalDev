@@ -1,0 +1,256 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Date Difference Calculator",
+  description:
+    "Free date difference calculator. Calculate the difference between two dates in days, weeks, months, and years with validation, result cards, and FAQ schema.",
+  href: "/date-time/date-difference-calculator/",
+  order: 65,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/date-difference-calculator/";
+
+const faqs = [
+  {
+    q: "What does this calculator do?",
+    a: "It calculates the difference between two calendar dates and shows the result in days, weeks, months, and years.",
+  },
+  {
+    q: "Does the order of the dates matter?",
+    a: "No. The calculator can handle dates in either order and will still show the absolute difference.",
+  },
+  {
+    q: "How are months and years handled?",
+    a: "The calculator shows exact day difference and also provides approximate months and years based on calendar-style averages.",
+  },
+  {
+    q: "Are leap years included automatically?",
+    a: "Yes. Because the calculation uses real calendar dates, leap years are included automatically.",
+  },
+  {
+    q: "Are my date inputs stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Date Difference Calculator — ${SITE_NAME}`}
+  description="Calculate the difference between two dates in days, weeks, months, and years with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Date Difference Calculator"
+  intro="Calculate the difference between two dates and view the result in multiple time units."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="date-difference-calculator">
+    <div class="form" role="form" aria-describedby="ddc_help ddc_privacy">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="ddc_start">Start date</label>
+          <input id="ddc_start" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="ddc_end">End date</label>
+          <input id="ddc_end" type="date" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ddc_mode">Display mode</label>
+        <select id="ddc_mode" aria-describedby="ddc_help">
+          <option value="absolute" selected>Absolute difference</option>
+          <option value="signed">Signed difference</option>
+        </select>
+        <p class="note" id="ddc_help" style="margin-top:6px;">
+          Absolute ignores order. Signed keeps the direction from start date to end date.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ddc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ddc_today">Use today as end date</button>
+        <button class="btn secondary" type="button" id="ddc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ddc_error" role="alert" style="display:none;"></div>
+      <div class="result" id="ddc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ddc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="ddc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ddc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No dates are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The calculator converts both dates into calendar timestamps at midnight and measures the difference in days.
+      It also converts that difference into approximate weeks, months, and years for easier interpretation.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2026-01-01 to 2026-01-31 → 30 days</li>
+      <li>2024-02-28 to 2024-03-01 → leap-year aware result</li>
+      <li>Signed mode shows whether the end date is before or after the start date</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/weeks-between-dates-calculator/">Weeks Between Dates</a></li>
+      <li><a href="/date-time/months-between-dates-calculator/">Months Between Dates</a></li>
+      <li><a href="/date-time/">All Date-Time Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("ddc_start");
+  const endEl = document.getElementById("ddc_end");
+  const modeEl = document.getElementById("ddc_mode");
+  const calcBtn = document.getElementById("ddc_calc");
+  const todayBtn = document.getElementById("ddc_today");
+  const clearBtn = document.getElementById("ddc_clear");
+  const errEl = document.getElementById("ddc_error");
+  const outEl = document.getElementById("ddc_result");
+  const cardsEl = document.getElementById("ddc_cards");
+  const tbodyEl = document.getElementById("ddc_tbody");
+
+  if (!startEl || !endEl || !modeEl || !calcBtn || !todayBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function parseDate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s || ""))) return null;
+    const d = new Date(String(s) + "T00:00:00");
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  function fmtNum(v, digits) {
+    return v.toLocaleString(undefined, { maximumFractionDigits: digits });
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function render(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + row[0] + "</td><td>" + row[1] + "</td>";
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const start = parseDate(startEl.value);
+    const end = parseDate(endEl.value);
+    const mode = String(modeEl.value || "absolute");
+
+    if (!start || !end) {
+      showError("Please enter valid start and end dates.");
+      return;
+    }
+
+    const msDiffRaw = end.getTime() - start.getTime();
+    const dayDiffRaw = msDiffRaw / 86400000;
+    const dayDiff = mode === "absolute" ? Math.abs(dayDiffRaw) : dayDiffRaw;
+
+    const weeks = dayDiff / 7;
+    const monthsApprox = dayDiff / 30.4375;
+    const yearsApprox = dayDiff / 365.25;
+
+    outEl.innerHTML =
+      "<strong>Date difference:</strong> " + fmtNum(dayDiff, 0) + " day(s)<br/>" +
+      "<span class='note'>" + fmtNum(weeks, 4) + " weeks · " + fmtNum(monthsApprox, 4) + " months · " + fmtNum(yearsApprox, 4) + " years</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(mode === "absolute" ? "Absolute difference" : "Signed difference") + " " +
+      badge(dayDiffRaw === 0 ? "Same date" : dayDiffRaw > 0 ? "End after start" : "End before start") + " " +
+      badge(Math.abs(dayDiffRaw) < 31 ? "Short span" : Math.abs(dayDiffRaw) < 366 ? "Medium span" : "Long span");
+
+    render([
+      ["Start date", startEl.value],
+      ["End date", endEl.value],
+      ["Difference in days", fmtNum(dayDiff, 0)],
+      ["Difference in weeks", fmtNum(weeks, 4)],
+      ["Approx. months", fmtNum(monthsApprox, 4)],
+      ["Approx. years", fmtNum(yearsApprox, 4)],
+    ]);
+  });
+
+  todayBtn.addEventListener("click", function () {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    endEl.value = y + "-" + m + "-" + d;
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    endEl.value = "";
+    modeEl.value = "absolute";
+    clearOut();
+    startEl.focus();
+  });
+});
+</script>

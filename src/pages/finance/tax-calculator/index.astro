@@ -1,0 +1,324 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Tax Calculator",
+  description:
+    "Calculate tax amount, pre-tax total, after-tax total, and effective rate using a simple percentage-based tax model.",
+  href: "/finance/tax-calculator/",
+  order: 75,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/tax-calculator/";
+
+const faqs = [
+  {
+    q: "What does this tax calculator do?",
+    a: "It calculates tax amount, after-tax total, and pre-tax amount using a simple percentage-based tax model.",
+  },
+  {
+    q: "Can I calculate both tax added and tax removed?",
+    a: "Yes. You can choose whether tax is added to a base amount or removed from a tax-inclusive total.",
+  },
+  {
+    q: "Is this a full tax filing calculator?",
+    a: "No. This is a simple rate-based calculator. It does not handle brackets, exemptions, deductions, or local filing rules.",
+  },
+  {
+    q: "Can I use this for sales tax or VAT-style calculations?",
+    a: "Yes. It works for many simple percentage tax cases, including sales tax or VAT-style calculations.",
+  },
+  {
+    q: "Are my amounts stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Tax Calculator — ${SITE_NAME}`}
+  description="Calculate tax amount, total with tax, or reverse-calculate pre-tax value using a simple tax percentage."
+  canonicalPath={CANONICAL_PATH}
+  h1="Tax Calculator"
+  intro="Calculate tax amount and total using a simple percentage rate, or reverse-calculate the pre-tax amount from a tax-inclusive total."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="tax-calculator">
+    <div class="form" role="form" aria-describedby="tax_help tax_privacy">
+      <div class="field">
+        <label for="tax_mode">Mode</label>
+        <select id="tax_mode">
+          <option value="add" selected>Add tax to amount</option>
+          <option value="remove">Extract pre-tax amount from tax-inclusive total</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="tax_amount">Amount</label>
+        <input id="tax_amount" type="number" inputmode="decimal" placeholder="e.g., 100" />
+      </div>
+
+      <div class="field">
+        <label for="tax_rate">Tax rate (%)</label>
+        <input id="tax_rate" type="number" inputmode="decimal" placeholder="e.g., 10" />
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn secondary" data-taxrate-preset="5">5%</button>
+        <button type="button" class="btn secondary" data-taxrate-preset="10">10%</button>
+        <button type="button" class="btn secondary" data-taxrate-preset="15">15%</button>
+        <button type="button" class="btn secondary" data-taxrate-preset="20">20%</button>
+        <button type="button" class="btn secondary" data-taxrate-preset="25">25%</button>
+      </div>
+
+      <div class="field">
+        <label for="tax_currency">Currency (display only)</label>
+        <select id="tax_currency">
+          <option value="USD" selected>USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="KRW">KRW (₩)</option>
+          <option value="JPY">JPY (¥)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="tax_round">Rounding</label>
+        <select id="tax_round">
+          <option value="2" selected>2 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="6">6 decimals</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="tax_calc" class="btn" type="button">Calculate</button>
+        <button id="tax_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="tax_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="tax_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="tax_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="tax_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tax_help" style="margin-top:10px;">
+        Add-tax mode: total = amount × (1 + rate). Extract mode: pre-tax = total ÷ (1 + rate).
+      </p>
+
+      <p class="note" id="tax_privacy" style="margin-top:10px;">
+        Informational only. This is a simple percentage tax calculator and does not replace official tax rules or filing calculations.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      In <strong>Add tax</strong> mode, the calculator applies a tax percentage to a base amount and shows the tax amount plus final total.
+    </p>
+
+    <p class="note">
+      In <strong>Extract pre-tax</strong> mode, the calculator starts from a tax-inclusive total and works backward to estimate the original
+      pre-tax amount and the tax portion.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$100 with 10% tax → $10 tax, $110 total</li>
+      <li>$110 tax-inclusive total at 10% → $100 pre-tax and $10 tax</li>
+      <li>Useful for sales tax, VAT-style examples, and simple tax planning</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sales-tax-calculator/">Sales Tax Calculator</a></li>
+      <li><a href="/finance/paycheck-calculator/">Paycheck Calculator</a></li>
+      <li><a href="/finance/tip-calculator/">Tip Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("tax_mode");
+  const amountEl = document.getElementById("tax_amount");
+  const rateEl = document.getElementById("tax_rate");
+  const currencyEl = document.getElementById("tax_currency");
+  const roundEl = document.getElementById("tax_round");
+  const calcBtn = document.getElementById("tax_calc");
+  const clearBtn = document.getElementById("tax_clear");
+  const errorEl = document.getElementById("tax_error");
+  const summaryEl = document.getElementById("tax_summary");
+  const cardsEl = document.getElementById("tax_cards");
+  const tbodyEl = document.getElementById("tax_tbody");
+
+  if (!modeEl || !amountEl || !rateEl || !currencyEl || !roundEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    const d = parseInt(String(roundEl.value), 10);
+    try {
+      return v.toLocaleString(undefined, {
+        style: "currency",
+        currency: ccy,
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      });
+    } catch {
+      return v.toLocaleString(undefined, {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      }) + " " + ccy;
+    }
+  }
+
+  function pct(v) {
+    return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  document.querySelectorAll("[data-taxrate-preset]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      rateEl.value = String(btn.getAttribute("data-taxrate-preset") || "");
+    });
+  });
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const mode = String(modeEl.value || "add");
+    const amount = toNum(amountEl.value);
+    const rate = toNum(rateEl.value);
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      showError("Please enter a valid amount (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
+      showError("Please enter a valid tax rate between 0 and 100.");
+      return;
+    }
+
+    const r = rate / 100;
+    let preTax = 0;
+    let taxAmount = 0;
+    let total = 0;
+
+    if (mode === "add") {
+      preTax = amount;
+      taxAmount = preTax * r;
+      total = preTax + taxAmount;
+
+      summaryEl.innerHTML =
+        "<strong>Tax amount:</strong> " + money(taxAmount, ccy) + "<br/>" +
+        "<strong>Total with tax:</strong> " + money(total, ccy);
+    } else {
+      total = amount;
+      preTax = total / (1 + r);
+      taxAmount = total - preTax;
+
+      summaryEl.innerHTML =
+        "<strong>Pre-tax amount:</strong> " + money(preTax, ccy) + "<br/>" +
+        "<strong>Included tax amount:</strong> " + money(taxAmount, ccy);
+    }
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(mode === "add" ? "Add tax mode" : "Extract pre-tax mode") + " " +
+      badge(rate < 10 ? "Lower rate" : rate < 20 ? "Moderate rate" : "Higher rate") + " " +
+      badge("Simple percentage model");
+
+    const rows = [
+      ["Mode", mode === "add" ? "Add tax to amount" : "Extract pre-tax from total"],
+      ["Tax rate", pct(rate)],
+      ["Pre-tax amount", money(preTax, ccy)],
+      ["Tax amount", money(taxAmount, ccy)],
+      ["Final total", money(total, ccy)],
+    ];
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    modeEl.value = "add";
+    amountEl.value = "";
+    rateEl.value = "";
+    currencyEl.value = "USD";
+    roundEl.value = "2";
+    clearOut();
+  });
+});
+</script>

@@ -1,0 +1,284 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Ideal Calorie Deficit Calculator",
+  description:
+    "Estimate a daily calorie deficit and daily calorie target from maintenance calories and desired weekly weight-loss pace.",
+  href: "/health/ideal-calorie-deficit/",
+  order: 75,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/ideal-calorie-deficit/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates a daily calorie deficit and an estimated calorie target based on maintenance calories and a chosen weekly weight-loss pace.",
+  },
+  {
+    q: "How is the calorie deficit calculated?",
+    a: "A common rule-of-thumb is that about 7,700 kcal corresponds to 1 kg of body weight, or about 3,500 kcal per pound.",
+  },
+  {
+    q: "Is this a medical recommendation?",
+    a: "No. This is an informational estimate only. Appropriate calorie targets vary by person and context.",
+  },
+  {
+    q: "Can I use pounds or kilograms?",
+    a: "Yes. You can choose kg/week or lb/week as your target rate.",
+  },
+  {
+    q: "Are my values stored?",
+    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Ideal Calorie Deficit Calculator — ${SITE_NAME}`}
+  description="Estimate a daily calorie deficit and target calorie intake from maintenance calories and your chosen weekly loss pace."
+  canonicalPath={CANONICAL_PATH}
+  h1="Ideal Calorie Deficit Calculator"
+  intro="Estimate a daily calorie deficit and target calorie intake from your maintenance calories and preferred weekly weight-loss pace. Informational only, not medical advice."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ideal-calorie-deficit">
+    <div class="form" role="form" aria-describedby="icd_help icd_privacy">
+      <div class="field">
+        <label for="icd_maintenance">Estimated maintenance calories (kcal/day)</label>
+        <input id="icd_maintenance" type="number" inputmode="decimal" min="1" placeholder="e.g., 2200" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="icd_rate">Target weekly loss</label>
+          <input id="icd_rate" type="number" inputmode="decimal" min="0.01" placeholder="e.g., 0.5" />
+        </div>
+
+        <div class="field">
+          <label for="icd_unit">Rate unit</label>
+          <select id="icd_unit" aria-describedby="icd_help">
+            <option value="kg" selected>kg/week</option>
+            <option value="lb">lb/week</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="icd_floor">Warning floor (kcal/day)</label>
+        <input id="icd_floor" type="number" inputmode="decimal" min="1" value="1200" />
+        <p class="note" id="icd_help" style="margin-top:6px;">
+          This tool uses a simple energy-balance estimate. Real-world outcomes vary and individual needs can differ substantially.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="icd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="icd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="icd_error" role="alert" style="display:none;"></div>
+
+      <div class="result" id="icd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="icd_details" style="margin-top:12px; display:none;"></div>
+
+      <p class="note" id="icd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts a target weekly loss into an estimated weekly calorie deficit, then divides by 7 to estimate a daily deficit.
+    </p>
+    <p class="note">
+      Estimated daily calorie target =
+      <strong>maintenance calories − daily deficit</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2,200 kcal/day maintenance and 0.5 kg/week → about 550 kcal/day deficit</li>
+      <li>2,400 kcal/day maintenance and 1 lb/week → about 500 kcal/day deficit</li>
+      <li>Useful as a planning estimate, not a guarantee</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((item) => (
+        <li><strong>{item.q}</strong> {item.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/health/calorie-needs/">Calorie Needs Calculator</a></li>
+      <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/health/macro/">Macro Calculator</a></li>
+      <li><a href="/health/">All Health Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const maintenanceEl = document.getElementById("icd_maintenance");
+  const rateEl = document.getElementById("icd_rate");
+  const unitEl = document.getElementById("icd_unit");
+  const floorEl = document.getElementById("icd_floor");
+
+  const calcBtn = document.getElementById("icd_calc");
+  const clearBtn = document.getElementById("icd_clear");
+  const errEl = document.getElementById("icd_error");
+  const outEl = document.getElementById("icd_result");
+  const detailsEl = document.getElementById("icd_details");
+
+  if (!maintenanceEl || !rateEl || !unitEl || !floorEl || !calcBtn || !clearBtn || !errEl || !outEl || !detailsEl) return;
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fmt(n, d = 0) {
+    return Number(n).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:800;">${escapeHtml(text)}</span>`;
+  }
+
+  function card(title, big, sub) {
+    return `
+      <div style="border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px;flex:1;min-width:220px;">
+        <strong>${escapeHtml(title)}</strong>
+        <div style="font-size:28px;font-weight:900;margin-top:6px;">${big}</div>
+        <div class="note" style="margin-top:4px;">${sub}</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutputs() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+  }
+
+  function compute() {
+    resetOutputs();
+
+    const maintenance = toNum(maintenanceEl.value);
+    const rate = toNum(rateEl.value);
+    const unit = String(unitEl.value || "kg");
+    const floor = toNum(floorEl.value);
+
+    if (!Number.isFinite(maintenance) || maintenance <= 0 || maintenance > 10000) {
+      showError("Please enter a valid maintenance calorie value.");
+      return;
+    }
+    if (!Number.isFinite(rate) || rate <= 0 || rate > 5) {
+      showError("Please enter a realistic weekly loss target.");
+      return;
+    }
+    if (!Number.isFinite(floor) || floor <= 0 || floor > 5000) {
+      showError("Please enter a valid warning floor value.");
+      return;
+    }
+
+    const weeklyDeficit = unit === "kg" ? rate * 7700 : rate * 3500;
+    const dailyDeficit = weeklyDeficit / 7;
+    const targetCalories = maintenance - dailyDeficit;
+
+    let paceLabel = "Moderate pace";
+    if (unit === "kg") {
+      if (rate < 0.25) paceLabel = "Slower pace";
+      else if (rate > 0.75) paceLabel = "Faster pace";
+    } else {
+      if (rate < 0.5) paceLabel = "Slower pace";
+      else if (rate > 1.5) paceLabel = "Faster pace";
+    }
+
+    outEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+        <strong>Results</strong>
+        ${badge("Energy-balance estimate")}
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;">
+        ${card("Daily deficit", `<span>${escapeHtml(fmt(dailyDeficit))} kcal</span>`, `${escapeHtml(fmt(rate, 2))} ${escapeHtml(unit)}/week target`)}
+        ${card("Target calories", `<span>${escapeHtml(fmt(targetCalories))} kcal/day</span>`, `From ${escapeHtml(fmt(maintenance))} kcal/day maintenance`) }
+      </div>
+    `;
+
+    detailsEl.style.display = "block";
+    detailsEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <strong>Calculation details</strong>
+        ${badge(unit === "kg" ? "kg/week target" : "lb/week target")} ${badge(paceLabel)} ${badge(targetCalories < floor ? "Below warning floor" : "Above warning floor")}
+      </div>
+      <div class="note" style="margin-top:8px;">Maintenance calories: <strong>${escapeHtml(fmt(maintenance))} kcal/day</strong></div>
+      <div class="note" style="margin-top:6px;">Weekly loss target: <strong>${escapeHtml(fmt(rate, 2))} ${escapeHtml(unit)}/week</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated weekly deficit: <strong>${escapeHtml(fmt(weeklyDeficit))} kcal/week</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated daily deficit: <strong>${escapeHtml(fmt(dailyDeficit))} kcal/day</strong></div>
+      <div class="note" style="margin-top:6px;">Estimated target intake: <strong>${escapeHtml(fmt(targetCalories))} kcal/day</strong></div>
+      <div class="note" style="margin-top:6px;">Warning floor: <strong>${escapeHtml(fmt(floor))} kcal/day</strong></div>
+    `;
+
+    if (targetCalories < floor) {
+      showError("The estimated target calories fall below your warning floor. Consider a slower target pace or professional guidance.");
+    }
+  }
+
+  calcBtn.addEventListener("click", compute);
+
+  clearBtn.addEventListener("click", function () {
+    maintenanceEl.value = "";
+    rateEl.value = "";
+    unitEl.value = "kg";
+    floorEl.value = "1200";
+    resetOutputs();
+    maintenanceEl.focus();
+  });
+
+  resetOutputs();
+});
+</script>

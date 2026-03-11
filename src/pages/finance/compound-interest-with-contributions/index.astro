@@ -1,0 +1,344 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Compound Interest with Contributions",
+  description:
+    "Estimate future value with compound interest and recurring contributions. Includes yearly table, validation, result cards, and FAQ schema.",
+  href: "/finance/compound-interest-with-contributions/",
+  order: 95,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/compound-interest-with-contributions/";
+
+const faqs = [
+  {
+    q: "What does this calculator estimate?",
+    a: "It estimates the future value of an account using compound growth plus recurring contributions over time.",
+  },
+  {
+    q: "What is the difference between principal and contributions?",
+    a: "Principal is the starting amount. Contributions are the extra amounts added regularly after the start.",
+  },
+  {
+    q: "Can I choose contribution frequency?",
+    a: "Yes. You can choose monthly or yearly contributions.",
+  },
+  {
+    q: "Does this include taxes, fees, or inflation?",
+    a: "No. This is a gross mathematical projection only. It does not include taxes, fees, or inflation adjustments.",
+  },
+  {
+    q: "Are results guaranteed?",
+    a: "No. This calculator assumes a constant return rate for estimation purposes only.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Compound Interest with Contributions — ${SITE_NAME}`}
+  description="Estimate future value with recurring contributions and compound growth. Includes validation, yearly breakdown, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Compound Interest with Contributions"
+  intro="Project account growth with a starting balance, recurring contributions, annual return rate, and time horizon."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="compound-interest-with-contributions">
+    <div class="form" role="form" aria-describedby="cic_help cic_privacy">
+      <div class="field">
+        <label for="cic_start">Initial amount</label>
+        <input id="cic_start" type="number" inputmode="decimal" placeholder="e.g., 5000" />
+      </div>
+
+      <div class="field">
+        <label for="cic_contrib">Contribution amount</label>
+        <input id="cic_contrib" type="number" inputmode="decimal" placeholder="e.g., 300" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="cic_freq">Contribution frequency</label>
+          <select id="cic_freq">
+            <option value="monthly" selected>Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cic_rate">Expected annual return (%)</label>
+          <input id="cic_rate" type="number" inputmode="decimal" placeholder="e.g., 7" />
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+        <div class="field">
+          <label for="cic_years">Years</label>
+          <input id="cic_years" type="number" inputmode="decimal" placeholder="e.g., 20" />
+        </div>
+
+        <div class="field">
+          <label for="cic_timing">Contribution timing</label>
+          <select id="cic_timing">
+            <option value="end" selected>End of period</option>
+            <option value="begin">Beginning of period</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cic_currency">Currency</label>
+          <select id="cic_currency">
+            <option value="USD" selected>USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="KRW">KRW (₩)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="cic_calc" class="btn" type="button">Calculate</button>
+        <button id="cic_clear" class="btn secondary" type="button">Clear</button>
+      </div>
+
+      <div id="cic_error" class="result" role="alert" style="display:none;"></div>
+
+      <div id="cic_summary" class="result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div id="cic_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>End value</th>
+              <th>Total contributions</th>
+              <th>Estimated gain</th>
+            </tr>
+          </thead>
+          <tbody id="cic_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cic_help" style="margin-top:10px;">
+        Monthly mode uses monthly compounding by default. Yearly mode uses yearly compounding.
+      </p>
+
+      <p class="note" id="cic_privacy" style="margin-top:10px;">
+        Informational only. Assumes a constant growth rate and does not include taxes, fees, or inflation.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      In monthly mode, the annual return is divided into monthly periods and applied repeatedly over time.
+      Contributions are added either at the beginning or end of each period, depending on your selection.
+    </p>
+
+    <p class="note">
+      The result separates <strong>total contributions</strong> from <strong>estimated gain</strong> so you can see
+      how much of the future value comes from new deposits versus projected growth.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>$5,000 start + $300/month at 7% for 20 years</li>
+      <li>$10,000 start + $2,000/year at 5% for 15 years</li>
+      <li>Switch contribution timing to “Beginning of period” to model earlier deposits</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => (
+        <li><strong>{f.q}</strong> {f.a}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+      <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
+      <li><a href="/finance/future-value-calculator/">Future Value Calculator</a></li>
+      <li><a href="/finance/">All Finance Calculators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("cic_start");
+  const contribEl = document.getElementById("cic_contrib");
+  const freqEl = document.getElementById("cic_freq");
+  const rateEl = document.getElementById("cic_rate");
+  const yearsEl = document.getElementById("cic_years");
+  const timingEl = document.getElementById("cic_timing");
+  const currencyEl = document.getElementById("cic_currency");
+  const calcBtn = document.getElementById("cic_calc");
+  const clearBtn = document.getElementById("cic_clear");
+  const errorEl = document.getElementById("cic_error");
+  const summaryEl = document.getElementById("cic_summary");
+  const cardsEl = document.getElementById("cic_cards");
+  const tbodyEl = document.getElementById("cic_tbody");
+
+  if (!startEl || !contribEl || !freqEl || !rateEl || !yearsEl || !timingEl || !currencyEl || !calcBtn || !clearBtn || !errorEl || !summaryEl || !cardsEl || !tbodyEl) return;
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function money(v, ccy) {
+    if (!Number.isFinite(v)) return "0";
+    try {
+      return v.toLocaleString(undefined, { style: "currency", currency: ccy });
+    } catch {
+      return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + ccy;
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearOut() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  calcBtn.addEventListener("click", function () {
+    clearOut();
+
+    const start = toNum(startEl.value);
+    const contrib = toNum(contribEl.value || "0");
+    const freq = String(freqEl.value || "monthly");
+    const annual = toNum(rateEl.value) / 100;
+    const years = toNum(yearsEl.value);
+    const timing = String(timingEl.value || "end");
+    const ccy = String(currencyEl.value || "USD");
+
+    if (!Number.isFinite(start) || start < 0) {
+      showError("Please enter a valid initial amount (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(contrib) || contrib < 0) {
+      showError("Please enter a valid contribution amount (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(annual) || annual < 0) {
+      showError("Please enter a valid annual return rate (0 or more).");
+      return;
+    }
+    if (!Number.isFinite(years) || years <= 0) {
+      showError("Please enter a valid number of years (> 0).");
+      return;
+    }
+
+    const yInt = Math.max(1, Math.round(years));
+    let value = start;
+    let totalContrib = start;
+
+    tbodyEl.innerHTML = "";
+
+    if (freq === "yearly") {
+      for (let y = 1; y <= yInt; y++) {
+        if (timing === "begin" && contrib > 0) {
+          value += contrib;
+          totalContrib += contrib;
+        }
+
+        value = value * (1 + annual);
+
+        if (timing === "end" && contrib > 0) {
+          value += contrib;
+          totalContrib += contrib;
+        }
+
+        const gain = value - totalContrib;
+        tbodyEl.insertAdjacentHTML(
+          "beforeend",
+          "<tr><td>" + y + "</td><td>" + money(value, ccy) + "</td><td>" + money(totalContrib, ccy) + "</td><td>" + money(gain, ccy) + "</td></tr>"
+        );
+      }
+    } else {
+      const r = annual / 12;
+      for (let y = 1; y <= yInt; y++) {
+        for (let m = 0; m < 12; m++) {
+          if (timing === "begin" && contrib > 0) {
+            value += contrib;
+            totalContrib += contrib;
+          }
+
+          value = value * (1 + r);
+
+          if (timing === "end" && contrib > 0) {
+            value += contrib;
+            totalContrib += contrib;
+          }
+        }
+
+        const gain = value - totalContrib;
+        tbodyEl.insertAdjacentHTML(
+          "beforeend",
+          "<tr><td>" + y + "</td><td>" + money(value, ccy) + "</td><td>" + money(totalContrib, ccy) + "</td><td>" + money(gain, ccy) + "</td></tr>"
+        );
+      }
+    }
+
+    const gainFinal = value - totalContrib;
+
+    summaryEl.innerHTML =
+      "<strong>Future value:</strong> " + money(value, ccy) + "<br/>" +
+      "<strong>Total contributions:</strong> " + money(totalContrib, ccy) + "<br/>" +
+      "<strong>Estimated gain:</strong> " + money(gainFinal, ccy);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      badge(freq === "monthly" ? "Monthly contributions" : "Yearly contributions") + " " +
+      badge(timing === "begin" ? "Beginning of period" : "End of period") + " " +
+      badge(annual < 0.05 ? "Lower growth assumption" : annual < 0.1 ? "Moderate growth assumption" : "Higher growth assumption");
+  });
+
+  clearBtn.addEventListener("click", function () {
+    startEl.value = "";
+    contribEl.value = "";
+    freqEl.value = "monthly";
+    rateEl.value = "";
+    yearsEl.value = "";
+    timingEl.value = "end";
+    currencyEl.value = "USD";
+    clearOut();
+  });
+});
+</script>
