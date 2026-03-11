@@ -1,0 +1,248 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cron Expression Parser",
+  description:
+    "Parse 5-field cron expressions into readable schedules with validation, field inspection, and FAQ schema.",
+  href: "/developer-tools/cron-expression-parser/",
+  order: 150,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/cron-expression-parser/";
+
+const faqs = [
+  {
+    q: "What does this cron expression parser do?",
+    a: "It parses a standard 5-field cron expression and explains the fields in a more readable format.",
+  },
+  {
+    q: "Which cron format is supported?",
+    a: "This tool supports 5-field cron expressions in the form minute hour day-of-month month day-of-week.",
+  },
+  {
+    q: "Does it support every possible cron extension?",
+    a: "No. It focuses on common 5-field syntax and practical readable summaries, not every vendor-specific extension.",
+  },
+  {
+    q: "Is my cron expression stored?",
+    a: "No. Parsing runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Cron Expression Parser — ${SITE_NAME}`}
+  description="Parse 5-field cron expressions into readable schedule details with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cron Expression Parser"
+  intro="Parse a standard 5-field cron expression and inspect each field in a human-readable form."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="cron-expression-parser">
+    <style is:inline>
+      #cp_input, #cp_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .cp-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cp_help cp_privacy">
+      <div class="field">
+        <label for="cp_input">Cron expression</label>
+        <input id="cp_input" type="text" spellcheck="false" placeholder="e.g., 30 2 * * 1" />
+      </div>
+
+      <p class="note" id="cp_help" style="margin-top:6px;">
+        Supported format: <strong>minute hour day-of-month month day-of-week</strong>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cp_parse">Parse</button>
+        <button class="btn secondary" type="button" id="cp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cp_output">Readable summary</label>
+        <textarea id="cp_output" class="cp-mono" rows="6" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Field</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cp_privacy" style="margin-top:10px;">
+        Privacy: parsing runs locally in your browser. No cron data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a 5-field cron expression and inspect its minute, hour, day-of-month, month, and day-of-week fields in a readable form.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>15 * * * *</strong> → every hour at minute 15</li>
+      <li><strong>30 2 * * *</strong> → every day at 02:30</li>
+      <li><strong>0 9 * * 1</strong> → every Monday at 09:00</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/cron-expression-generator/">Cron Expression Generator</a></li>
+      <li><a href="/developer-tools/regex-generator/">Regex Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("cp_input");
+  const parseBtn = document.getElementById("cp_parse");
+  const clearBtn = document.getElementById("cp_clear");
+  const errEl = document.getElementById("cp_error");
+  const resultEl = document.getElementById("cp_result");
+  const cardsEl = document.getElementById("cp_cards");
+  const outputEl = document.getElementById("cp_output");
+  const tbodyEl = document.getElementById("cp_tbody");
+
+  if (!inputEl || !parseBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function humanField(v, kind) {
+    if (v === "*") return "every";
+    if (/^\*\/\d+$/.test(v)) return "every " + v.split("/")[1];
+    if (kind === "dow") {
+      const map = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      return /^\d$/.test(v) ? (map[Number(v)] || v) : v;
+    }
+    return v;
+  }
+
+  function parseCron() {
+    resetOutput();
+    const raw = String(inputEl.value || "").trim();
+
+    if (!raw) {
+      showError("Please enter a cron expression.");
+      return;
+    }
+
+    const parts = raw.split(/\s+/);
+    if (parts.length !== 5) {
+      showError("Cron expression must contain exactly 5 fields.");
+      return;
+    }
+
+    const [minute, hour, dom, month, dow] = parts;
+
+    const summary =
+      "Minute: " + humanField(minute, "minute") + "\n" +
+      "Hour: " + humanField(hour, "hour") + "\n" +
+      "Day of month: " + humanField(dom, "dom") + "\n" +
+      "Month: " + humanField(month, "month") + "\n" +
+      "Day of week: " + humanField(dow, "dow");
+
+    outputEl.value = summary;
+    resultEl.innerHTML = "<strong>Cron expression parsed.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("5 fields") +
+      badge(minute === "*" ? "Recurring minute" : "Fixed / custom minute") +
+      badge(dow === "*" ? "Any weekday" : "Specific weekday rule") +
+      "</div>";
+
+    tbodyEl.innerHTML = "";
+    [
+      ["Minute", minute],
+      ["Hour", hour],
+      ["Day of month", dom],
+      ["Month", month],
+      ["Day of week", dow],
+    ].forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  parseBtn.addEventListener("click", parseCron);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

@@ -1,0 +1,400 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CSV to JSON",
+  description:
+    "Convert CSV to JSON with delimiter controls, header options, validation, result cards, and FAQ schema.",
+  href: "/developer-tools/csv-to-json/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/csv-to-json/";
+
+const faqs = [
+  {
+    q: "What CSV format does this converter accept?",
+    a: "It accepts standard CSV text with configurable delimiters such as comma, semicolon, or tab.",
+  },
+  {
+    q: "Can the first row be used as object keys?",
+    a: "Yes. Header mode uses the first row as JSON object property names.",
+  },
+  {
+    q: "Does it support quoted CSV values?",
+    a: "Yes. Quoted fields and escaped quotes are supported.",
+  },
+  {
+    q: "Is the conversion stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CSV to JSON — ${SITE_NAME}`}
+  description="Convert CSV into JSON arrays with header handling, delimiter controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="CSV to JSON"
+  intro="Convert CSV data into JSON output. Use the first row as headers or generate generic column names."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="csv-to-json">
+    <style is:inline>
+      .cj-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cj-grid-2 > * {
+        min-width: 0;
+      }
+      #cj_input,
+      #cj_output,
+      #cj_delimiter {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .cj-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .cj-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cj_help cj_privacy">
+      <div class="field">
+        <label for="cj_input">CSV input</label>
+        <textarea id="cj_input" rows="12" spellcheck="false" placeholder="name,age&#10;Alex,30&#10;Sam,28"></textarea>
+      </div>
+
+      <div class="cj-grid-2">
+        <div class="field">
+          <label for="cj_delimiter">Delimiter</label>
+          <select id="cj_delimiter">
+            <option value="," selected>Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="tab">Tab</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="cj_header" type="checkbox" checked />
+            First row is header
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="cj_help" style="margin-top:6px;">
+        Quoted fields are supported. When header mode is off, keys are generated as column1, column2, and so on.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cj_convert">Convert</button>
+        <button class="btn secondary" type="button" id="cj_copy">Copy JSON</button>
+        <button class="btn secondary" type="button" id="cj_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cj_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result cj-output" id="cj_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cj_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cj_output">JSON output</label>
+        <textarea id="cj_output" rows="12" readonly spellcheck="false" placeholder="Converted JSON will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cj_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cj_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No CSV or JSON content is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste CSV input, choose the delimiter, and decide whether the first row should be treated as header keys. The tool outputs a JSON array of objects.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>name,age</strong> + data rows → JSON objects with name and age keys</li>
+      <li><strong>1;2;3</strong> with semicolon delimiter → JSON conversion with the chosen delimiter</li>
+      <li>Header mode off → automatic keys like column1, column2</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/json-to-csv/">JSON to CSV</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("cj_input");
+  const delimiterEl = document.getElementById("cj_delimiter");
+  const headerEl = document.getElementById("cj_header");
+  const convertBtn = document.getElementById("cj_convert");
+  const copyBtn = document.getElementById("cj_copy");
+  const clearBtn = document.getElementById("cj_clear");
+  const errEl = document.getElementById("cj_error");
+  const resultEl = document.getElementById("cj_result");
+  const cardsEl = document.getElementById("cj_cards");
+  const outputEl = document.getElementById("cj_output");
+  const tbodyEl = document.getElementById("cj_tbody");
+
+  if (!inputEl || !delimiterEl || !headerEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseCsv(text, delimiter) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let i = 0;
+    let inQuotes = false;
+
+    while (i < text.length) {
+      const ch = text[i];
+      const next = text[i + 1];
+
+      if (inQuotes) {
+        if (ch === '"' && next === '"') {
+          field += '"';
+          i += 2;
+          continue;
+        }
+        if (ch === '"') {
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        field += ch;
+        i++;
+        continue;
+      }
+
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+
+      if (ch === delimiter) {
+        row.push(field);
+        field = "";
+        i++;
+        continue;
+      }
+
+      if (ch === "\n") {
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = "";
+        i++;
+        continue;
+      }
+
+      if (ch === "\r") {
+        i++;
+        continue;
+      }
+
+      field += ch;
+      i++;
+    }
+
+    row.push(field);
+    rows.push(row);
+
+    return rows.filter(function (r) {
+      return !(r.length === 1 && r[0] === "");
+    });
+  }
+
+  function convertCsvToJson() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const delimiter = String(delimiterEl.value || ",") === "tab" ? "\t" : String(delimiterEl.value || ",");
+    const hasHeader = !!headerEl.checked;
+
+    if (!raw.trim()) {
+      showError("Please paste CSV input.");
+      return;
+    }
+
+    const rows = parseCsv(raw, delimiter);
+    if (!rows.length) {
+      showError("No CSV rows found.");
+      return;
+    }
+
+    const width = Math.max.apply(null, rows.map(function (r) { return r.length; }));
+    const normalizedRows = rows.map(function (r) {
+      const copy = r.slice();
+      while (copy.length < width) copy.push("");
+      return copy;
+    });
+
+    let headers;
+    let dataRows;
+
+    if (hasHeader) {
+      headers = normalizedRows[0].map(function (h, idx) {
+        const v = String(h || "").trim();
+        return v || "column" + (idx + 1);
+      });
+      dataRows = normalizedRows.slice(1);
+    } else {
+      headers = Array.from({ length: width }, function (_, idx) {
+        return "column" + (idx + 1);
+      });
+      dataRows = normalizedRows;
+    }
+
+    const outputArray = dataRows.map(function (r) {
+      const obj = {};
+      headers.forEach(function (key, idx) {
+        obj[key] = r[idx] ?? "";
+      });
+      return obj;
+    });
+
+    const output = JSON.stringify(outputArray, null, 2);
+    lastOutput = output;
+    outputEl.value = output;
+
+    resultEl.innerHTML = "<strong>Conversion complete.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Rows: " + dataRows.length) +
+      badge("Columns: " + headers.length) +
+      badge(hasHeader ? "Header mode" : "Generated keys") +
+      "</div>";
+
+    fillTable([
+      ["Parsed rows", String(dataRows.length)],
+      ["Detected columns", String(headers.length)],
+      ["Delimiter", delimiter === "\t" ? "Tab" : delimiter],
+      ["Output length", String(output.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No JSON output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied JSON output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    delimiterEl.value = ",";
+    headerEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convertCsvToJson);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") convertCsvToJson();
+  });
+});
+</script>

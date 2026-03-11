@@ -1,0 +1,312 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hash Generator",
+  description:
+    "Generate hashes for text using SHA-1, SHA-256, SHA-384, and SHA-512 with encoding options, validation, and FAQ schema.",
+  href: "/developer-tools/hash-generator/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/hash-generator/";
+
+const faqs = [
+  {
+    q: "What does this hash generator do?",
+    a: "It generates cryptographic hash values for text input using browser-supported algorithms such as SHA-1, SHA-256, SHA-384, and SHA-512.",
+  },
+  {
+    q: "Can it generate MD5 or bcrypt?",
+    a: "No. This page focuses on Web Crypto algorithms. Separate tools can be used for MD5, SHA-256-only, or bcrypt-specific workflows.",
+  },
+  {
+    q: "Can I hash Unicode text?",
+    a: "Yes. Input text is encoded using UTF-8 before hashing.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Hash generation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Hash Generator — ${SITE_NAME}`}
+  description="Generate SHA hashes for text input using browser Web Crypto with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hash Generator"
+  intro="Generate hash values for text using SHA-1, SHA-256, SHA-384, or SHA-512 directly in your browser."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hash-generator">
+    <style is:inline>
+      .hg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .hg-grid-2 > * {
+        min-width: 0;
+      }
+      #hg_input,
+      #hg_algo,
+      #hg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .hg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .hg-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hg_help hg_privacy">
+      <div class="field">
+        <label for="hg_input">Input text</label>
+        <textarea id="hg_input" rows="8" spellcheck="false" placeholder="Enter text to hash."></textarea>
+      </div>
+
+      <div class="hg-grid-2">
+        <div class="field">
+          <label for="hg_algo">Algorithm</label>
+          <select id="hg_algo">
+            <option value="SHA-1">SHA-1</option>
+            <option value="SHA-256" selected>SHA-256</option>
+            <option value="SHA-384">SHA-384</option>
+            <option value="SHA-512">SHA-512</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="hg_upper" type="checkbox" />
+            Uppercase output
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="hg_help" style="margin-top:6px;">
+        Input is UTF-8 encoded before hashing. Output is shown in hexadecimal format.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="hg_copy">Copy Hash</button>
+        <button class="btn secondary" type="button" id="hg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hg_output">Hash output</label>
+        <textarea id="hg_output" class="hg-mono" rows="6" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hg_privacy" style="margin-top:10px;">
+        Privacy: hashing runs locally in your browser. No input text or hash output is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter text, choose a hashing algorithm, and generate the hexadecimal digest locally using your browser's crypto API.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate a SHA-256 digest for a test string</li>
+      <li>Switch to SHA-512 for a longer output</li>
+      <li>Use uppercase formatting if needed for display or comparison</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/sha256-generator/">SHA256 Generator</a></li>
+      <li><a href="/developer-tools/md5-generator/">MD5 Generator</a></li>
+      <li><a href="/developer-tools/bcrypt-generator/">Bcrypt Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("hg_input");
+  const algoEl = document.getElementById("hg_algo");
+  const upperEl = document.getElementById("hg_upper");
+  const generateBtn = document.getElementById("hg_generate");
+  const copyBtn = document.getElementById("hg_copy");
+  const clearBtn = document.getElementById("hg_clear");
+  const errEl = document.getElementById("hg_error");
+  const resultEl = document.getElementById("hg_result");
+  const cardsEl = document.getElementById("hg_cards");
+  const outputEl = document.getElementById("hg_output");
+  const tbodyEl = document.getElementById("hg_tbody");
+
+  if (!inputEl || !algoEl || !upperEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastHash = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastHash = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function toHex(buffer, upper) {
+    const bytes = new Uint8Array(buffer);
+    const hex = Array.from(bytes).map(function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+    return upper ? hex.toUpperCase() : hex;
+  }
+
+  async function generateHash() {
+    resetOutput();
+
+    const text = String(inputEl.value || "");
+    const algo = String(algoEl.value || "SHA-256");
+    const upper = !!upperEl.checked;
+
+    if (!text) {
+      showError("Please enter input text to hash.");
+      return;
+    }
+
+    if (!window.crypto || !window.crypto.subtle) {
+      showError("Web Crypto API is not available in this browser.");
+      return;
+    }
+
+    try {
+      const encoded = new TextEncoder().encode(text);
+      const digest = await window.crypto.subtle.digest(algo, encoded);
+      const hash = toHex(digest, upper);
+      lastHash = hash;
+      outputEl.value = hash;
+
+      resultEl.innerHTML = "<strong>Hash generated.</strong>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge(algo) +
+        badge("Input length: " + text.length) +
+        badge("Hex output") +
+        "</div>";
+
+      fillTable([
+        ["Algorithm", algo],
+        ["Input length", String(text.length)],
+        ["Hash length", String(hash.length)],
+        ["Case", upper ? "Uppercase" : "Lowercase"],
+      ]);
+    } catch (e) {
+      showError("Hash generation failed.");
+    }
+  }
+
+  async function copyHash() {
+    clearError();
+    if (!lastHash) {
+      showError("No hash output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastHash);
+      resultEl.innerHTML = "<strong>Copied hash output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    algoEl.value = "SHA-256";
+    upperEl.checked = false;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateHash);
+  copyBtn.addEventListener("click", copyHash);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

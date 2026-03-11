@@ -1,0 +1,260 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "UUID Validator",
+  description:
+    "Validate UUID strings, inspect version and variant, and review normalized output with result cards and FAQ schema.",
+  href: "/developer-tools/uuid-validator/",
+  order: 170,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/uuid-validator/";
+
+const faqs = [
+  {
+    q: "What does this UUID validator do?",
+    a: "It checks whether a string is a valid UUID and identifies the version and variant when possible.",
+  },
+  {
+    q: "Which UUID versions are recognized?",
+    a: "The validator recognizes common UUID versions such as v1 through v5 when the input follows the standard format.",
+  },
+  {
+    q: "Does it normalize uppercase and lowercase letters?",
+    a: "Yes. It can display the normalized lowercase UUID form for comparison.",
+  },
+  {
+    q: "Is my UUID input stored?",
+    a: "No. Validation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`UUID Validator — ${SITE_NAME}`}
+  description="Validate UUID strings, inspect version and variant, and review normalized output with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="UUID Validator"
+  intro="Validate a UUID string, inspect its version and variant, and compare the normalized lowercase form."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="uuid-validator">
+    <style is:inline>
+      #uv_input,
+      #uv_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .uv-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="uv_help uv_privacy">
+      <div class="field">
+        <label for="uv_input">UUID input</label>
+        <input id="uv_input" type="text" spellcheck="false" placeholder="e.g., 550e8400-e29b-41d4-a716-446655440000" />
+      </div>
+
+      <p class="note" id="uv_help" style="margin-top:6px;">
+        Expected format: 8-4-4-4-12 hexadecimal characters with hyphens.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="uv_validate">Validate</button>
+        <button class="btn secondary" type="button" id="uv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="uv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="uv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="uv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="uv_output">Normalized UUID</label>
+        <textarea id="uv_output" class="uv-mono" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="uv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="uv_privacy" style="margin-top:10px;">
+        Privacy: validation runs locally in your browser. No UUID data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a UUID string and validate it against the standard 8-4-4-4-12 format. The tool also reports UUID version and variant details.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>550e8400-e29b-41d4-a716-446655440000</strong> → valid UUID v4-style format</li>
+      <li>Letters may be uppercase or lowercase in the input</li>
+      <li>The normalized output is shown in lowercase</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
+      <li><a href="/developer-tools/hash-generator/">Hash Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("uv_input");
+  const validateBtn = document.getElementById("uv_validate");
+  const clearBtn = document.getElementById("uv_clear");
+  const errEl = document.getElementById("uv_error");
+  const resultEl = document.getElementById("uv_result");
+  const cardsEl = document.getElementById("uv_cards");
+  const outputEl = document.getElementById("uv_output");
+  const tbodyEl = document.getElementById("uv_tbody");
+
+  if (!inputEl || !validateBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getVariant(ch) {
+    const value = parseInt(ch, 16);
+    if ((value & 0b1000) === 0b0000) return "NCS";
+    if ((value & 0b1100) === 0b1000) return "RFC 4122 / 9562";
+    if ((value & 0b1110) === 0b1100) return "Microsoft";
+    return "Future / reserved";
+  }
+
+  function validateUuid() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please enter a UUID string.");
+      return;
+    }
+
+    const normalized = raw.toLowerCase();
+    const re = /^[0-9a-f]{8}-[0-9a-f]{4}-([1-5])[0-9a-f]{3}-([89ab])[0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const match = normalized.match(re);
+
+    if (!match) {
+      resultEl.innerHTML = "<strong>Invalid UUID.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Invalid format") +
+        "</div>";
+      fillTable([
+        ["Input length", String(raw.length)],
+        ["Validation", "Invalid"],
+      ]);
+      return;
+    }
+
+    const version = match[1];
+    const variant = getVariant(match[2]);
+    outputEl.value = normalized;
+
+    resultEl.innerHTML = "<strong>Valid UUID.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Version " + version) +
+      badge(variant) +
+      badge("Normalized") +
+      "</div>";
+
+    fillTable([
+      ["Validation", "Valid"],
+      ["Version", version],
+      ["Variant", variant],
+      ["Normalized UUID", normalized],
+      ["Input length", String(raw.length)],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  validateBtn.addEventListener("click", validateUuid);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

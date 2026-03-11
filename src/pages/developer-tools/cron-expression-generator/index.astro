@@ -1,0 +1,357 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cron Expression Generator",
+  description:
+    "Generate 5-field cron expressions for common schedules with validation, human-readable summaries, and FAQ schema.",
+  href: "/developer-tools/cron-expression-generator/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/cron-expression-generator/";
+
+const faqs = [
+  {
+    q: "What does this cron expression generator do?",
+    a: "It builds 5-field cron expressions for common recurring schedules such as every hour, every day, or weekly at a selected time.",
+  },
+  {
+    q: "Does it generate standard 5-field cron syntax?",
+    a: "Yes. This tool outputs minute, hour, day-of-month, month, and day-of-week fields.",
+  },
+  {
+    q: "Can I generate weekly or monthly schedules?",
+    a: "Yes. The generator supports hourly, daily, weekly, monthly, and custom interval-based schedules.",
+  },
+  {
+    q: "Is my schedule stored?",
+    a: "No. Generation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Cron Expression Generator — ${SITE_NAME}`}
+  description="Generate 5-field cron expressions with schedule presets and human-readable summaries."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cron Expression Generator"
+  intro="Generate a 5-field cron expression for hourly, daily, weekly, monthly, or interval-based schedules."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="cron-expression-generator">
+    <style is:inline>
+      .cg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cg-grid-2 > * {
+        min-width: 0;
+      }
+      #cg_mode, #cg_minute, #cg_hour, #cg_dow, #cg_dom, #cg_every, #cg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .cg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .cg-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cg_help cg_privacy">
+      <div class="cg-grid-2">
+        <div class="field">
+          <label for="cg_mode">Schedule type</label>
+          <select id="cg_mode">
+            <option value="hourly" selected>Hourly</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="interval">Every N minutes</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="cg_minute">Minute</label>
+          <input id="cg_minute" type="number" inputmode="numeric" min="0" max="59" value="0" />
+        </div>
+      </div>
+
+      <div class="cg-grid-2">
+        <div class="field">
+          <label for="cg_hour">Hour</label>
+          <input id="cg_hour" type="number" inputmode="numeric" min="0" max="23" value="0" />
+        </div>
+
+        <div class="field">
+          <label for="cg_dow">Day of week (weekly)</label>
+          <select id="cg_dow">
+            <option value="0" selected>Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cg-grid-2">
+        <div class="field">
+          <label for="cg_dom">Day of month (monthly)</label>
+          <input id="cg_dom" type="number" inputmode="numeric" min="1" max="31" value="1" />
+        </div>
+
+        <div class="field">
+          <label for="cg_every">Every N minutes (interval)</label>
+          <input id="cg_every" type="number" inputmode="numeric" min="1" max="59" value="5" />
+        </div>
+      </div>
+
+      <p class="note" id="cg_help" style="margin-top:6px;">
+        This tool generates standard 5-field cron expressions: minute hour day-of-month month day-of-week.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="cg_copy">Copy Expression</button>
+        <button class="btn secondary" type="button" id="cg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cg_output">Cron expression</label>
+        <textarea id="cg_output" class="cg-mono" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No schedule data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a schedule preset, adjust time fields, and generate a 5-field cron expression with a human-readable summary.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Hourly at minute 15 → <strong>15 * * * *</strong></li>
+      <li>Daily at 02:30 → <strong>30 2 * * *</strong></li>
+      <li>Weekly on Monday at 09:00 → <strong>0 9 * * 1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/cron-expression-parser/">Cron Expression Parser</a></li>
+      <li><a href="/developer-tools/regex-generator/">Regex Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("cg_mode");
+  const minuteEl = document.getElementById("cg_minute");
+  const hourEl = document.getElementById("cg_hour");
+  const dowEl = document.getElementById("cg_dow");
+  const domEl = document.getElementById("cg_dom");
+  const everyEl = document.getElementById("cg_every");
+  const generateBtn = document.getElementById("cg_generate");
+  const copyBtn = document.getElementById("cg_copy");
+  const clearBtn = document.getElementById("cg_clear");
+  const errEl = document.getElementById("cg_error");
+  const resultEl = document.getElementById("cg_result");
+  const cardsEl = document.getElementById("cg_cards");
+  const outputEl = document.getElementById("cg_output");
+  const tbodyEl = document.getElementById("cg_tbody");
+
+  if (!modeEl || !minuteEl || !hourEl || !dowEl || !domEl || !everyEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastExpr = "";
+
+  function intVal(el) {
+    const n = Number(String(el.value || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastExpr = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateCron() {
+    resetOutput();
+
+    const mode = String(modeEl.value || "hourly");
+    const minute = intVal(minuteEl);
+    const hour = intVal(hourEl);
+    const dow = intVal(dowEl);
+    const dom = intVal(domEl);
+    const every = intVal(everyEl);
+
+    if (!Number.isInteger(minute) || minute < 0 || minute > 59) {
+      showError("Minute must be an integer from 0 to 59.");
+      return;
+    }
+    if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+      showError("Hour must be an integer from 0 to 23.");
+      return;
+    }
+    if (!Number.isInteger(dom) || dom < 1 || dom > 31) {
+      showError("Day of month must be an integer from 1 to 31.");
+      return;
+    }
+    if (!Number.isInteger(every) || every < 1 || every > 59) {
+      showError("Every N minutes must be an integer from 1 to 59.");
+      return;
+    }
+
+    let expr = "";
+    let summary = "";
+
+    if (mode === "hourly") {
+      expr = minute + " * * * *";
+      summary = "Every hour at minute " + minute;
+    } else if (mode === "daily") {
+      expr = minute + " " + hour + " * * *";
+      summary = "Every day at " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+    } else if (mode === "weekly") {
+      expr = minute + " " + hour + " * * " + dow;
+      summary = "Every week on day " + dow + " at " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+    } else if (mode === "monthly") {
+      expr = minute + " " + hour + " " + dom + " * *";
+      summary = "Every month on day " + dom + " at " + String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+    } else {
+      expr = "*/" + every + " * * * *";
+      summary = "Every " + every + " minute(s)";
+    }
+
+    lastExpr = expr;
+    outputEl.value = expr;
+    resultEl.innerHTML = "<strong>Cron expression generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(mode) +
+      badge("5 fields") +
+      badge(summary) +
+      "</div>";
+
+    fillTable([
+      ["Expression", expr],
+      ["Mode", mode],
+      ["Summary", summary],
+    ]);
+  }
+
+  async function copyExpr() {
+    clearError();
+    if (!lastExpr) {
+      showError("No cron expression to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastExpr);
+      resultEl.innerHTML = "<strong>Copied cron expression.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    modeEl.value = "hourly";
+    minuteEl.value = "0";
+    hourEl.value = "0";
+    dowEl.value = "0";
+    domEl.value = "1";
+    everyEl.value = "5";
+    resetOutput();
+    modeEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateCron);
+  copyBtn.addEventListener("click", copyExpr);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

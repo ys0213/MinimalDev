@@ -1,0 +1,283 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JWT Decoder",
+  description:
+    "Decode JWT header and payload locally, inspect claims, expiration values, and structure with result cards and FAQ schema.",
+  href: "/developer-tools/jwt-decoder/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/jwt-decoder/";
+
+const faqs = [
+  {
+    q: "What does this JWT decoder do?",
+    a: "It decodes the header and payload parts of a JWT and shows them as JSON for inspection.",
+  },
+  {
+    q: "Does this tool verify the signature?",
+    a: "No. This decoder only parses and displays the token structure. It does not verify authenticity.",
+  },
+  {
+    q: "Can it show expiration timestamps?",
+    a: "Yes. Standard time-based claims such as exp, iat, and nbf are shown in both raw and readable form when present.",
+  },
+  {
+    q: "Is my token sent anywhere?",
+    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JWT Decoder — ${SITE_NAME}`}
+  description="Decode JWT header and payload locally, inspect claims, and review token structure with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JWT Decoder"
+  intro="Decode a JWT token locally to inspect its header, payload, and common time-based claims."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="jwt-decoder">
+    <style is:inline>
+      .jd-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .jd-grid-2 > * {
+        min-width: 0;
+      }
+      #jd_input,
+      #jd_header,
+      #jd_payload {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .jd-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="jd_help jd_privacy">
+      <div class="field">
+        <label for="jd_input">JWT token</label>
+        <textarea id="jd_input" rows="7" spellcheck="false" placeholder="Paste a JWT token here."></textarea>
+      </div>
+
+      <p class="note" id="jd_help" style="margin-top:6px;">
+        JWT format is typically header.payload.signature. This tool decodes but does not verify the signature.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="jd_decode">Decode</button>
+        <button class="btn secondary" type="button" id="jd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jd_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="jd_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="jd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="jd-grid-2" style="margin-top:16px;">
+        <div class="field">
+          <label for="jd_header">Decoded header</label>
+          <textarea id="jd_header" rows="12" readonly spellcheck="false"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="jd_payload">Decoded payload</label>
+          <textarea id="jd_payload" rows="12" readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="jd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="jd_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No token data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a JWT token, decode its base64url-encoded header and payload, and inspect the resulting JSON plus time-related claims such as exp, iat, and nbf.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>JWT tokens usually have <strong>3 parts</strong> separated by dots</li>
+      <li>The first two parts are base64url-encoded JSON</li>
+      <li>The third part is the signature and is not decoded into JSON</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/jwt-encoder/">JWT Encoder</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("jd_input");
+  const decodeBtn = document.getElementById("jd_decode");
+  const clearBtn = document.getElementById("jd_clear");
+  const errEl = document.getElementById("jd_error");
+  const resultEl = document.getElementById("jd_result");
+  const cardsEl = document.getElementById("jd_cards");
+  const headerEl = document.getElementById("jd_header");
+  const payloadEl = document.getElementById("jd_payload");
+  const tbodyEl = document.getElementById("jd_tbody");
+
+  if (!inputEl || !decodeBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !headerEl || !payloadEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    headerEl.value = "";
+    payloadEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function decodeBase64Url(str) {
+    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "===".slice((base64.length + 3) % 4);
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, function (c) { return c.charCodeAt(0); });
+    return new TextDecoder().decode(bytes);
+  }
+
+  function humanTime(v) {
+    if (!Number.isFinite(v)) return "—";
+    return new Date(v * 1000).toISOString();
+  }
+
+  function decodeJwt() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste a JWT token.");
+      return;
+    }
+
+    const parts = raw.split(".");
+    if (parts.length < 2) {
+      showError("JWT must contain at least header and payload parts.");
+      return;
+    }
+
+    let headerObj, payloadObj;
+    try {
+      headerObj = JSON.parse(decodeBase64Url(parts[0]));
+      payloadObj = JSON.parse(decodeBase64Url(parts[1]));
+    } catch (e) {
+      showError("Could not decode JWT header or payload.");
+      return;
+    }
+
+    headerEl.value = JSON.stringify(headerObj, null, 2);
+    payloadEl.value = JSON.stringify(payloadObj, null, 2);
+
+    const hasSig = parts.length >= 3 && parts[2] !== "";
+    resultEl.innerHTML = "<strong>JWT decoded.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Parts: " + parts.length) +
+      badge(hasSig ? "Signature present" : "No signature part") +
+      badge("Decoded locally") +
+      "</div>";
+
+    fillTable([
+      ["Algorithm", headerObj.alg || "—"],
+      ["Type", headerObj.typ || "—"],
+      ["Subject", payloadObj.sub || "—"],
+      ["Issuer", payloadObj.iss || "—"],
+      ["Audience", Array.isArray(payloadObj.aud) ? payloadObj.aud.join(", ") : (payloadObj.aud || "—")],
+      ["Issued at (iat)", Number.isFinite(payloadObj.iat) ? humanTime(payloadObj.iat) : "—"],
+      ["Not before (nbf)", Number.isFinite(payloadObj.nbf) ? humanTime(payloadObj.nbf) : "—"],
+      ["Expires (exp)", Number.isFinite(payloadObj.exp) ? humanTime(payloadObj.exp) : "—"],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decodeJwt);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

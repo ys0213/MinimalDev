@@ -1,0 +1,303 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Bcrypt Generator",
+  description:
+    "Generate bcrypt hashes for text input with configurable cost, validation, copy support, and FAQ schema.",
+  href: "/developer-tools/bcrypt-generator/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/bcrypt-generator/";
+
+const faqs = [
+  {
+    q: "What does this bcrypt generator do?",
+    a: "It generates a bcrypt hash for the text you enter using a configurable cost factor.",
+  },
+  {
+    q: "Why is bcrypt slower than MD5 or SHA-256?",
+    a: "Bcrypt is intentionally slow and salted, which makes it more suitable for password hashing.",
+  },
+  {
+    q: "Can I choose the cost factor?",
+    a: "Yes. You can set a cost factor within a safe browser-friendly range.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Hash generation runs locally in your browser. This page does not store or transmit your input.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Bcrypt Generator — ${SITE_NAME}`}
+  description="Generate bcrypt hashes for text input with configurable cost and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Bcrypt Generator"
+  intro="Generate a bcrypt hash for text input. Useful for password-hashing style testing and development workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="bcrypt-generator">
+    <style is:inline>
+      .bg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .bg-grid-2 > * {
+        min-width: 0;
+      }
+      #bg_input, #bg_cost, #bg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .bg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .bg-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="bg_help bg_privacy">
+      <div class="field">
+        <label for="bg_input">Input text</label>
+        <textarea id="bg_input" rows="8" spellcheck="false" placeholder="Enter text to hash with bcrypt."></textarea>
+      </div>
+
+      <div class="bg-grid-2">
+        <div class="field">
+          <label for="bg_cost">Cost factor</label>
+          <input id="bg_cost" type="number" inputmode="numeric" min="4" max="15" value="10" />
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="bg_show_note" type="checkbox" checked />
+            Show bcrypt note
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="bg_help" style="margin-top:6px;">
+        This tool uses bcrypt in the browser. Higher cost values are slower. Cost 10–12 is common for testing, but browser speed varies by device.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="bg_copy">Copy Hash</button>
+        <button class="btn secondary" type="button" id="bg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="bg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="bg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="bg_output">Bcrypt output</label>
+        <textarea id="bg_output" class="bg-mono" rows="6" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="bg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bg_privacy" style="margin-top:10px;">
+        Privacy: hashing runs locally in your browser. No input text or output hash is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter text, choose a cost factor, and generate a bcrypt hash locally in the browser. Bcrypt includes a salt and produces a different result each time.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate a bcrypt hash for password-style testing</li>
+      <li>Increase cost for slower, stronger work factors</li>
+      <li>Run multiple times to see different salted outputs</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/hash-generator/">Hash Generator</a></li>
+      <li><a href="/developer-tools/sha256-generator/">SHA256 Generator</a></li>
+      <li><a href="/developer-tools/md5-generator/">MD5 Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script type="module" is:inline>
+import bcrypt from "https://esm.sh/bcryptjs@2.4.3";
+
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("bg_input");
+  const costEl = document.getElementById("bg_cost");
+  const noteEl = document.getElementById("bg_show_note");
+  const generateBtn = document.getElementById("bg_generate");
+  const copyBtn = document.getElementById("bg_copy");
+  const clearBtn = document.getElementById("bg_clear");
+  const errEl = document.getElementById("bg_error");
+  const resultEl = document.getElementById("bg_result");
+  const cardsEl = document.getElementById("bg_cards");
+  const outputEl = document.getElementById("bg_output");
+  const tbodyEl = document.getElementById("bg_tbody");
+
+  if (!inputEl || !costEl || !noteEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastHash = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastHash = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+    async function generateHash() {
+        resetOutput();
+
+        const text = String(inputEl.value || "");
+        const cost = Number(String(costEl.value || "10"));
+
+        if (!text) {
+            showError("Please enter input text to hash.");
+            return;
+        }
+
+        if (!Number.isInteger(cost) || cost < 4 || cost > 15) {
+            showError("Cost factor must be an integer between 4 and 15.");
+            return;
+        }
+
+        try {
+            generateBtn.disabled = true;
+            resultEl.innerHTML = "<strong>Generating bcrypt hash...</strong>";
+
+            const hash = await bcrypt.hash(text, cost);
+
+            lastHash = hash;
+            outputEl.value = hash;
+
+            resultEl.innerHTML = "<strong>Bcrypt hash generated.</strong>";
+            cardsEl.style.display = "block";
+            cardsEl.innerHTML =
+            '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+            badge("bcrypt") +
+            badge("Cost: " + cost) +
+            badge("Salted output") +
+            "</div>";
+
+            fillTable([
+            ["Algorithm", "bcrypt"],
+            ["Cost factor", String(cost)],
+            ["Input length", String(text.length)],
+            ["Hash length", String(hash.length)],
+            ]);
+
+            if (noteEl.checked) {
+            cardsEl.innerHTML += '<div class="note" style="margin-top:10px;">Each bcrypt result is salted, so hashing the same input again produces a different output.</div>';
+            }
+        } catch (_) {
+            showError("Bcrypt generation failed.");
+            resultEl.textContent = "Result will appear here.";
+        } finally {
+            generateBtn.disabled = false;
+        }
+    }
+
+  async function copyHash() {
+    clearError();
+    if (!lastHash) {
+      showError("No bcrypt output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastHash);
+      resultEl.innerHTML = "<strong>Copied bcrypt hash.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    costEl.value = "10";
+    noteEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateHash);
+  copyBtn.addEventListener("click", copyHash);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

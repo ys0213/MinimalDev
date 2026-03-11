@@ -1,0 +1,293 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JSON Validator",
+  description:
+    "Validate JSON, pretty-print or minify it, inspect top-level type, and review errors with result cards and FAQ schema.",
+  href: "/developer-tools/json-validator/",
+  order: 20,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/json-validator/";
+
+const faqs = [
+  {
+    q: "What does this JSON validator do?",
+    a: "It checks whether your JSON is valid, and can also pretty-print or minify valid JSON.",
+  },
+  {
+    q: "Does it support arrays and nested objects?",
+    a: "Yes. It validates standard JSON including nested arrays and objects.",
+  },
+  {
+    q: "What happens if the JSON is invalid?",
+    a: "The tool shows a parse error and does not transform the content until the JSON is valid.",
+  },
+  {
+    q: "Is my JSON stored?",
+    a: "No. Validation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JSON Validator — ${SITE_NAME}`}
+  description="Validate JSON, pretty-print or minify it, and inspect structure with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JSON Validator"
+  intro="Validate JSON input, pretty-print it for readability, or minify it for compact output."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="json-validator">
+    <style is:inline>
+      #jv_input,
+      #jv_output,
+      #jv_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .jv-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="jv_help jv_privacy">
+      <div class="field">
+        <label for="jv_input">JSON input</label>
+        <textarea id="jv_input" rows="12" spellcheck="false" placeholder='e.g. {"name":"Alex","age":30}'></textarea>
+      </div>
+
+      <div class="field">
+        <label for="jv_format">Output format</label>
+        <select id="jv_format">
+          <option value="pretty" selected>Pretty print</option>
+          <option value="minify">Minify</option>
+        </select>
+      </div>
+
+      <p class="note" id="jv_help" style="margin-top:6px;">
+        Standard JSON only. Trailing commas, comments, and single-quoted keys are not valid JSON.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="jv_validate">Validate</button>
+        <button class="btn secondary" type="button" id="jv_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="jv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result jv-output" id="jv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="jv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="jv_output">Formatted output</label>
+        <textarea id="jv_output" rows="12" spellcheck="false" readonly placeholder="Validated JSON output will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="jv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="jv_privacy" style="margin-top:10px;">
+        Privacy: validation runs locally in your browser. No JSON data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste JSON into the input area, validate it, and choose whether the output should be formatted for readability or minified for compact use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+        <li><strong>{'{"name":"Alex","age":30}'}</strong> → valid object JSON</li>
+        <li><strong>{'[1,2,3]'}</strong> → valid array JSON</li>
+        <li><strong>{'{"a":1,}'}</strong> → invalid because of a trailing comma</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/json-to-csv/">JSON to CSV</a></li>
+      <li><a href="/developer-tools/csv-to-json/">CSV to JSON</a></li>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("jv_input");
+  const formatEl = document.getElementById("jv_format");
+  const validateBtn = document.getElementById("jv_validate");
+  const copyBtn = document.getElementById("jv_copy");
+  const clearBtn = document.getElementById("jv_clear");
+  const errEl = document.getElementById("jv_error");
+  const resultEl = document.getElementById("jv_result");
+  const cardsEl = document.getElementById("jv_cards");
+  const outputEl = document.getElementById("jv_output");
+  const tbodyEl = document.getElementById("jv_tbody");
+
+  if (!inputEl || !formatEl || !validateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getTopType(value) {
+    if (Array.isArray(value)) return "array";
+    if (value === null) return "null";
+    return typeof value;
+  }
+
+  function validateJson() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const format = String(formatEl.value || "pretty");
+
+    if (!raw) {
+      showError("Please paste JSON input.");
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      showError("Invalid JSON: " + (e && e.message ? e.message : "parse error"));
+      return;
+    }
+
+    const output = format === "minify"
+      ? JSON.stringify(parsed)
+      : JSON.stringify(parsed, null, 2);
+
+    lastOutput = output;
+    outputEl.value = output;
+
+    const topType = getTopType(parsed);
+    const rootCount =
+      Array.isArray(parsed) ? parsed.length :
+      (parsed && typeof parsed === "object" ? Object.keys(parsed).length : 0);
+
+    resultEl.innerHTML = "<strong>Valid JSON.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid") +
+      badge("Root type: " + topType) +
+      badge(format === "minify" ? "Minified" : "Pretty printed") +
+      "</div>";
+
+    fillTable([
+      ["Root type", topType],
+      ["Root item/key count", String(rootCount)],
+      ["Input length", String(raw.length)],
+      ["Output length", String(output.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No validated output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied formatted output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    formatEl.value = "pretty";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  validateBtn.addEventListener("click", validateJson);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") validateJson();
+  });
+});
+</script>

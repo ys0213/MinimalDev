@@ -1,0 +1,353 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JSON to CSV",
+  description:
+    "Convert JSON arrays of objects to CSV with validation, delimiter options, result cards, and FAQ schema.",
+  href: "/developer-tools/json-to-csv/",
+  order: 30,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/json-to-csv/";
+
+const faqs = [
+  {
+    q: "What JSON format does this converter expect?",
+    a: "It expects a JSON array of objects, where each object becomes one CSV row.",
+  },
+  {
+    q: "Can nested objects be converted?",
+    a: "This tool is designed for flat object properties. Nested objects and arrays are stringified when necessary.",
+  },
+  {
+    q: "Can I choose a delimiter?",
+    a: "Yes. You can output CSV using comma, semicolon, or tab delimiters.",
+  },
+  {
+    q: "Is the conversion stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JSON to CSV — ${SITE_NAME}`}
+  description="Convert JSON arrays of objects to CSV with validation, delimiter selection, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JSON to CSV"
+  intro="Convert a JSON array of objects into CSV output. Choose a delimiter and include headers automatically."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="json-to-csv">
+    <style is:inline>
+      .jc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .jc-grid-2 > * {
+        min-width: 0;
+      }
+      #jc_input,
+      #jc_output,
+      #jc_delimiter {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .jc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .jc-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="jc_help jc_privacy">
+      <div class="field">
+        <label for="jc_input">JSON input</label>
+        <textarea id="jc_input" rows="12" spellcheck="false" placeholder='e.g. [{"name":"Alex","age":30},{"name":"Sam","age":28}]'></textarea>
+      </div>
+
+      <div class="jc-grid-2">
+        <div class="field">
+          <label for="jc_delimiter">Delimiter</label>
+          <select id="jc_delimiter">
+            <option value="," selected>Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="tab">Tab</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="jc_header" type="checkbox" checked />
+            Include header row
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="jc_help" style="margin-top:6px;">
+        Input must be a JSON array of objects. Mixed value types are supported, but nested objects may be stringified.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="jc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="jc_copy">Copy CSV</button>
+        <button class="btn secondary" type="button" id="jc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result jc-output" id="jc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="jc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="jc_output">CSV output</label>
+        <textarea id="jc_output" rows="12" readonly spellcheck="false" placeholder="Converted CSV will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="jc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="jc_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No JSON or CSV content is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The converter reads a JSON array of objects, gathers all keys, creates a header row, and writes each object as a CSV row using the selected delimiter.
+    </p>
+  </div>
+
+    <div slot="examples">
+        <ul>
+            <li><strong>{'[{"name":"Alex","age":30}]'}</strong> → one-row CSV with header</li>
+            <li><strong>{'[{"id":1},{"id":2}]'}</strong> → repeated key column output</li>
+            <li>Nested values are stringified when needed</li>
+        </ul>
+    </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/csv-to-json/">CSV to JSON</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("jc_input");
+  const delimiterEl = document.getElementById("jc_delimiter");
+  const headerEl = document.getElementById("jc_header");
+  const convertBtn = document.getElementById("jc_convert");
+  const copyBtn = document.getElementById("jc_copy");
+  const clearBtn = document.getElementById("jc_clear");
+  const errEl = document.getElementById("jc_error");
+  const resultEl = document.getElementById("jc_result");
+  const cardsEl = document.getElementById("jc_cards");
+  const outputEl = document.getElementById("jc_output");
+  const tbodyEl = document.getElementById("jc_tbody");
+
+  if (!inputEl || !delimiterEl || !headerEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function csvEscape(value, delimiter) {
+    const str = value == null ? "" : String(value);
+    const needsQuotes = str.includes('"') || str.includes("\n") || str.includes("\r") || str.includes(delimiter);
+    const escaped = str.replaceAll('"', '""');
+    return needsQuotes ? '"' + escaped + '"' : escaped;
+  }
+
+  function convertJsonToCsv() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const delimiter = String(delimiterEl.value || ",") === "tab" ? "\t" : String(delimiterEl.value || ",");
+    const includeHeader = !!headerEl.checked;
+
+    if (!raw) {
+      showError("Please paste JSON input.");
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      showError("Invalid JSON: " + (e && e.message ? e.message : "parse error"));
+      return;
+    }
+
+    if (!Array.isArray(parsed)) {
+      showError("Input must be a JSON array.");
+      return;
+    }
+
+    if (!parsed.length) {
+      showError("JSON array is empty. Please provide at least one row object.");
+      return;
+    }
+
+    const allObjects = parsed.every(function (item) {
+      return item && typeof item === "object" && !Array.isArray(item);
+    });
+
+    if (!allObjects) {
+      showError("Every array item must be an object.");
+      return;
+    }
+
+    const headers = [];
+    parsed.forEach(function (obj) {
+      Object.keys(obj).forEach(function (key) {
+        if (!headers.includes(key)) headers.push(key);
+      });
+    });
+
+    const rows = [];
+    if (includeHeader) rows.push(headers.map(function (h) { return csvEscape(h, delimiter); }).join(delimiter));
+
+    parsed.forEach(function (obj) {
+      const row = headers.map(function (key) {
+        const value = obj[key];
+        const normalized =
+          value == null ? "" :
+          typeof value === "object" ? JSON.stringify(value) :
+          String(value);
+        return csvEscape(normalized, delimiter);
+      });
+      rows.push(row.join(delimiter));
+    });
+
+    const output = rows.join("\n");
+    lastOutput = output;
+    outputEl.value = output;
+
+    resultEl.innerHTML = "<strong>Conversion complete.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Rows: " + parsed.length) +
+      badge("Columns: " + headers.length) +
+      badge(includeHeader ? "Header included" : "No header row") +
+      "</div>";
+
+    fillTable([
+      ["Input rows", String(parsed.length)],
+      ["Detected columns", String(headers.length)],
+      ["Delimiter", delimiter === "\t" ? "Tab" : delimiter],
+      ["Output length", String(output.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No CSV output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied CSV output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    delimiterEl.value = ",";
+    headerEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convertJsonToCsv);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") convertJsonToCsv();
+  });
+});
+</script>

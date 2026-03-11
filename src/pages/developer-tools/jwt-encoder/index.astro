@@ -1,0 +1,304 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JWT Encoder",
+  description:
+    "Encode JWT header and payload locally into a token-like string for testing and development. Includes validation, result cards, and FAQ schema.",
+  href: "/developer-tools/jwt-encoder/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/jwt-encoder/";
+
+const faqs = [
+  {
+    q: "What does this JWT encoder do?",
+    a: "It base64url-encodes a JSON header and payload into a token-like JWT string for local testing.",
+  },
+  {
+    q: "Does it sign the JWT securely?",
+    a: "No. This tool does not generate a real cryptographic signature. It is for local encoding and testing structure only.",
+  },
+  {
+    q: "Can I customize the header and payload?",
+    a: "Yes. You can enter any valid JSON objects for both parts.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Encoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JWT Encoder — ${SITE_NAME}`}
+  description="Encode JWT header and payload into a token-like string for local testing, with JSON validation and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JWT Encoder"
+  intro="Encode JWT header and payload locally into a token-like string. Useful for testing format and structure."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="jwt-encoder">
+    <style is:inline>
+      .je-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .je-grid-2 > * {
+        min-width: 0;
+      }
+      #je_header,
+      #je_payload,
+      #je_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .je-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="je_help je_privacy">
+      <div class="je-grid-2">
+        <div class="field">
+          <label for="je_header">JWT header JSON</label>
+          <textarea id="je_header" rows="10" spellcheck="false">{`{"alg":"HS256","typ":"JWT"}`}</textarea>
+        </div>
+
+        <div class="field">
+          <label for="je_payload">JWT payload JSON</label>
+          <textarea id="je_payload" rows="10" spellcheck="false">{`{"sub":"1234567890","name":"John Doe","iat":1710000000}`}</textarea>
+        </div>
+      </div>
+
+      <p class="note" id="je_help" style="margin-top:6px;">
+        Both header and payload must be valid JSON objects. This tool does not create a real cryptographic signature.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="je_encode">Encode</button>
+        <button class="btn secondary" type="button" id="je_copy">Copy Token</button>
+        <button class="btn secondary" type="button" id="je_clear">Reset Example</button>
+      </div>
+
+      <div class="result" id="je_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="je_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="je_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="je_output">Encoded token-like string</label>
+        <textarea id="je_output" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="je_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="je_privacy" style="margin-top:10px;">
+        Privacy: encoding runs locally in your browser. No header, payload, or token data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool validates your header and payload as JSON objects, base64url-encodes them, and joins them with a placeholder signature part.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Header example: <strong>{'{"alg":"HS256","typ":"JWT"}'}</strong></li>
+      <li>Payload example: <strong>{'{"sub":"123","iat":1710000000}'}</strong></li>
+      <li>Output is useful for format testing, not secure authentication</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/hash-generator/">Hash Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const headerEl = document.getElementById("je_header");
+  const payloadEl = document.getElementById("je_payload");
+  const encodeBtn = document.getElementById("je_encode");
+  const copyBtn = document.getElementById("je_copy");
+  const clearBtn = document.getElementById("je_clear");
+  const errEl = document.getElementById("je_error");
+  const resultEl = document.getElementById("je_result");
+  const cardsEl = document.getElementById("je_cards");
+  const outputEl = document.getElementById("je_output");
+  const tbodyEl = document.getElementById("je_tbody");
+
+  if (!headerEl || !payloadEl || !encodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastToken = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastToken = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base64urlEncode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = "";
+    bytes.forEach(function (b) { binary += String.fromCharCode(b); });
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function encodeJwt() {
+    resetOutput();
+
+    const rawHeader = String(headerEl.value || "").trim();
+    const rawPayload = String(payloadEl.value || "").trim();
+
+    if (!rawHeader || !rawPayload) {
+      showError("Please enter both header and payload JSON.");
+      return;
+    }
+
+    let headerObj, payloadObj;
+    try {
+      headerObj = JSON.parse(rawHeader);
+      payloadObj = JSON.parse(rawPayload);
+    } catch (e) {
+      showError("Header or payload is not valid JSON.");
+      return;
+    }
+
+    if (!headerObj || typeof headerObj !== "object" || Array.isArray(headerObj)) {
+      showError("JWT header must be a JSON object.");
+      return;
+    }
+
+    if (!payloadObj || typeof payloadObj !== "object" || Array.isArray(payloadObj)) {
+      showError("JWT payload must be a JSON object.");
+      return;
+    }
+
+    const encodedHeader = base64urlEncode(JSON.stringify(headerObj));
+    const encodedPayload = base64urlEncode(JSON.stringify(payloadObj));
+    const signaturePlaceholder = "signature";
+    const token = encodedHeader + "." + encodedPayload + "." + signaturePlaceholder;
+
+    lastToken = token;
+    outputEl.value = token;
+
+    resultEl.innerHTML = "<strong>JWT-like token generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Header encoded") +
+      badge("Payload encoded") +
+      badge("Signature placeholder") +
+      "</div>";
+
+    fillTable([
+      ["Algorithm", headerObj.alg || "—"],
+      ["Type", headerObj.typ || "—"],
+      ["Header length", String(encodedHeader.length)],
+      ["Payload length", String(encodedPayload.length)],
+      ["Token length", String(token.length)],
+    ]);
+  }
+
+  async function copyToken() {
+    clearError();
+    if (!lastToken) {
+      showError("No token to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastToken);
+      resultEl.innerHTML = "<strong>Copied token-like string.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetExample() {
+    headerEl.value = '{"alg":"HS256","typ":"JWT"}';
+    payloadEl.value = '{"sub":"1234567890","name":"John Doe","iat":1710000000}';
+    resetOutput();
+    headerEl.focus();
+  }
+
+  encodeBtn.addEventListener("click", encodeJwt);
+  copyBtn.addEventListener("click", copyToken);
+  clearBtn.addEventListener("click", resetExample);
+});
+</script>

@@ -1,0 +1,398 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Regex Generator",
+  description:
+    "Generate common regex patterns for numbers, words, email, URL, date, and custom constraints with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/regex-generator/",
+  order: 15,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/regex-generator/";
+
+const faqs = [
+  {
+    q: "What does this regex generator do?",
+    a: "It builds common regex patterns for typical use cases such as digits, words, email-like strings, URLs, and custom length rules.",
+  },
+  {
+    q: "Does it guarantee a perfect regex for every case?",
+    a: "No. It generates practical starter patterns for common cases. You may still need to refine them for your exact requirements.",
+  },
+  {
+    q: "Can I copy the generated pattern?",
+    a: "Yes. The tool includes a copy action for the generated regex pattern.",
+  },
+  {
+    q: "Are my selections stored?",
+    a: "No. Everything runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Regex Generator — ${SITE_NAME}`}
+  description="Generate common regex patterns with options for anchors, length limits, flags, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Regex Generator"
+  intro="Generate starter regex patterns for common validation and matching tasks. Customize anchors, quantifiers, and flags."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="regex-generator">
+    <style is:inline>
+      .rg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rg-grid-2 > * {
+        min-width: 0;
+      }
+      #rg_type,
+      #rg_min,
+      #rg_max,
+      #rg_flags,
+      #rg_output,
+      #rg_sample {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rg-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rg_help rg_privacy">
+      <div class="rg-grid-2">
+        <div class="field">
+          <label for="rg_type">Pattern type</label>
+          <select id="rg_type">
+            <option value="digits" selected>Digits only</option>
+            <option value="letters">Letters only</option>
+            <option value="alnum">Letters + digits</option>
+            <option value="word">Word characters</option>
+            <option value="email">Email (simple)</option>
+            <option value="url">URL (simple)</option>
+            <option value="date">Date YYYY-MM-DD</option>
+            <option value="hex">Hex string</option>
+            <option value="uuid">UUID (simple)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rg_flags">Flags</label>
+          <input id="rg_flags" type="text" placeholder="e.g., i" spellcheck="false" />
+        </div>
+      </div>
+
+      <div class="rg-grid-2">
+        <div class="field">
+          <label for="rg_min">Minimum length (optional)</label>
+          <input id="rg_min" type="number" inputmode="numeric" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="rg_max">Maximum length (optional)</label>
+          <input id="rg_max" type="number" inputmode="numeric" placeholder="e.g., 12" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="rg_anchor" type="checkbox" checked />
+          Add start/end anchors (^ and $)
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="rg_sample">Sample text to test (optional)</label>
+        <input id="rg_sample" type="text" placeholder="e.g., user123" spellcheck="false" />
+      </div>
+
+      <p class="note" id="rg_help" style="margin-top:6px;">
+        This tool generates practical starter patterns for common use cases. Review the output before production use.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rg_copy">Copy Pattern</button>
+        <button class="btn secondary" type="button" id="rg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result rg-mono" id="rg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rg_output">Generated regex</label>
+        <textarea id="rg_output" rows="5" readonly spellcheck="false" placeholder="Generated regex will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rg_privacy" style="margin-top:10px;">
+        Privacy: pattern generation runs locally in your browser. No data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a pattern type, optionally add length limits and flags, then generate a starter regex. You can also test it against a sample value.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Digits only</strong> with min 4 and max 6 → useful for PIN-like values</li>
+      <li><strong>Email (simple)</strong> → starter pattern for email-like text</li>
+      <li><strong>Date YYYY-MM-DD</strong> → basic date format matching</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/regex-tester/">Regex Tester</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const typeEl = document.getElementById("rg_type");
+  const flagsEl = document.getElementById("rg_flags");
+  const minEl = document.getElementById("rg_min");
+  const maxEl = document.getElementById("rg_max");
+  const anchorEl = document.getElementById("rg_anchor");
+  const sampleEl = document.getElementById("rg_sample");
+  const generateBtn = document.getElementById("rg_generate");
+  const copyBtn = document.getElementById("rg_copy");
+  const clearBtn = document.getElementById("rg_clear");
+  const errEl = document.getElementById("rg_error");
+  const resultEl = document.getElementById("rg_result");
+  const cardsEl = document.getElementById("rg_cards");
+  const outputEl = document.getElementById("rg_output");
+  const tbodyEl = document.getElementById("rg_tbody");
+
+  if (!typeEl || !flagsEl || !minEl || !maxEl || !anchorEl || !sampleEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastPattern = "";
+
+  function toInt(v) {
+    const s = String(v || "").trim();
+    if (!s) return null;
+    const n = Number(s);
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastPattern = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function validateFlags(flags) {
+    if (!/^[gimsuyd]*$/i.test(flags)) return "Flags must use only valid JavaScript regex flags.";
+    const arr = flags.toLowerCase().split("");
+    if (new Set(arr).size !== arr.length) return "Duplicate regex flags are not allowed.";
+    return "";
+  }
+
+  function buildQuantifier(min, max) {
+    if (min == null && max == null) return "+";
+    if (Number.isNaN(min) || Number.isNaN(max)) return null;
+    if (min != null && min < 0) return null;
+    if (max != null && max < 0) return null;
+    if (min != null && max != null && min > max) return null;
+    if (min != null && max != null) return "{" + min + "," + max + "}";
+    if (min != null) return "{" + min + ",}";
+    return "{0," + max + "}";
+  }
+
+  function buildBase(type) {
+    if (type === "digits") return "\\d";
+    if (type === "letters") return "[A-Za-z]";
+    if (type === "alnum") return "[A-Za-z0-9]";
+    if (type === "word") return "\\w";
+    if (type === "email") return "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}";
+    if (type === "url") return "https?:\\/\\/[^\\s/$.?#].[^\\s]*";
+    if (type === "date") return "\\d{4}-\\d{2}-\\d{2}";
+    if (type === "hex") return "[A-Fa-f0-9]";
+    if (type === "uuid") return "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}";
+    return "\\w";
+  }
+
+  function generateRegex() {
+    resetOutput();
+
+    const type = String(typeEl.value || "digits");
+    const flags = String(flagsEl.value || "").trim();
+    const min = toInt(minEl.value);
+    const max = toInt(maxEl.value);
+    const anchored = !!anchorEl.checked;
+    const sample = String(sampleEl.value || "");
+
+    const flagError = validateFlags(flags);
+    if (flagError) {
+      showError(flagError);
+      return;
+    }
+
+    let body = buildBase(type);
+
+    if (["digits", "letters", "alnum", "word", "hex"].includes(type)) {
+      const quant = buildQuantifier(min, max);
+      if (!quant) {
+        showError("Please enter valid minimum and maximum length values.");
+        return;
+      }
+      body = body + quant;
+    } else {
+      if (min != null || max != null) {
+        const quant = buildQuantifier(min, max);
+        if (!quant) {
+          showError("Please enter valid minimum and maximum length values.");
+          return;
+        }
+        body = "(?:" + body + ")" + quant;
+      }
+    }
+
+    const pattern = (anchored ? "^" : "") + body + (anchored ? "$" : "");
+    const full = "/" + pattern + "/" + flags;
+    lastPattern = full;
+    outputEl.value = full;
+
+    let sampleInfo = "No sample tested";
+    if (sample) {
+      try {
+        const re = new RegExp(pattern, flags);
+        sampleInfo = re.test(sample) ? "Sample matches" : "Sample does not match";
+      } catch (_) {
+        sampleInfo = "Sample test skipped";
+      }
+    }
+
+    resultEl.innerHTML = "<strong>Generated regex:</strong>\n" + full;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Type: " + type) +
+      badge(anchored ? "Anchored" : "Not anchored") +
+      badge(sampleInfo) +
+      "</div>";
+
+    fillTable([
+      ["Pattern type", type],
+      ["Regex", full],
+      ["Anchors", anchored ? "Yes" : "No"],
+      ["Flags", flags || "None"],
+      ["Length rule", (min == null && max == null) ? "Default +" : ((min == null ? "0" : String(min)) + " to " + (max == null ? "∞" : String(max)))],
+    ]);
+  }
+
+  async function copyPattern() {
+    clearError();
+    if (!lastPattern) {
+      showError("No pattern to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastPattern);
+      resultEl.innerHTML = "<strong>Copied pattern.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    typeEl.value = "digits";
+    flagsEl.value = "";
+    minEl.value = "";
+    maxEl.value = "";
+    anchorEl.checked = true;
+    sampleEl.value = "";
+    resetOutput();
+    typeEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateRegex);
+  copyBtn.addEventListener("click", copyPattern);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

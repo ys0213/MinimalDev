@@ -1,0 +1,269 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "User Agent Parser",
+  description:
+    "Parse user agent strings into browser, engine, OS, device hints, and platform details with result cards and FAQ schema.",
+  href: "/developer-tools/user-agent-parser/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/user-agent-parser/";
+
+const faqs = [
+  {
+    q: "What does this user agent parser do?",
+    a: "It analyzes a user agent string and extracts likely browser, engine, operating system, device type, and platform details.",
+  },
+  {
+    q: "Is user agent parsing always exact?",
+    a: "No. User agent parsing is heuristic and may be imperfect because many strings are customized or intentionally ambiguous.",
+  },
+  {
+    q: "Can I paste a custom user agent string?",
+    a: "Yes. You can paste any user agent string for parsing.",
+  },
+  {
+    q: "Is the user agent stored?",
+    a: "No. Parsing runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`User Agent Parser — ${SITE_NAME}`}
+  description="Parse user agent strings into browser, engine, OS, and device hints with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="User Agent Parser"
+  intro="Parse a user agent string to inspect likely browser, engine, operating system, and device details."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="user-agent-parser">
+    <style is:inline>
+      #ua_input, #ua_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .ua-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ua_help ua_privacy">
+      <div class="field">
+        <label for="ua_input">User agent string</label>
+        <textarea id="ua_input" rows="8" spellcheck="false" placeholder="Paste a user agent string here."></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ua_parse">Parse</button>
+        <button class="btn secondary" type="button" id="ua_use_current">Use current browser UA</button>
+        <button class="btn secondary" type="button" id="ua_clear">Clear</button>
+      </div>
+
+      <p class="note" id="ua_help" style="margin-top:6px;">
+        Parsing is heuristic. Some browsers and apps intentionally mimic other user agent strings.
+      </p>
+
+      <div class="result" id="ua_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ua_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ua_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ua_output">Parsed summary</label>
+        <textarea id="ua_output" class="ua-mono" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ua_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ua_privacy" style="margin-top:10px;">
+        Privacy: parsing runs locally in your browser. No user agent data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a user agent string or use your current browser UA, then inspect likely browser family, rendering engine, operating system, and device type.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Parse a Chrome, Safari, Firefox, or Edge user agent string</li>
+      <li>Check likely OS such as Windows, macOS, Android, or iOS</li>
+      <li>Inspect whether the UA looks like mobile, tablet, or desktop</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("ua_input");
+  const parseBtn = document.getElementById("ua_parse");
+  const currentBtn = document.getElementById("ua_use_current");
+  const clearBtn = document.getElementById("ua_clear");
+  const errEl = document.getElementById("ua_error");
+  const resultEl = document.getElementById("ua_result");
+  const cardsEl = document.getElementById("ua_cards");
+  const outputEl = document.getElementById("ua_output");
+  const tbodyEl = document.getElementById("ua_tbody");
+
+  if (!inputEl || !parseBtn || !currentBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function detectBrowser(ua) {
+    if (/Edg\//.test(ua)) return "Microsoft Edge";
+    if (/OPR\//.test(ua)) return "Opera";
+    if (/Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua)) return "Chrome";
+    if (/Firefox\//.test(ua)) return "Firefox";
+    if (/Safari\//.test(ua) && /Version\//.test(ua) && !/Chrome\//.test(ua)) return "Safari";
+    return "Unknown";
+  }
+
+  function detectEngine(ua) {
+    if (/Gecko\//.test(ua) && /Firefox\//.test(ua)) return "Gecko";
+    if (/AppleWebKit\//.test(ua)) return "WebKit/Blink family";
+    if (/Trident\//.test(ua)) return "Trident";
+    return "Unknown";
+  }
+
+  function detectOS(ua) {
+    if (/Windows NT/.test(ua)) return "Windows";
+    if (/Android/.test(ua)) return "Android";
+    if (/iPhone|iPad|iPod/.test(ua)) return "iOS";
+    if (/Mac OS X/.test(ua)) return "macOS";
+    if (/Linux/.test(ua)) return "Linux";
+    return "Unknown";
+  }
+
+  function detectDevice(ua) {
+    if (/iPad|Tablet/.test(ua)) return "Tablet";
+    if (/Mobile|iPhone|Android/.test(ua)) return "Mobile";
+    return "Desktop / Other";
+  }
+
+  function parseUA() {
+    resetOutput();
+    const ua = String(inputEl.value || "").trim();
+
+    if (!ua) {
+      showError("Please paste a user agent string.");
+      return;
+    }
+
+    const browser = detectBrowser(ua);
+    const engine = detectEngine(ua);
+    const os = detectOS(ua);
+    const device = detectDevice(ua);
+
+    outputEl.value =
+      "Browser: " + browser + "\n" +
+      "Engine: " + engine + "\n" +
+      "OS: " + os + "\n" +
+      "Device: " + device;
+
+    resultEl.innerHTML = "<strong>User agent parsed.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(browser) +
+      badge(os) +
+      badge(device) +
+      "</div>";
+
+    tbodyEl.innerHTML = "";
+    [
+      ["Browser", browser],
+      ["Engine", engine],
+      ["Operating system", os],
+      ["Device type", device],
+      ["Raw length", String(ua.length)],
+    ].forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  parseBtn.addEventListener("click", parseUA);
+  currentBtn.addEventListener("click", function () {
+    inputEl.value = navigator.userAgent;
+    parseUA();
+  });
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

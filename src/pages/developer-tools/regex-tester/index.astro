@@ -1,0 +1,405 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Regex Tester",
+  description:
+    "Test regular expressions with live pattern matching, flags, validation, result cards, and FAQ schema.",
+  href: "/developer-tools/regex-tester/",
+  order: 10,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/regex-tester/";
+
+const faqs = [
+  {
+    q: "What does this regex tester do?",
+    a: "It tests a regular expression pattern against input text and shows matches, groups, flags, and errors.",
+  },
+  {
+    q: "Which flags are supported?",
+    a: "Common JavaScript regex flags are supported, including g, i, m, s, u, and y.",
+  },
+  {
+    q: "What happens if the pattern is invalid?",
+    a: "The tool shows a validation error and does not attempt matching until the pattern is corrected.",
+  },
+  {
+    q: "Are my patterns or test strings stored?",
+    a: "No. Everything runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Regex Tester — ${SITE_NAME}`}
+  description="Test regular expressions with pattern validation, flags, match details, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Regex Tester"
+  intro="Test a regular expression pattern against sample text. Review matches, captured groups, and pattern errors."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="regex-tester">
+    <style is:inline>
+      .rt-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rt-grid-2 > * {
+        min-width: 0;
+      }
+      #rt_pattern,
+      #rt_flags,
+      #rt_text,
+      #rt_replace,
+      #rt_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rt-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rt-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rt_help rt_privacy">
+      <div class="rt-grid-2">
+        <div class="field">
+          <label for="rt_pattern">Pattern</label>
+          <input id="rt_pattern" type="text" placeholder="e.g., \b\w{4}\b" spellcheck="false" aria-describedby="rt_help" />
+        </div>
+
+        <div class="field">
+          <label for="rt_flags">Flags</label>
+          <input id="rt_flags" type="text" placeholder="e.g., gi" spellcheck="false" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rt_text">Test text</label>
+        <textarea id="rt_text" rows="8" spellcheck="false" placeholder="Enter sample text to test your regex pattern."></textarea>
+      </div>
+
+      <div class="rt-grid-2">
+        <div class="field">
+          <label for="rt_mode">Mode</label>
+          <select id="rt_mode">
+            <option value="match" selected>Match / Test</option>
+            <option value="replace">Replace</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rt_replace">Replacement text (replace mode)</label>
+          <input id="rt_replace" type="text" placeholder="e.g., [$&]" spellcheck="false" />
+        </div>
+      </div>
+
+      <p class="note" id="rt_help" style="margin-top:6px;">
+        JavaScript regular expression syntax is used. Duplicate flags or invalid patterns will show an error.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rt_run">Run</button>
+        <button class="btn secondary" type="button" id="rt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result rt-output" id="rt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rt_privacy" style="margin-top:10px;">
+        Privacy: regex evaluation runs locally in your browser. No pattern or text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter a JavaScript regex pattern and optional flags, then test it against input text. In replace mode, the tool also applies a replacement string.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>\b\w{4}\b</strong> with <strong>g</strong> finds 4-letter words</li>
+      <li><strong>\d+</strong> with <strong>g</strong> finds all number sequences</li>
+      <li><strong>(cat|dog)</strong> with <strong>i</strong> matches either word case-insensitively</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/regex-generator/">Regex Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const patternEl = document.getElementById("rt_pattern");
+  const flagsEl = document.getElementById("rt_flags");
+  const textEl = document.getElementById("rt_text");
+  const modeEl = document.getElementById("rt_mode");
+  const replaceEl = document.getElementById("rt_replace");
+  const runBtn = document.getElementById("rt_run");
+  const clearBtn = document.getElementById("rt_clear");
+  const errEl = document.getElementById("rt_error");
+  const outEl = document.getElementById("rt_result");
+  const cardsEl = document.getElementById("rt_cards");
+  const tbodyEl = document.getElementById("rt_tbody");
+
+  if (!patternEl || !flagsEl || !textEl || !modeEl || !replaceEl || !runBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function validateFlags(flags) {
+    if (!/^[gimsuyd]*$/i.test(flags)) {
+      return "Flags must use only valid JavaScript regex flags.";
+    }
+    const chars = flags.toLowerCase().split("");
+    const unique = new Set(chars);
+    if (unique.size !== chars.length) {
+      return "Duplicate regex flags are not allowed.";
+    }
+    return "";
+  }
+
+  function runRegex() {
+    resetOutput();
+
+    const pattern = String(patternEl.value || "");
+    const flags = String(flagsEl.value || "").trim();
+    const text = String(textEl.value || "");
+    const mode = String(modeEl.value || "match");
+    const replacement = String(replaceEl.value || "");
+
+    if (!pattern) {
+      showError("Please enter a regex pattern.");
+      return;
+    }
+
+    const flagError = validateFlags(flags);
+    if (flagError) {
+      showError(flagError);
+      return;
+    }
+
+    let regex;
+    try {
+      regex = new RegExp(pattern, flags);
+    } catch (e) {
+      showError("Invalid regex pattern: " + (e && e.message ? e.message : "unknown error"));
+      return;
+    }
+
+    if (mode === "replace") {
+      const replaced = text.replace(regex, replacement);
+      outEl.innerHTML =
+        "<strong>Replaced output:</strong>\n" + escapeHtml(replaced);
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Replace mode") +
+        badge("Output length: " + replaced.length) +
+        badge(flags ? "Flags: " + flags : "No flags") +
+        "</div>";
+
+      fillTable([
+        ["Mode", "Replace"],
+        ["Pattern", "/" + pattern + "/" + flags],
+        ["Input length", String(text.length)],
+        ["Output length", String(replaced.length)],
+      ]);
+      return;
+    }
+
+    let matches = [];
+    let groupPreview = "";
+    let matched = false;
+
+    if (flags.includes("g")) {
+      const iterRegex = new RegExp(pattern, flags);
+      let m;
+      while ((m = iterRegex.exec(text)) !== null) {
+        matched = true;
+        matches.push({
+          value: m[0],
+          index: m.index,
+          groups: m.length > 1 ? m.slice(1) : [],
+        });
+        if (m[0] === "") iterRegex.lastIndex++;
+        if (matches.length >= 1000) break;
+      }
+    } else {
+      const m = regex.exec(text);
+      if (m) {
+        matched = true;
+        matches.push({
+          value: m[0],
+          index: m.index,
+          groups: m.length > 1 ? m.slice(1) : [],
+        });
+      }
+    }
+
+    if (!matched) {
+      outEl.innerHTML = "<strong>No match found.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("No match") +
+        badge(flags ? "Flags: " + flags : "No flags") +
+        "</div>";
+
+      fillTable([
+        ["Pattern", "/" + pattern + "/" + flags],
+        ["Mode", "Match"],
+        ["Match count", "0"],
+        ["Input length", String(text.length)],
+      ]);
+      return;
+    }
+
+    const first = matches[0];
+    if (first.groups && first.groups.length) {
+      groupPreview = first.groups.map(function (g, i) {
+        return "Group " + (i + 1) + ": " + (g == null ? "null" : g);
+      }).join("\n");
+    }
+
+    const preview = matches.slice(0, 20).map(function (m, i) {
+      return "#" + (i + 1) + " @ " + m.index + ": " + m.value;
+    }).join("\n");
+
+    outEl.innerHTML =
+      "<strong>Matches:</strong>\n" +
+      escapeHtml(preview) +
+      (groupPreview ? "\n\n" + escapeHtml(groupPreview) : "");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Match mode") +
+      badge("Matches: " + matches.length) +
+      badge(flags ? "Flags: " + flags : "No flags") +
+      "</div>";
+
+    fillTable([
+      ["Pattern", "/" + pattern + "/" + flags],
+      ["Mode", "Match"],
+      ["Match count", String(matches.length)],
+      ["First match", first.value],
+      ["First index", String(first.index)],
+      ["Input length", String(text.length)],
+    ]);
+  }
+
+  function resetForm() {
+    patternEl.value = "";
+    flagsEl.value = "";
+    textEl.value = "";
+    replaceEl.value = "";
+    modeEl.value = "match";
+    resetOutput();
+    patternEl.focus();
+  }
+
+  runBtn.addEventListener("click", runRegex);
+  clearBtn.addEventListener("click", resetForm);
+
+  [patternEl, flagsEl, replaceEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") runRegex();
+    });
+  });
+});
+</script>

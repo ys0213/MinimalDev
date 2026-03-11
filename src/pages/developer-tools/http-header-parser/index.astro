@@ -1,0 +1,240 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "HTTP Header Parser",
+  description:
+    "Parse raw HTTP headers into name/value pairs with validation, duplicate detection, result cards, and FAQ schema.",
+  href: "/developer-tools/http-header-parser/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/http-header-parser/";
+
+const faqs = [
+  {
+    q: "What does this HTTP header parser do?",
+    a: "It parses raw HTTP header text into structured header name/value pairs.",
+  },
+  {
+    q: "Can it detect duplicate headers?",
+    a: "Yes. It highlights repeated header names and counts total parsed lines.",
+  },
+  {
+    q: "Does it parse a full HTTP request?",
+    a: "This tool focuses on header lines. You can paste a request or response block, and it will parse lines that match header syntax.",
+  },
+  {
+    q: "Are my headers stored?",
+    a: "No. Parsing runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`HTTP Header Parser — ${SITE_NAME}`}
+  description="Parse raw HTTP headers into structured key/value pairs with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="HTTP Header Parser"
+  intro="Paste raw HTTP headers and parse them into structured header fields."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="http-header-parser">
+    <style is:inline>
+      #hh_input, #hh_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .hh-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hh_help hh_privacy">
+      <div class="field">
+        <label for="hh_input">Raw header input</label>
+        <textarea id="hh_input" rows="12" spellcheck="false" placeholder="Host: example.com&#10;Content-Type: application/json&#10;Authorization: Bearer ..."></textarea>
+      </div>
+
+      <p class="note" id="hh_help" style="margin-top:6px;">
+        Lines in the form <strong>Name: Value</strong> are parsed as headers. Status lines or request lines are ignored in the header table.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hh_parse">Parse</button>
+        <button class="btn secondary" type="button" id="hh_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hh_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hh_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hh_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hh_output">Parsed header summary</label>
+        <textarea id="hh_output" class="hh-mono" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Header</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hh_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hh_privacy" style="margin-top:10px;">
+        Privacy: parsing runs locally in your browser. No header content is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste raw headers, parse each <strong>Name: Value</strong> line, and inspect duplicates, counts, and normalized output.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Parse response headers copied from developer tools</li>
+      <li>Inspect repeated headers such as Set-Cookie</li>
+      <li>Convert raw header blocks into structured output</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/user-agent-parser/">User Agent Parser</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("hh_input");
+  const parseBtn = document.getElementById("hh_parse");
+  const clearBtn = document.getElementById("hh_clear");
+  const errEl = document.getElementById("hh_error");
+  const resultEl = document.getElementById("hh_result");
+  const cardsEl = document.getElementById("hh_cards");
+  const outputEl = document.getElementById("hh_output");
+  const tbodyEl = document.getElementById("hh_tbody");
+
+  if (!inputEl || !parseBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function parseHeaders() {
+    resetOutput();
+    const raw = String(inputEl.value || "").trim();
+
+    if (!raw) {
+      showError("Please paste raw HTTP headers.");
+      return;
+    }
+
+    const lines = raw.split(/\r?\n/);
+    const parsed = [];
+    const counts = {};
+
+    lines.forEach(function (line) {
+      const idx = line.indexOf(":");
+      if (idx <= 0) return;
+      const name = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      if (!name) return;
+      parsed.push([name, value]);
+      const lower = name.toLowerCase();
+      counts[lower] = (counts[lower] || 0) + 1;
+    });
+
+    if (!parsed.length) {
+      showError("No valid header lines were found.");
+      return;
+    }
+
+    tbodyEl.innerHTML = "";
+    parsed.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+
+    const dupCount = Object.keys(counts).filter(function (k) { return counts[k] > 1; }).length;
+    outputEl.value = parsed.map(function (row) {
+      return row[0] + ": " + row[1];
+    }).join("\n");
+
+    resultEl.innerHTML = "<strong>Headers parsed successfully.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Headers: " + parsed.length) +
+      badge("Duplicate names: " + dupCount) +
+      badge("Structured output") +
+      "</div>";
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  parseBtn.addEventListener("click", parseHeaders);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

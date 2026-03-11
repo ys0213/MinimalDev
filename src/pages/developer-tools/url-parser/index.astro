@@ -1,0 +1,246 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "URL Parser",
+  description:
+    "Parse URLs into protocol, host, path, query, hash, and parameters with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/url-parser/",
+  order: 110,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/url-parser/";
+
+const faqs = [
+  {
+    q: "What does this URL parser do?",
+    a: "It breaks a URL into parts such as protocol, hostname, port, pathname, query string, hash, and decoded parameters.",
+  },
+  {
+    q: "Can it parse query parameters?",
+    a: "Yes. It lists query parameters and their values from the URL.",
+  },
+  {
+    q: "Does it require a full absolute URL?",
+    a: "This parser works best with absolute URLs that include a scheme like https://.",
+  },
+  {
+    q: "Is my URL stored?",
+    a: "No. Parsing runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`URL Parser — ${SITE_NAME}`}
+  description="Parse a URL into protocol, host, path, query, hash, and parameters with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="URL Parser"
+  intro="Parse a URL into its main parts, inspect query parameters, and review decoded values."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="url-parser">
+    <style is:inline>
+      #up_input, #up_params {
+        width: 100%;
+        min-width: 0;
+      }
+      .up-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="up_help up_privacy">
+      <div class="field">
+        <label for="up_input">URL input</label>
+        <textarea id="up_input" rows="6" spellcheck="false" placeholder="e.g., https://example.com:8080/path/to/page?x=1&y=test#section"></textarea>
+      </div>
+
+      <p class="note" id="up_help" style="margin-top:6px;">
+        Best results come from absolute URLs such as https://example.com/path?key=value#hash
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="up_parse">Parse</button>
+        <button class="btn secondary" type="button" id="up_clear">Clear</button>
+      </div>
+
+      <div class="result" id="up_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="up_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="up_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="up_params">Query parameters</label>
+        <textarea id="up_params" class="up-mono" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Part</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="up_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="up_privacy" style="margin-top:10px;">
+        Privacy: parsing runs locally in your browser. No URL data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a URL, parse it with the browser URL API, and inspect components such as protocol, origin, pathname, query parameters, and fragment.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Parse a URL with multiple query parameters</li>
+      <li>Inspect protocol, hostname, and path separately</li>
+      <li>Review the fragment and raw search string</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/url-encoder-decoder/">URL Encoder Decoder</a></li>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("up_input");
+  const parseBtn = document.getElementById("up_parse");
+  const clearBtn = document.getElementById("up_clear");
+  const errEl = document.getElementById("up_error");
+  const resultEl = document.getElementById("up_result");
+  const cardsEl = document.getElementById("up_cards");
+  const paramsEl = document.getElementById("up_params");
+  const tbodyEl = document.getElementById("up_tbody");
+
+  if (!inputEl || !parseBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !paramsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    paramsEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseUrl() {
+    resetOutput();
+    const raw = String(inputEl.value || "").trim();
+
+    if (!raw) {
+      showError("Please enter a URL.");
+      return;
+    }
+
+    let url;
+    try {
+      url = new URL(raw);
+    } catch (_) {
+      showError("Invalid URL. Please use an absolute URL such as https://example.com/path?x=1");
+      return;
+    }
+
+    const params = [];
+    url.searchParams.forEach(function (value, key) {
+      params.push(key + " = " + value);
+    });
+
+    paramsEl.value = params.length ? params.join("\n") : "No query parameters";
+
+    resultEl.innerHTML = "<strong>URL parsed successfully.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(url.protocol.replace(":", "")) +
+      badge("Params: " + params.length) +
+      badge(url.hash ? "Has fragment" : "No fragment") +
+      "</div>";
+
+    fillTable([
+      ["href", url.href],
+      ["origin", url.origin],
+      ["protocol", url.protocol],
+      ["username", url.username || "—"],
+      ["password", url.password ? "••••" : "—"],
+      ["host", url.host],
+      ["hostname", url.hostname],
+      ["port", url.port || "—"],
+      ["pathname", url.pathname],
+      ["search", url.search || "—"],
+      ["hash", url.hash || "—"],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  parseBtn.addEventListener("click", parseUrl);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>
