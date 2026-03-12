@@ -1,0 +1,275 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Reading Time Calculator",
+  description:
+    "Estimate reading time from text using configurable reading speed, plus word, sentence, and paragraph summaries with FAQ schema.",
+  href: "/text-tools/reading-time-calculator/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/reading-time-calculator/";
+
+const faqs = [
+  {
+    q: "What does this reading time calculator do?",
+    a: "It estimates how long it may take to read a text based on the word count and the selected words-per-minute reading speed.",
+  },
+  {
+    q: "Can I adjust the reading speed?",
+    a: "Yes. You can enter your own words-per-minute value to match fast or slow reading styles.",
+  },
+  {
+    q: "Does it show other writing metrics too?",
+    a: "Yes. It also reports word count, sentence count, paragraph count, and character totals.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Calculation runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Reading Time Calculator — ${SITE_NAME}`}
+  description="Estimate reading time from text using configurable reading speed and related writing metrics."
+  canonicalPath={CANONICAL_PATH}
+  h1="Reading Time Calculator"
+  intro="Estimate reading time based on word count and a configurable words-per-minute reading speed."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="reading-time-calculator">
+    <style is:inline>
+      .rtc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rtc-grid-2 > * { min-width: 0; }
+      #rtc_input, #rtc_wpm {
+        width: 100%;
+        min-width: 0;
+      }
+      .rtc-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .rtc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .rtc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 760px) {
+        .rtc-grid-2,
+        .rtc-cards-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rtc_help rtc_privacy">
+      <div class="field">
+        <label for="rtc_input">Input text</label>
+        <textarea id="rtc_input" rows="14" spellcheck="false" placeholder="Paste or type text here..."></textarea>
+      </div>
+
+      <div class="rtc-grid-2">
+        <div class="field">
+          <label for="rtc_wpm">Reading speed (words per minute)</label>
+          <input id="rtc_wpm" type="number" inputmode="numeric" min="50" max="1000" value="200" />
+        </div>
+        <div class="field">
+          <label for="rtc_round">Display style</label>
+          <select id="rtc_round">
+            <option value="rounded" selected>Rounded estimate</option>
+            <option value="exact">Exact minutes</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="rtc_help" style="margin-top:6px;">
+        Many general reading-time tools use around 200 words per minute as a default. Adjust the speed to fit your audience.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rtc_calc">Calculate Reading Time</button>
+        <button class="btn secondary" type="button" id="rtc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rtc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rtc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div id="rtc_cards" class="rtc-cards-grid" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="rtc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rtc_privacy" style="margin-top:10px;">
+        Privacy: calculation runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text, choose a reading speed in words per minute, and estimate how long it may take someone to read the content.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Estimate reading time for a blog post draft</li>
+      <li>Use slower reading speeds for technical documentation</li>
+      <li>Compare content length across multiple drafts</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/sentence-counter/">Sentence Counter</a></li>
+      <li><a href="/text-tools/line-counter/">Line Counter</a></li>
+      <li><a href="/text-tools/keyword-density-checker/">Keyword Density Checker</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("rtc_input");
+  const wpmEl = document.getElementById("rtc_wpm");
+  const roundEl = document.getElementById("rtc_round");
+  const calcBtn = document.getElementById("rtc_calc");
+  const clearBtn = document.getElementById("rtc_clear");
+  const errEl = document.getElementById("rtc_error");
+  const resultEl = document.getElementById("rtc_result");
+  const cardsEl = document.getElementById("rtc_cards");
+  const tbodyEl = document.getElementById("rtc_tbody");
+
+  if (!inputEl || !wpmEl || !roundEl || !calcBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function card(title, value, note){
+    return (
+      '<div class="rtc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+
+  function formatTime(minutes, roundedMode) {
+    if (roundedMode === "exact") {
+      return minutes.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " min";
+    }
+
+    const rounded = Math.max(1, Math.round(minutes));
+    if (rounded < 60) return rounded + " min";
+
+    const h = Math.floor(rounded / 60);
+    const m = rounded % 60;
+    return h + "h " + m + "m";
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const wpm = Number(String(wpmEl.value || ""));
+    const roundMode = String(roundEl.value || "rounded");
+
+    if (!raw.trim()) {
+      showError("Please enter text to analyze.");
+      return;
+    }
+    if (!Number.isFinite(wpm) || wpm < 50 || wpm > 1000) {
+      showError("Please enter a valid reading speed between 50 and 1000 words per minute.");
+      return;
+    }
+
+    const cleaned = raw.trim();
+    const words = cleaned ? cleaned.split(/\s+/).length : 0;
+    const sentences = (cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).filter(Boolean).length;
+    const paragraphs = cleaned ? cleaned.split(/\n\s*\n/).filter(Boolean).length : 0;
+    const chars = raw.length;
+    const readMinutes = words / wpm;
+
+    resultEl.innerHTML = "<strong>Reading time calculated.</strong>";
+    cardsEl.style.display = "grid";
+    cardsEl.innerHTML =
+      card("Estimated reading time", formatTime(readMinutes, roundMode), "Based on " + wpm + " words/minute.") +
+      card("Words", String(words), "Primary reading-time input.") +
+      card("Sentences", String(sentences), "Estimated from punctuation.");
+
+    fillTable([
+      ["Words", String(words)],
+      ["Estimated sentences", String(sentences)],
+      ["Paragraphs", String(paragraphs)],
+      ["Characters", String(chars)],
+      ["Reading speed (WPM)", String(wpm)],
+      ["Estimated reading time", formatTime(readMinutes, roundMode)],
+      ["Exact reading minutes", readMinutes.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    wpmEl.value = "200";
+    roundEl.value = "rounded";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

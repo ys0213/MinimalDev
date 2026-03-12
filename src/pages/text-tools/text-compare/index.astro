@@ -1,0 +1,272 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Text Compare",
+  description:
+    "Compare two texts for equality, lengths, and line differences with normalization options, result cards, and FAQ schema.",
+  href: "/text-tools/text-compare/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/text-compare/";
+
+const faqs = [
+  {
+    q: "What does this text compare tool do?",
+    a: "It compares two text blocks and reports whether they are the same after optional normalization.",
+  },
+  {
+    q: "How is it different from the diff checker?",
+    a: "This tool focuses on comparison summaries and quick equality checks, while the diff checker emphasizes mismatched lines more directly.",
+  },
+  {
+    q: "Can it ignore case and extra spaces?",
+    a: "Yes. You can trim text, ignore case, and collapse repeated spaces before comparison.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Comparison runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Text Compare — ${SITE_NAME}`}
+  description="Compare two texts for equality with optional normalization and summary metrics."
+  canonicalPath={CANONICAL_PATH}
+  h1="Text Compare"
+  intro="Compare two text inputs quickly to check whether they match after optional normalization rules."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="text-compare">
+    <style is:inline>
+      .txc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .txc-grid-2 > * { min-width: 0; }
+      #txc_a, #txc_b {
+        width: 100%;
+        min-width: 0;
+      }
+      .txc-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .txc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .txc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 900px) {
+        .txc-grid-2,
+        .txc-cards-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="txc_help txc_privacy">
+      <div class="txc-grid-2">
+        <div class="field">
+          <label for="txc_a">Text A</label>
+          <textarea id="txc_a" rows="12" spellcheck="false" placeholder="Paste first text here..."></textarea>
+        </div>
+        <div class="field">
+          <label for="txc_b">Text B</label>
+          <textarea id="txc_b" rows="12" spellcheck="false" placeholder="Paste second text here..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="txc_trim" type="checkbox" /> Trim text first</label>
+        <label><input id="txc_case" type="checkbox" /> Ignore case</label>
+        <label><input id="txc_spaces" type="checkbox" /> Collapse repeated spaces</label>
+      </div>
+
+      <p class="note" id="txc_help" style="margin-top:6px;">
+        This tool is useful for fast equality checks and summary comparison rather than detailed inline visual diffing.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="txc_compare">Compare</button>
+        <button class="btn secondary" type="button" id="txc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="txc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="txc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div id="txc_cards" class="txc-cards-grid" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="txc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="txc_privacy" style="margin-top:10px;">
+        Privacy: comparison runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste two texts, choose optional normalization rules, and compare them to check whether they are effectively the same.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Check whether two generated outputs match</li>
+      <li>Ignore case or spacing differences before comparing</li>
+      <li>Quickly compare content length and line counts</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/text-diff-checker/">Text Diff Checker</a></li>
+      <li><a href="/text-tools/whitespace-remover/">Whitespace Remover</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("txc_a");
+  const bEl = document.getElementById("txc_b");
+  const trimEl = document.getElementById("txc_trim");
+  const caseEl = document.getElementById("txc_case");
+  const spacesEl = document.getElementById("txc_spaces");
+  const compareBtn = document.getElementById("txc_compare");
+  const clearBtn = document.getElementById("txc_clear");
+  const errEl = document.getElementById("txc_error");
+  const resultEl = document.getElementById("txc_result");
+  const cardsEl = document.getElementById("txc_cards");
+  const tbodyEl = document.getElementById("txc_tbody");
+
+  if (!aEl || !bEl || !trimEl || !caseEl || !spacesEl || !compareBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function card(title, value, note){
+    return (
+      '<div class="txc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+
+  function normalize(text) {
+    let out = String(text || "");
+    if (trimEl.checked) out = out.trim();
+    if (spacesEl.checked) out = out.replace(/[ \t]{2,}/g, " ");
+    if (caseEl.checked) out = out.toLowerCase();
+    return out;
+  }
+
+  function compare() {
+    resetOutput();
+
+    const rawA = String(aEl.value || "");
+    const rawB = String(bEl.value || "");
+
+    if (!rawA && !rawB) {
+      showError("Please enter text in at least one field.");
+      return;
+    }
+
+    const a = normalize(rawA);
+    const b = normalize(rawB);
+
+    const equal = a === b;
+    const lenDiff = a.length - b.length;
+    const lineDiff = a.split(/\r?\n/).length - b.split(/\r?\n/).length;
+
+    resultEl.innerHTML = equal
+      ? "<strong>The two texts match after normalization.</strong>"
+      : "<strong>The two texts do not match.</strong>";
+
+    cardsEl.style.display = "grid";
+    cardsEl.innerHTML =
+      card("Compare result", equal ? "Match" : "Mismatch", "After applying the selected normalization rules.") +
+      card("Length difference", String(lenDiff), "Characters in A minus characters in B.");
+
+    fillTable([
+      ["Result", equal ? "Match" : "Mismatch"],
+      ["Characters in Text A", String(a.length)],
+      ["Characters in Text B", String(b.length)],
+      ["Character difference (A - B)", String(lenDiff)],
+      ["Lines in Text A", String(a.split(/\r?\n/).length)],
+      ["Lines in Text B", String(b.split(/\r?\n/).length)],
+      ["Line difference (A - B)", String(lineDiff)],
+      ["Trim text first", trimEl.checked ? "Yes" : "No"],
+      ["Ignore case", caseEl.checked ? "Yes" : "No"],
+      ["Collapse repeated spaces", spacesEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  function clearAll() {
+    aEl.value = "";
+    bEl.value = "";
+    trimEl.checked = false;
+    caseEl.checked = false;
+    spacesEl.checked = false;
+    resetOutput();
+    aEl.focus();
+  }
+
+  compareBtn.addEventListener("click", compare);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

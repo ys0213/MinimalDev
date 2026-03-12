@@ -1,0 +1,230 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sentence Counter",
+  description:
+    "Count sentences in text with word, paragraph, and character summaries, plus result cards and FAQ schema.",
+  href: "/text-tools/sentence-counter/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/sentence-counter/";
+
+const faqs = [
+  {
+    q: "What does this sentence counter do?",
+    a: "It estimates the number of sentences in a text and also shows related counts such as words, paragraphs, and characters.",
+  },
+  {
+    q: "How are sentences detected?",
+    a: "This tool uses common sentence-ending punctuation such as periods, question marks, and exclamation marks to estimate sentence boundaries.",
+  },
+  {
+    q: "Is the count always perfect?",
+    a: "No. Sentence counting is heuristic-based, so abbreviations or unusual punctuation may affect the estimate.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Counting runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Sentence Counter — ${SITE_NAME}`}
+  description="Count sentences in text and review words, paragraphs, and character totals."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sentence Counter"
+  intro="Count estimated sentences in a text and review supporting writing metrics."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="sentence-counter">
+    <style is:inline>
+      #sc_input {
+        width: 100%;
+        min-width: 0;
+      }
+      .sc-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .sc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .sc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 760px) {
+        .sc-cards-grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="sc_help sc_privacy">
+      <div class="field">
+        <label for="sc_input">Input text</label>
+        <textarea id="sc_input" rows="14" spellcheck="false" placeholder="Paste or type text here..."></textarea>
+      </div>
+
+      <p class="note" id="sc_help" style="margin-top:6px;">
+        Sentence counts are estimated from punctuation patterns and may differ slightly from manual editorial counting.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sc_count">Count Sentences</button>
+        <button class="btn secondary" type="button" id="sc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div id="sc_cards" class="sc-cards-grid" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="sc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sc_privacy" style="margin-top:10px;">
+        Privacy: counting runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text, run the counter, and review estimated sentence totals along with supporting writing metrics such as words, paragraphs, and characters.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Estimate sentence count in an article draft</li>
+      <li>Compare sentence density across writing samples</li>
+      <li>Review paragraph and word totals at the same time</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/line-counter/">Line Counter</a></li>
+      <li><a href="/text-tools/reading-time-calculator/">Reading Time Calculator</a></li>
+      <li><a href="/text-tools/keyword-density-checker/">Keyword Density Checker</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("sc_input");
+  const countBtn = document.getElementById("sc_count");
+  const clearBtn = document.getElementById("sc_clear");
+  const errEl = document.getElementById("sc_error");
+  const resultEl = document.getElementById("sc_result");
+  const cardsEl = document.getElementById("sc_cards");
+  const tbodyEl = document.getElementById("sc_tbody");
+
+  if (!inputEl || !countBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function card(title, value, note){
+    return (
+      '<div class="sc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+
+  function countSentences() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.trim()) {
+      showError("Please enter text to count.");
+      return;
+    }
+
+    const cleaned = raw.trim();
+    const sentenceMatches = cleaned.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
+    const sentenceCount = sentenceMatches.filter(Boolean).length;
+    const words = cleaned ? cleaned.split(/\s+/).length : 0;
+    const paragraphs = cleaned ? cleaned.split(/\n\s*\n/).filter(Boolean).length : 0;
+    const chars = raw.length;
+    const charsNoSpaces = raw.replace(/\s/g, "").length;
+
+    resultEl.innerHTML = "<strong>Sentence count completed.</strong>";
+    cardsEl.style.display = "grid";
+    cardsEl.innerHTML =
+      card("Sentences", String(sentenceCount), "Estimated from punctuation.") +
+      card("Words", String(words), "Split by whitespace.") +
+      card("Paragraphs", String(paragraphs), "Separated by blank lines.");
+
+    fillTable([
+      ["Estimated sentences", String(sentenceCount)],
+      ["Words", String(words)],
+      ["Paragraphs", String(paragraphs)],
+      ["Characters (with spaces)", String(chars)],
+      ["Characters (without spaces)", String(charsNoSpaces)],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  countBtn.addEventListener("click", countSentences);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

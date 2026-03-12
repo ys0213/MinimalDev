@@ -1,0 +1,299 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Unicode Converter",
+  description:
+    "Convert text to Unicode code points and convert code points back to text, with validation, result cards, and FAQ schema.",
+  href: "/text-tools/unicode-converter/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/unicode-converter/";
+
+const faqs = [
+  {
+    q: "What does this Unicode converter do?",
+    a: "It converts text into Unicode code points and can also turn Unicode code points back into text.",
+  },
+  {
+    q: "What format does it use for code points?",
+    a: "It uses U+XXXX style output, with larger values shown in the appropriate hexadecimal length.",
+  },
+  {
+    q: "Can I paste multiple code points?",
+    a: "Yes. You can enter multiple Unicode code points separated by spaces, commas, or line breaks.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Conversion runs locally in your browser and no data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Unicode Converter — ${SITE_NAME}`}
+  description="Convert text to Unicode code points and Unicode code points back to text."
+  canonicalPath={CANONICAL_PATH}
+  h1="Unicode Converter"
+  intro="Convert between plain text and Unicode code points for debugging, development, and encoding inspection."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="unicode-converter">
+    <style is:inline>
+      .uc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .uc-grid-2 > * { min-width: 0; }
+      #uc_text, #uc_codes, #uc_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      .uc-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 900px) {
+        .uc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="uc_help uc_privacy">
+      <div class="field">
+        <label for="uc_mode">Conversion mode</label>
+        <select id="uc_mode">
+          <option value="text_to_unicode" selected>Text → Unicode</option>
+          <option value="unicode_to_text">Unicode → Text</option>
+        </select>
+      </div>
+
+      <div class="uc-grid-2">
+        <div class="field">
+          <label for="uc_text">Text input</label>
+          <textarea id="uc_text" rows="12" spellcheck="false" placeholder="Enter text here..."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="uc_codes">Unicode code points</label>
+          <textarea id="uc_codes" class="uc-mono" rows="12" spellcheck="false" placeholder="e.g. U+0041 U+1F600"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="uc_help" style="margin-top:6px;">
+        Unicode input accepts forms like <strong>U+0041</strong>, <strong>0041</strong>, or mixed values separated by spaces, commas, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="uc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="uc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="uc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="uc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="uc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="uc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="uc_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No text or code point data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a direction, enter text or Unicode code points, and convert between readable characters and their Unicode representations.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Convert <strong>Hello</strong> into Unicode code points</li>
+      <li>Convert <strong>U+1F600</strong> into the matching character</li>
+      <li>Inspect multilingual or emoji text in Unicode form</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/ascii-converter/">ASCII Converter</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("uc_mode");
+  const textEl = document.getElementById("uc_text");
+  const codesEl = document.getElementById("uc_codes");
+  const convertBtn = document.getElementById("uc_convert");
+  const clearBtn = document.getElementById("uc_clear");
+  const errEl = document.getElementById("uc_error");
+  const resultEl = document.getElementById("uc_result");
+  const cardsEl = document.getElementById("uc_cards");
+  const tbodyEl = document.getElementById("uc_tbody");
+
+  if (!modeEl || !textEl || !codesEl || !convertBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function toCodePointString(ch) {
+    const cp = ch.codePointAt(0);
+    return "U+" + cp.toString(16).toUpperCase().padStart(cp <= 0xFFFF ? 4 : 5, "0");
+  }
+
+  function convert() {
+    resetOutput();
+
+    const mode = String(modeEl.value || "text_to_unicode");
+
+    if (mode === "text_to_unicode") {
+      const text = String(textEl.value || "");
+      if (!text) {
+        showError("Please enter text to convert.");
+        return;
+      }
+
+      const points = Array.from(text).map(toCodePointString);
+      codesEl.value = points.join(" ");
+
+      resultEl.innerHTML = "<strong>Converted text to Unicode code points.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+        badge("Characters: " + Array.from(text).length) +
+        badge("Code points: " + points.length) +
+        badge("Mode: Text → Unicode") +
+        "</div>";
+
+      fillTable([
+        ["Input characters", String(Array.from(text).length)],
+        ["Output code points", String(points.length)],
+        ["Mode", "Text → Unicode"],
+      ]);
+    } else {
+      const raw = String(codesEl.value || "").trim();
+      if (!raw) {
+        showError("Please enter one or more Unicode code points.");
+        return;
+      }
+
+      const tokens = raw.split(/[\s,;]+/g).filter(Boolean);
+      const chars = [];
+      const bad = [];
+
+      tokens.forEach(function(token){
+        const cleaned = token.replace(/^U\+/i, "");
+        if (!/^[0-9a-fA-F]+$/.test(cleaned)) {
+          bad.push(token);
+          return;
+        }
+        const cp = parseInt(cleaned, 16);
+        if (!Number.isFinite(cp) || cp < 0 || cp > 0x10FFFF) {
+          bad.push(token);
+          return;
+        }
+        try {
+          chars.push(String.fromCodePoint(cp));
+        } catch (_) {
+          bad.push(token);
+        }
+      });
+
+      if (!chars.length) {
+        showError("No valid Unicode code points were found.");
+        return;
+      }
+
+      textEl.value = chars.join("");
+
+      resultEl.innerHTML = "<strong>Converted Unicode code points to text.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+        badge("Valid code points: " + chars.length) +
+        badge("Invalid tokens: " + bad.length) +
+        badge("Mode: Unicode → Text") +
+        "</div>";
+
+      fillTable([
+        ["Input tokens", String(tokens.length)],
+        ["Valid code points", String(chars.length)],
+        ["Invalid tokens", String(bad.length)],
+        ["Mode", "Unicode → Text"],
+      ]);
+
+      if (bad.length) {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        const td2 = document.createElement("td");
+        td1.textContent = "Invalid tokens";
+        td2.textContent = bad.slice(0, 10).join(", ") + (bad.length > 10 ? " ..." : "");
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tbodyEl.appendChild(tr);
+      }
+    }
+  }
+
+  function clearAll() {
+    modeEl.value = "text_to_unicode";
+    textEl.value = "";
+    codesEl.value = "";
+    resetOutput();
+    textEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

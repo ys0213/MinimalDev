@@ -1,0 +1,291 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Text Diff Checker",
+  description:
+    "Compare two text blocks and highlight whether they match, plus line and character difference summaries with FAQ schema.",
+  href: "/text-tools/text-diff-checker/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/text-diff-checker/";
+
+const faqs = [
+  {
+    q: "What does this text diff checker do?",
+    a: "It compares two text blocks and reports whether they are identical, along with summary-level differences in size and lines.",
+  },
+  {
+    q: "Does it ignore spaces or case?",
+    a: "It can, if you enable normalization options such as trim, collapse spaces, or ignore case.",
+  },
+  {
+    q: "Does it show a full visual diff?",
+    a: "This version focuses on practical summary comparison and line-level mismatch reporting rather than a full code-style diff view.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Comparison runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Text Diff Checker — ${SITE_NAME}`}
+  description="Compare two text blocks with normalization options and summary diff reporting."
+  canonicalPath={CANONICAL_PATH}
+  h1="Text Diff Checker"
+  intro="Compare two text inputs to see whether they match and where summary-level differences appear."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="text-diff-checker">
+    <style is:inline>
+      .tdc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .tdc-grid-2 > * { min-width: 0; }
+      #tdc_a, #tdc_b {
+        width: 100%;
+        min-width: 0;
+      }
+      .tdc-mismatch {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 10px;
+        min-width: 0;
+      }
+      .tdc-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 900px) {
+        .tdc-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="tdc_help tdc_privacy">
+      <div class="tdc-grid-2">
+        <div class="field">
+          <label for="tdc_a">Text A</label>
+          <textarea id="tdc_a" rows="12" spellcheck="false" placeholder="Paste first text here..."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="tdc_b">Text B</label>
+          <textarea id="tdc_b" rows="12" spellcheck="false" placeholder="Paste second text here..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="tdc_trim" type="checkbox" /> Trim text before compare</label>
+        <label><input id="tdc_case" type="checkbox" /> Ignore case</label>
+        <label><input id="tdc_spaces" type="checkbox" /> Collapse repeated spaces</label>
+      </div>
+
+      <p class="note" id="tdc_help" style="margin-top:6px;">
+        This checker compares the processed versions of Text A and Text B based on the selected normalization options.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tdc_compare">Compare Text</button>
+        <button class="btn secondary" type="button" id="tdc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tdc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="tdc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tdc_cards" style="display:none; margin-top:12px;"></div>
+      <div id="tdc_details" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="tdc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tdc_privacy" style="margin-top:10px;">
+        Privacy: comparison runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste two texts, choose optional normalization rules, and compare them to see whether they match and where basic differences occur.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Check whether two drafts are effectively identical</li>
+      <li>Ignore case or extra spaces before comparing</li>
+      <li>Identify the first several mismatched lines quickly</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/text-compare/">Text Compare</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/whitespace-remover/">Whitespace Remover</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("tdc_a");
+  const bEl = document.getElementById("tdc_b");
+  const trimEl = document.getElementById("tdc_trim");
+  const caseEl = document.getElementById("tdc_case");
+  const spacesEl = document.getElementById("tdc_spaces");
+  const compareBtn = document.getElementById("tdc_compare");
+  const clearBtn = document.getElementById("tdc_clear");
+  const errEl = document.getElementById("tdc_error");
+  const resultEl = document.getElementById("tdc_result");
+  const cardsEl = document.getElementById("tdc_cards");
+  const detailsEl = document.getElementById("tdc_details");
+  const tbodyEl = document.getElementById("tdc_tbody");
+
+  if (!aEl || !bEl || !trimEl || !caseEl || !spacesEl || !compareBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !detailsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    detailsEl.style.display = "none";
+    detailsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function normalize(text) {
+    let out = String(text || "");
+    if (trimEl.checked) out = out.trim();
+    if (spacesEl.checked) out = out.replace(/[ \t]{2,}/g, " ");
+    if (caseEl.checked) out = out.toLowerCase();
+    return out;
+  }
+
+  function compare() {
+    resetOutput();
+
+    const rawA = String(aEl.value || "");
+    const rawB = String(bEl.value || "");
+
+    if (!rawA && !rawB) {
+      showError("Please enter text in at least one input.");
+      return;
+    }
+
+    const a = normalize(rawA);
+    const b = normalize(rawB);
+
+    const match = a === b;
+    const linesA = a.split(/\r?\n/);
+    const linesB = b.split(/\r?\n/);
+    const maxLines = Math.max(linesA.length, linesB.length);
+
+    const mismatches = [];
+    for (let i = 0; i < maxLines; i++) {
+      const la = linesA[i] ?? "";
+      const lb = linesB[i] ?? "";
+      if (la !== lb) {
+        mismatches.push({ line: i + 1, a: la, b: lb });
+      }
+      if (mismatches.length >= 10) break;
+    }
+
+    resultEl.innerHTML = match
+      ? "<strong>Texts match after normalization.</strong>"
+      : "<strong>Texts do not match.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge(match ? "Match" : "Mismatch") +
+      badge("Chars A: " + a.length) +
+      badge("Chars B: " + b.length) +
+      '</div>';
+
+    fillTable([
+      ["Match result", match ? "Match" : "Mismatch"],
+      ["Characters in Text A", String(a.length)],
+      ["Characters in Text B", String(b.length)],
+      ["Lines in Text A", String(linesA.length)],
+      ["Lines in Text B", String(linesB.length)],
+      ["Trim before compare", trimEl.checked ? "Yes" : "No"],
+      ["Ignore case", caseEl.checked ? "Yes" : "No"],
+      ["Collapse repeated spaces", spacesEl.checked ? "Yes" : "No"],
+    ]);
+
+    if (!match) {
+      detailsEl.style.display = "block";
+      detailsEl.innerHTML =
+        mismatches.map(function(item){
+          return (
+            '<div class="tdc-mismatch">' +
+              '<strong>Line ' + item.line + '</strong>' +
+              '<div class="note" style="margin-top:6px;">Text A</div>' +
+              '<div class="tdc-mono">' + String(item.a).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;") + '</div>' +
+              '<div class="note" style="margin-top:8px;">Text B</div>' +
+              '<div class="tdc-mono">' + String(item.b).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;") + '</div>' +
+            '</div>'
+          );
+        }).join("");
+    }
+  }
+
+  function clearAll() {
+    aEl.value = "";
+    bEl.value = "";
+    trimEl.checked = false;
+    caseEl.checked = false;
+    spacesEl.checked = false;
+    resetOutput();
+    aEl.focus();
+  }
+
+  compareBtn.addEventListener("click", compare);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

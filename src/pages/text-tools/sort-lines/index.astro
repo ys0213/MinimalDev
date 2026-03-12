@@ -1,0 +1,284 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sort Lines",
+  description:
+    "Sort lines alphabetically or by length with ascending and descending options, validation, result cards, and FAQ schema.",
+  href: "/text-tools/sort-lines/",
+  order: 30,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/sort-lines/";
+
+const faqs = [
+  {
+    q: "What does this line sorter do?",
+    a: "It sorts lines of text by alphabetical order or by line length.",
+  },
+  {
+    q: "Can I sort in descending order?",
+    a: "Yes. You can choose ascending or descending order.",
+  },
+  {
+    q: "Can it ignore case when sorting alphabetically?",
+    a: "Yes. You can enable case-insensitive sorting.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Sorting runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Sort Lines — ${SITE_NAME}`}
+  description="Sort lines alphabetically or by length with ascending and descending options."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sort Lines"
+  intro="Sort line-based text for cleanup, deduplication workflows, lists, logs, and structured editing."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="sort-lines">
+    <style is:inline>
+      .sl-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .sl-grid-2 > * { min-width: 0; }
+      #sl_input, #sl_output, #sl_mode, #sl_order { width: 100%; min-width: 0; }
+      .sl-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      @media (min-width: 760px) {
+        .sl-grid-2 { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="sl_help sl_privacy">
+      <div class="field">
+        <label for="sl_input">Input text</label>
+        <textarea id="sl_input" rows="12" spellcheck="false" placeholder="Paste lines here..."></textarea>
+      </div>
+
+      <div class="sl-grid-2">
+        <div class="field">
+          <label for="sl_mode">Sort mode</label>
+          <select id="sl_mode">
+            <option value="alpha" selected>Alphabetical</option>
+            <option value="length">By line length</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sl_order">Sort order</label>
+          <select id="sl_order">
+            <option value="asc" selected>Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="sl_ignore_case" type="checkbox" checked /> Ignore case</label>
+        <label><input id="sl_trim" type="checkbox" /> Trim before comparing</label>
+      </div>
+
+      <p class="note" id="sl_help" style="margin-top:6px;">
+        Sorting keeps all lines, including duplicates, unless you remove them separately with the duplicate line tool.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sl_sort">Sort Lines</button>
+        <button class="btn secondary" type="button" id="sl_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="sl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="sl_output">Sorted output</label>
+        <textarea id="sl_output" class="sl-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="sl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sl_privacy" style="margin-top:10px;">
+        Privacy: sorting runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste one item per line, choose alphabetical or length-based sorting, pick the order, and sort the lines instantly.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Sort keyword lists alphabetically</li>
+      <li>Sort text items by shortest or longest length</li>
+      <li>Prepare cleaner line-based data before further editing</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/remove-duplicate-lines/">Remove Duplicate Lines</a></li>
+      <li><a href="/text-tools/shuffle-lines/">Shuffle Lines</a></li>
+      <li><a href="/text-tools/line-counter/">Line Counter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("sl_input");
+  const modeEl = document.getElementById("sl_mode");
+  const orderEl = document.getElementById("sl_order");
+  const ignoreCaseEl = document.getElementById("sl_ignore_case");
+  const trimEl = document.getElementById("sl_trim");
+  const sortBtn = document.getElementById("sl_sort");
+  const copyBtn = document.getElementById("sl_copy");
+  const clearBtn = document.getElementById("sl_clear");
+  const errEl = document.getElementById("sl_error");
+  const resultEl = document.getElementById("sl_result");
+  const cardsEl = document.getElementById("sl_cards");
+  const outputEl = document.getElementById("sl_output");
+  const tbodyEl = document.getElementById("sl_tbody");
+
+  if (!inputEl || !modeEl || !orderEl || !ignoreCaseEl || !trimEl || !sortBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function sortLines() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text with one or more lines.");
+      return;
+    }
+
+    const lines = raw.split(/\r?\n/);
+    const mode = String(modeEl.value || "alpha");
+    const order = String(orderEl.value || "asc");
+
+    const sorted = lines.slice().sort(function (a, b) {
+      const ax = trimEl.checked ? a.trim() : a;
+      const bx = trimEl.checked ? b.trim() : b;
+
+      if (mode === "length") {
+        return ax.length - bx.length;
+      }
+
+      const aa = ignoreCaseEl.checked ? ax.toLowerCase() : ax;
+      const bb = ignoreCaseEl.checked ? bx.toLowerCase() : bx;
+      return aa.localeCompare(bb);
+    });
+
+    if (order === "desc") sorted.reverse();
+
+    lastOutput = sorted.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Lines sorted.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Lines: " + lines.length) +
+      badge("Mode: " + mode) +
+      badge("Order: " + order) +
+      "</div>";
+
+    fillTable([
+      ["Input lines", String(lines.length)],
+      ["Sort mode", mode],
+      ["Sort order", order],
+      ["Ignore case", ignoreCaseEl.checked ? "Yes" : "No"],
+      ["Trim before compare", trimEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No sorted output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied sorted output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    modeEl.value = "alpha";
+    orderEl.value = "asc";
+    ignoreCaseEl.checked = true;
+    trimEl.checked = false;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  sortBtn.addEventListener("click", sortLines);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

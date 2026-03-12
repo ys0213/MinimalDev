@@ -1,0 +1,293 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Keyword Density Checker",
+  description:
+    "Check keyword density in text with case options, whole-word matching, result cards, and FAQ schema.",
+  href: "/text-tools/keyword-density-checker/",
+  order: 110,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/keyword-density-checker/";
+
+const faqs = [
+  {
+    q: "What does this keyword density checker do?",
+    a: "It measures how often a keyword or phrase appears in a text and shows its percentage relative to the total word count.",
+  },
+  {
+    q: "Can I check multi-word phrases?",
+    a: "Yes. You can enter a phrase, not just a single keyword.",
+  },
+  {
+    q: "Can it ignore case?",
+    a: "Yes. You can compare text in a case-insensitive way.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Analysis runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Keyword Density Checker — ${SITE_NAME}`}
+  description="Check keyword and phrase density in text with case and matching options."
+  canonicalPath={CANONICAL_PATH}
+  h1="Keyword Density Checker"
+  intro="Measure keyword or phrase frequency in a text and estimate density as a percentage of total words."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="keyword-density-checker">
+    <style is:inline>
+      .kdc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .kdc-grid-2 > * { min-width: 0; }
+      #kdc_input, #kdc_keyword {
+        width: 100%;
+        min-width: 0;
+      }
+      .kdc-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .kdc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .kdc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 760px) {
+        .kdc-grid-2,
+        .kdc-cards-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="kdc_help kdc_privacy">
+      <div class="field">
+        <label for="kdc_input">Input text</label>
+        <textarea id="kdc_input" rows="14" spellcheck="false" placeholder="Paste or type text here..."></textarea>
+      </div>
+
+      <div class="kdc-grid-2">
+        <div class="field">
+          <label for="kdc_keyword">Keyword or phrase</label>
+          <input id="kdc_keyword" type="text" placeholder="e.g., online tools" />
+        </div>
+        <div class="field">
+          <label for="kdc_mode">Match mode</label>
+          <select id="kdc_mode">
+            <option value="word" selected>Whole word / phrase</option>
+            <option value="substring">Substring match</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="kdc_case" type="checkbox" checked /> Ignore case</label>
+        <label><input id="kdc_trim" type="checkbox" checked /> Trim input first</label>
+      </div>
+
+      <p class="note" id="kdc_help" style="margin-top:6px;">
+        Whole word / phrase mode is usually better for SEO-style analysis. Substring mode is broader and may count partial matches.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="kdc_check">Check Density</button>
+        <button class="btn secondary" type="button" id="kdc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="kdc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="kdc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div id="kdc_cards" class="kdc-cards-grid" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="kdc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="kdc_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No text or keyword data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste your text, enter a keyword or phrase, choose a matching mode, and estimate how frequently that term appears in the content.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Check how often a target keyword appears in an article draft</li>
+      <li>Measure phrase repetition using whole phrase matching</li>
+      <li>Compare broader substring counts when needed</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/reading-time-calculator/">Reading Time Calculator</a></li>
+      <li><a href="/text-tools/sentence-counter/">Sentence Counter</a></li>
+      <li><a href="/text-tools/line-counter/">Line Counter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("kdc_input");
+  const keywordEl = document.getElementById("kdc_keyword");
+  const modeEl = document.getElementById("kdc_mode");
+  const caseEl = document.getElementById("kdc_case");
+  const trimEl = document.getElementById("kdc_trim");
+  const checkBtn = document.getElementById("kdc_check");
+  const clearBtn = document.getElementById("kdc_clear");
+  const errEl = document.getElementById("kdc_error");
+  const resultEl = document.getElementById("kdc_result");
+  const cardsEl = document.getElementById("kdc_cards");
+  const tbodyEl = document.getElementById("kdc_tbody");
+
+  if (!inputEl || !keywordEl || !modeEl || !caseEl || !trimEl || !checkBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function card(title, value, note){
+    return (
+      '<div class="kdc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+  function escapeRegExp(s){
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function analyze() {
+    resetOutput();
+
+    let text = String(inputEl.value || "");
+    let keyword = String(keywordEl.value || "");
+
+    if (trimEl.checked) {
+      text = text.trim();
+      keyword = keyword.trim();
+    }
+
+    if (!text) {
+      showError("Please enter text to analyze.");
+      return;
+    }
+    if (!keyword) {
+      showError("Please enter a keyword or phrase.");
+      return;
+    }
+
+    const compareText = caseEl.checked ? text.toLowerCase() : text;
+    const compareKeyword = caseEl.checked ? keyword.toLowerCase() : keyword;
+
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    if (words === 0) {
+      showError("The text does not contain any words to analyze.");
+      return;
+    }
+
+    let count = 0;
+
+    if (String(modeEl.value) === "substring") {
+      const re = new RegExp(escapeRegExp(compareKeyword), "g");
+      const matches = compareText.match(re);
+      count = matches ? matches.length : 0;
+    } else {
+      const phrase = escapeRegExp(compareKeyword).replace(/\s+/g, "\\s+");
+      const re = new RegExp("(^|[^\\p{L}\\p{N}_])" + phrase + "([^\\p{L}\\p{N}_]|$)", "gu");
+      const matches = compareText.match(re);
+      count = matches ? matches.length : 0;
+    }
+
+    const density = (count / words) * 100;
+
+    resultEl.innerHTML = "<strong>Keyword density checked.</strong>";
+    cardsEl.style.display = "grid";
+    cardsEl.innerHTML =
+      card("Matches", String(count), "Occurrences found in the text.") +
+      card("Density", density.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%", "Matches divided by total word count.");
+
+    fillTable([
+      ["Keyword or phrase", keyword],
+      ["Match mode", String(modeEl.value) === "substring" ? "Substring" : "Whole word / phrase"],
+      ["Ignore case", caseEl.checked ? "Yes" : "No"],
+      ["Total words", String(words)],
+      ["Matches found", String(count)],
+      ["Estimated density", density.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%"],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    keywordEl.value = "";
+    modeEl.value = "word";
+    caseEl.checked = true;
+    trimEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  checkBtn.addEventListener("click", analyze);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

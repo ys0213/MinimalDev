@@ -1,0 +1,235 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Line Counter",
+  description:
+    "Count total lines, non-empty lines, empty lines, characters, words, and paragraphs with validation, result cards, and FAQ schema.",
+  href: "/text-tools/line-counter/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/line-counter/";
+
+const faqs = [
+  {
+    q: "What does this line counter do?",
+    a: "It counts lines, non-empty lines, empty lines, words, characters, and paragraphs in your text.",
+  },
+  {
+    q: "How are paragraphs counted?",
+    a: "Paragraphs are counted by splitting text blocks on one or more blank lines.",
+  },
+  {
+    q: "Does it count spaces as characters?",
+    a: "Yes. Total character count includes spaces and line breaks. It also shows a count without spaces.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Counting runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Line Counter — ${SITE_NAME}`}
+  description="Count lines, non-empty lines, empty lines, words, characters, and paragraphs."
+  canonicalPath={CANONICAL_PATH}
+  h1="Line Counter"
+  intro="Count lines and related text metrics such as words, characters, empty lines, and paragraphs."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="line-counter">
+    <style is:inline>
+      #lc_input {
+        width: 100%;
+        min-width: 0;
+      }
+      .lc-cards-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .lc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .lc-card strong {
+        display: block;
+      }
+      .lc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 760px) {
+        .lc-cards-grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="lc_help lc_privacy">
+      <div class="field">
+        <label for="lc_input">Input text</label>
+        <textarea id="lc_input" rows="14" spellcheck="false" placeholder="Paste or type text here..."></textarea>
+      </div>
+
+      <p class="note" id="lc_help" style="margin-top:6px;">
+        Counts update when you click the button below. This tool is useful for text cleanup, formatting review, and basic writing metrics.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="lc_count">Count Text</button>
+        <button class="btn secondary" type="button" id="lc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="lc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="lc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div id="lc_cards" class="lc-cards-grid" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="lc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="lc_privacy" style="margin-top:10px;">
+        Privacy: counting runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text into the input area, count it once, and review totals for lines, words, characters, blank lines, and paragraphs.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Count total and non-empty lines in logs or CSV-like text</li>
+      <li>Review paragraph and word counts in writing drafts</li>
+      <li>Measure characters with and without spaces</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/sentence-counter/">Sentence Counter</a></li>
+      <li><a href="/text-tools/reading-time-calculator/">Reading Time Calculator</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("lc_input");
+  const countBtn = document.getElementById("lc_count");
+  const clearBtn = document.getElementById("lc_clear");
+  const errEl = document.getElementById("lc_error");
+  const resultEl = document.getElementById("lc_result");
+  const cardsEl = document.getElementById("lc_cards");
+  const tbodyEl = document.getElementById("lc_tbody");
+
+  if (!inputEl || !countBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function card(title, value, note){
+    return (
+      '<div class="lc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+
+  function countText() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text to count.");
+      return;
+    }
+
+    const lines = raw.split(/\r?\n/);
+    const nonEmptyLines = lines.filter(line => line.trim() !== "").length;
+    const emptyLines = lines.length - nonEmptyLines;
+    const words = raw.trim() ? raw.trim().split(/\s+/).length : 0;
+    const chars = raw.length;
+    const charsNoSpaces = raw.replace(/\s/g, "").length;
+    const paragraphs = raw.trim() ? raw.trim().split(/\n\s*\n/).filter(Boolean).length : 0;
+
+    resultEl.innerHTML = "<strong>Text counted successfully.</strong>";
+    cardsEl.style.display = "grid";
+    cardsEl.innerHTML =
+      card("Total lines", String(lines.length), "Includes empty lines.") +
+      card("Words", String(words), "Split by whitespace.") +
+      card("Characters", String(chars), "Includes spaces and line breaks.");
+
+    fillTable([
+      ["Total lines", String(lines.length)],
+      ["Non-empty lines", String(nonEmptyLines)],
+      ["Empty lines", String(emptyLines)],
+      ["Words", String(words)],
+      ["Characters (with spaces)", String(chars)],
+      ["Characters (without spaces)", String(charsNoSpaces)],
+      ["Paragraphs", String(paragraphs)],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  countBtn.addEventListener("click", countText);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

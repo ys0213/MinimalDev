@@ -1,0 +1,267 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Remove Duplicate Lines",
+  description:
+    "Remove duplicate lines from text with case sensitivity and trimming options, plus validation, result cards, and FAQ schema.",
+  href: "/text-tools/remove-duplicate-lines/",
+  order: 20,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/remove-duplicate-lines/";
+
+const faqs = [
+  {
+    q: "What does this duplicate line remover do?",
+    a: "It removes repeated lines from your text and keeps only the first occurrence of each unique line.",
+  },
+  {
+    q: "Can it ignore case differences?",
+    a: "Yes. You can treat uppercase and lowercase versions of the same line as duplicates.",
+  },
+  {
+    q: "Can it trim spaces before comparing lines?",
+    a: "Yes. You can trim leading and trailing spaces before duplicate detection.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Processing runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Remove Duplicate Lines — ${SITE_NAME}`}
+  description="Remove duplicate lines from text with case sensitivity and trimming options."
+  canonicalPath={CANONICAL_PATH}
+  h1="Remove Duplicate Lines"
+  intro="Remove repeated lines from a text block while keeping the original first occurrence order."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="remove-duplicate-lines">
+    <style is:inline>
+      #rdl_input, #rdl_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rdl-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rdl_help rdl_privacy">
+      <div class="field">
+        <label for="rdl_input">Input text</label>
+        <textarea id="rdl_input" rows="12" spellcheck="false" placeholder="Paste lines here..."></textarea>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="rdl_case" type="checkbox" /> Ignore case</label>
+        <label><input id="rdl_trim" type="checkbox" checked /> Trim spaces before comparing</label>
+        <label><input id="rdl_skip_empty" type="checkbox" /> Remove empty lines too</label>
+      </div>
+
+      <p class="note" id="rdl_help" style="margin-top:6px;">
+        The tool keeps the first unique line and removes later duplicates. Original order is preserved.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rdl_process">Remove Duplicates</button>
+        <button class="btn secondary" type="button" id="rdl_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="rdl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rdl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rdl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rdl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rdl_output">Processed output</label>
+        <textarea id="rdl_output" class="rdl-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Metric</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody id="rdl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rdl_privacy" style="margin-top:10px;">
+        Privacy: processing runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste line-based text, choose how duplicates should be compared, and remove repeated lines while preserving the first occurrence.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Clean repeated email lists or keyword lists</li>
+      <li>Remove duplicates while ignoring case</li>
+      <li>Trim spaces before comparison for cleaner deduplication</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/sort-lines/">Sort Lines</a></li>
+      <li><a href="/text-tools/shuffle-lines/">Shuffle Lines</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("rdl_input");
+  const caseEl = document.getElementById("rdl_case");
+  const trimEl = document.getElementById("rdl_trim");
+  const skipEmptyEl = document.getElementById("rdl_skip_empty");
+  const processBtn = document.getElementById("rdl_process");
+  const copyBtn = document.getElementById("rdl_copy");
+  const clearBtn = document.getElementById("rdl_clear");
+  const errEl = document.getElementById("rdl_error");
+  const resultEl = document.getElementById("rdl_result");
+  const cardsEl = document.getElementById("rdl_cards");
+  const outputEl = document.getElementById("rdl_output");
+  const tbodyEl = document.getElementById("rdl_tbody");
+
+  if (!inputEl || !caseEl || !trimEl || !skipEmptyEl || !processBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function process() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text with one or more lines.");
+      return;
+    }
+
+    const lines = raw.split(/\r?\n/);
+    const seen = new Set();
+    const out = [];
+    let removed = 0;
+
+    lines.forEach(function(line) {
+      let compare = line;
+      if (trimEl.checked) compare = compare.trim();
+      if (caseEl.checked) compare = compare.toLowerCase();
+
+      if (skipEmptyEl.checked && compare === "") {
+        removed++;
+        return;
+      }
+
+      if (seen.has(compare)) {
+        removed++;
+        return;
+      }
+
+      seen.add(compare);
+      out.push(line);
+    });
+
+    lastOutput = out.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Duplicate lines removed.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Input lines: " + lines.length) +
+      badge("Kept: " + out.length) +
+      badge("Removed: " + removed) +
+      "</div>";
+
+    fillTable([
+      ["Input lines", String(lines.length)],
+      ["Output lines", String(out.length)],
+      ["Removed lines", String(removed)],
+      ["Ignore case", caseEl.checked ? "Yes" : "No"],
+      ["Trim before compare", trimEl.checked ? "Yes" : "No"],
+      ["Remove empty lines", skipEmptyEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No processed output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied processed output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    caseEl.checked = false;
+    trimEl.checked = true;
+    skipEmptyEl.checked = false;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  processBtn.addEventListener("click", process);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

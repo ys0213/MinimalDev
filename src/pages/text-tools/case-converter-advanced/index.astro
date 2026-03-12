@@ -1,0 +1,375 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Advanced Case Converter",
+  description:
+    "Convert text between uppercase, lowercase, title case, sentence case, camelCase, snake_case, kebab-case, and more with validation, result cards, and FAQ schema.",
+  href: "/text-tools/case-converter-advanced/",
+  order: 10,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/case-converter-advanced/";
+
+const faqs = [
+  {
+    q: "What does this case converter do?",
+    a: "It converts text into multiple case styles including uppercase, lowercase, title case, sentence case, camelCase, snake_case, and kebab-case.",
+  },
+  {
+    q: "Does it preserve punctuation?",
+    a: "Most punctuation is preserved, but separator-based formats like snake_case and kebab-case normalize spacing and punctuation into word separators.",
+  },
+  {
+    q: "Can I convert one text into several formats at once?",
+    a: "Yes. This tool shows multiple output formats from the same input text.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Everything runs locally in your browser and your text is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Advanced Case Converter — ${SITE_NAME}`}
+  description="Convert text between uppercase, lowercase, title case, sentence case, camelCase, snake_case, and kebab-case."
+  canonicalPath={CANONICAL_PATH}
+  h1="Advanced Case Converter"
+  intro="Convert one text input into multiple case styles for writing, coding, naming, and formatting workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="case-converter-advanced">
+    <style is:inline>
+      .cca-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cca-grid-2 > * {
+        min-width: 0;
+      }
+      #cca_input, #cca_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .cca-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .cca-result-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .cca-result-item {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .cca-result-item code {
+        display: block;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin-top: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      @media (min-width: 900px) {
+        .cca-result-list {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cca_help cca_privacy">
+      <div class="field">
+        <label for="cca_input">Input text</label>
+        <textarea id="cca_input" rows="10" spellcheck="false" placeholder="Enter text to convert..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="cca_primary">Primary format to copy</label>
+        <select id="cca_primary">
+          <option value="upper">UPPERCASE</option>
+          <option value="lower">lowercase</option>
+          <option value="title" selected>Title Case</option>
+          <option value="sentence">Sentence case</option>
+          <option value="camel">camelCase</option>
+          <option value="pascal">PascalCase</option>
+          <option value="snake">snake_case</option>
+          <option value="kebab">kebab-case</option>
+          <option value="constant">CONSTANT_CASE</option>
+        </select>
+      </div>
+
+      <p class="note" id="cca_help" style="margin-top:6px;">
+        Separator-based formats normalize words before joining them. Empty input will not produce output.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cca_convert">Convert</button>
+        <button class="btn secondary" type="button" id="cca_copy">Copy Primary Output</button>
+        <button class="btn secondary" type="button" id="cca_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cca_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cca_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cca_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="cca_results" class="cca-result-list" style="display:none;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cca_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cca_privacy" style="margin-top:10px;">
+        Privacy: text conversion runs locally in your browser. No input or output text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter text once, then convert it into multiple writing and developer-friendly case formats such as title case, sentence case, camelCase, and snake_case.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Hello world example</strong> → title case, sentence case, snake_case, kebab-case</li>
+      <li>Convert headings into <strong>camelCase</strong> or <strong>PascalCase</strong> for code naming</li>
+      <li>Normalize mixed input before copying your preferred format</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/whitespace-remover/">Whitespace Remover</a></li>
+      <li><a href="/text-tools/ascii-converter/">ASCII Converter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("cca_input");
+  const primaryEl = document.getElementById("cca_primary");
+  const convertBtn = document.getElementById("cca_convert");
+  const copyBtn = document.getElementById("cca_copy");
+  const clearBtn = document.getElementById("cca_clear");
+  const errEl = document.getElementById("cca_error");
+  const resultEl = document.getElementById("cca_result");
+  const cardsEl = document.getElementById("cca_cards");
+  const resultsEl = document.getElementById("cca_results");
+  const tbodyEl = document.getElementById("cca_tbody");
+
+  if (!inputEl || !primaryEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !resultsEl || !tbodyEl) return;
+
+  let outputs = {};
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+  function resetOutput() {
+    clearError();
+    outputs = {};
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    resultsEl.style.display = "none";
+    resultsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function wordsFromText(text) {
+    return String(text)
+      .trim()
+      .replace(/[_\-]+/g, " ")
+      .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  function capitalize(word) {
+    if (!word) return "";
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  }
+
+  function sentenceCase(text) {
+    const t = String(text).trim().toLowerCase();
+    if (!t) return "";
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  function titleCase(words) {
+    return words.map(capitalize).join(" ");
+  }
+
+  function camelCase(words) {
+    if (!words.length) return "";
+    return words[0].toLowerCase() + words.slice(1).map(capitalize).join("");
+  }
+
+  function pascalCase(words) {
+    return words.map(capitalize).join("");
+  }
+
+  function snakeCase(words) {
+    return words.map(w => w.toLowerCase()).join("_");
+  }
+
+  function kebabCase(words) {
+    return words.map(w => w.toLowerCase()).join("-");
+  }
+
+  function constantCase(words) {
+    return words.map(w => w.toUpperCase()).join("_");
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function renderResults(map) {
+    resultsEl.style.display = "grid";
+    const labels = [
+      ["upper", "UPPERCASE"],
+      ["lower", "lowercase"],
+      ["title", "Title Case"],
+      ["sentence", "Sentence case"],
+      ["camel", "camelCase"],
+      ["pascal", "PascalCase"],
+      ["snake", "snake_case"],
+      ["kebab", "kebab-case"],
+      ["constant", "CONSTANT_CASE"],
+    ];
+
+    resultsEl.innerHTML = labels.map(function (entry) {
+      const key = entry[0];
+      const label = entry[1];
+      return (
+        '<div class="cca-result-item">' +
+          '<strong>' + label + '</strong>' +
+          '<code>' + String(map[key]).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;") + '</code>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  function convert() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.trim()) {
+      showError("Please enter text to convert.");
+      return;
+    }
+
+    const words = wordsFromText(raw);
+
+    outputs = {
+      upper: raw.toUpperCase(),
+      lower: raw.toLowerCase(),
+      title: titleCase(words),
+      sentence: sentenceCase(raw),
+      camel: camelCase(words),
+      pascal: pascalCase(words),
+      snake: snakeCase(words),
+      kebab: kebabCase(words),
+      constant: constantCase(words),
+    };
+
+    renderResults(outputs);
+
+    resultEl.innerHTML = "<strong>Text converted into multiple formats.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Formats: 9") +
+      badge("Words: " + words.length) +
+      badge("Primary: " + String(primaryEl.value)) +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Detected words", String(words.length)],
+      ["Primary output", String(primaryEl.value)],
+      ["Available formats", "9"],
+    ]);
+  }
+
+  async function copyPrimary() {
+    clearError();
+    const key = String(primaryEl.value || "title");
+    const value = outputs[key];
+    if (!value) {
+      showError("No converted output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      resultEl.innerHTML = "<strong>Copied primary converted output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    primaryEl.value = "title";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyPrimary);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

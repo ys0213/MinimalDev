@@ -1,0 +1,300 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Text Cleaner",
+  description:
+    "Clean pasted text by trimming lines, normalizing spaces, removing blank lines, and fixing punctuation spacing, with FAQ schema.",
+  href: "/text-tools/text-cleaner/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/text-cleaner/";
+
+const faqs = [
+  {
+    q: "What does this text cleaner do?",
+    a: "It cleans pasted text using practical formatting rules such as trimming lines, normalizing spaces, removing tabs, and fixing basic punctuation spacing.",
+  },
+  {
+    q: "Can it remove blank lines?",
+    a: "Yes. You can remove blank lines or collapse multiple blank lines into a single separator.",
+  },
+  {
+    q: "Does it change the words themselves?",
+    a: "No. It focuses on structural cleanup rather than rewriting the wording.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Cleaning runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Text Cleaner — ${SITE_NAME}`}
+  description="Clean pasted text with whitespace normalization, line cleanup, and punctuation spacing fixes."
+  canonicalPath={CANONICAL_PATH}
+  h1="Text Cleaner"
+  intro="Clean messy pasted text using common formatting fixes for spaces, lines, and punctuation."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="text-cleaner">
+    <style is:inline>
+      #tc_input, #tc_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .tc-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .tc-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      @media (min-width: 760px) {
+        .tc-options {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="tc_help tc_privacy">
+      <div class="field">
+        <label for="tc_input">Input text</label>
+        <textarea id="tc_input" rows="14" spellcheck="false" placeholder="Paste messy text here..."></textarea>
+      </div>
+
+      <div class="tc-options" role="group" aria-label="Text cleaning options">
+        <label><input id="tc_trim_lines" type="checkbox" checked /> Trim each line</label>
+        <label><input id="tc_collapse_spaces" type="checkbox" checked /> Collapse repeated spaces</label>
+        <label><input id="tc_remove_tabs" type="checkbox" checked /> Remove tabs</label>
+        <label><input id="tc_remove_blank" type="checkbox" /> Remove blank lines</label>
+        <label><input id="tc_collapse_blank" type="checkbox" checked /> Collapse multiple blank lines</label>
+        <label><input id="tc_fix_punct" type="checkbox" checked /> Fix spacing before punctuation</label>
+      </div>
+
+      <p class="note" id="tc_help" style="margin-top:6px;">
+        This tool focuses on cleanup, not rewriting. It is useful for pasted notes, drafts, logs, and imported content.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tc_clean">Clean Text</button>
+        <button class="btn secondary" type="button" id="tc_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="tc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="tc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="tc_output">Cleaned output</label>
+        <textarea id="tc_output" class="tc-output" rows="14" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="tc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tc_privacy" style="margin-top:10px;">
+        Privacy: cleaning runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text, choose the cleanup rules you want, and generate a cleaner version that is easier to read, edit, or reuse.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Clean copied text from PDFs or web pages</li>
+      <li>Normalize line spacing in rough drafts</li>
+      <li>Fix punctuation spacing in imported content</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/whitespace-remover/">Whitespace Remover</a></li>
+      <li><a href="/text-tools/case-converter-advanced/">Advanced Case Converter</a></li>
+      <li><a href="/text-tools/remove-duplicate-lines/">Remove Duplicate Lines</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("tc_input");
+  const trimLinesEl = document.getElementById("tc_trim_lines");
+  const collapseSpacesEl = document.getElementById("tc_collapse_spaces");
+  const removeTabsEl = document.getElementById("tc_remove_tabs");
+  const removeBlankEl = document.getElementById("tc_remove_blank");
+  const collapseBlankEl = document.getElementById("tc_collapse_blank");
+  const fixPunctEl = document.getElementById("tc_fix_punct");
+  const cleanBtn = document.getElementById("tc_clean");
+  const copyBtn = document.getElementById("tc_copy");
+  const clearBtn = document.getElementById("tc_clear");
+  const errEl = document.getElementById("tc_error");
+  const resultEl = document.getElementById("tc_result");
+  const cardsEl = document.getElementById("tc_cards");
+  const outputEl = document.getElementById("tc_output");
+  const tbodyEl = document.getElementById("tc_tbody");
+
+  if (!inputEl || !trimLinesEl || !collapseSpacesEl || !removeTabsEl || !removeBlankEl || !collapseBlankEl || !fixPunctEl || !cleanBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function clean() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text to clean.");
+      return;
+    }
+
+    const originalLength = raw.length;
+    let out = raw;
+
+    if (removeTabsEl.checked) out = out.replace(/\t/g, " ");
+
+    let lines = out.split(/\r?\n/);
+
+    if (trimLinesEl.checked) {
+      lines = lines.map(function(line){ return line.trim(); });
+    }
+
+    if (collapseSpacesEl.checked) {
+      lines = lines.map(function(line){ return line.replace(/ {2,}/g, " "); });
+    }
+
+    if (fixPunctEl.checked) {
+      lines = lines.map(function(line){
+        return line
+          .replace(/\s+([,.;:!?])/g, "$1")
+          .replace(/([,.;:!?])([^\s])/g, "$1 $2");
+      });
+    }
+
+    if (removeBlankEl.checked) {
+      lines = lines.filter(function(line){ return line !== ""; });
+    } else if (collapseBlankEl.checked) {
+      const collapsed = [];
+      let prevBlank = false;
+      lines.forEach(function(line){
+        const blank = line === "";
+        if (blank && prevBlank) return;
+        collapsed.push(line);
+        prevBlank = blank;
+      });
+      lines = collapsed;
+    }
+
+    out = lines.join("\n");
+    lastOutput = out;
+    outputEl.value = out;
+
+    resultEl.innerHTML = "<strong>Text cleaned successfully.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Original chars: " + originalLength) +
+      badge("Output chars: " + out.length) +
+      badge("Difference: " + (out.length - originalLength)) +
+      "</div>";
+
+    fillTable([
+      ["Original character count", String(originalLength)],
+      ["Output character count", String(out.length)],
+      ["Trim lines", trimLinesEl.checked ? "Yes" : "No"],
+      ["Collapse spaces", collapseSpacesEl.checked ? "Yes" : "No"],
+      ["Remove tabs", removeTabsEl.checked ? "Yes" : "No"],
+      ["Remove blank lines", removeBlankEl.checked ? "Yes" : "No"],
+      ["Collapse blank lines", collapseBlankEl.checked ? "Yes" : "No"],
+      ["Fix punctuation spacing", fixPunctEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!outputEl.value) {
+      showError("No cleaned output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(outputEl.value);
+      resultEl.innerHTML = "<strong>Copied cleaned output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    trimLinesEl.checked = true;
+    collapseSpacesEl.checked = true;
+    removeTabsEl.checked = true;
+    removeBlankEl.checked = false;
+    collapseBlankEl.checked = true;
+    fixPunctEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  cleanBtn.addEventListener("click", clean);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

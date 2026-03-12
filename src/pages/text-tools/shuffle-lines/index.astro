@@ -1,0 +1,253 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Shuffle Lines",
+  description:
+    "Shuffle text lines randomly with validation, result cards, copy support, and FAQ schema.",
+  href: "/text-tools/shuffle-lines/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/shuffle-lines/";
+
+const faqs = [
+  {
+    q: "What does this line shuffler do?",
+    a: "It randomly rearranges the order of lines in your text.",
+  },
+  {
+    q: "Does it preserve the line contents?",
+    a: "Yes. The content of each line stays the same; only the order changes.",
+  },
+  {
+    q: "Can I remove empty lines before shuffling?",
+    a: "Yes. You can choose to ignore empty lines before the shuffle runs.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Shuffling runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Shuffle Lines — ${SITE_NAME}`}
+  description="Shuffle text lines randomly with optional empty-line removal and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Shuffle Lines"
+  intro="Randomize the order of lines in a text block for testing, games, activities, or list randomization."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="shuffle-lines">
+    <style is:inline>
+      #shl_input, #shl_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .shl-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="shl_help shl_privacy">
+      <div class="field">
+        <label for="shl_input">Input text</label>
+        <textarea id="shl_input" rows="12" spellcheck="false" placeholder="Paste lines here..."></textarea>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="shl_skip_empty" type="checkbox" /> Remove empty lines first</label>
+      </div>
+
+      <p class="note" id="shl_help" style="margin-top:6px;">
+        The line contents stay the same. Only the order is randomized.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="shl_shuffle">Shuffle Lines</button>
+        <button class="btn secondary" type="button" id="shl_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="shl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="shl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="shl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="shl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="shl_output">Shuffled output</label>
+        <textarea id="shl_output" class="shl-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="shl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="shl_privacy" style="margin-top:10px;">
+        Privacy: shuffling runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste one item per line, optionally remove empty lines, and shuffle the list to produce a randomized order.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Shuffle quiz prompts or flashcards</li>
+      <li>Randomize participant or task lists</li>
+      <li>Prepare randomized test data order</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/sort-lines/">Sort Lines</a></li>
+      <li><a href="/text-tools/remove-duplicate-lines/">Remove Duplicate Lines</a></li>
+      <li><a href="/text-tools/line-counter/">Line Counter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("shl_input");
+  const skipEmptyEl = document.getElementById("shl_skip_empty");
+  const shuffleBtn = document.getElementById("shl_shuffle");
+  const copyBtn = document.getElementById("shl_copy");
+  const clearBtn = document.getElementById("shl_clear");
+  const errEl = document.getElementById("shl_error");
+  const resultEl = document.getElementById("shl_result");
+  const cardsEl = document.getElementById("shl_cards");
+  const outputEl = document.getElementById("shl_output");
+  const tbodyEl = document.getElementById("shl_tbody");
+
+  if (!inputEl || !skipEmptyEl || !shuffleBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      const t=arr[i]; arr[i]=arr[j]; arr[j]=t;
+    }
+    return arr;
+  }
+
+  function doShuffle() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text with one or more lines.");
+      return;
+    }
+
+    let lines = raw.split(/\r?\n/);
+    const originalCount = lines.length;
+
+    if (skipEmptyEl.checked) {
+      lines = lines.filter(function(line){ return line.trim() !== ""; });
+    }
+
+    if (!lines.length) {
+      showError("There are no lines left to shuffle after filtering.");
+      return;
+    }
+
+    shuffle(lines);
+
+    lastOutput = lines.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Lines shuffled.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Original lines: " + originalCount) +
+      badge("Shuffled lines: " + lines.length) +
+      badge(skipEmptyEl.checked ? "Empty lines removed" : "Empty lines kept") +
+      "</div>";
+
+    fillTable([
+      ["Original lines", String(originalCount)],
+      ["Output lines", String(lines.length)],
+      ["Remove empty lines first", skipEmptyEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No shuffled output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied shuffled output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    skipEmptyEl.checked = false;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  shuffleBtn.addEventListener("click", doShuffle);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

@@ -1,0 +1,304 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "ASCII Converter",
+  description:
+    "Convert text to ASCII codes and ASCII codes back to text, with validation, result cards, and FAQ schema.",
+  href: "/text-tools/ascii-converter/",
+  order: 150,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/ascii-converter/";
+
+const faqs = [
+  {
+    q: "What does this ASCII converter do?",
+    a: "It converts text into ASCII decimal codes and can also convert ASCII decimal codes back into text.",
+  },
+  {
+    q: "Does it work with non-ASCII characters?",
+    a: "Text-to-ASCII mode can flag characters outside the ASCII range. ASCII-to-text mode only accepts values from 0 to 127.",
+  },
+  {
+    q: "Can I paste multiple ASCII values?",
+    a: "Yes. You can enter multiple ASCII values separated by spaces, commas, or line breaks.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Conversion runs locally in your browser and no data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`ASCII Converter — ${SITE_NAME}`}
+  description="Convert text to ASCII decimal codes and ASCII codes back to text."
+  canonicalPath={CANONICAL_PATH}
+  h1="ASCII Converter"
+  intro="Convert between plain text and ASCII decimal codes for debugging, learning, and encoding inspection."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ascii-converter">
+    <style is:inline>
+      .ac-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .ac-grid-2 > * { min-width: 0; }
+      #ac_text, #ac_codes, #ac_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      .ac-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 900px) {
+        .ac-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ac_help ac_privacy">
+      <div class="field">
+        <label for="ac_mode">Conversion mode</label>
+        <select id="ac_mode">
+          <option value="text_to_ascii" selected>Text → ASCII</option>
+          <option value="ascii_to_text">ASCII → Text</option>
+        </select>
+      </div>
+
+      <div class="ac-grid-2">
+        <div class="field">
+          <label for="ac_text">Text input</label>
+          <textarea id="ac_text" rows="12" spellcheck="false" placeholder="Enter text here..."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="ac_codes">ASCII decimal codes</label>
+          <textarea id="ac_codes" class="ac-mono" rows="12" spellcheck="false" placeholder="e.g. 72 101 108 108 111"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="ac_help" style="margin-top:6px;">
+        ASCII input accepts decimal values from 0 to 127, separated by spaces, commas, semicolons, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ac_convert">Convert</button>
+        <button class="btn secondary" type="button" id="ac_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ac_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ac_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ac_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="ac_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ac_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No text or ASCII data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a direction, enter text or ASCII decimal values, and convert between readable characters and standard ASCII codes.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Convert <strong>Hello</strong> into ASCII decimal values</li>
+      <li>Convert <strong>72 101 108 108 111</strong> back into text</li>
+      <li>Inspect plain English text in basic ASCII form</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/unicode-converter/">Unicode Converter</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("ac_mode");
+  const textEl = document.getElementById("ac_text");
+  const codesEl = document.getElementById("ac_codes");
+  const convertBtn = document.getElementById("ac_convert");
+  const clearBtn = document.getElementById("ac_clear");
+  const errEl = document.getElementById("ac_error");
+  const resultEl = document.getElementById("ac_result");
+  const cardsEl = document.getElementById("ac_cards");
+  const tbodyEl = document.getElementById("ac_tbody");
+
+  if (!modeEl || !textEl || !codesEl || !convertBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function convert() {
+    resetOutput();
+
+    const mode = String(modeEl.value || "text_to_ascii");
+
+    if (mode === "text_to_ascii") {
+      const text = String(textEl.value || "");
+      if (!text) {
+        showError("Please enter text to convert.");
+        return;
+      }
+
+      const chars = Array.from(text);
+      const codes = [];
+      const nonAscii = [];
+
+      chars.forEach(function(ch){
+        const cp = ch.codePointAt(0);
+        if (cp <= 127) {
+          codes.push(String(cp));
+        } else {
+          nonAscii.push(ch);
+          codes.push("[non-ASCII:" + cp + "]");
+        }
+      });
+
+      codesEl.value = codes.join(" ");
+
+      resultEl.innerHTML = "<strong>Converted text to ASCII codes.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+        badge("Characters: " + chars.length) +
+        badge("ASCII codes: " + codes.length) +
+        badge("Non-ASCII chars: " + nonAscii.length) +
+        "</div>";
+
+      fillTable([
+        ["Input characters", String(chars.length)],
+        ["Output codes", String(codes.length)],
+        ["Non-ASCII characters", String(nonAscii.length)],
+        ["Mode", "Text → ASCII"],
+      ]);
+    } else {
+      const raw = String(codesEl.value || "").trim();
+      if (!raw) {
+        showError("Please enter one or more ASCII decimal values.");
+        return;
+      }
+
+      const tokens = raw.split(/[\s,;]+/g).filter(Boolean);
+      const chars = [];
+      const bad = [];
+
+      tokens.forEach(function(token){
+        if (!/^-?\d+$/.test(token)) {
+          bad.push(token);
+          return;
+        }
+        const n = parseInt(token, 10);
+        if (n < 0 || n > 127) {
+          bad.push(token);
+          return;
+        }
+        chars.push(String.fromCharCode(n));
+      });
+
+      if (!chars.length) {
+        showError("No valid ASCII values were found.");
+        return;
+      }
+
+      textEl.value = chars.join("");
+
+      resultEl.innerHTML = "<strong>Converted ASCII codes to text.</strong>";
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+        badge("Input tokens: " + tokens.length) +
+        badge("Valid ASCII: " + chars.length) +
+        badge("Invalid tokens: " + bad.length) +
+        "</div>";
+
+      fillTable([
+        ["Input tokens", String(tokens.length)],
+        ["Valid ASCII values", String(chars.length)],
+        ["Invalid tokens", String(bad.length)],
+        ["Mode", "ASCII → Text"],
+      ]);
+
+      if (bad.length) {
+        const tr = document.createElement("tr");
+        const td1 = document.createElement("td");
+        const td2 = document.createElement("td");
+        td1.textContent = "Invalid tokens";
+        td2.textContent = bad.slice(0, 10).join(", ") + (bad.length > 10 ? " ..." : "");
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tbodyEl.appendChild(tr);
+      }
+    }
+  }
+
+  function clearAll() {
+    modeEl.value = "text_to_ascii";
+    textEl.value = "";
+    codesEl.value = "";
+    resetOutput();
+    textEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

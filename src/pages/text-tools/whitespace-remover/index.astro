@@ -1,0 +1,298 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Whitespace Remover",
+  description:
+    "Remove extra spaces, tabs, blank lines, or all whitespace from text with validation, result cards, and FAQ schema.",
+  href: "/text-tools/whitespace-remover/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/whitespace-remover/";
+
+const faqs = [
+  {
+    q: "What does this whitespace remover do?",
+    a: "It removes or normalizes spaces, tabs, and line breaks depending on the cleanup options you choose.",
+  },
+  {
+    q: "Can it remove blank lines?",
+    a: "Yes. You can remove empty lines and also collapse multiple blank lines if needed.",
+  },
+  {
+    q: "Can it remove all whitespace completely?",
+    a: "Yes. You can choose a full removal mode that strips all whitespace characters from the text.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Processing runs locally in your browser and no text is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Whitespace Remover — ${SITE_NAME}`}
+  description="Remove extra spaces, tabs, blank lines, or all whitespace from text."
+  canonicalPath={CANONICAL_PATH}
+  h1="Whitespace Remover"
+  intro="Clean up whitespace in text by collapsing spaces, removing tabs, deleting blank lines, or stripping all whitespace."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="whitespace-remover">
+    <style is:inline>
+      #wsr_input, #wsr_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .wsr-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .wsr-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      @media (min-width: 760px) {
+        .wsr-options {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="wsr_help wsr_privacy">
+      <div class="field">
+        <label for="wsr_input">Input text</label>
+        <textarea id="wsr_input" rows="12" spellcheck="false" placeholder="Paste or type text here..."></textarea>
+      </div>
+
+      <div class="wsr-options" role="group" aria-label="Whitespace cleanup options">
+        <label><input id="wsr_trim_lines" type="checkbox" checked /> Trim each line</label>
+        <label><input id="wsr_collapse_spaces" type="checkbox" checked /> Collapse repeated spaces</label>
+        <label><input id="wsr_remove_tabs" type="checkbox" checked /> Remove tab characters</label>
+        <label><input id="wsr_remove_blank" type="checkbox" /> Remove blank lines</label>
+        <label><input id="wsr_collapse_blank" type="checkbox" /> Collapse multiple blank lines</label>
+        <label><input id="wsr_remove_all" type="checkbox" /> Remove all whitespace</label>
+      </div>
+
+      <p class="note" id="wsr_help" style="margin-top:6px;">
+        “Remove all whitespace” overrides the other cleanup options and strips spaces, tabs, and line breaks completely.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="wsr_process">Clean Text</button>
+        <button class="btn secondary" type="button" id="wsr_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="wsr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="wsr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="wsr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="wsr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="wsr_output">Processed output</label>
+        <textarea id="wsr_output" class="wsr-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="wsr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="wsr_privacy" style="margin-top:10px;">
+        Privacy: processing runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text, choose the whitespace cleanup rules you want, and generate a cleaner version for writing, coding, or export workflows.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Remove extra spaces from pasted content</li>
+      <li>Delete blank lines in logs or lists</li>
+      <li>Strip all whitespace for compact string comparisons</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/remove-duplicate-lines/">Remove Duplicate Lines</a></li>
+      <li><a href="/text-tools/case-converter-advanced/">Advanced Case Converter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("wsr_input");
+  const trimLinesEl = document.getElementById("wsr_trim_lines");
+  const collapseSpacesEl = document.getElementById("wsr_collapse_spaces");
+  const removeTabsEl = document.getElementById("wsr_remove_tabs");
+  const removeBlankEl = document.getElementById("wsr_remove_blank");
+  const collapseBlankEl = document.getElementById("wsr_collapse_blank");
+  const removeAllEl = document.getElementById("wsr_remove_all");
+  const processBtn = document.getElementById("wsr_process");
+  const copyBtn = document.getElementById("wsr_copy");
+  const clearBtn = document.getElementById("wsr_clear");
+  const errEl = document.getElementById("wsr_error");
+  const resultEl = document.getElementById("wsr_result");
+  const cardsEl = document.getElementById("wsr_cards");
+  const outputEl = document.getElementById("wsr_output");
+  const tbodyEl = document.getElementById("wsr_tbody");
+
+  if (!inputEl || !trimLinesEl || !collapseSpacesEl || !removeTabsEl || !removeBlankEl || !collapseBlankEl || !removeAllEl || !processBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function process() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text to process.");
+      return;
+    }
+
+    const originalLength = raw.length;
+    let out = raw;
+
+    if (removeAllEl.checked) {
+      out = out.replace(/\s+/g, "");
+    } else {
+      if (removeTabsEl.checked) out = out.replace(/\t/g, "");
+      let lines = out.split(/\r?\n/);
+
+      if (trimLinesEl.checked) {
+        lines = lines.map(function(line){ return line.trim(); });
+      }
+      if (collapseSpacesEl.checked) {
+        lines = lines.map(function(line){ return line.replace(/ {2,}/g, " "); });
+      }
+      if (removeBlankEl.checked) {
+        lines = lines.filter(function(line){ return line !== ""; });
+      } else if (collapseBlankEl.checked) {
+        const collapsed = [];
+        let prevBlank = false;
+        lines.forEach(function(line){
+          const isBlank = line === "";
+          if (isBlank && prevBlank) return;
+          collapsed.push(line);
+          prevBlank = isBlank;
+        });
+        lines = collapsed;
+      }
+
+      out = lines.join("\n");
+    }
+
+    lastOutput = out;
+    outputEl.value = out;
+
+    resultEl.innerHTML = "<strong>Whitespace cleanup completed.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Original chars: " + originalLength) +
+      badge("Output chars: " + out.length) +
+      badge("Removed: " + Math.max(0, originalLength - out.length)) +
+      "</div>";
+
+    fillTable([
+      ["Original character count", String(originalLength)],
+      ["Output character count", String(out.length)],
+      ["Trim lines", trimLinesEl.checked ? "Yes" : "No"],
+      ["Collapse spaces", collapseSpacesEl.checked ? "Yes" : "No"],
+      ["Remove tabs", removeTabsEl.checked ? "Yes" : "No"],
+      ["Remove blank lines", removeBlankEl.checked ? "Yes" : "No"],
+      ["Collapse blank lines", collapseBlankEl.checked ? "Yes" : "No"],
+      ["Remove all whitespace", removeAllEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput && lastOutput !== "") {
+      showError("No processed output to copy yet.");
+      return;
+    }
+    if (outputEl.value === "") {
+      showError("No processed output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(outputEl.value);
+      resultEl.innerHTML = "<strong>Copied processed output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    trimLinesEl.checked = true;
+    collapseSpacesEl.checked = true;
+    removeTabsEl.checked = true;
+    removeBlankEl.checked = false;
+    collapseBlankEl.checked = false;
+    removeAllEl.checked = false;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  processBtn.addEventListener("click", process);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

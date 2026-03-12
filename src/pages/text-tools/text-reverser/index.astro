@@ -1,0 +1,252 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Text Reverser",
+  description:
+    "Reverse text by characters, words, or lines with validation, result cards, and FAQ schema.",
+  href: "/text-tools/text-reverser/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/text-reverser/";
+
+const faqs = [
+  {
+    q: "What does this text reverser do?",
+    a: "It reverses text by characters, words, or lines depending on the mode you choose.",
+  },
+  {
+    q: "Can I reverse each line separately?",
+    a: "Yes. Character mode can reverse the entire text, while line mode reverses the line order.",
+  },
+  {
+    q: "Does word mode keep punctuation attached?",
+    a: "Word mode splits on whitespace, so punctuation generally stays attached to the token it belongs to.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Processing runs locally in your browser and your text is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Text Reverser — ${SITE_NAME}`}
+  description="Reverse text by characters, words, or lines."
+  canonicalPath={CANONICAL_PATH}
+  h1="Text Reverser"
+  intro="Reverse text in different ways for editing, testing, creative writing, and formatting experiments."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="text-reverser">
+    <style is:inline>
+      #trv_input, #trv_output, #trv_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      .trv-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="trv_help trv_privacy">
+      <div class="field">
+        <label for="trv_input">Input text</label>
+        <textarea id="trv_input" rows="12" spellcheck="false" placeholder="Enter text to reverse..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="trv_mode">Reverse mode</label>
+        <select id="trv_mode">
+          <option value="chars" selected>Reverse characters</option>
+          <option value="words">Reverse words</option>
+          <option value="lines">Reverse lines</option>
+          <option value="chars_per_line">Reverse characters in each line</option>
+        </select>
+      </div>
+
+      <p class="note" id="trv_help" style="margin-top:6px;">
+        Choose whether to reverse individual characters, word order, line order, or each line separately.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="trv_process">Reverse Text</button>
+        <button class="btn secondary" type="button" id="trv_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="trv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="trv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="trv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="trv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="trv_output">Reversed output</label>
+        <textarea id="trv_output" class="trv-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="trv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="trv_privacy" style="margin-top:10px;">
+        Privacy: processing runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste text, choose a reversal mode, and instantly generate a reversed version for creative or technical use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Reverse a full sentence character by character</li>
+      <li>Reverse the order of words in a phrase</li>
+      <li>Reverse the order of lines in a text block</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/sort-lines/">Sort Lines</a></li>
+      <li><a href="/text-tools/ascii-converter/">ASCII Converter</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("trv_input");
+  const modeEl = document.getElementById("trv_mode");
+  const processBtn = document.getElementById("trv_process");
+  const copyBtn = document.getElementById("trv_copy");
+  const clearBtn = document.getElementById("trv_clear");
+  const errEl = document.getElementById("trv_error");
+  const resultEl = document.getElementById("trv_result");
+  const cardsEl = document.getElementById("trv_cards");
+  const outputEl = document.getElementById("trv_output");
+  const tbodyEl = document.getElementById("trv_tbody");
+
+  if (!inputEl || !modeEl || !processBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
+  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
+  function badge(text){ return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">'+text+'</span>'; }
+  function resetOutput(){
+    clearError();
+    lastOutput = "";
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fillTable(rows){
+    tbodyEl.innerHTML = "";
+    rows.forEach(function(row){
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");
+      const td2=document.createElement("td");
+      td1.textContent=row[0];
+      td2.textContent=row[1];
+      tr.appendChild(td1); tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function reverseText() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw) {
+      showError("Please enter text to reverse.");
+      return;
+    }
+
+    const mode = String(modeEl.value || "chars");
+    let out = "";
+
+    if (mode === "words") {
+      out = raw.trim() ? raw.trim().split(/\s+/).reverse().join(" ") : "";
+    } else if (mode === "lines") {
+      out = raw.split(/\r?\n/).reverse().join("\n");
+    } else if (mode === "chars_per_line") {
+      out = raw.split(/\r?\n/).map(function(line){ return line.split("").reverse().join(""); }).join("\n");
+    } else {
+      out = raw.split("").reverse().join("");
+    }
+
+    lastOutput = out;
+    outputEl.value = out;
+
+    resultEl.innerHTML = "<strong>Text reversed.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Mode: " + mode) +
+      badge("Input chars: " + raw.length) +
+      badge("Output chars: " + out.length) +
+      "</div>";
+
+    fillTable([
+      ["Mode", mode],
+      ["Input characters", String(raw.length)],
+      ["Output characters", String(out.length)],
+      ["Input lines", String(raw.split(/\r?\n/).length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!outputEl.value) {
+      showError("No reversed output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(outputEl.value);
+      resultEl.innerHTML = "<strong>Copied reversed output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    modeEl.value = "chars";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  processBtn.addEventListener("click", reverseText);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>
