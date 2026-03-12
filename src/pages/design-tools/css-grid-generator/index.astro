@@ -1,0 +1,330 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CSS Grid Generator",
+  description:
+    "Generate CSS Grid container settings with live preview, copy-ready CSS, validation, and FAQ schema.",
+  href: "/design-tools/css-grid-generator/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/css-grid-generator/";
+
+const faqs = [
+  {
+    q: "What does this CSS Grid generator do?",
+    a: "It generates CSS Grid container code using configurable columns, rows, gaps, and alignment settings.",
+  },
+  {
+    q: "Can I preview the layout?",
+    a: "Yes. The tool includes a live preview grid so you can see the result before copying the CSS.",
+  },
+  {
+    q: "Does it generate item placement code too?",
+    a: "This version focuses on the grid container settings rather than per-item placement rules.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CSS Grid Generator — ${SITE_NAME}`}
+  description="Generate CSS Grid container settings with live preview and copy-ready CSS."
+  canonicalPath={CANONICAL_PATH}
+  h1="CSS Grid Generator"
+  intro="Build a CSS Grid container visually with column, row, gap, and alignment controls."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="css-grid-generator">
+    <style is:inline>
+      .cgrid-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cgrid-grid-2 > * {
+        min-width: 0;
+      }
+      #cgrid_cols,
+      #cgrid_rows,
+      #cgrid_gap,
+      #cgrid_justify,
+      #cgrid_align,
+      #cgrid_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .cgrid-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        padding: 16px;
+        overflow: hidden;
+      }
+      .cgrid-preview {
+        display: grid;
+        min-height: 220px;
+      }
+      .cgrid-item {
+        border-radius: 12px;
+        background: rgba(79, 70, 229, 0.18);
+        border: 1px solid rgba(79, 70, 229, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        min-height: 50px;
+      }
+      .cgrid-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 900px) {
+        .cgrid-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cgrid_help cgrid_privacy">
+      <div class="cgrid-grid-2">
+        <div class="field">
+          <label for="cgrid_cols">Columns</label>
+          <input id="cgrid_cols" type="number" inputmode="numeric" min="1" max="12" value="3" />
+        </div>
+        <div class="field">
+          <label for="cgrid_rows">Rows</label>
+          <input id="cgrid_rows" type="number" inputmode="numeric" min="1" max="12" value="2" />
+        </div>
+        <div class="field">
+          <label for="cgrid_gap">Gap (px)</label>
+          <input id="cgrid_gap" type="number" inputmode="decimal" min="0" value="12" />
+        </div>
+        <div class="field">
+          <label for="cgrid_justify">Justify items</label>
+          <select id="cgrid_justify">
+            <option value="stretch" selected>stretch</option>
+            <option value="start">start</option>
+            <option value="center">center</option>
+            <option value="end">end</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cgrid_align">Align items</label>
+          <select id="cgrid_align">
+            <option value="stretch" selected>stretch</option>
+            <option value="start">start</option>
+            <option value="center">center</option>
+            <option value="end">end</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="cgrid_help" style="margin-top:6px;">
+        This tool generates the grid container CSS using repeat-based equal-width columns and auto-sized rows in the preview.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cgrid_generate">Generate Grid</button>
+        <button class="btn secondary" type="button" id="cgrid_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="cgrid_reset">Reset</button>
+      </div>
+
+      <div class="result" id="cgrid_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cgrid_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="cgrid-preview-wrap" style="margin-top:16px;">
+        <div id="cgrid_preview" class="cgrid-preview"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cgrid_css">CSS output</label>
+        <textarea id="cgrid_css" class="cgrid-code" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
+          <tbody id="cgrid_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cgrid_privacy" style="margin-top:10px;">
+        Privacy: grid generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose the number of columns and rows, set the gap and alignment rules, preview the layout, and copy the generated CSS Grid container code.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a 3-column card layout with a 12px gap</li>
+      <li>Preview centered items inside a simple dashboard grid</li>
+      <li>Copy the grid container CSS into a component stylesheet</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/flexbox-generator/">Flexbox Generator</a></li>
+      <li><a href="/design-tools/border-radius-generator/">Border Radius Generator</a></li>
+      <li><a href="/design-tools/box-shadow-generator/">Box Shadow Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const colsEl = document.getElementById("cgrid_cols");
+  const rowsEl = document.getElementById("cgrid_rows");
+  const gapEl = document.getElementById("cgrid_gap");
+  const justifyEl = document.getElementById("cgrid_justify");
+  const alignEl = document.getElementById("cgrid_align");
+  const generateBtn = document.getElementById("cgrid_generate");
+  const copyBtn = document.getElementById("cgrid_copy");
+  const resetBtn = document.getElementById("cgrid_reset");
+  const errEl = document.getElementById("cgrid_error");
+  const resultEl = document.getElementById("cgrid_result");
+  const previewEl = document.getElementById("cgrid_preview");
+  const cssEl = document.getElementById("cgrid_css");
+  const tbodyEl = document.getElementById("cgrid_tbody");
+
+  if (!colsEl || !rowsEl || !gapEl || !justifyEl || !alignEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !cssEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const cols = Number(String(colsEl.value || ""));
+    const rows = Number(String(rowsEl.value || ""));
+    const gap = Number(String(gapEl.value || ""));
+
+    if (!Number.isInteger(cols) || cols < 1 || cols > 12) {
+      showError("Columns must be an integer from 1 to 12.");
+      return;
+    }
+    if (!Number.isInteger(rows) || rows < 1 || rows > 12) {
+      showError("Rows must be an integer from 1 to 12.");
+      return;
+    }
+    if (!Number.isFinite(gap) || gap < 0) {
+      showError("Gap must be 0 or more.");
+      return;
+    }
+
+    previewEl.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))";
+    previewEl.style.gridTemplateRows = "repeat(" + rows + ", minmax(50px, auto))";
+    previewEl.style.gap = gap + "px";
+    previewEl.style.justifyItems = String(justifyEl.value || "stretch");
+    previewEl.style.alignItems = String(alignEl.value || "stretch");
+
+    const totalItems = cols * rows;
+    previewEl.innerHTML = "";
+    for (let i = 1; i <= totalItems; i++) {
+      const item = document.createElement("div");
+      item.className = "cgrid-item";
+      item.textContent = String(i);
+      previewEl.appendChild(item);
+    }
+
+    cssEl.value =
+`display: grid;
+grid-template-columns: repeat(${cols}, minmax(0, 1fr));
+gap: ${gap}px;
+justify-items: ${String(justifyEl.value)};
+align-items: ${String(alignEl.value)};`;
+
+    resultEl.innerHTML = "<strong>CSS Grid generated.</strong>";
+
+    fillTable([
+      ["Columns", String(cols)],
+      ["Rows", String(rows)],
+      ["Gap", gap + "px"],
+      ["Justify items", String(justifyEl.value)],
+      ["Align items", String(alignEl.value)],
+      ["Preview items", String(totalItems)],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!cssEl.value) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(cssEl.value);
+      resultEl.innerHTML = "<strong>Copied CSS Grid code.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    colsEl.value = "3";
+    rowsEl.value = "2";
+    gapEl.value = "12";
+    justifyEl.value = "stretch";
+    alignEl.value = "stretch";
+    update();
+  }
+
+  generateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetAll);
+
+  [colsEl, rowsEl, gapEl, justifyEl, alignEl].forEach(function (el) {
+    el.addEventListener("input", update);
+    el.addEventListener("change", update);
+  });
+
+  update();
+});
+</script>

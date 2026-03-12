@@ -1,0 +1,271 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "HEX to RGB",
+  description:
+    "Convert HEX color values to RGB with validation, preview, copy-friendly output, and FAQ schema.",
+  href: "/design-tools/hex-to-rgb/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/hex-to-rgb/";
+
+const faqs = [
+  {
+    q: "What does this HEX to RGB converter do?",
+    a: "It converts a HEX color value into its RGB equivalent and shows a live preview of the color.",
+  },
+  {
+    q: "Does it support shorthand HEX values?",
+    a: "Yes. It accepts both 3-digit and 6-digit HEX color formats.",
+  },
+  {
+    q: "Can I copy the converted RGB value?",
+    a: "Yes. The resulting RGB value is shown in a copy-friendly format.",
+  },
+  {
+    q: "Is any color data stored?",
+    a: "No. Conversion runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`HEX to RGB — ${SITE_NAME}`}
+  description="Convert HEX color values to RGB with preview and copy-ready output."
+  canonicalPath={CANONICAL_PATH}
+  h1="HEX to RGB"
+  intro="Convert HEX colors into RGB values and preview the color for design and CSS workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hex-to-rgb">
+    <style is:inline>
+      .htr-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .htr-grid-2 > * {
+        min-width: 0;
+      }
+      #htr_hex, #htr_rgb {
+        width: 100%;
+        min-width: 0;
+      }
+      .htr-preview {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 140px;
+        padding: 16px;
+        display: flex;
+        align-items: end;
+      }
+      .htr-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .htr-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="htr_help htr_privacy">
+      <div class="htr-grid-2">
+        <div class="field">
+          <label for="htr_hex">HEX value</label>
+          <input id="htr_hex" type="text" placeholder="#4f46e5" value="#4f46e5" />
+        </div>
+        <div class="field">
+          <label for="htr_rgb">RGB result</label>
+          <input id="htr_rgb" class="htr-code" type="text" readonly />
+        </div>
+      </div>
+
+      <p class="note" id="htr_help" style="margin-top:6px;">
+        Accepted formats include 3-digit shorthand like <strong>#0af</strong> and 6-digit full HEX like <strong>#00AAFF</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="htr_convert">Convert</button>
+        <button class="btn secondary" type="button" id="htr_copy">Copy RGB</button>
+        <button class="btn secondary" type="button" id="htr_reset">Reset</button>
+      </div>
+
+      <div class="result" id="htr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="htr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="htr-preview" id="htr_preview" style="margin-top:16px;">
+        <div class="htr-code" id="htr_preview_text">#4F46E5</div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Format</th><th scope="col">Value</th></tr></thead>
+          <tbody id="htr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="htr_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter a HEX color, convert it to RGB, preview the result, and copy the RGB value for direct CSS or design use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Convert <strong>#4f46e5</strong> into an RGB value</li>
+      <li>Test shorthand HEX codes like <strong>#0af</strong></li>
+      <li>Preview a color visually after conversion</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/rgb-to-hex/">RGB to HEX</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/contrast-checker/">Contrast Checker</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const hexEl = document.getElementById("htr_hex");
+  const rgbEl = document.getElementById("htr_rgb");
+  const convertBtn = document.getElementById("htr_convert");
+  const copyBtn = document.getElementById("htr_copy");
+  const resetBtn = document.getElementById("htr_reset");
+  const errEl = document.getElementById("htr_error");
+  const resultEl = document.getElementById("htr_result");
+  const previewEl = document.getElementById("htr_preview");
+  const previewTextEl = document.getElementById("htr_preview_text");
+  const tbodyEl = document.getElementById("htr_tbody");
+
+  if (!hexEl || !rgbEl || !convertBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !previewTextEl || !tbodyEl) return;
+
+  let lastRgb = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function expandHex(hex) {
+    let clean = String(hex).trim().replace(/^#/, "");
+    if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+      clean = clean.split("").map(ch => ch + ch).join("");
+    }
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return "#" + clean.toUpperCase();
+  }
+  function hexToRgb(hex) {
+    const full = expandHex(hex);
+    if (!full) return null;
+    const clean = full.replace("#", "");
+    return {
+      hex: full,
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function textColorForBg(r, g, b) {
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111111" : "#FFFFFF";
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function convert() {
+    clearError();
+
+    const rgb = hexToRgb(String(hexEl.value || ""));
+    if (!rgb) {
+      showError("Please enter a valid 3-digit or 6-digit HEX color.");
+      return;
+    }
+
+    lastRgb = "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")";
+    rgbEl.value = lastRgb;
+    previewEl.style.background = rgb.hex;
+    previewEl.style.color = textColorForBg(rgb.r, rgb.g, rgb.b);
+    previewTextEl.textContent = rgb.hex;
+
+    resultEl.innerHTML = "<strong>HEX converted to RGB.</strong>";
+
+    fillTable([
+      ["HEX", rgb.hex],
+      ["RGB", lastRgb],
+      ["Red", String(rgb.r)],
+      ["Green", String(rgb.g)],
+      ["Blue", String(rgb.b)],
+    ]);
+  }
+
+  async function copyRgb() {
+    clearError();
+    if (!lastRgb) {
+      showError("No RGB value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastRgb);
+      resultEl.innerHTML = "<strong>Copied RGB value.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    hexEl.value = "#4f46e5";
+    convert();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyRgb);
+  resetBtn.addEventListener("click", resetAll);
+  hexEl.addEventListener("input", convert);
+
+  convert();
+});
+</script>

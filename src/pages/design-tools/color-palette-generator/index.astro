@@ -1,0 +1,349 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Color Palette Generator",
+  description:
+    "Generate simple color palettes from a base color with live swatches, copy-ready HEX values, and FAQ schema.",
+  href: "/design-tools/color-palette-generator/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/color-palette-generator/";
+
+const faqs = [
+  {
+    q: "What does this color palette generator do?",
+    a: "It creates a small palette of lighter and darker variations based on a single base color.",
+  },
+  {
+    q: "Can I copy the generated color values?",
+    a: "Yes. The palette shows copy-friendly HEX values for each swatch.",
+  },
+  {
+    q: "Does it create full brand systems?",
+    a: "No. This version generates a practical palette preview from one color, useful for quick design exploration.",
+  },
+  {
+    q: "Is any color data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Color Palette Generator — ${SITE_NAME}`}
+  description="Generate lighter and darker palette variants from a base color."
+  canonicalPath={CANONICAL_PATH}
+  h1="Color Palette Generator"
+  intro="Choose a base color and generate a quick palette of lighter and darker variations for design work."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="color-palette-generator">
+    <style is:inline>
+      .cpg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cpg-grid-2 > * {
+        min-width: 0;
+      }
+      #cpg_base,
+      #cpg_steps {
+        width: 100%;
+        min-width: 0;
+      }
+      .cpg-palette {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .cpg-swatch {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 100px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 6px;
+        min-width: 0;
+      }
+      .cpg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .cpg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+        .cpg-palette {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (min-width: 1000px) {
+        .cpg-palette {
+          grid-template-columns: repeat(5, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cpg_help cpg_privacy">
+      <div class="cpg-grid-2">
+        <div class="field">
+          <label for="cpg_base">Base color</label>
+          <input id="cpg_base" type="color" value="#4f46e5" />
+        </div>
+        <div class="field">
+          <label for="cpg_steps">Palette size</label>
+          <select id="cpg_steps">
+            <option value="5" selected>5 colors</option>
+            <option value="7">7 colors</option>
+            <option value="9">9 colors</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="cpg_help" style="margin-top:6px;">
+        The palette is built by shifting lightness around the base color to create lighter and darker steps.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cpg_generate">Generate Palette</button>
+        <button class="btn secondary" type="button" id="cpg_copy">Copy All HEX Values</button>
+        <button class="btn secondary" type="button" id="cpg_reset">Reset</button>
+      </div>
+
+      <div class="result" id="cpg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cpg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div id="cpg_palette" class="cpg-palette"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
+          <tbody id="cpg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cpg_privacy" style="margin-top:10px;">
+        Privacy: palette generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick a base color, choose how many swatches you want, and generate a small palette of lighter and darker variations.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate supporting shades from a brand primary color</li>
+      <li>Build a quick UI palette for buttons and backgrounds</li>
+      <li>Copy the generated HEX values into your design tokens</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/contrast-checker/">Contrast Checker</a></li>
+      <li><a href="/design-tools/hex-to-rgb/">HEX to RGB</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const baseEl = document.getElementById("cpg_base");
+  const stepsEl = document.getElementById("cpg_steps");
+  const generateBtn = document.getElementById("cpg_generate");
+  const copyBtn = document.getElementById("cpg_copy");
+  const resetBtn = document.getElementById("cpg_reset");
+  const errEl = document.getElementById("cpg_error");
+  const resultEl = document.getElementById("cpg_result");
+  const paletteEl = document.getElementById("cpg_palette");
+  const tbodyEl = document.getElementById("cpg_tbody");
+
+  if (!baseEl || !stepsEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !paletteEl || !tbodyEl) return;
+
+  let lastHexList = [];
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function hexToRgb(hex) {
+    const clean = String(hex).replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("").toUpperCase();
+  }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+  function hslToRgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = function(p, q, t) {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return { r: r * 255, g: g * 255, b: b * 255 };
+  }
+  function textColorForBg(r, g, b) {
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111111" : "#FFFFFF";
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generate() {
+    clearError();
+
+    const rgb = hexToRgb(String(baseEl.value || "#4f46e5"));
+    if (!rgb) {
+      showError("Please choose a valid base color.");
+      return;
+    }
+
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    const steps = Number(String(stepsEl.value || "5"));
+    const middle = Math.floor(steps / 2);
+    const palette = [];
+
+    for (let i = 0; i < steps; i++) {
+      const shift = (i - middle) * 10;
+      const nextL = Math.max(8, Math.min(92, hsl.l + shift));
+      const nextRgb = hslToRgb(hsl.h, hsl.s, nextL);
+      palette.push(rgbToHex(nextRgb.r, nextRgb.g, nextRgb.b));
+    }
+
+    lastHexList = palette.slice();
+    paletteEl.innerHTML = "";
+
+    palette.forEach(function (hex, idx) {
+      const swatch = document.createElement("div");
+      swatch.className = "cpg-swatch";
+      swatch.style.background = hex;
+
+      const rgbSwatch = hexToRgb(hex);
+      swatch.style.color = textColorForBg(rgbSwatch.r, rgbSwatch.g, rgbSwatch.b);
+      swatch.innerHTML =
+        '<strong>Swatch ' + (idx + 1) + '</strong>' +
+        '<div class="cpg-code">' + hex + '</div>';
+      paletteEl.appendChild(swatch);
+    });
+
+    resultEl.innerHTML = "<strong>Color palette generated.</strong>";
+
+    fillTable([
+      ["Base color", String(baseEl.value).toUpperCase()],
+      ["Palette size", String(steps)],
+      ["Palette type", "Lightness-based variations"],
+    ]);
+  }
+
+  async function copyAll() {
+    clearError();
+    if (!lastHexList.length) {
+      showError("No palette values available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastHexList.join("\n"));
+      resultEl.innerHTML = "<strong>Copied all palette HEX values.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    baseEl.value = "#4f46e5";
+    stepsEl.value = "5";
+    generate();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyAll);
+  resetBtn.addEventListener("click", resetAll);
+  baseEl.addEventListener("input", generate);
+  stepsEl.addEventListener("change", generate);
+
+  generate();
+});
+</script>

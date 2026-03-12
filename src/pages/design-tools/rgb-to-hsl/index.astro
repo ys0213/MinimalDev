@@ -1,0 +1,300 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "RGB to HSL",
+  description:
+    "Convert RGB values to HSL with validation, preview, copy-ready output, and FAQ schema.",
+  href: "/design-tools/rgb-to-hsl/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/rgb-to-hsl/";
+
+const faqs = [
+  {
+    q: "What does this RGB to HSL converter do?",
+    a: "It converts red, green, and blue channel values into the HSL color model.",
+  },
+  {
+    q: "What input range does it support?",
+    a: "Each RGB channel must be an integer from 0 to 255.",
+  },
+  {
+    q: "Why use HSL?",
+    a: "HSL can be easier to reason about for hue, saturation, and lightness adjustments in design workflows.",
+  },
+  {
+    q: "Is any color data stored?",
+    a: "No. Conversion runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`RGB to HSL — ${SITE_NAME}`}
+  description="Convert RGB color values to HSL with preview and copy-ready output."
+  canonicalPath={CANONICAL_PATH}
+  h1="RGB to HSL"
+  intro="Convert RGB values into HSL and preview the resulting color for CSS and design work."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="rgb-to-hsl">
+    <style is:inline>
+      .rthsl-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rthsl-grid-3 > * {
+        min-width: 0;
+      }
+      #rthsl_r, #rthsl_g, #rthsl_b, #rthsl_hsl {
+        width: 100%;
+        min-width: 0;
+      }
+      .rthsl-preview {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 140px;
+        padding: 16px;
+        display: flex;
+        align-items: end;
+      }
+      .rthsl-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .rthsl-grid-3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rthsl_help rthsl_privacy">
+      <div class="rthsl-grid-3">
+        <div class="field">
+          <label for="rthsl_r">Red (0–255)</label>
+          <input id="rthsl_r" type="number" inputmode="numeric" min="0" max="255" value="79" />
+        </div>
+        <div class="field">
+          <label for="rthsl_g">Green (0–255)</label>
+          <input id="rthsl_g" type="number" inputmode="numeric" min="0" max="255" value="70" />
+        </div>
+        <div class="field">
+          <label for="rthsl_b">Blue (0–255)</label>
+          <input id="rthsl_b" type="number" inputmode="numeric" min="0" max="255" value="229" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rthsl_hsl">HSL result</label>
+        <input id="rthsl_hsl" class="rthsl-code" type="text" readonly />
+      </div>
+
+      <p class="note" id="rthsl_help" style="margin-top:6px;">
+        Enter whole-number RGB channel values. Hue is shown in degrees, saturation and lightness as percentages.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rthsl_convert">Convert</button>
+        <button class="btn secondary" type="button" id="rthsl_copy">Copy HSL</button>
+        <button class="btn secondary" type="button" id="rthsl_reset">Reset</button>
+      </div>
+
+      <div class="result" id="rthsl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rthsl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="rthsl-preview" id="rthsl_preview" style="margin-top:16px;">
+        <div class="rthsl-code" id="rthsl_preview_text">hsl(243, 75%, 59%)</div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Format</th><th scope="col">Value</th></tr></thead>
+          <tbody id="rthsl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rthsl_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter RGB channel values, convert them into HSL, preview the color, and copy the final HSL value for CSS use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>79, 70, 229</strong> → approximately <strong>hsl(243, 75%, 59%)</strong></li>
+      <li>Inspect hue and lightness more directly than RGB</li>
+      <li>Use HSL values for more intuitive color adjustments</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/hsl-to-rgb/">HSL to RGB</a></li>
+      <li><a href="/design-tools/rgb-to-hex/">RGB to HEX</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rEl = document.getElementById("rthsl_r");
+  const gEl = document.getElementById("rthsl_g");
+  const bEl = document.getElementById("rthsl_b");
+  const hslEl = document.getElementById("rthsl_hsl");
+  const convertBtn = document.getElementById("rthsl_convert");
+  const copyBtn = document.getElementById("rthsl_copy");
+  const resetBtn = document.getElementById("rthsl_reset");
+  const errEl = document.getElementById("rthsl_error");
+  const resultEl = document.getElementById("rthsl_result");
+  const previewEl = document.getElementById("rthsl_preview");
+  const previewTextEl = document.getElementById("rthsl_preview_text");
+  const tbodyEl = document.getElementById("rthsl_tbody");
+
+  if (!rEl || !gEl || !bEl || !hslEl || !convertBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !previewTextEl || !tbodyEl) return;
+
+  let lastHsl = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100),
+    };
+  }
+  function textColorForBg(r, g, b) {
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111111" : "#FFFFFF";
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function convert() {
+    clearError();
+
+    const r = Number(String(rEl.value || ""));
+    const g = Number(String(gEl.value || ""));
+    const b = Number(String(bEl.value || ""));
+
+    if (![r, g, b].every(Number.isInteger)) {
+      showError("Please enter whole numbers for all RGB channels.");
+      return;
+    }
+    if ([r, g, b].some(v => v < 0 || v > 255)) {
+      showError("Each RGB channel must be between 0 and 255.");
+      return;
+    }
+
+    const hsl = rgbToHsl(r, g, b);
+    lastHsl = "hsl(" + hsl.h + ", " + hsl.s + "%, " + hsl.l + "%)";
+    hslEl.value = lastHsl;
+    previewEl.style.background = "rgb(" + r + ", " + g + ", " + b + ")";
+    previewEl.style.color = textColorForBg(r, g, b);
+    previewTextEl.textContent = lastHsl;
+
+    resultEl.innerHTML = "<strong>RGB converted to HSL.</strong>";
+
+    fillTable([
+      ["RGB", "rgb(" + r + ", " + g + ", " + b + ")"],
+      ["HSL", lastHsl],
+      ["Hue", hsl.h + "°"],
+      ["Saturation", hsl.s + "%"],
+      ["Lightness", hsl.l + "%"],
+    ]);
+  }
+
+  async function copyHsl() {
+    clearError();
+    if (!lastHsl) {
+      showError("No HSL value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastHsl);
+      resultEl.innerHTML = "<strong>Copied HSL value.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    rEl.value = "79";
+    gEl.value = "70";
+    bEl.value = "229";
+    convert();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyHsl);
+  resetBtn.addEventListener("click", resetAll);
+
+  [rEl, gEl, bEl].forEach(function (el) {
+    el.addEventListener("input", convert);
+  });
+
+  convert();
+});
+</script>

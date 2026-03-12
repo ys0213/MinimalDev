@@ -1,0 +1,308 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Contrast Checker",
+  description:
+    "Check text and background color contrast ratios with WCAG guidance, live preview, and FAQ schema.",
+  href: "/design-tools/contrast-checker/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/contrast-checker/";
+
+const faqs = [
+  {
+    q: "What does this contrast checker do?",
+    a: "It calculates the contrast ratio between a text color and a background color and compares the result with common WCAG thresholds.",
+  },
+  {
+    q: "Does it show AA and AAA guidance?",
+    a: "Yes. The tool indicates whether the current contrast passes common normal-text and large-text thresholds.",
+  },
+  {
+    q: "Can I preview the combination live?",
+    a: "Yes. The tool includes a live preview using your selected foreground and background colors.",
+  },
+  {
+    q: "Is any color data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Contrast Checker — ${SITE_NAME}`}
+  description="Check foreground and background contrast ratio with live preview and WCAG-style guidance."
+  canonicalPath={CANONICAL_PATH}
+  h1="Contrast Checker"
+  intro="Choose text and background colors, preview them together, and check their contrast ratio."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="contrast-checker">
+    <style is:inline>
+      .cc-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cc-grid-2 > * {
+        min-width: 0;
+      }
+      #cc_fg, #cc_bg {
+        width: 100%;
+        min-width: 0;
+      }
+      .cc-preview {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 160px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+      }
+      .cc-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .cc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .cc-card .big {
+        font-size: 28px;
+        font-weight: 900;
+        margin-top: 6px;
+      }
+      @media (min-width: 760px) {
+        .cc-grid-2, .cc-cards {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cc_help cc_privacy">
+      <div class="cc-grid-2">
+        <div class="field">
+          <label for="cc_fg">Text color</label>
+          <input id="cc_fg" type="color" value="#111111" />
+        </div>
+        <div class="field">
+          <label for="cc_bg">Background color</label>
+          <input id="cc_bg" type="color" value="#FFFFFF" />
+        </div>
+      </div>
+
+      <p class="note" id="cc_help" style="margin-top:6px;">
+        This tool estimates contrast using a standard luminance-based ratio and compares it to common accessibility guidance levels.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cc_check">Check Contrast</button>
+        <button class="btn secondary" type="button" id="cc_swap">Swap Colors</button>
+        <button class="btn secondary" type="button" id="cc_reset">Reset</button>
+      </div>
+
+      <div class="result" id="cc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="cc-preview" id="cc_preview" style="margin-top:16px;">
+        <strong>Preview text</strong>
+        <div>The quick brown fox jumps over the lazy dog.</div>
+        <div style="font-size:22px; font-weight:800;">Large preview text</div>
+      </div>
+
+      <div id="cc_cards" class="cc-cards"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="cc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cc_privacy" style="margin-top:10px;">
+        Privacy: contrast calculation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick a foreground and background color, preview them together, and review the contrast ratio plus accessibility-style pass indicators.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Check whether body text is readable on a light background</li>
+      <li>Compare dark and light UI combinations quickly</li>
+      <li>Test brand colors against accessibility thresholds</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/color-palette-generator/">Color Palette Generator</a></li>
+      <li><a href="/design-tools/hex-to-rgb/">HEX to RGB</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fgEl = document.getElementById("cc_fg");
+  const bgEl = document.getElementById("cc_bg");
+  const checkBtn = document.getElementById("cc_check");
+  const swapBtn = document.getElementById("cc_swap");
+  const resetBtn = document.getElementById("cc_reset");
+  const errEl = document.getElementById("cc_error");
+  const resultEl = document.getElementById("cc_result");
+  const previewEl = document.getElementById("cc_preview");
+  const cardsEl = document.getElementById("cc_cards");
+  const tbodyEl = document.getElementById("cc_tbody");
+
+  if (!fgEl || !bgEl || !checkBtn || !swapBtn || !resetBtn || !errEl || !resultEl || !previewEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function hexToRgb(hex) {
+    const clean = String(hex).replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function channel(c) {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  }
+  function luminance(rgb) {
+    return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
+  }
+  function contrastRatio(a, b) {
+    const l1 = luminance(a);
+    const l2 = luminance(b);
+    const light = Math.max(l1, l2);
+    const dark = Math.min(l1, l2);
+    return (light + 0.05) / (dark + 0.05);
+  }
+  function card(title, value, note) {
+    return (
+      '<div class="cc-card">' +
+        '<strong>' + title + '</strong>' +
+        '<div class="big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+      '</div>'
+    );
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const fg = String(fgEl.value || "#111111");
+    const bg = String(bgEl.value || "#ffffff");
+    const fgRgb = hexToRgb(fg);
+    const bgRgb = hexToRgb(bg);
+
+    if (!fgRgb || !bgRgb) {
+      showError("Please choose valid colors.");
+      return;
+    }
+
+    const ratio = contrastRatio(fgRgb, bgRgb);
+    const ratioText = ratio.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ":1";
+
+    previewEl.style.color = fg;
+    previewEl.style.background = bg;
+
+    const passAANormal = ratio >= 4.5;
+    const passAALarge = ratio >= 3;
+    const passAAANormal = ratio >= 7;
+    const passAAALarge = ratio >= 4.5;
+
+    resultEl.innerHTML = "<strong>Contrast checked.</strong>";
+    cardsEl.innerHTML =
+      card("Contrast ratio", ratioText, "Foreground vs background ratio.") +
+      card("AA normal text", passAANormal ? "Pass" : "Fail", "Typical target: 4.5:1") +
+      card("AA large text", passAALarge ? "Pass" : "Fail", "Typical target: 3:1") +
+      card("AAA normal text", passAAANormal ? "Pass" : "Fail", "Typical target: 7:1");
+
+    fillTable([
+      ["Text color", fg.toUpperCase()],
+      ["Background color", bg.toUpperCase()],
+      ["Contrast ratio", ratioText],
+      ["AA normal text", passAANormal ? "Pass" : "Fail"],
+      ["AA large text", passAALarge ? "Pass" : "Fail"],
+      ["AAA normal text", passAAANormal ? "Pass" : "Fail"],
+      ["AAA large text", passAAALarge ? "Pass" : "Fail"],
+    ]);
+  }
+
+  function swap() {
+    const a = fgEl.value;
+    fgEl.value = bgEl.value;
+    bgEl.value = a;
+    update();
+  }
+
+  function resetAll() {
+    fgEl.value = "#111111";
+    bgEl.value = "#ffffff";
+    update();
+  }
+
+  checkBtn.addEventListener("click", update);
+  swapBtn.addEventListener("click", swap);
+  resetBtn.addEventListener("click", resetAll);
+  fgEl.addEventListener("input", update);
+  bgEl.addEventListener("input", update);
+
+  update();
+});
+</script>

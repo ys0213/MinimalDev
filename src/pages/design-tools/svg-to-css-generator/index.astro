@@ -1,0 +1,262 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "SVG to CSS Generator",
+  description:
+    "Convert SVG markup into CSS-friendly data URL background code with validation, preview, and FAQ schema.",
+  href: "/design-tools/svg-to-css-generator/",
+  order: 150,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/svg-to-css-generator/";
+
+const faqs = [
+  {
+    q: "What does this SVG to CSS generator do?",
+    a: "It converts SVG markup into a CSS background-image data URL so it can be used directly in stylesheets.",
+  },
+  {
+    q: "Do I need a full SVG tag?",
+    a: "Yes. This tool expects complete SVG markup, including the opening and closing svg element.",
+  },
+  {
+    q: "Can I preview the generated result?",
+    a: "Yes. The tool shows a live preview using the generated data URL as a background image.",
+  },
+  {
+    q: "Is my SVG stored?",
+    a: "No. Conversion runs locally in your browser and no SVG data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`SVG to CSS Generator — ${SITE_NAME}`}
+  description="Convert SVG markup into CSS-ready data URL background code with preview."
+  canonicalPath={CANONICAL_PATH}
+  h1="SVG to CSS Generator"
+  intro="Paste SVG markup, convert it to a CSS background-image data URL, and preview the result."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="svg-to-css-generator">
+    <style is:inline>
+      #stc_svg, #stc_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .stc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .stc-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 220px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .stc-preview {
+        width: min(260px, 100%);
+        height: 160px;
+        border-radius: 14px;
+        border: 1px dashed rgba(255,255,255,0.22);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="stc_help stc_privacy">
+      <div class="field">
+        <label for="stc_svg">SVG markup</label>
+        <textarea
+          id="stc_svg"
+          class="stc-code"
+          rows="12"
+          spellcheck="false"
+          placeholder='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#4f46e5"/></svg>'
+        ></textarea>
+      </div>
+
+      <p class="note" id="stc_help" style="margin-top:6px;">
+        Paste a complete SVG element. The tool converts it into a CSS-safe data URL and shows a preview.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="stc_generate">Generate CSS</button>
+        <button class="btn secondary" type="button" id="stc_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="stc_reset">Reset Example</button>
+      </div>
+
+      <div class="result" id="stc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="stc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="stc-preview-wrap" style="margin-top:16px;">
+        <div id="stc_preview" class="stc-preview" aria-label="SVG background preview"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="stc_css">CSS output</label>
+        <textarea id="stc_css" class="stc-code" rows="10" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <tbody id="stc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="stc_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No SVG data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste SVG markup, generate a CSS-ready data URL, preview the background result, and copy the generated CSS into your stylesheet.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Convert a simple icon SVG into a background-image value</li>
+      <li>Preview how the SVG will render as a CSS background</li>
+      <li>Embed small vector assets without extra file requests</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/favicon-generator/">Favicon Generator</a></li>
+      <li><a href="/design-tools/css-gradient-generator/">CSS Gradient Generator</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const svgEl = document.getElementById("stc_svg");
+  const cssEl = document.getElementById("stc_css");
+  const generateBtn = document.getElementById("stc_generate");
+  const copyBtn = document.getElementById("stc_copy");
+  const resetBtn = document.getElementById("stc_reset");
+  const errEl = document.getElementById("stc_error");
+  const resultEl = document.getElementById("stc_result");
+  const previewEl = document.getElementById("stc_preview");
+  const tbodyEl = document.getElementById("stc_tbody");
+
+  if (!svgEl || !cssEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !tbodyEl) return;
+
+  let lastCss = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function svgToDataUrl(svg) {
+    return "data:image/svg+xml," + encodeURIComponent(svg)
+      .replace(/%0A/g, "")
+      .replace(/%20/g, " ")
+      .replace(/%3D/g, "=")
+      .replace(/%3A/g, ":")
+      .replace(/%2F/g, "/");
+  }
+
+  function generate() {
+    clearError();
+
+    const svg = String(svgEl.value || "").trim();
+    if (!svg) {
+      showError("Please enter SVG markup.");
+      return;
+    }
+    if (!/^<svg[\s\S]*<\/svg>$/.test(svg)) {
+      showError("Please provide complete SVG markup including opening and closing svg tags.");
+      return;
+    }
+
+    const dataUrl = svgToDataUrl(svg);
+    lastCss =
+`background-image: url("${dataUrl}");
+background-repeat: no-repeat;
+background-position: center;
+background-size: contain;`;
+
+    cssEl.value = lastCss;
+    previewEl.style.backgroundImage = 'url("' + dataUrl + '")';
+    resultEl.innerHTML = "<strong>SVG converted to CSS background code.</strong>";
+
+    fillTable([
+      ["Input length", String(svg.length) + " chars"],
+      ["Output type", "CSS data URL"],
+      ["Preview mode", "background-image"],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!lastCss) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastCss);
+      resultEl.innerHTML = "<strong>Copied CSS background code.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetExample() {
+    svgEl.value = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="#4f46e5"/><rect x="28" y="16" width="8" height="32" fill="#ffffff"/></svg>';
+    generate();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetExample);
+
+  resetExample();
+});
+</script>

@@ -1,0 +1,305 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Favicon Generator",
+  description:
+    "Generate a simple SVG favicon from text, background color, text color, and shape settings, with preview and FAQ schema.",
+  href: "/design-tools/favicon-generator/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/favicon-generator/";
+
+const faqs = [
+  {
+    q: "What does this favicon generator do?",
+    a: "It creates a simple SVG favicon preview from a short text label, colors, and a basic shape style.",
+  },
+  {
+    q: "Can I use more than one character?",
+    a: "Yes, but short text such as one or two characters generally works best for favicon readability.",
+  },
+  {
+    q: "Does it create a downloadable .ico file?",
+    a: "This version generates an SVG favicon string and preview, which is useful for modern browser favicon workflows.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Favicon Generator — ${SITE_NAME}`}
+  description="Generate a simple SVG favicon from short text and color settings with live preview."
+  canonicalPath={CANONICAL_PATH}
+  h1="Favicon Generator"
+  intro="Create a simple text-based SVG favicon using background color, text color, and rounded shape settings."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="favicon-generator">
+    <style is:inline>
+      .fav-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .fav-grid-2 > * {
+        min-width: 0;
+      }
+      #fav_text, #fav_bg, #fav_fg, #fav_radius, #fav_svg {
+        width: 100%;
+        min-width: 0;
+      }
+      .fav-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .fav-preview-box {
+        width: 96px;
+        height: 96px;
+        display: block;
+      }
+      .fav-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .fav-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fav_help fav_privacy">
+      <div class="fav-grid-2">
+        <div class="field">
+          <label for="fav_text">Favicon text</label>
+          <input id="fav_text" type="text" maxlength="3" value="M" placeholder="e.g., M" />
+        </div>
+        <div class="field">
+          <label for="fav_radius">Corner radius (0–32)</label>
+          <input id="fav_radius" type="number" inputmode="numeric" min="0" max="32" value="16" />
+        </div>
+        <div class="field">
+          <label for="fav_bg">Background color</label>
+          <input id="fav_bg" type="color" value="#4f46e5" />
+        </div>
+        <div class="field">
+          <label for="fav_fg">Text color</label>
+          <input id="fav_fg" type="color" value="#ffffff" />
+        </div>
+      </div>
+
+      <p class="note" id="fav_help" style="margin-top:6px;">
+        One character usually works best, but up to three characters are allowed here for simple monogram-style favicon previews.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fav_generate">Generate Favicon</button>
+        <button class="btn secondary" type="button" id="fav_copy">Copy SVG</button>
+        <button class="btn secondary" type="button" id="fav_reset">Reset</button>
+      </div>
+
+      <div class="result" id="fav_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="fav_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="fav-preview-wrap" style="margin-top:16px;">
+        <div id="fav_preview" class="fav-preview-box" aria-label="Favicon preview"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="fav_svg">SVG output</label>
+        <textarea id="fav_svg" class="fav-code" rows="10" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
+          <tbody id="fav_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fav_privacy" style="margin-top:10px;">
+        Privacy: favicon generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter a short label, choose foreground and background colors, set the corner radius, preview the result, and copy the generated SVG.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a one-letter favicon for a side project</li>
+      <li>Use two letters for a compact monogram icon</li>
+      <li>Copy the generated SVG into a favicon workflow</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/svg-to-css-generator/">SVG to CSS Generator</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/color-palette-generator/">Color Palette Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const textEl = document.getElementById("fav_text");
+  const radiusEl = document.getElementById("fav_radius");
+  const bgEl = document.getElementById("fav_bg");
+  const fgEl = document.getElementById("fav_fg");
+  const generateBtn = document.getElementById("fav_generate");
+  const copyBtn = document.getElementById("fav_copy");
+  const resetBtn = document.getElementById("fav_reset");
+  const errEl = document.getElementById("fav_error");
+  const resultEl = document.getElementById("fav_result");
+  const previewEl = document.getElementById("fav_preview");
+  const svgEl = document.getElementById("fav_svg");
+  const tbodyEl = document.getElementById("fav_tbody");
+
+  if (!textEl || !radiusEl || !bgEl || !fgEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !svgEl || !tbodyEl) return;
+
+  let lastSvg = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function escapeXml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&apos;");
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generate() {
+    clearError();
+
+    const text = String(textEl.value || "").trim();
+    const radius = Number(String(radiusEl.value || ""));
+    const bg = String(bgEl.value || "#4f46e5");
+    const fg = String(fgEl.value || "#ffffff");
+
+    if (!text) {
+      showError("Please enter favicon text.");
+      return;
+    }
+    if (text.length > 3) {
+      showError("Use 3 characters or fewer for the favicon text.");
+      return;
+    }
+    if (!Number.isFinite(radius) || radius < 0 || radius > 32) {
+      showError("Corner radius must be from 0 to 32.");
+      return;
+    }
+
+    const fontSize = text.length === 1 ? 52 : text.length === 2 ? 38 : 28;
+
+    lastSvg =
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Generated favicon">
+  <rect x="0" y="0" width="64" height="64" rx="${radius}" ry="${radius}" fill="${bg}"/>
+  <text x="32" y="32" text-anchor="middle" dominant-baseline="central"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="${fontSize}"
+    font-weight="700"
+    fill="${fg}">${escapeXml(text)}</text>
+</svg>`;
+
+    svgEl.value = lastSvg;
+    previewEl.innerHTML = lastSvg;
+    resultEl.innerHTML = "<strong>Favicon SVG generated.</strong>";
+
+    fillTable([
+      ["Text", text],
+      ["Background", bg.toUpperCase()],
+      ["Foreground", fg.toUpperCase()],
+      ["Corner radius", String(radius)],
+      ["SVG viewBox", "0 0 64 64"],
+    ]);
+  }
+
+  async function copySvg() {
+    clearError();
+    if (!lastSvg) {
+      showError("No SVG value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastSvg);
+      resultEl.innerHTML = "<strong>Copied SVG favicon code.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    textEl.value = "M";
+    radiusEl.value = "16";
+    bgEl.value = "#4f46e5";
+    fgEl.value = "#ffffff";
+    generate();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copySvg);
+  resetBtn.addEventListener("click", resetAll);
+
+  [textEl, radiusEl, bgEl, fgEl].forEach(function (el) {
+    el.addEventListener("input", generate);
+    el.addEventListener("change", generate);
+  });
+
+  generate();
+});
+</script>

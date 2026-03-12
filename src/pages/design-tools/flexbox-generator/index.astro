@@ -1,0 +1,329 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Flexbox Generator",
+  description:
+    "Generate Flexbox container CSS with live preview, alignment controls, copy-ready output, and FAQ schema.",
+  href: "/design-tools/flexbox-generator/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/flexbox-generator/";
+
+const faqs = [
+  {
+    q: "What does this Flexbox generator do?",
+    a: "It generates CSS Flexbox container settings such as direction, wrap, justify-content, align-items, and gap.",
+  },
+  {
+    q: "Can I preview the layout live?",
+    a: "Yes. The tool includes a live preview area showing how the flex items respond to the selected settings.",
+  },
+  {
+    q: "Does it generate item-specific flex rules?",
+    a: "This version focuses on the container settings rather than per-item flex-grow or flex-basis rules.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Flexbox Generator — ${SITE_NAME}`}
+  description="Generate Flexbox container CSS with live preview and copy-ready code."
+  canonicalPath={CANONICAL_PATH}
+  h1="Flexbox Generator"
+  intro="Build a Flexbox container visually using direction, wrap, alignment, and gap controls."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="flexbox-generator">
+    <style is:inline>
+      .fg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .fg-grid-2 > * {
+        min-width: 0;
+      }
+      #fg_direction,
+      #fg_wrap,
+      #fg_justify,
+      #fg_align,
+      #fg_gap,
+      #fg_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .fg-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        padding: 16px;
+        overflow: hidden;
+      }
+      .fg-preview {
+        display: flex;
+        min-height: 220px;
+      }
+      .fg-item {
+        border-radius: 12px;
+        background: rgba(6, 182, 212, 0.18);
+        border: 1px solid rgba(6, 182, 212, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        min-width: 60px;
+        min-height: 60px;
+        padding: 10px 14px;
+      }
+      .fg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 900px) {
+        .fg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fg_help fg_privacy">
+      <div class="fg-grid-2">
+        <div class="field">
+          <label for="fg_direction">Flex direction</label>
+          <select id="fg_direction">
+            <option value="row" selected>row</option>
+            <option value="column">column</option>
+            <option value="row-reverse">row-reverse</option>
+            <option value="column-reverse">column-reverse</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fg_wrap">Flex wrap</label>
+          <select id="fg_wrap">
+            <option value="nowrap" selected>nowrap</option>
+            <option value="wrap">wrap</option>
+            <option value="wrap-reverse">wrap-reverse</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fg_justify">Justify content</label>
+          <select id="fg_justify">
+            <option value="flex-start" selected>flex-start</option>
+            <option value="center">center</option>
+            <option value="flex-end">flex-end</option>
+            <option value="space-between">space-between</option>
+            <option value="space-around">space-around</option>
+            <option value="space-evenly">space-evenly</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fg_align">Align items</label>
+          <select id="fg_align">
+            <option value="stretch">stretch</option>
+            <option value="flex-start">flex-start</option>
+            <option value="center" selected>center</option>
+            <option value="flex-end">flex-end</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fg_gap">Gap (px)</label>
+          <input id="fg_gap" type="number" inputmode="decimal" min="0" value="12" />
+        </div>
+      </div>
+
+      <p class="note" id="fg_help" style="margin-top:6px;">
+        This tool generates container-level Flexbox CSS. Preview items are sample blocks used only for layout demonstration.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fg_generate">Generate Flexbox</button>
+        <button class="btn secondary" type="button" id="fg_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="fg_reset">Reset</button>
+      </div>
+
+      <div class="result" id="fg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="fg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="fg-preview-wrap" style="margin-top:16px;">
+        <div id="fg_preview" class="fg-preview">
+          <div class="fg-item">1</div>
+          <div class="fg-item">2</div>
+          <div class="fg-item">3</div>
+          <div class="fg-item">4</div>
+          <div class="fg-item">5</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="fg_css">CSS output</label>
+        <textarea id="fg_css" class="fg-code" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
+          <tbody id="fg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fg_privacy" style="margin-top:10px;">
+        Privacy: Flexbox generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose the Flexbox direction, wrap behavior, alignment rules, and gap size, then preview the layout and copy the generated CSS.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a centered horizontal button group</li>
+      <li>Preview a wrapping tag layout with gap spacing</li>
+      <li>Copy the flex container CSS into your component styles</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/css-grid-generator/">CSS Grid Generator</a></li>
+      <li><a href="/design-tools/border-radius-generator/">Border Radius Generator</a></li>
+      <li><a href="/design-tools/box-shadow-generator/">Box Shadow Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const directionEl = document.getElementById("fg_direction");
+  const wrapEl = document.getElementById("fg_wrap");
+  const justifyEl = document.getElementById("fg_justify");
+  const alignEl = document.getElementById("fg_align");
+  const gapEl = document.getElementById("fg_gap");
+  const generateBtn = document.getElementById("fg_generate");
+  const copyBtn = document.getElementById("fg_copy");
+  const resetBtn = document.getElementById("fg_reset");
+  const errEl = document.getElementById("fg_error");
+  const resultEl = document.getElementById("fg_result");
+  const previewEl = document.getElementById("fg_preview");
+  const cssEl = document.getElementById("fg_css");
+  const tbodyEl = document.getElementById("fg_tbody");
+
+  if (!directionEl || !wrapEl || !justifyEl || !alignEl || !gapEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !cssEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const gap = Number(String(gapEl.value || ""));
+    if (!Number.isFinite(gap) || gap < 0) {
+      showError("Gap must be 0 or more.");
+      return;
+    }
+
+    previewEl.style.flexDirection = String(directionEl.value || "row");
+    previewEl.style.flexWrap = String(wrapEl.value || "nowrap");
+    previewEl.style.justifyContent = String(justifyEl.value || "flex-start");
+    previewEl.style.alignItems = String(alignEl.value || "center");
+    previewEl.style.gap = gap + "px";
+
+    cssEl.value =
+`display: flex;
+flex-direction: ${String(directionEl.value)};
+flex-wrap: ${String(wrapEl.value)};
+justify-content: ${String(justifyEl.value)};
+align-items: ${String(alignEl.value)};
+gap: ${gap}px;`;
+
+    resultEl.innerHTML = "<strong>Flexbox CSS generated.</strong>";
+
+    fillTable([
+      ["Flex direction", String(directionEl.value)],
+      ["Flex wrap", String(wrapEl.value)],
+      ["Justify content", String(justifyEl.value)],
+      ["Align items", String(alignEl.value)],
+      ["Gap", gap + "px"],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!cssEl.value) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(cssEl.value);
+      resultEl.innerHTML = "<strong>Copied Flexbox CSS.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    directionEl.value = "row";
+    wrapEl.value = "nowrap";
+    justifyEl.value = "flex-start";
+    alignEl.value = "center";
+    gapEl.value = "12";
+    update();
+  }
+
+  generateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetAll);
+
+  [directionEl, wrapEl, justifyEl, alignEl, gapEl].forEach(function (el) {
+    el.addEventListener("input", update);
+    el.addEventListener("change", update);
+  });
+
+  update();
+});
+</script>
