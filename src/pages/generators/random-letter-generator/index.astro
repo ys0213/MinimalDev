@@ -1,0 +1,314 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Letter Generator",
+  description:
+    "Generate random letters with uppercase/lowercase options, quantity controls, grouping settings, and FAQ schema.",
+  href: "/generators/random-letter-generator/",
+  order: 140,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-letter-generator/";
+
+const faqs = [
+  {
+    q: "What does this random letter generator do?",
+    a: "It generates random alphabet letters based on the case and output settings you choose.",
+  },
+  {
+    q: "Can I generate uppercase or lowercase letters only?",
+    a: "Yes. You can generate uppercase only, lowercase only, or mixed-case results.",
+  },
+  {
+    q: "Can I output one letter per line or grouped text?",
+    a: "Yes. You can choose line-separated output or grouped string output.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Letter Generator — ${SITE_NAME}`}
+  description="Generate random letters with case options, output modes, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Letter Generator"
+  intro="Generate random letters for games, exercises, placeholders, testing, and educational activities."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-letter-generator">
+    <style is:inline>
+      .rlg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rlg-grid-2 > * {
+        min-width: 0;
+      }
+      #rlg_count,
+      #rlg_case,
+      #rlg_mode,
+      #rlg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rlg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (min-width: 760px) {
+        .rlg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rlg_help rlg_privacy">
+      <div class="rlg-grid-2">
+        <div class="field">
+          <label for="rlg_count">How many letters</label>
+          <input id="rlg_count" type="number" inputmode="numeric" min="1" max="1000" value="20" />
+        </div>
+
+        <div class="field">
+          <label for="rlg_case">Letter case</label>
+          <select id="rlg_case">
+            <option value="mixed" selected>Mixed case</option>
+            <option value="upper">Uppercase only</option>
+            <option value="lower">Lowercase only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rlg_mode">Output mode</label>
+        <select id="rlg_mode">
+          <option value="lines" selected>One per line</option>
+          <option value="spaced">Single line with spaces</option>
+          <option value="joined">Joined string</option>
+        </select>
+      </div>
+
+      <p class="note" id="rlg_help" style="margin-top:6px;">
+        This tool generates alphabet letters A-Z or a-z depending on the selected case mode.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rlg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rlg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rlg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rlg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rlg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rlg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rlg_output">Generated letters</label>
+        <textarea id="rlg_output" class="rlg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rlg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rlg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated letters are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many letters you want, pick the letter case, decide how to format the output, and generate the result instantly.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate random uppercase letters for quiz cards</li>
+      <li>Generate a joined string for placeholder tokens</li>
+      <li>Generate one-letter-per-line output for classroom or game use</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-number-list/">Random Number List</a></li>
+      <li><a href="/generators/random-hex-generator/">Random Hex Generator</a></li>
+      <li><a href="/generators/random-color-generator/">Random Color Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rlg_count");
+  const caseEl = document.getElementById("rlg_case");
+  const modeEl = document.getElementById("rlg_mode");
+  const generateBtn = document.getElementById("rlg_generate");
+  const copyBtn = document.getElementById("rlg_copy");
+  const clearBtn = document.getElementById("rlg_clear");
+  const errEl = document.getElementById("rlg_error");
+  const resultEl = document.getElementById("rlg_result");
+  const cardsEl = document.getElementById("rlg_cards");
+  const outputEl = document.getElementById("rlg_output");
+  const tbodyEl = document.getElementById("rlg_tbody");
+
+  if (!countEl || !caseEl || !modeEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randLetter(caseMode) {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+
+    if (caseMode === "upper") return upper[Math.floor(Math.random() * upper.length)];
+    if (caseMode === "lower") return lower[Math.floor(Math.random() * lower.length)];
+
+    const useUpper = Math.random() < 0.5;
+    const source = useUpper ? upper : lower;
+    return source[Math.floor(Math.random() * source.length)];
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateLetters() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const caseMode = String(caseEl.value || "mixed");
+    const mode = String(modeEl.value || "lines");
+
+    if (!Number.isInteger(count) || count < 1 || count > 1000) {
+      showError("Please enter a quantity from 1 to 1000.");
+      return;
+    }
+
+    const letters = [];
+    for (let i = 0; i < count; i++) {
+      letters.push(randLetter(caseMode));
+    }
+
+    if (mode === "joined") lastOutput = letters.join("");
+    else if (mode === "spaced") lastOutput = letters.join(" ");
+    else lastOutput = letters.join("\n");
+
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Letters generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Case: " + caseMode) +
+      badge("Mode: " + mode) +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Case mode", caseMode],
+      ["Output mode", mode],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated letters to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated letters.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "20";
+    caseEl.value = "mixed";
+    modeEl.value = "lines";
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateLetters);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

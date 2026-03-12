@@ -1,0 +1,347 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Number List",
+  description:
+    "Generate random number lists with min, max, count, uniqueness, and sorting options, plus FAQ schema.",
+  href: "/generators/random-number-list/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-number-list/";
+
+const faqs = [
+  {
+    q: "What does this random number list generator do?",
+    a: "It generates a list of random integers within a selected minimum and maximum range.",
+  },
+  {
+    q: "Can I avoid duplicates?",
+    a: "Yes. You can require unique numbers as long as the selected range is large enough.",
+  },
+  {
+    q: "Can I sort the results?",
+    a: "Yes. You can keep the original random order or sort ascending or descending.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Number List — ${SITE_NAME}`}
+  description="Generate random number lists with range, uniqueness, sorting options, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Number List"
+  intro="Generate random integer lists for testing, sampling, mock data, and spreadsheet workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-number-list">
+    <style is:inline>
+      .rnl-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rnl-grid-2 > * {
+        min-width: 0;
+      }
+      #rnl_min,
+      #rnl_max,
+      #rnl_count,
+      #rnl_sort,
+      #rnl_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rnl-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (min-width: 760px) {
+        .rnl-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rnl_help rnl_privacy">
+      <div class="rnl-grid-2">
+        <div class="field">
+          <label for="rnl_min">Minimum value</label>
+          <input id="rnl_min" type="number" inputmode="numeric" value="1" />
+        </div>
+
+        <div class="field">
+          <label for="rnl_max">Maximum value</label>
+          <input id="rnl_max" type="number" inputmode="numeric" value="100" />
+        </div>
+      </div>
+
+      <div class="rnl-grid-2">
+        <div class="field">
+          <label for="rnl_count">How many numbers</label>
+          <input id="rnl_count" type="number" inputmode="numeric" min="1" max="1000" value="10" />
+        </div>
+
+        <div class="field">
+          <label for="rnl_sort">Sort order</label>
+          <select id="rnl_sort">
+            <option value="none" selected>Random order</option>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="rnl_unique" type="checkbox" />
+          Unique values only
+        </label>
+      </div>
+
+      <p class="note" id="rnl_help" style="margin-top:6px;">
+        Unique mode requires the selected range to be large enough for the requested count.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rnl_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rnl_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rnl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rnl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rnl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rnl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rnl_output">Generated number list</label>
+        <textarea id="rnl_output" class="rnl-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rnl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rnl_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated numbers are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Set the minimum and maximum values, choose how many numbers you want, optionally require uniqueness, and generate a list in random or sorted order.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 random numbers between 1 and 100</li>
+      <li>Generate a unique list of 6 lottery-style numbers</li>
+      <li>Generate sorted numeric samples for spreadsheet testing</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-letter-generator/">Random Letter Generator</a></li>
+      <li><a href="/utility/random-number-generator/">Random Number Generator</a></li>
+      <li><a href="/generators/random-ip-generator/">Random IP Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const minEl = document.getElementById("rnl_min");
+  const maxEl = document.getElementById("rnl_max");
+  const countEl = document.getElementById("rnl_count");
+  const sortEl = document.getElementById("rnl_sort");
+  const uniqueEl = document.getElementById("rnl_unique");
+  const generateBtn = document.getElementById("rnl_generate");
+  const copyBtn = document.getElementById("rnl_copy");
+  const clearBtn = document.getElementById("rnl_clear");
+  const errEl = document.getElementById("rnl_error");
+  const resultEl = document.getElementById("rnl_result");
+  const cardsEl = document.getElementById("rnl_cards");
+  const outputEl = document.getElementById("rnl_output");
+  const tbodyEl = document.getElementById("rnl_tbody");
+
+  if (!minEl || !maxEl || !countEl || !sortEl || !uniqueEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateNumbers() {
+    resetOutput();
+
+    const min = toInt(minEl.value);
+    const max = toInt(maxEl.value);
+    const count = toInt(countEl.value);
+    const sort = String(sortEl.value || "none");
+    const unique = !!uniqueEl.checked;
+
+    if (!Number.isInteger(min) || !Number.isInteger(max)) {
+      showError("Please enter valid integer minimum and maximum values.");
+      return;
+    }
+    if (min > max) {
+      showError("Minimum value must be less than or equal to maximum value.");
+      return;
+    }
+    if (!Number.isInteger(count) || count < 1 || count > 1000) {
+      showError("Please enter a quantity from 1 to 1000.");
+      return;
+    }
+
+    const span = max - min + 1;
+    if (unique && count > span) {
+      showError("Unique mode requires the requested count to be less than or equal to the size of the selected range.");
+      return;
+    }
+
+    let results = [];
+
+    if (unique) {
+      const set = new Set();
+      while (set.size < count) {
+        set.add(randInt(min, max));
+      }
+      results = Array.from(set);
+    } else {
+      for (let i = 0; i < count; i++) {
+        results.push(randInt(min, max));
+      }
+    }
+
+    if (sort === "asc") results.sort(function (a, b) { return a - b; });
+    if (sort === "desc") results.sort(function (a, b) { return b - a; });
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Numbers generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Range: " + min + " to " + max) +
+      badge(unique ? "Unique" : "Duplicates allowed") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Minimum", String(min)],
+      ["Maximum", String(max)],
+      ["Unique mode", unique ? "Yes" : "No"],
+      ["Sort order", sort],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated numbers to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated numbers.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    minEl.value = "1";
+    maxEl.value = "100";
+    countEl.value = "10";
+    sortEl.value = "none";
+    uniqueEl.checked = false;
+    resetOutput();
+    minEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateNumbers);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

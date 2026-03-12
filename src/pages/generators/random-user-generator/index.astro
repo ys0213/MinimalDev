@@ -1,0 +1,312 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random User Generator",
+  description:
+    "Generate random mock user records with names, usernames, emails, and IDs, plus validation, result cards, and FAQ schema.",
+  href: "/generators/random-user-generator/",
+  order: 100,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-user-generator/";
+
+const faqs = [
+  {
+    q: "What does this random user generator do?",
+    a: "It generates mock user records including names, usernames, emails, and numeric IDs for testing and placeholder data.",
+  },
+  {
+    q: "Are these real users?",
+    a: "No. These are randomly generated placeholder records for testing, demos, and UI development.",
+  },
+  {
+    q: "Can I generate multiple users at once?",
+    a: "Yes. You can choose how many mock users to generate in one batch.",
+  },
+  {
+    q: "Is any user data stored?",
+    a: "No. Everything runs locally in your browser and no generated data is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random User Generator — ${SITE_NAME}`}
+  description="Generate random mock users with names, usernames, emails, and IDs, plus FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random User Generator"
+  intro="Generate mock user records for testing, demo accounts, seed data, and UI previews."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-user-generator">
+    <style is:inline>
+      .rug-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rug-grid-2 > * {
+        min-width: 0;
+      }
+      #rug_count,
+      #rug_domain,
+      #rug_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rug-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (min-width: 760px) {
+        .rug-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rug_help rug_privacy">
+      <div class="rug-grid-2">
+        <div class="field">
+          <label for="rug_count">How many users</label>
+          <input id="rug_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+
+        <div class="field">
+          <label for="rug_domain">Email domain style</label>
+          <select id="rug_domain">
+            <option value="example" selected>example.com</option>
+            <option value="sample">sample domains</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="rug_help" style="margin-top:6px;">
+        Each generated record includes a name, username, email, and ID. These are mock records only.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rug_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rug_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rug_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rug_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rug_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rug_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rug_output">Generated user records</label>
+        <textarea id="rug_output" class="rug-output" rows="14" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rug_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rug_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated user records are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many users you want, select an email domain style, and generate mock user records for demos, seed data, and interface testing.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 mock users for admin dashboard testing</li>
+      <li>Generate placeholder users for demo account tables</li>
+      <li>Copy mock records into spreadsheets or fixtures</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-name-generator/">Random Name Generator</a></li>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/generators/fake-email-generator/">Fake Email Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rug_count");
+  const domainEl = document.getElementById("rug_domain");
+  const generateBtn = document.getElementById("rug_generate");
+  const copyBtn = document.getElementById("rug_copy");
+  const clearBtn = document.getElementById("rug_clear");
+  const errEl = document.getElementById("rug_error");
+  const resultEl = document.getElementById("rug_result");
+  const cardsEl = document.getElementById("rug_cards");
+  const outputEl = document.getElementById("rug_output");
+  const tbodyEl = document.getElementById("rug_tbody");
+
+  if (!countEl || !domainEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const firstNames = ["Alex","Emma","Liam","Olivia","Noah","Ava","Mason","Sophia","Lucas","Mia","Leo","Amelia","Jack","Ella","Henry","Nora"];
+  const lastNames = ["Smith","Johnson","Brown","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Clark","Lewis","Walker","Hall","Young","Allen"];
+  const sampleDomains = ["samplemail.test","demobox.dev","mockuser.app","placeholder.net","examplemail.org"];
+
+  let lastOutput = "";
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makeUser(index, domainMode) {
+    const first = randItem(firstNames);
+    const last = randItem(lastNames);
+    const fullName = first + " " + last;
+    const username = (first + "." + last + index).toLowerCase();
+    const domain = domainMode === "sample" ? randItem(sampleDomains) : "example.com";
+    const email = username + "@" + domain;
+    const id = 100000 + Math.floor(Math.random() * 900000);
+
+    return {
+      id: id,
+      name: fullName,
+      username: username,
+      email: email
+    };
+  }
+
+  function generateUsers() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const domainMode = String(domainEl.value || "example");
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const users = [];
+    for (let i = 1; i <= count; i++) {
+      users.push(makeUser(i, domainMode));
+    }
+
+    lastOutput = users.map(function (u) {
+      return "ID: " + u.id + "\nName: " + u.name + "\nUsername: " + u.username + "\nEmail: " + u.email;
+    }).join("\n\n---\n\n");
+
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>User records generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Email domain: " + domainMode) +
+      badge("Mock data") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Email domain style", domainMode],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated user records to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated user records.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "10";
+    domainEl.value = "example";
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateUsers);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

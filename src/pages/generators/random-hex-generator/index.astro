@@ -1,0 +1,305 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Hex Generator",
+  description:
+    "Generate random hexadecimal strings with length controls, uppercase options, validation, and FAQ schema.",
+  href: "/generators/random-hex-generator/",
+  order: 110,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-hex-generator/";
+
+const faqs = [
+  {
+    q: "What does this random hex generator do?",
+    a: "It generates random hexadecimal strings using digits 0-9 and letters A-F.",
+  },
+  {
+    q: "Can I choose the string length?",
+    a: "Yes. You can set both the number of results and the length of each hexadecimal string.",
+  },
+  {
+    q: "Can I output lowercase or uppercase hex?",
+    a: "Yes. You can choose uppercase or lowercase formatting.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Hex Generator — ${SITE_NAME}`}
+  description="Generate random hexadecimal strings with configurable length, formatting options, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Hex Generator"
+  intro="Generate random hexadecimal strings for IDs, testing, mock values, and development workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-hex-generator">
+    <style is:inline>
+      .rhg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rhg-grid-2 > * {
+        min-width: 0;
+      }
+      #rhg_count,
+      #rhg_length,
+      #rhg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rhg-output {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (min-width: 760px) {
+        .rhg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rhg_help rhg_privacy">
+      <div class="rhg-grid-2">
+        <div class="field">
+          <label for="rhg_count">How many hex strings</label>
+          <input id="rhg_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+
+        <div class="field">
+          <label for="rhg_length">Hex string length</label>
+          <input id="rhg_length" type="number" inputmode="numeric" min="1" max="256" value="8" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>
+          <input id="rhg_upper" type="checkbox" checked />
+          Uppercase output
+        </label>
+      </div>
+
+      <p class="note" id="rhg_help" style="margin-top:6px;">
+        Hexadecimal output uses only 0-9 and A-F (or a-f in lowercase mode).
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rhg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rhg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rhg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rhg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rhg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rhg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rhg_output">Generated hex strings</label>
+        <textarea id="rhg_output" class="rhg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rhg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rhg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many hex strings you want, set the length, choose the case format, and generate values instantly.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 short hex strings for mock IDs</li>
+      <li>Generate longer hex values for test tokens</li>
+      <li>Use uppercase mode for visual consistency in UI previews</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-color-generator/">Random Color Generator</a></li>
+      <li><a href="/developer-tools/hex-calculator/">Hex Calculator</a></li>
+      <li><a href="/developer-tools/number-base-converter/">Number Base Converter</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rhg_count");
+  const lengthEl = document.getElementById("rhg_length");
+  const upperEl = document.getElementById("rhg_upper");
+  const generateBtn = document.getElementById("rhg_generate");
+  const copyBtn = document.getElementById("rhg_copy");
+  const clearBtn = document.getElementById("rhg_clear");
+  const errEl = document.getElementById("rhg_error");
+  const resultEl = document.getElementById("rhg_result");
+  const cardsEl = document.getElementById("rhg_cards");
+  const outputEl = document.getElementById("rhg_output");
+  const tbodyEl = document.getElementById("rhg_tbody");
+
+  if (!countEl || !lengthEl || !upperEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateOne(length, upper) {
+    const chars = upper ? "0123456789ABCDEF" : "0123456789abcdef";
+    let out = "";
+    for (let i = 0; i < length; i++) {
+      out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return out;
+  }
+
+  function generateHex() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const length = toInt(lengthEl.value);
+    const upper = !!upperEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+    if (!Number.isInteger(length) || length < 1 || length > 256) {
+      showError("Please enter a hex length from 1 to 256.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      results.push(generateOne(length, upper));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Hex strings generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Length: " + length) +
+      badge(upper ? "Uppercase" : "Lowercase") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Hex length", String(length)],
+      ["Case", upper ? "Uppercase" : "Lowercase"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated hex strings to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated hex strings.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "10";
+    lengthEl.value = "8";
+    upperEl.checked = true;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateHex);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>
