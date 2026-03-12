@@ -61,6 +61,7 @@ const faqJsonLd = {
       .fg-grid-2 > * {
         min-width: 0;
       }
+
       #fg_direction,
       #fg_wrap,
       #fg_justify,
@@ -70,16 +71,30 @@ const faqJsonLd = {
         width: 100%;
         min-width: 0;
       }
+
       .fg-preview-wrap {
         border: 1px solid rgba(255,255,255,0.15);
         border-radius: 14px;
         padding: 16px;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
       }
+
       .fg-preview {
         display: flex;
         min-height: 220px;
+        width: 100%;
+        min-width: 100%;
+        box-sizing: border-box;
       }
+
+      .fg-preview.is-nowrap-row,
+      .fg-preview.is-nowrap-row-reverse {
+        width: max-content;
+        min-width: 100%;
+      }
+
       .fg-item {
         border-radius: 12px;
         background: rgba(6, 182, 212, 0.18);
@@ -88,18 +103,26 @@ const faqJsonLd = {
         align-items: center;
         justify-content: center;
         font-weight: 800;
-        min-width: 60px;
+        min-width: 52px;
         min-height: 60px;
         padding: 10px 14px;
+        box-sizing: border-box;
+        flex: 0 0 auto;
       }
+
       .fg-code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         white-space: pre-wrap;
         word-break: break-word;
       }
+
       @media (min-width: 900px) {
         .fg-grid-2 {
           grid-template-columns: 1fr 1fr;
+        }
+
+        .fg-item {
+          min-width: 60px;
         }
       }
     </style>
@@ -115,6 +138,7 @@ const faqJsonLd = {
             <option value="column-reverse">column-reverse</option>
           </select>
         </div>
+
         <div class="field">
           <label for="fg_wrap">Flex wrap</label>
           <select id="fg_wrap">
@@ -123,6 +147,7 @@ const faqJsonLd = {
             <option value="wrap-reverse">wrap-reverse</option>
           </select>
         </div>
+
         <div class="field">
           <label for="fg_justify">Justify content</label>
           <select id="fg_justify">
@@ -134,6 +159,7 @@ const faqJsonLd = {
             <option value="space-evenly">space-evenly</option>
           </select>
         </div>
+
         <div class="field">
           <label for="fg_align">Align items</label>
           <select id="fg_align">
@@ -143,6 +169,7 @@ const faqJsonLd = {
             <option value="flex-end">flex-end</option>
           </select>
         </div>
+
         <div class="field">
           <label for="fg_gap">Gap (px)</label>
           <input id="fg_gap" type="number" inputmode="decimal" min="0" value="12" />
@@ -240,10 +267,12 @@ document.addEventListener("DOMContentLoaded", function () {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
+
   function showError(msg) {
     errEl.style.display = "block";
     errEl.textContent = msg;
   }
+
   function fillTable(rows) {
     tbodyEl.innerHTML = "";
     rows.forEach(function (row) {
@@ -258,36 +287,53 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function updatePreviewScrollMode(direction, wrap) {
+    previewEl.classList.remove("is-nowrap-row", "is-nowrap-row-reverse");
+
+    if (wrap === "nowrap" && direction === "row") {
+      previewEl.classList.add("is-nowrap-row");
+    } else if (wrap === "nowrap" && direction === "row-reverse") {
+      previewEl.classList.add("is-nowrap-row-reverse");
+    }
+  }
+
   function update() {
     clearError();
 
     const gap = Number(String(gapEl.value || ""));
+    const direction = String(directionEl.value || "row");
+    const wrap = String(wrapEl.value || "nowrap");
+    const justify = String(justifyEl.value || "flex-start");
+    const align = String(alignEl.value || "center");
+
     if (!Number.isFinite(gap) || gap < 0) {
       showError("Gap must be 0 or more.");
       return;
     }
 
-    previewEl.style.flexDirection = String(directionEl.value || "row");
-    previewEl.style.flexWrap = String(wrapEl.value || "nowrap");
-    previewEl.style.justifyContent = String(justifyEl.value || "flex-start");
-    previewEl.style.alignItems = String(alignEl.value || "center");
+    previewEl.style.flexDirection = direction;
+    previewEl.style.flexWrap = wrap;
+    previewEl.style.justifyContent = justify;
+    previewEl.style.alignItems = align;
     previewEl.style.gap = gap + "px";
+
+    updatePreviewScrollMode(direction, wrap);
 
     cssEl.value =
 `display: flex;
-flex-direction: ${String(directionEl.value)};
-flex-wrap: ${String(wrapEl.value)};
-justify-content: ${String(justifyEl.value)};
-align-items: ${String(alignEl.value)};
+flex-direction: ${direction};
+flex-wrap: ${wrap};
+justify-content: ${justify};
+align-items: ${align};
 gap: ${gap}px;`;
 
     resultEl.innerHTML = "<strong>Flexbox CSS generated.</strong>";
 
     fillTable([
-      ["Flex direction", String(directionEl.value)],
-      ["Flex wrap", String(wrapEl.value)],
-      ["Justify content", String(justifyEl.value)],
-      ["Align items", String(alignEl.value)],
+      ["Flex direction", direction],
+      ["Flex wrap", wrap],
+      ["Justify content", justify],
+      ["Align items", align],
       ["Gap", gap + "px"],
     ]);
   }
