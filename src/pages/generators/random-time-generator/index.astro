@@ -1,0 +1,336 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Time Generator",
+  description:
+    "Generate random times with range and format controls, plus validation, copy support, result cards, and FAQ schema.",
+  href: "/generators/random-time-generator/",
+  order: 80,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-time-generator/";
+
+const faqs = [
+  {
+    q: "What does this random time generator do?",
+    a: "It generates random times between a selected start time and end time.",
+  },
+  {
+    q: "Can I choose 12-hour or 24-hour format?",
+    a: "Yes. You can output times in either 24-hour or 12-hour format.",
+  },
+  {
+    q: "Can I generate multiple times at once?",
+    a: "Yes. You can choose how many random times to generate in one run.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Time generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Time Generator — ${SITE_NAME}`}
+  description="Generate random times within a selected range with 12-hour or 24-hour formatting and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Time Generator"
+  intro="Generate random times inside a selected time range for testing, demos, and mock scheduling workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-time-generator">
+    <style is:inline>
+      .rtg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rtg-grid-2 > * {
+        min-width: 0;
+      }
+      #rtg_start,
+      #rtg_end,
+      #rtg_count,
+      #rtg_format,
+      #rtg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rtg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rtg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rtg_help rtg_privacy">
+      <div class="rtg-grid-2">
+        <div class="field">
+          <label for="rtg_start">Start time</label>
+          <input id="rtg_start" type="time" step="60" />
+        </div>
+
+        <div class="field">
+          <label for="rtg_end">End time</label>
+          <input id="rtg_end" type="time" step="60" />
+        </div>
+      </div>
+
+      <div class="rtg-grid-2">
+        <div class="field">
+          <label for="rtg_count">How many times</label>
+          <input id="rtg_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+
+        <div class="field">
+          <label for="rtg_format">Time format</label>
+          <select id="rtg_format">
+            <option value="24" selected>24-hour</option>
+            <option value="12">12-hour</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="rtg_help" style="margin-top:6px;">
+        The selected time range is inclusive. Start time must be earlier than or equal to end time.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rtg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rtg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rtg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rtg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rtg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rtg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rtg_output">Generated times</label>
+        <textarea id="rtg_output" class="rtg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rtg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rtg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated times are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick a start and end time, set how many random results you want, choose the output format, and generate a list instantly.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 random times between 09:00 and 18:00</li>
+      <li>Use 12-hour format for UI previews with AM/PM</li>
+      <li>Use 24-hour format for scheduling or test datasets</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-date-generator/">Random Date Generator</a></li>
+      <li><a href="/date-time/time-between-times/">Time Between Times</a></li>
+      <li><a href="/date-time/time-duration-calculator/">Time Duration Calculator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("rtg_start");
+  const endEl = document.getElementById("rtg_end");
+  const countEl = document.getElementById("rtg_count");
+  const formatEl = document.getElementById("rtg_format");
+  const generateBtn = document.getElementById("rtg_generate");
+  const copyBtn = document.getElementById("rtg_copy");
+  const clearBtn = document.getElementById("rtg_clear");
+  const errEl = document.getElementById("rtg_error");
+  const resultEl = document.getElementById("rtg_result");
+  const cardsEl = document.getElementById("rtg_cards");
+  const outputEl = document.getElementById("rtg_output");
+  const tbodyEl = document.getElementById("rtg_tbody");
+
+  if (!startEl || !endEl || !countEl || !formatEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function parseTimeToMinutes(value) {
+    const s = String(value || "").trim();
+    if (!/^\d{2}:\d{2}$/.test(s)) return NaN;
+    const parts = s.split(":").map(Number);
+    if (parts.length !== 2) return NaN;
+    const h = parts[0];
+    const m = parts[1];
+    if (!Number.isInteger(h) || !Number.isInteger(m) || h < 0 || h > 23 || m < 0 || m > 59) return NaN;
+    return h * 60 + m;
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function formatTime(totalMinutes, mode) {
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (mode === "12") {
+      const suffix = h >= 12 ? "PM" : "AM";
+      const hh = ((h + 11) % 12) + 1;
+      return hh + ":" + String(m).padStart(2, "0") + " " + suffix;
+    }
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateTimes() {
+    resetOutput();
+
+    const start = parseTimeToMinutes(startEl.value);
+    const end = parseTimeToMinutes(endEl.value);
+    const count = toCount(countEl.value);
+    const mode = String(formatEl.value || "24");
+
+    if (!Number.isInteger(start) || !Number.isInteger(end)) {
+      showError("Please select both a valid start time and end time.");
+      return;
+    }
+    if (start > end) {
+      showError("Start time must be earlier than or equal to end time.");
+      return;
+    }
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      const value = start + Math.floor(Math.random() * (end - start + 1));
+      results.push(formatTime(value, mode));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Times generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Format: " + (mode === "12" ? "12-hour" : "24-hour")) +
+      badge("Inclusive range") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Start time", formatTime(start, mode)],
+      ["End time", formatTime(end, mode)],
+      ["Format", mode === "12" ? "12-hour" : "24-hour"],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated times to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated times.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    startEl.value = "";
+    endEl.value = "";
+    countEl.value = "10";
+    formatEl.value = "24";
+    resetOutput();
+    startEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateTimes);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

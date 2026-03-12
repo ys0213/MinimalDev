@@ -1,0 +1,322 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fake Address Generator",
+  description:
+    "Generate fake sample addresses for testing and placeholder use with country style options, quantity controls, result cards, and FAQ schema.",
+  href: "/generators/fake-address-generator/",
+  order: 20,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/fake-address-generator/";
+
+const faqs = [
+  {
+    q: "What does this fake address generator do?",
+    a: "It generates sample placeholder addresses for testing, mock data, and demo content.",
+  },
+  {
+    q: "Are these real addresses?",
+    a: "No. These are randomly assembled sample addresses intended for placeholder use, not real-world navigation or delivery.",
+  },
+  {
+    q: "Can I generate more than one address?",
+    a: "Yes. You can choose the number of addresses to generate.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Address generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Fake Address Generator — ${SITE_NAME}`}
+  description="Generate fake sample addresses for testing, demos, and placeholder data with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fake Address Generator"
+  intro="Generate fake placeholder addresses for testing forms, account records, demos, and mock datasets."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="fake-address-generator">
+    <style is:inline>
+      .fag-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .fag-grid-2 > * {
+        min-width: 0;
+      }
+      #fag_style,
+      #fag_count,
+      #fag_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .fag-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .fag-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fag_help fag_privacy">
+      <div class="fag-grid-2">
+        <div class="field">
+          <label for="fag_style">Address style</label>
+          <select id="fag_style">
+            <option value="us" selected>US-style</option>
+            <option value="intl">Generic international style</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fag_count">How many addresses</label>
+          <input id="fag_count" type="number" inputmode="numeric" min="1" max="50" value="5" />
+        </div>
+      </div>
+
+      <p class="note" id="fag_help" style="margin-top:6px;">
+        These are placeholder addresses only. Do not use them as real mailing or billing information.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fag_generate">Generate</button>
+        <button class="btn secondary" type="button" id="fag_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="fag_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fag_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="fag_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="fag_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="fag_output">Generated addresses</label>
+        <textarea id="fag_output" class="fag-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="fag_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fag_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose an address style, set how many results you want, and generate placeholder addresses for testing or demo purposes.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 5 US-style addresses for signup form testing</li>
+      <li>Generate generic international-style addresses for UI demos</li>
+      <li>Use copied output in spreadsheet imports or test fixtures</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/fake-phone-generator/">Fake Phone Generator</a></li>
+      <li><a href="/generators/fake-email-generator/">Fake Email Generator</a></li>
+      <li><a href="/generators/random-user-generator/">Random User Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const styleEl = document.getElementById("fag_style");
+  const countEl = document.getElementById("fag_count");
+  const generateBtn = document.getElementById("fag_generate");
+  const copyBtn = document.getElementById("fag_copy");
+  const clearBtn = document.getElementById("fag_clear");
+  const errEl = document.getElementById("fag_error");
+  const resultEl = document.getElementById("fag_result");
+  const cardsEl = document.getElementById("fag_cards");
+  const outputEl = document.getElementById("fag_output");
+  const tbodyEl = document.getElementById("fag_tbody");
+
+  if (!styleEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const streets = ["Oak","Maple","Pine","Cedar","Elm","Lake","Hill","River","Sunset","Park","Main","Highland","Willow","Forest","Valley"];
+  const suffixes = ["St","Ave","Rd","Blvd","Ln","Dr","Way","Ct"];
+  const cities = ["Springfield","Riverton","Brookfield","Fairview","Georgetown","Madison","Franklin","Clinton","Ashland","Kingston"];
+  const states = ["CA","TX","FL","NY","WA","IL","GA","NC","AZ","CO"];
+  const countries = ["United States","Canada","United Kingdom","Germany","Australia","Japan"];
+  const regions = ["North","South","East","West","Central"];
+  const postcodes = ["10001","30301","60601","73301","85001","98101","20001","02108","33101","15201"];
+
+  let lastOutput = "";
+
+  function randomItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makeAddress(style) {
+    if (style === "intl") {
+      return (
+        randomInt(1, 999) + " " + randomItem(streets) + " " + randomItem(suffixes) + "\n" +
+        randomItem(cities) + ", " + randomItem(regions) + " Region\n" +
+        randomItem(postcodes) + "\n" +
+        randomItem(countries)
+      );
+    }
+
+    return (
+      randomInt(1, 9999) + " " + randomItem(streets) + " " + randomItem(suffixes) + "\n" +
+      randomItem(cities) + ", " + randomItem(states) + " " + randomItem(postcodes) + "\n" +
+      "United States"
+    );
+  }
+
+  function generateAddresses() {
+    resetOutput();
+
+    const style = String(styleEl.value || "us");
+    const count = toCount(countEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 50) {
+      showError("Please enter a quantity from 1 to 50.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      results.push(makeAddress(style));
+    }
+
+    lastOutput = results.join("\n\n---\n\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Addresses generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Style: " + style) +
+      badge("Count: " + count) +
+      badge("Placeholder data") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Address style", style],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated addresses to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated addresses.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    styleEl.value = "us";
+    countEl.value = "5";
+    resetOutput();
+    styleEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateAddresses);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

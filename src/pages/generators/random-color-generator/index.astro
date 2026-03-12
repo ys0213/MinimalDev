@@ -1,0 +1,373 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Color Generator",
+  description:
+    "Generate random HEX, RGB, and HSL colors with quantity controls, preview cards, copy support, and FAQ schema.",
+  href: "/generators/random-color-generator/",
+  order: 60,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-color-generator/";
+
+const faqs = [
+  {
+    q: "What does this random color generator do?",
+    a: "It generates random colors and shows them in HEX, RGB, and HSL formats.",
+  },
+  {
+    q: "Can I generate more than one color at once?",
+    a: "Yes. You can create a list of random colors in one run.",
+  },
+  {
+    q: "Can I copy the generated colors?",
+    a: "Yes. The output list can be copied directly after generation.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Colors are generated locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Color Generator — ${SITE_NAME}`}
+  description="Generate random HEX, RGB, and HSL colors with previews, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Color Generator"
+  intro="Generate random colors for UI mockups, design testing, themes, and creative workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-color-generator">
+    <style is:inline>
+      .rcg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rcg-grid-2 > * {
+        min-width: 0;
+      }
+      #rcg_count,
+      #rcg_format,
+      #rcg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rcg-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      .rcg-swatch {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .rcg-swatch-color {
+        height: 72px;
+      }
+      .rcg-swatch-meta {
+        padding: 10px;
+        font-size: 13px;
+        word-break: break-word;
+      }
+      .rcg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (min-width: 760px) {
+        .rcg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rcg_help rcg_privacy">
+      <div class="rcg-grid-2">
+        <div class="field">
+          <label for="rcg_count">How many colors</label>
+          <input id="rcg_count" type="number" inputmode="numeric" min="1" max="50" value="8" />
+        </div>
+
+        <div class="field">
+          <label for="rcg_format">Primary output format</label>
+          <select id="rcg_format">
+            <option value="hex" selected>HEX</option>
+            <option value="rgb">RGB</option>
+            <option value="hsl">HSL</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="rcg_help" style="margin-top:6px;">
+        Each generated color includes a preview and values in multiple formats.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rcg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rcg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rcg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rcg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rcg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rcg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="rcg_preview" style="margin-top:16px; display:none;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rcg_output">Generated color list</label>
+        <textarea id="rcg_output" class="rcg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rcg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rcg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated colors are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many colors to generate, select a primary output format, and create a random palette with previews and copyable values.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 8 colors for a mock design palette</li>
+      <li>Generate HEX values for quick CSS use</li>
+      <li>Use RGB or HSL values for design tooling and color experiments</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-hex-generator/">Random Hex Generator</a></li>
+      <li><a href="/generators/random-letter-generator/">Random Letter Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rcg_count");
+  const formatEl = document.getElementById("rcg_format");
+  const generateBtn = document.getElementById("rcg_generate");
+  const copyBtn = document.getElementById("rcg_copy");
+  const clearBtn = document.getElementById("rcg_clear");
+  const errEl = document.getElementById("rcg_error");
+  const resultEl = document.getElementById("rcg_result");
+  const cardsEl = document.getElementById("rcg_cards");
+  const previewEl = document.getElementById("rcg_preview");
+  const outputEl = document.getElementById("rcg_output");
+  const tbodyEl = document.getElementById("rcg_tbody");
+
+  if (!countEl || !formatEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !previewEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function rand255() {
+    return Math.floor(Math.random() * 256);
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    previewEl.style.display = "none";
+    previewEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function rgbToHex(r, g, b) {
+    return "#" + [r, g, b].map(function (v) {
+      return v.toString(16).padStart(2, "0").toUpperCase();
+    }).join("");
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s;
+    const l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100)
+    };
+  }
+
+  function generateColors() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const format = String(formatEl.value || "hex");
+
+    if (!Number.isInteger(count) || count < 1 || count > 50) {
+      showError("Please enter a quantity from 1 to 50.");
+      return;
+    }
+
+    const rows = [];
+    const lines = [];
+
+    for (let i = 0; i < count; i++) {
+      const r = rand255();
+      const g = rand255();
+      const b = rand255();
+      const hex = rgbToHex(r, g, b);
+      const rgb = "rgb(" + r + ", " + g + ", " + b + ")";
+      const hslObj = rgbToHsl(r, g, b);
+      const hsl = "hsl(" + hslObj.h + ", " + hslObj.s + "%, " + hslObj.l + "%)";
+      rows.push({ hex, rgb, hsl });
+
+      lines.push(format === "rgb" ? rgb : format === "hsl" ? hsl : hex);
+    }
+
+    lastOutput = lines.join("\n");
+    outputEl.value = lastOutput;
+
+    previewEl.style.display = "block";
+    previewEl.innerHTML =
+      '<div class="rcg-preview-grid">' +
+      rows.map(function (row) {
+        return (
+          '<div class="rcg-swatch">' +
+            '<div class="rcg-swatch-color" style="background:' + row.hex + ';"></div>' +
+            '<div class="rcg-swatch-meta">' +
+              '<div><strong>' + row.hex + '</strong></div>' +
+              '<div>' + row.rgb + '</div>' +
+              '<div>' + row.hsl + '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join("") +
+      '</div>';
+
+    resultEl.innerHTML = "<strong>Colors generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Primary format: " + format.toUpperCase()) +
+      badge("Preview cards shown") +
+      '</div>';
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Primary output format", format.toUpperCase()],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated colors to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated colors.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "8";
+    formatEl.value = "hex";
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateColors);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

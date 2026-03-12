@@ -1,0 +1,303 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fake Email Generator",
+  description:
+    "Generate fake placeholder email addresses with domain and quantity options, validation, result cards, and FAQ schema.",
+  href: "/generators/fake-email-generator/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/fake-email-generator/";
+
+const faqs = [
+  {
+    q: "What does this fake email generator do?",
+    a: "It generates placeholder email-style addresses for testing, demos, and mock data.",
+  },
+  {
+    q: "Are these real inboxes?",
+    a: "No. These are fake placeholder addresses and should not be assumed to receive real email.",
+  },
+  {
+    q: "Can I choose a domain style?",
+    a: "Yes. You can use example-style domains or randomly combined sample domains.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Fake Email Generator — ${SITE_NAME}`}
+  description="Generate fake placeholder email addresses with quantity and domain controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fake Email Generator"
+  intro="Generate fake placeholder email addresses for testing forms, mock users, and demo content."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="fake-email-generator">
+    <style is:inline>
+      .feg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .feg-grid-2 > * {
+        min-width: 0;
+      }
+      #feg_style,
+      #feg_count,
+      #feg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .feg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .feg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="feg_help feg_privacy">
+      <div class="feg-grid-2">
+        <div class="field">
+          <label for="feg_style">Domain style</label>
+          <select id="feg_style">
+            <option value="example" selected>example.com style</option>
+            <option value="sample">sample domain mix</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="feg_count">How many email addresses</label>
+          <input id="feg_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+      </div>
+
+      <p class="note" id="feg_help" style="margin-top:6px;">
+        These are placeholder-style email addresses for testing and UI demos. They should not be treated as real inboxes.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="feg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="feg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="feg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="feg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="feg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="feg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="feg_output">Generated email addresses</label>
+        <textarea id="feg_output" class="feg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="feg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="feg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated email addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Select a domain style, choose how many addresses you want, and generate placeholder email data for testing or demos.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 example-style addresses for form testing</li>
+      <li>Generate sample-domain addresses for mock user lists</li>
+      <li>Copy results into fixture files or spreadsheets</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/generators/fake-phone-generator/">Fake Phone Generator</a></li>
+      <li><a href="/generators/random-user-generator/">Random User Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const styleEl = document.getElementById("feg_style");
+  const countEl = document.getElementById("feg_count");
+  const generateBtn = document.getElementById("feg_generate");
+  const copyBtn = document.getElementById("feg_copy");
+  const clearBtn = document.getElementById("feg_clear");
+  const errEl = document.getElementById("feg_error");
+  const resultEl = document.getElementById("feg_result");
+  const cardsEl = document.getElementById("feg_cards");
+  const outputEl = document.getElementById("feg_output");
+  const tbodyEl = document.getElementById("feg_tbody");
+
+  if (!styleEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const firstParts = ["alex","emma","liam","olivia","noah","ava","mason","mia","leo","grace","nora","henry","jack","amelia","lucas"];
+  const secondParts = ["smith","brown","jones","lee","clark","young","walker","hall","king","green","scott","allen","taylor","martin","wright"];
+  const domains = ["samplemail.test","demobox.dev","mockuser.app","placeholder.net","examplemail.org"];
+
+  let lastOutput = "";
+
+  function randomItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makeEmail(style, idx) {
+    const local = randomItem(firstParts) + "." + randomItem(secondParts) + idx;
+    const domain = style === "sample" ? randomItem(domains) : "example.com";
+    return local.toLowerCase() + "@" + domain;
+  }
+
+  function generateEmails() {
+    resetOutput();
+
+    const style = String(styleEl.value || "example");
+    const count = toCount(countEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 1; i <= count; i++) {
+      results.push(makeEmail(style, i));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Email addresses generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Style: " + style) +
+      badge("Count: " + count) +
+      badge(style === "example" ? "example.com domain" : "sample domains") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Domain style", style],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated email addresses to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated email addresses.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    styleEl.value = "example";
+    countEl.value = "10";
+    resetOutput();
+    styleEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateEmails);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

@@ -1,0 +1,308 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fake Phone Generator",
+  description:
+    "Generate fake sample phone numbers with style controls, quantity settings, validation, result cards, and FAQ schema.",
+  href: "/generators/fake-phone-generator/",
+  order: 30,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/fake-phone-generator/";
+
+const faqs = [
+  {
+    q: "What does this fake phone generator do?",
+    a: "It generates placeholder phone numbers for testing, demos, and mock user data.",
+  },
+  {
+    q: "Are these real phone numbers?",
+    a: "No. These are sample-style numbers intended for placeholder use and should not be treated as contactable numbers.",
+  },
+  {
+    q: "Can I choose a format?",
+    a: "Yes. You can generate US-style, international-style, or mixed sample formats.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Fake Phone Generator — ${SITE_NAME}`}
+  description="Generate fake sample phone numbers with format controls, quantity options, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fake Phone Generator"
+  intro="Generate fake placeholder phone numbers for demos, testing, mock accounts, and UI previews."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="fake-phone-generator">
+    <style is:inline>
+      .fpg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .fpg-grid-2 > * {
+        min-width: 0;
+      }
+      #fpg_style,
+      #fpg_count,
+      #fpg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .fpg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .fpg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fpg_help fpg_privacy">
+      <div class="fpg-grid-2">
+        <div class="field">
+          <label for="fpg_style">Phone format</label>
+          <select id="fpg_style">
+            <option value="us" selected>US-style</option>
+            <option value="intl">International-style</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fpg_count">How many phone numbers</label>
+          <input id="fpg_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+      </div>
+
+      <p class="note" id="fpg_help" style="margin-top:6px;">
+        Generated results are placeholder-style numbers for testing and demos. They are not verified real contact numbers.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="fpg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="fpg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="fpg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fpg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="fpg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="fpg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="fpg_output">Generated phone numbers</label>
+        <textarea id="fpg_output" class="fpg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="fpg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="fpg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated phone numbers are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a sample phone number style, set the number of results, and generate placeholder contact values for testing and display use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 US-style sample phone numbers</li>
+      <li>Generate international-style numbers for profile mockups</li>
+      <li>Use mixed mode for more varied demo data</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/fake-email-generator/">Fake Email Generator</a></li>
+      <li><a href="/generators/fake-address-generator/">Fake Address Generator</a></li>
+      <li><a href="/generators/random-user-generator/">Random User Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const styleEl = document.getElementById("fpg_style");
+  const countEl = document.getElementById("fpg_count");
+  const generateBtn = document.getElementById("fpg_generate");
+  const copyBtn = document.getElementById("fpg_copy");
+  const clearBtn = document.getElementById("fpg_clear");
+  const errEl = document.getElementById("fpg_error");
+  const resultEl = document.getElementById("fpg_result");
+  const cardsEl = document.getElementById("fpg_cards");
+  const outputEl = document.getElementById("fpg_output");
+  const tbodyEl = document.getElementById("fpg_tbody");
+
+  if (!styleEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function usPhone() {
+    return "(" + randomInt(200, 989) + ") " + randomInt(200, 989) + "-" + String(randomInt(0, 9999)).padStart(4, "0");
+  }
+
+  function intlPhone() {
+    return "+" + randomInt(1, 99) + " " + randomInt(100, 999) + " " + randomInt(100, 999) + " " + String(randomInt(0, 9999)).padStart(4, "0");
+  }
+
+  function mixedPhone() {
+    return Math.random() < 0.5 ? usPhone() : intlPhone();
+  }
+
+  function generatePhones() {
+    resetOutput();
+
+    const style = String(styleEl.value || "us");
+    const count = toCount(countEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      if (style === "intl") results.push(intlPhone());
+      else if (style === "mixed") results.push(mixedPhone());
+      else results.push(usPhone());
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Phone numbers generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Style: " + style) +
+      badge("Count: " + count) +
+      badge(style === "mixed" ? "Mixed sample set" : "Single style set") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Phone style", style],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated phone numbers to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated phone numbers.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    styleEl.value = "us";
+    countEl.value = "10";
+    resetOutput();
+    styleEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generatePhones);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

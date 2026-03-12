@@ -1,0 +1,317 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Date Generator",
+  description:
+    "Generate random dates within a selected range, with validation, result cards, copy support, and FAQ schema.",
+  href: "/generators/random-date-generator/",
+  order: 70,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-date-generator/";
+
+const faqs = [
+  {
+    q: "What does this random date generator do?",
+    a: "It generates random dates between a start date and an end date that you choose.",
+  },
+  {
+    q: "Can I generate more than one date at a time?",
+    a: "Yes. You can choose how many random dates to generate.",
+  },
+  {
+    q: "Are the generated dates inclusive of the range?",
+    a: "Yes. The tool generates dates within the selected range, including both endpoints.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Date generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Date Generator — ${SITE_NAME}`}
+  description="Generate random dates within a date range with validation, copy support, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Date Generator"
+  intro="Generate random dates between two selected dates for testing, mock data, and planning demos."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-date-generator">
+    <style is:inline>
+      .rdg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rdg-grid-2 > * {
+        min-width: 0;
+      }
+      #rdg_start,
+      #rdg_end,
+      #rdg_count,
+      #rdg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rdg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rdg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rdg_help rdg_privacy">
+      <div class="rdg-grid-2">
+        <div class="field">
+          <label for="rdg_start">Start date</label>
+          <input id="rdg_start" type="date" inputmode="none" />
+        </div>
+
+        <div class="field">
+          <label for="rdg_end">End date</label>
+          <input id="rdg_end" type="date" inputmode="none" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rdg_count">How many dates</label>
+        <input id="rdg_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+      </div>
+
+      <p class="note" id="rdg_help" style="margin-top:6px;">
+        Select a valid start and end date. The generator includes both range endpoints.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rdg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rdg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rdg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rdg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rdg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rdg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rdg_output">Generated dates</label>
+        <textarea id="rdg_output" class="rdg-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rdg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rdg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated dates are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick a start date, pick an end date, set how many results you want, and generate random dates across the selected range.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 dates for sample records within a calendar year</li>
+      <li>Create mock event dates for testing filters and dashboards</li>
+      <li>Produce random date values for spreadsheets and fixtures</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-time-generator/">Random Time Generator</a></li>
+      <li><a href="/date-time/date-difference-calculator/">Date Difference Calculator</a></li>
+      <li><a href="/date-time/week-number-calculator/">Week Number Calculator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("rdg_start");
+  const endEl = document.getElementById("rdg_end");
+  const countEl = document.getElementById("rdg_count");
+  const generateBtn = document.getElementById("rdg_generate");
+  const copyBtn = document.getElementById("rdg_copy");
+  const clearBtn = document.getElementById("rdg_clear");
+  const errEl = document.getElementById("rdg_error");
+  const resultEl = document.getElementById("rdg_result");
+  const cardsEl = document.getElementById("rdg_cards");
+  const outputEl = document.getElementById("rdg_output");
+  const tbodyEl = document.getElementById("rdg_tbody");
+
+  if (!startEl || !endEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function parseISODate(s) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s))) return null;
+    const d = new Date(s + "T00:00:00");
+    if (!Number.isFinite(d.getTime())) return null;
+    return d;
+  }
+
+  function toISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateDates() {
+    resetOutput();
+
+    const start = parseISODate(startEl.value);
+    const end = parseISODate(endEl.value);
+    const count = toCount(countEl.value);
+
+    if (!start || !end) {
+      showError("Please select both a valid start date and end date.");
+      return;
+    }
+    if (start.getTime() > end.getTime()) {
+      showError("Start date must be earlier than or equal to end date.");
+      return;
+    }
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const spanDays = Math.floor((end.getTime() - start.getTime()) / dayMs);
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      const offset = Math.floor(Math.random() * (spanDays + 1));
+      results.push(toISO(new Date(start.getTime() + offset * dayMs)));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Dates generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Range days: " + (spanDays + 1)) +
+      badge("Inclusive range") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Start date", toISO(start)],
+      ["End date", toISO(end)],
+      ["Range days", String(spanDays + 1)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated dates to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated dates.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    startEl.value = "";
+    endEl.value = "";
+    countEl.value = "10";
+    resetOutput();
+    startEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateDates);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

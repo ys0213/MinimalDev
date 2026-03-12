@@ -1,0 +1,326 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random IP Generator",
+  description:
+    "Generate random IPv4 addresses with public/private filtering, quantity controls, validation, and FAQ schema.",
+  href: "/generators/random-ip-generator/",
+  order: 90,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-ip-generator/";
+
+const faqs = [
+  {
+    q: "What does this random IP generator do?",
+    a: "It generates random IPv4 addresses for testing, demos, and placeholder network data.",
+  },
+  {
+    q: "Can I generate private or public-style IPs only?",
+    a: "Yes. You can choose all IPv4 values, private-range addresses, or public-style addresses that avoid the most common private ranges.",
+  },
+  {
+    q: "Are these real assigned IP addresses?",
+    a: "No. These are randomly generated address strings for testing and placeholder use.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random IP Generator — ${SITE_NAME}`}
+  description="Generate random IPv4 addresses with public/private filtering, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random IP Generator"
+  intro="Generate random IPv4 addresses for test data, demos, placeholder systems, and networking UI mockups."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-ip-generator">
+    <style is:inline>
+      .rig-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rig-grid-2 > * {
+        min-width: 0;
+      }
+      #rig_mode,
+      #rig_count,
+      #rig_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rig-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rig-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rig_help rig_privacy">
+      <div class="rig-grid-2">
+        <div class="field">
+          <label for="rig_mode">Address type</label>
+          <select id="rig_mode">
+            <option value="all" selected>All IPv4</option>
+            <option value="private">Private ranges only</option>
+            <option value="public">Public-style only</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rig_count">How many IP addresses</label>
+          <input id="rig_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+      </div>
+
+      <p class="note" id="rig_help" style="margin-top:6px;">
+        Public-style mode avoids the most common private ranges. These addresses are for testing and placeholder use only.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rig_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rig_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rig_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rig_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rig_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rig_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rig_output">Generated IP addresses</label>
+        <textarea id="rig_output" class="rig-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rig_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rig_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated IP addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose whether you want all IPv4 addresses, private-only ranges, or public-style results, then generate a list for testing or demo purposes.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate private IPs for local network UI testing</li>
+      <li>Generate public-style IPs for placeholder API responses</li>
+      <li>Generate mixed IPv4 values for tables and dashboards</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-number-list/">Random Number List</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("rig_mode");
+  const countEl = document.getElementById("rig_count");
+  const generateBtn = document.getElementById("rig_generate");
+  const copyBtn = document.getElementById("rig_copy");
+  const clearBtn = document.getElementById("rig_clear");
+  const errEl = document.getElementById("rig_error");
+  const resultEl = document.getElementById("rig_result");
+  const cardsEl = document.getElementById("rig_cards");
+  const outputEl = document.getElementById("rig_output");
+  const tbodyEl = document.getElementById("rig_tbody");
+
+  if (!modeEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function randByte(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makePrivate() {
+    const pick = Math.floor(Math.random() * 3);
+    if (pick === 0) return "10." + randByte(0,255) + "." + randByte(0,255) + "." + randByte(1,254);
+    if (pick === 1) return "172." + randByte(16,31) + "." + randByte(0,255) + "." + randByte(1,254);
+    return "192.168." + randByte(0,255) + "." + randByte(1,254);
+  }
+
+  function isPrivate(a, b) {
+    if (a === 10) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    return false;
+  }
+
+  function makePublicStyle() {
+    let a, b, c, d;
+    do {
+      a = randByte(1,223);
+      b = randByte(0,255);
+      c = randByte(0,255);
+      d = randByte(1,254);
+    } while (
+      a === 127 ||
+      a === 0 ||
+      isPrivate(a, b) ||
+      (a === 169 && b === 254) ||
+      (a >= 224)
+    );
+    return a + "." + b + "." + c + "." + d;
+  }
+
+  function makeAll() {
+    return randByte(1,223) + "." + randByte(0,255) + "." + randByte(0,255) + "." + randByte(1,254);
+  }
+
+  function generateIPs() {
+    resetOutput();
+
+    const mode = String(modeEl.value || "all");
+    const count = toCount(countEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      if (mode === "private") results.push(makePrivate());
+      else if (mode === "public") results.push(makePublicStyle());
+      else results.push(makeAll());
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>IP addresses generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Mode: " + mode) +
+      badge("Count: " + count) +
+      badge("IPv4 only") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Address mode", mode],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated IP addresses to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated IP addresses.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    modeEl.value = "all";
+    countEl.value = "10";
+    resetOutput();
+    modeEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateIPs);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

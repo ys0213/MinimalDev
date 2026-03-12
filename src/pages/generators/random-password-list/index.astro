@@ -1,0 +1,354 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Password List",
+  description:
+    "Generate a list of random passwords with configurable length and character types, plus validation, result cards, and FAQ schema.",
+  href: "/generators/random-password-list/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-password-list/";
+
+const faqs = [
+  {
+    q: "What does this random password list generator do?",
+    a: "It generates multiple random passwords at once using the character types and length you choose.",
+  },
+  {
+    q: "Can I include symbols and numbers?",
+    a: "Yes. You can choose uppercase letters, lowercase letters, numbers, and symbols.",
+  },
+  {
+    q: "Does it guarantee selected character types appear?",
+    a: "Yes. If a character type is selected, each password includes at least one character from that type.",
+  },
+  {
+    q: "Are generated passwords stored?",
+    a: "No. Passwords are generated locally in your browser and are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Password List — ${SITE_NAME}`}
+  description="Generate multiple random passwords with configurable length and character types, plus FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Password List"
+  intro="Generate a batch of random passwords for testing, placeholder accounts, and workflow setup."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-password-list">
+    <style is:inline>
+      .rpl-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rpl-grid-2 > * {
+        min-width: 0;
+      }
+      #rpl_count,
+      #rpl_length,
+      #rpl_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rpl-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rpl-output {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rpl_help rpl_privacy">
+      <div class="rpl-grid-2">
+        <div class="field">
+          <label for="rpl_count">How many passwords</label>
+          <input id="rpl_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+
+        <div class="field">
+          <label for="rpl_length">Password length</label>
+          <input id="rpl_length" type="number" inputmode="numeric" min="4" max="128" value="12" />
+        </div>
+      </div>
+
+      <div class="field">
+        <div style="font-weight:800; margin-bottom:6px;">Character types</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;" role="group" aria-label="Password character types">
+          <label><input id="rpl_upper" type="checkbox" checked /> Uppercase</label>
+          <label><input id="rpl_lower" type="checkbox" checked /> Lowercase</label>
+          <label><input id="rpl_number" type="checkbox" checked /> Numbers</label>
+          <label><input id="rpl_symbol" type="checkbox" /> Symbols</label>
+        </div>
+      </div>
+
+      <p class="note" id="rpl_help" style="margin-top:6px;">
+        At least one character type must be selected. Each selected type is guaranteed to appear in every generated password.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rpl_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rpl_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rpl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rpl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rpl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rpl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rpl_output">Generated passwords</label>
+        <textarea id="rpl_output" class="rpl-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rpl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rpl_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated passwords are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many passwords to generate, set the length, pick the character types to include, and create a batch list instantly.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 passwords with 12 characters for demo accounts</li>
+      <li>Generate longer passwords with symbols for stronger placeholder credentials</li>
+      <li>Use lowercase + numbers only for simplified test environments</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/generators/random-user-generator/">Random User Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rpl_count");
+  const lengthEl = document.getElementById("rpl_length");
+  const upperEl = document.getElementById("rpl_upper");
+  const lowerEl = document.getElementById("rpl_lower");
+  const numberEl = document.getElementById("rpl_number");
+  const symbolEl = document.getElementById("rpl_symbol");
+  const generateBtn = document.getElementById("rpl_generate");
+  const copyBtn = document.getElementById("rpl_copy");
+  const clearBtn = document.getElementById("rpl_clear");
+  const errEl = document.getElementById("rpl_error");
+  const resultEl = document.getElementById("rpl_result");
+  const cardsEl = document.getElementById("rpl_cards");
+  const outputEl = document.getElementById("rpl_output");
+  const tbodyEl = document.getElementById("rpl_tbody");
+
+  if (!countEl || !lengthEl || !upperEl || !lowerEl || !numberEl || !symbolEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function toInt(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateOne(length, selectedSets, allChars) {
+    const chars = [];
+    selectedSets.forEach(function (set) {
+      chars.push(randItem(set));
+    });
+    while (chars.length < length) {
+      chars.push(randItem(allChars));
+    }
+    return shuffle(chars).join("");
+  }
+
+  function generatePasswords() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const length = toInt(lengthEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+    if (!Number.isInteger(length) || length < 4 || length > 128) {
+      showError("Please enter a password length from 4 to 128.");
+      return;
+    }
+
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    const lower = "abcdefghijklmnopqrstuvwxyz".split("");
+    const numbers = "0123456789".split("");
+    const symbols = "!@#$%^&*()-_=+[]{};:,.?/".split("");
+
+    const selectedSets = [];
+    if (upperEl.checked) selectedSets.push(upper);
+    if (lowerEl.checked) selectedSets.push(lower);
+    if (numberEl.checked) selectedSets.push(numbers);
+    if (symbolEl.checked) selectedSets.push(symbols);
+
+    if (!selectedSets.length) {
+      showError("Select at least one character type.");
+      return;
+    }
+
+    if (length < selectedSets.length) {
+      showError("Password length must be at least the number of selected character types.");
+      return;
+    }
+
+    const allChars = selectedSets.flat();
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      results.push(generateOne(length, selectedSets, allChars));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Passwords generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Count: " + count) +
+      badge("Length: " + length) +
+      badge("Types: " + selectedSets.length) +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Password length", String(length)],
+      ["Selected character groups", String(selectedSets.length)],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated passwords to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated passwords.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "10";
+    lengthEl.value = "12";
+    upperEl.checked = true;
+    lowerEl.checked = true;
+    numberEl.checked = true;
+    symbolEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generatePasswords);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

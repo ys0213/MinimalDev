@@ -1,0 +1,299 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Name Generator",
+  description:
+    "Generate random first names, last names, or full names with quantity controls, validation, result cards, and FAQ schema.",
+  href: "/generators/random-name-generator/",
+  order: 10,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-name-generator/";
+
+const faqs = [
+  {
+    q: "What does this random name generator do?",
+    a: "It generates random first names, last names, or full names from built-in sample lists.",
+  },
+  {
+    q: "Can I generate more than one name at a time?",
+    a: "Yes. You can choose how many names to generate in one run.",
+  },
+  {
+    q: "Are these real people?",
+    a: "No. These are randomly combined sample names for placeholder or testing use.",
+  },
+  {
+    q: "Is any data stored?",
+    a: "No. Everything runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Name Generator — ${SITE_NAME}`}
+  description="Generate random first names, last names, or full names with quantity controls, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Name Generator"
+  intro="Generate random names for placeholders, demos, mock users, and testing workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-name-generator">
+    <style is:inline>
+      .rng-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rng-grid-2 > * {
+        min-width: 0;
+      }
+      #rng_type,
+      #rng_count,
+      #rng_output {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 760px) {
+        .rng-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .rng-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rng_help rng_privacy">
+      <div class="rng-grid-2">
+        <div class="field">
+          <label for="rng_type">Name type</label>
+          <select id="rng_type">
+            <option value="full" selected>Full name</option>
+            <option value="first">First name only</option>
+            <option value="last">Last name only</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rng_count">How many names</label>
+          <input id="rng_count" type="number" inputmode="numeric" min="1" max="100" value="10" />
+        </div>
+      </div>
+
+      <p class="note" id="rng_help" style="margin-top:6px;">
+        Use this tool for placeholder or testing data. The generated names are random sample combinations.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rng_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rng_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rng_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rng_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rng_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rng_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rng_output">Generated names</label>
+        <textarea id="rng_output" class="rng-output" rows="12" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rng_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rng_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated names are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Select whether you want first names, last names, or full names, choose the number of results, then generate a new randomized list.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate 10 full names for demo user accounts</li>
+      <li>Generate first names only for UI mockups</li>
+      <li>Generate surname lists for placeholder records</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>
+      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/generators/random-user-generator/">Random User Generator</a></li>
+      <li><a href="/generators/fake-email-generator/">Fake Email Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const typeEl = document.getElementById("rng_type");
+  const countEl = document.getElementById("rng_count");
+  const generateBtn = document.getElementById("rng_generate");
+  const copyBtn = document.getElementById("rng_copy");
+  const clearBtn = document.getElementById("rng_clear");
+  const errEl = document.getElementById("rng_error");
+  const resultEl = document.getElementById("rng_result");
+  const cardsEl = document.getElementById("rng_cards");
+  const outputEl = document.getElementById("rng_output");
+  const tbodyEl = document.getElementById("rng_tbody");
+
+  if (!typeEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const firstNames = ["Alex","Emma","Liam","Olivia","Noah","Ava","Mason","Sophia","Ethan","Mia","Lucas","Amelia","Leo","Chloe","Daniel","Grace","Henry","Ella","Jack","Nora"];
+  const lastNames = ["Smith","Johnson","Brown","Taylor","Anderson","Thomas","Jackson","White","Harris","Martin","Clark","Lewis","Walker","Hall","Young","Allen","King","Wright","Scott","Green"];
+
+  let lastOutput = "";
+
+  function randomItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function toCount(v) {
+    const n = Number(String(v).trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function generateNames() {
+    resetOutput();
+
+    const type = String(typeEl.value || "full");
+    const count = toCount(countEl.value);
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+      if (type === "first") results.push(randomItem(firstNames));
+      else if (type === "last") results.push(randomItem(lastNames));
+      else results.push(randomItem(firstNames) + " " + randomItem(lastNames));
+    }
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Names generated.</strong>";
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+      badge("Type: " + type) +
+      badge("Count: " + count) +
+      badge(type === "full" ? "Two-part names" : "Single-part names") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Name type", type],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated names to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated names.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    typeEl.value = "full";
+    countEl.value = "10";
+    resetOutput();
+    typeEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateNames);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>
