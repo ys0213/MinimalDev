@@ -1,0 +1,305 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Color Picker",
+  description:
+    "Pick a color and view HEX, RGB, and HSL values with copy-friendly output, contrast preview, and FAQ schema.",
+  href: "/design-tools/color-picker/",
+  order: 10,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/color-picker/";
+
+const faqs = [
+  {
+    q: "What does this color picker do?",
+    a: "It lets you choose a color visually and shows the matching HEX, RGB, and HSL values.",
+  },
+  {
+    q: "Can I preview text on the selected color?",
+    a: "Yes. The tool shows a live preview and automatically picks a readable text color for the preview block.",
+  },
+  {
+    q: "Does it support copying values?",
+    a: "Yes. You can copy the currently selected format after choosing a color.",
+  },
+  {
+    q: "Is any color data stored?",
+    a: "No. Everything runs locally in your browser and no color selections are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Color Picker — ${SITE_NAME}`}
+  description="Pick a color and view HEX, RGB, and HSL values with preview and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Color Picker"
+  intro="Choose a color visually and inspect its HEX, RGB, and HSL values for design and CSS workflows."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="color-picker">
+    <style is:inline>
+      .cp-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cp-grid-2 > * {
+        min-width: 0;
+      }
+      #cp_color,
+      #cp_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .cp-preview {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 140px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+      }
+      .cp-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .cp-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cp_help cp_privacy">
+      <div class="cp-grid-2">
+        <div class="field">
+          <label for="cp_color">Choose color</label>
+          <input id="cp_color" type="color" value="#4f46e5" />
+        </div>
+
+        <div class="field">
+          <label for="cp_format">Primary copy format</label>
+          <select id="cp_format">
+            <option value="hex" selected>HEX</option>
+            <option value="rgb">RGB</option>
+            <option value="hsl">HSL</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="cp_help" style="margin-top:6px;">
+        Use the visual picker to choose a color and inspect the matching code values in multiple formats.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cp_update">Update Values</button>
+        <button class="btn secondary" type="button" id="cp_copy">Copy Primary Value</button>
+        <button class="btn secondary" type="button" id="cp_reset">Reset</button>
+      </div>
+
+      <div class="result" id="cp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="cp-preview" id="cp_preview" style="margin-top:16px;">
+        <strong id="cp_preview_title">Selected color preview</strong>
+        <div class="cp-code" id="cp_preview_value">#4F46E5</div>
+        <div class="note" id="cp_preview_note">Readable preview text is shown on the selected color.</div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Format</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody id="cp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cp_privacy" style="margin-top:10px;">
+        Privacy: color selection and conversion run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick a color visually, then review the matching HEX, RGB, and HSL values. The preview also helps check readability against the chosen color.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Choose a brand accent color and copy its HEX value</li>
+      <li>Inspect RGB and HSL equivalents for CSS design work</li>
+      <li>Preview light and dark text readability on the selected background</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/contrast-checker/">Contrast Checker</a></li>
+      <li><a href="/design-tools/color-palette-generator/">Color Palette Generator</a></li>
+      <li><a href="/design-tools/hex-to-rgb/">HEX to RGB</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const colorEl = document.getElementById("cp_color");
+  const formatEl = document.getElementById("cp_format");
+  const updateBtn = document.getElementById("cp_update");
+  const copyBtn = document.getElementById("cp_copy");
+  const resetBtn = document.getElementById("cp_reset");
+  const errEl = document.getElementById("cp_error");
+  const resultEl = document.getElementById("cp_result");
+  const previewEl = document.getElementById("cp_preview");
+  const previewValueEl = document.getElementById("cp_preview_value");
+  const tbodyEl = document.getElementById("cp_tbody");
+
+  if (!colorEl || !formatEl || !updateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !previewValueEl || !tbodyEl) return;
+
+  let lastValues = { hex: "#4F46E5", rgb: "rgb(79, 70, 229)", hsl: "hsl(243, 75%, 59%)" };
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function hexToRgb(hex) {
+    const clean = String(hex).replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100),
+    };
+  }
+  function textColorForBg(r, g, b) {
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#111111" : "#FFFFFF";
+  }
+  function fillTable(values) {
+    tbodyEl.innerHTML = "";
+    [
+      ["HEX", values.hex],
+      ["RGB", values.rgb],
+      ["HSL", values.hsl],
+    ].forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function update() {
+    clearError();
+
+    const hexRaw = String(colorEl.value || "").toUpperCase();
+    const rgb = hexToRgb(hexRaw);
+    if (!rgb) {
+      showError("Please choose a valid color.");
+      return;
+    }
+
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    lastValues = {
+      hex: hexRaw,
+      rgb: "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")",
+      hsl: "hsl(" + hsl.h + ", " + hsl.s + "%, " + hsl.l + "%)"
+    };
+
+    previewEl.style.background = hexRaw;
+    previewEl.style.color = textColorForBg(rgb.r, rgb.g, rgb.b);
+    previewValueEl.textContent = lastValues[String(formatEl.value || "hex")];
+
+    resultEl.innerHTML = "<strong>Color values updated.</strong>";
+    fillTable(lastValues);
+  }
+
+  async function copyPrimary() {
+    clearError();
+    const key = String(formatEl.value || "hex");
+    const value = lastValues[key];
+    if (!value) {
+      showError("No color value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      resultEl.innerHTML = "<strong>Copied primary color value.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    colorEl.value = "#4f46e5";
+    formatEl.value = "hex";
+    update();
+  }
+
+  updateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyPrimary);
+  resetBtn.addEventListener("click", resetAll);
+  colorEl.addEventListener("input", update);
+  formatEl.addEventListener("change", update);
+
+  update();
+});
+</script>

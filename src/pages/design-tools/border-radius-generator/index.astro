@@ -1,0 +1,284 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Border Radius Generator",
+  description:
+    "Generate CSS border-radius values with corner controls, live preview, validation, and FAQ schema.",
+  href: "/design-tools/border-radius-generator/",
+  order: 50,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/border-radius-generator/";
+
+const faqs = [
+  {
+    q: "What does this border radius generator do?",
+    a: "It generates CSS border-radius values using individual corner controls and shows a live preview.",
+  },
+  {
+    q: "Can I set each corner separately?",
+    a: "Yes. You can define the top-left, top-right, bottom-right, and bottom-left corner radius values independently.",
+  },
+  {
+    q: "Can I copy the CSS?",
+    a: "Yes. The generated border-radius CSS value is shown in a copy-ready format.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Border Radius Generator — ${SITE_NAME}`}
+  description="Generate CSS border-radius values with individual corner controls and preview."
+  canonicalPath={CANONICAL_PATH}
+  h1="Border Radius Generator"
+  intro="Build a border-radius value visually by adjusting each corner and previewing the result."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="border-radius-generator">
+    <style is:inline>
+      .brg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .brg-grid-2 > * {
+        min-width: 0;
+      }
+      #brg_tl,
+      #brg_tr,
+      #brg_br,
+      #brg_bl,
+      #brg_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .brg-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .brg-preview-box {
+        width: min(240px, 100%);
+        height: 140px;
+        background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      }
+      .brg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .brg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="brg_help brg_privacy">
+      <div class="brg-grid-2">
+        <div class="field">
+          <label for="brg_tl">Top-left radius (px)</label>
+          <input id="brg_tl" type="number" inputmode="decimal" min="0" value="16" />
+        </div>
+        <div class="field">
+          <label for="brg_tr">Top-right radius (px)</label>
+          <input id="brg_tr" type="number" inputmode="decimal" min="0" value="16" />
+        </div>
+        <div class="field">
+          <label for="brg_br">Bottom-right radius (px)</label>
+          <input id="brg_br" type="number" inputmode="decimal" min="0" value="16" />
+        </div>
+        <div class="field">
+          <label for="brg_bl">Bottom-left radius (px)</label>
+          <input id="brg_bl" type="number" inputmode="decimal" min="0" value="16" />
+        </div>
+      </div>
+
+      <p class="note" id="brg_help" style="margin-top:6px;">
+        Enter non-negative radius values for each corner to build the final border-radius property.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="brg_generate">Generate Radius</button>
+        <button class="btn secondary" type="button" id="brg_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="brg_reset">Reset</button>
+      </div>
+
+      <div class="result" id="brg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="brg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="brg-preview-wrap" style="margin-top:16px;">
+        <div class="brg-preview-box" id="brg_preview_box"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="brg_css">CSS output</label>
+        <textarea id="brg_css" class="brg-code" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Corner</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody id="brg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="brg_privacy" style="margin-top:10px;">
+        Privacy: border-radius generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Set each corner radius separately, preview the rounded box, and copy the generated border-radius CSS for direct use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a uniform rounded card</li>
+      <li>Design asymmetrical corner shapes for UI blocks</li>
+      <li>Copy the exact CSS radius value into your stylesheet</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/box-shadow-generator/">Box Shadow Generator</a></li>
+      <li><a href="/design-tools/css-grid-generator/">CSS Grid Generator</a></li>
+      <li><a href="/design-tools/flexbox-generator/">Flexbox Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const tlEl = document.getElementById("brg_tl");
+  const trEl = document.getElementById("brg_tr");
+  const brEl = document.getElementById("brg_br");
+  const blEl = document.getElementById("brg_bl");
+  const generateBtn = document.getElementById("brg_generate");
+  const copyBtn = document.getElementById("brg_copy");
+  const resetBtn = document.getElementById("brg_reset");
+  const errEl = document.getElementById("brg_error");
+  const resultEl = document.getElementById("brg_result");
+  const previewBoxEl = document.getElementById("brg_preview_box");
+  const cssEl = document.getElementById("brg_css");
+  const tbodyEl = document.getElementById("brg_tbody");
+
+  if (!tlEl || !trEl || !brEl || !blEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewBoxEl || !cssEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const tl = Number(String(tlEl.value || ""));
+    const tr = Number(String(trEl.value || ""));
+    const br = Number(String(brEl.value || ""));
+    const bl = Number(String(blEl.value || ""));
+
+    if (![tl, tr, br, bl].every(Number.isFinite)) {
+      showError("Please enter valid numeric radius values.");
+      return;
+    }
+    if ([tl, tr, br, bl].some(v => v < 0)) {
+      showError("Radius values must be 0 or more.");
+      return;
+    }
+
+    const css = tl + "px " + tr + "px " + br + "px " + bl + "px";
+    previewBoxEl.style.borderRadius = css;
+    cssEl.value = "border-radius: " + css + ";";
+    resultEl.innerHTML = "<strong>Border radius generated.</strong>";
+
+    fillTable([
+      ["Top-left", tl + "px"],
+      ["Top-right", tr + "px"],
+      ["Bottom-right", br + "px"],
+      ["Bottom-left", bl + "px"],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!cssEl.value) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(cssEl.value);
+      resultEl.innerHTML = "<strong>Copied border-radius CSS.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    tlEl.value = "16";
+    trEl.value = "16";
+    brEl.value = "16";
+    blEl.value = "16";
+    update();
+  }
+
+  generateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetAll);
+
+  [tlEl, trEl, brEl, blEl].forEach(function (el) {
+    el.addEventListener("input", update);
+  });
+
+  update();
+});
+</script>

@@ -1,0 +1,332 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Box Shadow Generator",
+  description:
+    "Generate CSS box-shadow values with live preview, inset option, validation, and FAQ schema.",
+  href: "/design-tools/box-shadow-generator/",
+  order: 40,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/box-shadow-generator/";
+
+const faqs = [
+  {
+    q: "What does this box shadow generator do?",
+    a: "It generates a CSS box-shadow value based on horizontal offset, vertical offset, blur, spread, color, and inset settings.",
+  },
+  {
+    q: "Can I preview the shadow live?",
+    a: "Yes. The tool includes a live preview box so you can see the shadow before copying the CSS.",
+  },
+  {
+    q: "Does it support inset shadows?",
+    a: "Yes. You can toggle inset mode to generate inner shadows.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Box Shadow Generator — ${SITE_NAME}`}
+  description="Generate CSS box-shadow values with live preview and copy-ready output."
+  canonicalPath={CANONICAL_PATH}
+  h1="Box Shadow Generator"
+  intro="Build a CSS box-shadow visually with offsets, blur, spread, color, and inset controls."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="box-shadow-generator">
+    <style is:inline>
+      .bsg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .bsg-grid-2 > * {
+        min-width: 0;
+      }
+      #bsg_x,
+      #bsg_y,
+      #bsg_blur,
+      #bsg_spread,
+      #bsg_color,
+      #bsg_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .bsg-preview-wrap {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 220px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .bsg-preview-box {
+        width: min(240px, 100%);
+        height: 140px;
+        border-radius: 18px;
+        background: #ffffff;
+      }
+      .bsg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .bsg-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="bsg_help bsg_privacy">
+      <div class="bsg-grid-2">
+        <div class="field">
+          <label for="bsg_x">Horizontal offset (px)</label>
+          <input id="bsg_x" type="number" inputmode="decimal" value="0" />
+        </div>
+        <div class="field">
+          <label for="bsg_y">Vertical offset (px)</label>
+          <input id="bsg_y" type="number" inputmode="decimal" value="12" />
+        </div>
+        <div class="field">
+          <label for="bsg_blur">Blur radius (px)</label>
+          <input id="bsg_blur" type="number" inputmode="decimal" min="0" value="24" />
+        </div>
+        <div class="field">
+          <label for="bsg_spread">Spread radius (px)</label>
+          <input id="bsg_spread" type="number" inputmode="decimal" value="0" />
+        </div>
+      </div>
+
+      <div class="bsg-grid-2">
+        <div class="field">
+          <label for="bsg_color">Shadow color</label>
+          <input id="bsg_color" type="color" value="#000000" />
+        </div>
+        <div class="field">
+          <label for="bsg_alpha">Opacity (0 to 1)</label>
+          <input id="bsg_alpha" type="number" inputmode="decimal" min="0" max="1" step="0.01" value="0.20" />
+        </div>
+      </div>
+
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <label><input id="bsg_inset" type="checkbox" /> Inset shadow</label>
+      </div>
+
+      <p class="note" id="bsg_help" style="margin-top:6px;">
+        Use positive or negative offsets to move the shadow. Blur must be 0 or more.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bsg_generate">Generate Shadow</button>
+        <button class="btn secondary" type="button" id="bsg_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="bsg_reset">Reset</button>
+      </div>
+
+      <div class="result" id="bsg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="bsg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="bsg-preview-wrap" style="margin-top:16px;">
+        <div class="bsg-preview-box" id="bsg_preview_box"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="bsg_css">CSS output</label>
+        <textarea id="bsg_css" class="bsg-code" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Setting</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody id="bsg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bsg_privacy" style="margin-top:10px;">
+        Privacy: shadow generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Adjust the box-shadow values, preview the result on a sample card, and copy the CSS property when the look is right.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a soft card shadow for UI panels</li>
+      <li>Generate an inset shadow for recessed elements</li>
+      <li>Experiment with blur and spread before copying CSS</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/border-radius-generator/">Border Radius Generator</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/flexbox-generator/">Flexbox Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("bsg_x");
+  const yEl = document.getElementById("bsg_y");
+  const blurEl = document.getElementById("bsg_blur");
+  const spreadEl = document.getElementById("bsg_spread");
+  const colorEl = document.getElementById("bsg_color");
+  const alphaEl = document.getElementById("bsg_alpha");
+  const insetEl = document.getElementById("bsg_inset");
+  const generateBtn = document.getElementById("bsg_generate");
+  const copyBtn = document.getElementById("bsg_copy");
+  const resetBtn = document.getElementById("bsg_reset");
+  const errEl = document.getElementById("bsg_error");
+  const resultEl = document.getElementById("bsg_result");
+  const previewBoxEl = document.getElementById("bsg_preview_box");
+  const cssEl = document.getElementById("bsg_css");
+  const tbodyEl = document.getElementById("bsg_tbody");
+
+  if (!xEl || !yEl || !blurEl || !spreadEl || !colorEl || !alphaEl || !insetEl || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewBoxEl || !cssEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function hexToRgb(hex) {
+    const clean = String(hex).replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null;
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const x = Number(String(xEl.value || "0"));
+    const y = Number(String(yEl.value || "0"));
+    const blur = Number(String(blurEl.value || "0"));
+    const spread = Number(String(spreadEl.value || "0"));
+    const alpha = Number(String(alphaEl.value || "0.2"));
+
+    if (![x, y, blur, spread, alpha].every(Number.isFinite)) {
+      showError("Please enter valid numeric values.");
+      return;
+    }
+    if (blur < 0) {
+      showError("Blur radius must be 0 or more.");
+      return;
+    }
+    if (alpha < 0 || alpha > 1) {
+      showError("Opacity must be between 0 and 1.");
+      return;
+    }
+
+    const rgb = hexToRgb(String(colorEl.value || "#000000"));
+    if (!rgb) {
+      showError("Please choose a valid shadow color.");
+      return;
+    }
+
+    const rgba = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + alpha + ")";
+    const css = (insetEl.checked ? "inset " : "") + x + "px " + y + "px " + blur + "px " + spread + "px " + rgba;
+
+    previewBoxEl.style.boxShadow = css;
+    cssEl.value = "box-shadow: " + css + ";";
+    resultEl.innerHTML = "<strong>Box shadow generated.</strong>";
+
+    fillTable([
+      ["Horizontal offset", x + "px"],
+      ["Vertical offset", y + "px"],
+      ["Blur radius", blur + "px"],
+      ["Spread radius", spread + "px"],
+      ["Shadow color", rgba],
+      ["Inset", insetEl.checked ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!cssEl.value) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(cssEl.value);
+      resultEl.innerHTML = "<strong>Copied box-shadow CSS.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    xEl.value = "0";
+    yEl.value = "12";
+    blurEl.value = "24";
+    spreadEl.value = "0";
+    colorEl.value = "#000000";
+    alphaEl.value = "0.20";
+    insetEl.checked = false;
+    update();
+  }
+
+  generateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetAll);
+
+  [xEl, yEl, blurEl, spreadEl, colorEl, alphaEl, insetEl].forEach(function (el) {
+    el.addEventListener("input", update);
+    el.addEventListener("change", update);
+  });
+
+  update();
+});
+</script>

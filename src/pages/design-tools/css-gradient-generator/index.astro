@@ -1,0 +1,310 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CSS Gradient Generator",
+  description:
+    "Generate advanced CSS linear gradients with multiple stops, preview, copy-ready code, and FAQ schema.",
+  href: "/design-tools/css-gradient-generator/",
+  order: 30,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/design-tools/css-gradient-generator/";
+
+const faqs = [
+  {
+    q: "What does this CSS gradient generator do?",
+    a: "It creates a CSS linear gradient with multiple color stops and provides a live preview plus copyable CSS code.",
+  },
+  {
+    q: "Can I set stop positions?",
+    a: "Yes. You can define color stop percentages for each color stop.",
+  },
+  {
+    q: "Does it support more than two colors?",
+    a: "Yes. This version supports three color stops.",
+  },
+  {
+    q: "Is any design data stored?",
+    a: "No. Everything runs locally in your browser and no values are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CSS Gradient Generator — ${SITE_NAME}`}
+  description="Generate multi-stop CSS linear gradients with live preview and copyable code."
+  canonicalPath={CANONICAL_PATH}
+  h1="CSS Gradient Generator"
+  intro="Create a three-stop linear gradient with custom stop positions and copy-ready CSS output."
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="css-gradient-generator">
+    <style is:inline>
+      .cgg-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cgg-grid-2 > * {
+        min-width: 0;
+      }
+      #cgg_angle,
+      #cgg_css {
+        width: 100%;
+        min-width: 0;
+      }
+      .cgg-stop-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .cgg-preview {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        min-height: 180px;
+        padding: 16px;
+      }
+      .cgg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      @media (min-width: 760px) {
+        .cgg-grid-2,
+        .cgg-stop-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (min-width: 980px) {
+        .cgg-stop-grid {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cgg_help cgg_privacy">
+      <div class="field">
+        <label for="cgg_angle">Angle (degrees)</label>
+        <input id="cgg_angle" type="number" inputmode="decimal" min="0" max="360" value="90" />
+      </div>
+
+      <div class="cgg-stop-grid">
+        <div class="field">
+          <label for="cgg_color1">Stop 1 color</label>
+          <input id="cgg_color1" type="color" value="#4f46e5" />
+          <label for="cgg_pos1" style="margin-top:8px;">Stop 1 position (%)</label>
+          <input id="cgg_pos1" type="number" inputmode="decimal" min="0" max="100" value="0" />
+        </div>
+
+        <div class="field">
+          <label for="cgg_color2">Stop 2 color</label>
+          <input id="cgg_color2" type="color" value="#06b6d4" />
+          <label for="cgg_pos2" style="margin-top:8px;">Stop 2 position (%)</label>
+          <input id="cgg_pos2" type="number" inputmode="decimal" min="0" max="100" value="50" />
+        </div>
+
+        <div class="field">
+          <label for="cgg_color3">Stop 3 color</label>
+          <input id="cgg_color3" type="color" value="#22c55e" />
+          <label for="cgg_pos3" style="margin-top:8px;">Stop 3 position (%)</label>
+          <input id="cgg_pos3" type="number" inputmode="decimal" min="0" max="100" value="100" />
+        </div>
+      </div>
+
+      <p class="note" id="cgg_help" style="margin-top:6px;">
+        Stop positions should be in ascending order for the most predictable gradient output.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cgg_generate">Generate CSS Gradient</button>
+        <button class="btn secondary" type="button" id="cgg_copy">Copy CSS</button>
+        <button class="btn secondary" type="button" id="cgg_reset">Reset</button>
+      </div>
+
+      <div class="result" id="cgg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cgg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+
+      <div class="cgg-preview" id="cgg_preview" style="margin-top:16px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cgg_css">CSS output</label>
+        <textarea id="cgg_css" class="cgg-code" rows="5" readonly spellcheck="false"></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr><th scope="col">Setting</th><th scope="col">Value</th></tr>
+          </thead>
+          <tbody id="cgg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cgg_privacy" style="margin-top:10px;">
+        Privacy: gradient generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose three colors, set stop positions and angle, preview the result, and copy the final CSS linear-gradient code.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a three-stop background gradient for UI sections</li>
+      <li>Control exactly where each color appears in the gradient</li>
+      <li>Copy the generated CSS directly into your stylesheet</li>
+    </ul>
+  </div>
+
+  <div slot="faq">
+    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/design-tools/gradient-generator/">Gradient Generator</a></li>
+      <li><a href="/design-tools/color-picker/">Color Picker</a></li>
+      <li><a href="/design-tools/color-palette-generator/">Color Palette Generator</a></li>
+      <li><a href="/design-tools/">All Design Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const angleEl = document.getElementById("cgg_angle");
+  const color1El = document.getElementById("cgg_color1");
+  const color2El = document.getElementById("cgg_color2");
+  const color3El = document.getElementById("cgg_color3");
+  const pos1El = document.getElementById("cgg_pos1");
+  const pos2El = document.getElementById("cgg_pos2");
+  const pos3El = document.getElementById("cgg_pos3");
+  const generateBtn = document.getElementById("cgg_generate");
+  const copyBtn = document.getElementById("cgg_copy");
+  const resetBtn = document.getElementById("cgg_reset");
+  const errEl = document.getElementById("cgg_error");
+  const resultEl = document.getElementById("cgg_result");
+  const previewEl = document.getElementById("cgg_preview");
+  const cssEl = document.getElementById("cgg_css");
+  const tbodyEl = document.getElementById("cgg_tbody");
+
+  if (!angleEl || !color1El || !color2El || !color3El || !pos1El || !pos2El || !pos3El || !generateBtn || !copyBtn || !resetBtn || !errEl || !resultEl || !previewEl || !cssEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function update() {
+    clearError();
+
+    const angle = Number(String(angleEl.value || ""));
+    const p1 = Number(String(pos1El.value || ""));
+    const p2 = Number(String(pos2El.value || ""));
+    const p3 = Number(String(pos3El.value || ""));
+
+    if (!Number.isFinite(angle) || angle < 0 || angle > 360) {
+      showError("Please enter a valid angle from 0 to 360.");
+      return;
+    }
+    if (![p1, p2, p3].every(Number.isFinite) || [p1, p2, p3].some(v => v < 0 || v > 100)) {
+      showError("Please enter valid stop positions from 0 to 100.");
+      return;
+    }
+    if (!(p1 <= p2 && p2 <= p3)) {
+      showError("Stop positions should be in ascending order.");
+      return;
+    }
+
+    const c1 = String(color1El.value || "#4f46e5");
+    const c2 = String(color2El.value || "#06b6d4");
+    const c3 = String(color3El.value || "#22c55e");
+
+    const css = "linear-gradient(" + angle + "deg, " +
+      c1 + " " + p1 + "%, " +
+      c2 + " " + p2 + "%, " +
+      c3 + " " + p3 + "%)";
+
+    previewEl.style.background = css;
+    cssEl.value = "background: " + css + ";";
+    resultEl.innerHTML = "<strong>CSS gradient generated.</strong>";
+
+    fillTable([
+      ["Gradient type", "Linear"],
+      ["Angle", angle + "deg"],
+      ["Stop 1", c1.toUpperCase() + " at " + p1 + "%"],
+      ["Stop 2", c2.toUpperCase() + " at " + p2 + "%"],
+      ["Stop 3", c3.toUpperCase() + " at " + p3 + "%"],
+    ]);
+  }
+
+  async function copyCss() {
+    clearError();
+    if (!cssEl.value) {
+      showError("No CSS value available to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(cssEl.value);
+      resultEl.innerHTML = "<strong>Copied CSS gradient value.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function resetAll() {
+    angleEl.value = "90";
+    color1El.value = "#4f46e5";
+    color2El.value = "#06b6d4";
+    color3El.value = "#22c55e";
+    pos1El.value = "0";
+    pos2El.value = "50";
+    pos3El.value = "100";
+    update();
+  }
+
+  generateBtn.addEventListener("click", update);
+  copyBtn.addEventListener("click", copyCss);
+  resetBtn.addEventListener("click", resetAll);
+
+  [angleEl, color1El, color2El, color3El, pos1El, pos2El, pos3El].forEach(function (el) {
+    el.addEventListener("input", update);
+  });
+
+  update();
+});
+</script>
