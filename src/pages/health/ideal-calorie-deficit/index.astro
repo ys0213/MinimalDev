@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Ideal Calorie Deficit Calculator"
   intro="Estimate a daily calorie deficit and target calorie intake from your maintenance calories and preferred weekly weight-loss pace. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -119,14 +121,6 @@ const faqJsonLd = {
       <li>2,200 kcal/day maintenance and 0.5 kg/week → about 550 kcal/day deficit</li>
       <li>2,400 kcal/day maintenance and 1 lb/week → about 500 kcal/day deficit</li>
       <li>Useful as a planning estimate, not a guarantee</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

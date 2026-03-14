@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Day of Week Calculator"
   intro="Pick a date to find the weekday (Monday, Tuesday, etc.). Uses your local timezone and formats weekday names using your browser locale."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -112,14 +114,6 @@ const faqJsonLd = {
     <ul>
       <li>2026-03-02 → shows the weekday for that date</li>
       <li>Change locale to “ko-KR” to display 요일 in Korean</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

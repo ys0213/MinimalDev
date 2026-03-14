@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Running Calorie Calculator"
   intro="Estimate calories burned while running from body weight and distance. Optional duration adds pace context."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -127,14 +129,6 @@ const faqJsonLd = {
       <li>70 kg running 5 km → about 350 kcal estimate</li>
       <li>154 lb running 3.1 miles → imperial inputs are converted internally</li>
       <li>Add duration to estimate average pace</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

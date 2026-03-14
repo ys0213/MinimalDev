@@ -7,6 +7,29 @@ export const tool = {
   href: "/math/percent-increase-calculator/",
   order: 50,
 };
+
+const faqs = [
+  {
+    q: "What if the old value is 0?",
+    a: "Percentage increase is undefined because it would require division by zero.",
+  },
+  {
+    q: "Can the result be negative?",
+    a: "Yes. If the new value is smaller than the old value, the result represents a decrease, not an increase.",
+  },
+  {
+    q: "Is this the same as percentage change?",
+    a: "Percentage change can represent either an increase or a decrease. This tool uses the increase formula and may return a negative result if the new value is smaller.",
+  },
+  {
+    q: "Why is my result very large?",
+    a: "When the old value is very small, even a small absolute difference can create a large percentage increase.",
+  },
+  {
+    q: "Is this accurate?",
+    a: "Yes. It uses the standard mathematical formula for percentage increase.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,8 @@ export const tool = {
   canonicalPath="/math/percent-increase-calculator/"
   h1="Percentage Increase Calculator"
   intro="Calculate percentage increase between two numbers. Useful for price increases, growth rates, salary raises, and comparisons."
+  faq={faqs}
+  categoryName="Math"
 >
   <div slot="tool" data-tool="percent-increase-calculator">
     <div class="form">
@@ -26,8 +51,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 80"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pi_help pi_error"
         />
       </div>
@@ -40,8 +65,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 100"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pi_help pi_error"
         />
         <div id="pi_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
@@ -62,7 +87,6 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="pi_sr_summary"
@@ -77,8 +101,7 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      <strong>Percentage increase formula:</strong>
-      ((new − old) ÷ old) × 100
+      <strong>Percentage increase formula:</strong> ((new − old) ÷ old) × 100
     </p>
 
     <ul>
@@ -97,16 +120,6 @@ export const tool = {
     </ul>
   </div>
 
-  <div slot="faq">
-    <ul>
-      <li><strong>What if the old value is 0?</strong> Percentage increase is undefined because division by zero is not possible.</li>
-      <li><strong>Can the result be negative?</strong> If the new value is smaller than the old value, the result represents a decrease.</li>
-      <li><strong>Is this the same as percentage change?</strong> Percentage change can represent either increase or decrease.</li>
-      <li><strong>Why is my result very large?</strong> When the old value is small, even small differences can create large percentage increases.</li>
-      <li><strong>Is this accurate?</strong> Yes. It uses the standard mathematical formula.</li>
-    </ul>
-  </div>
-
   <div slot="related">
     <ul>
       <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
@@ -117,9 +130,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="pi_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const oldEl = document.getElementById("pi_old");
@@ -129,46 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("pi_result");
   const errEl = document.getElementById("pi_error");
   const srEl = document.getElementById("pi_sr_summary");
-  const faqSchemaEl = document.getElementById("pi_faq_schema");
 
-  if (!oldEl || !newEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "What if the old value is 0?",
-      a: "Percentage increase is undefined because it would require division by zero.",
-    },
-    {
-      q: "Can the result be negative?",
-      a: "Yes. If the new value is smaller than the old value, the result represents a decrease (negative increase).",
-    },
-    {
-      q: "Is this the same as percentage change?",
-      a: "Percentage change can represent either an increase or a decrease. This tool focuses on the increase formula but will show a negative result if the new value is smaller.",
-    },
-    {
-      q: "Why is my result very large?",
-      a: "When the old value is small (near zero), even small absolute differences can create very large percentage increases.",
-    },
-    {
-      q: "Is this accurate?",
-      a: "Yes. It uses the standard mathematical formula for percentage increase.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!oldEl || !newEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -218,19 +190,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!Number.isFinite(oldV)) {
       setError("Please enter a valid old value.", "old");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (!Number.isFinite(newV)) {
       setError("Please enter a valid new value.", "new");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
     if (Math.abs(oldV) > 1e15) {
       setError("Old value is too large. Please enter a smaller value.", "old");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (Math.abs(newV) > 1e15) {
       setError("New value is too large. Please enter a smaller value.", "new");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
@@ -244,7 +224,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const diff = newV - oldV;
     const pct = (diff / oldV) * 100;
 
-    // Category label for UX
     let tag = "Increase";
     if (pct === 0) tag = "No change";
     else if (pct < 0) tag = "Decrease";
@@ -265,13 +244,13 @@ document.addEventListener("DOMContentLoaded", function () {
         "Computed as ((" + fmt(newV) + " − " + fmt(oldV) + ") ÷ " + fmt(oldV) + ") × 100" +
       "</div>" +
       (pct < 0
-        ? "<div class='note' style='margin-top:6px;'><strong>Note:</strong> New is smaller than old, so this is a decrease (negative “increase”).</div>"
+        ? "<div class='note' style='margin-top:6px;'><strong>Note:</strong> New is smaller than old, so this is a decrease (negative increase).</div>"
         : "");
 
     srEl.textContent =
       "Old value " + fmt(oldV) + ", new value " + fmt(newV) + ". " +
-      (pct >= 0 ? "Percentage increase " : "Percentage change ") + fmtPct(pct) + "." +
-      " Difference " + fmt(diff) + ".";
+      (pct >= 0 ? "Percentage increase " : "Percentage change ") + fmtPct(pct) + ". " +
+      "Difference " + fmt(diff) + ".";
 
     return { oldV, newV, diff, pct };
   }
@@ -294,11 +273,9 @@ document.addEventListener("DOMContentLoaded", function () {
     oldEl.focus();
   });
 
-  // Live update on input (keeps Calculate for explicit action)
   oldEl.addEventListener("input", function () { compute(true); });
   newEl.addEventListener("input", function () { compute(true); });
 
-  renderFaqSchema();
   clearError();
 });
 </script>

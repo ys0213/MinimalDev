@@ -57,6 +57,8 @@ const offsetOptions = [
   canonicalPath={CANONICAL_PATH}
   h1="Time Zone Converter"
   intro="Convert a local date and time from one UTC offset to another. Useful for planning calls, travel, and cross-region scheduling."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -143,14 +145,6 @@ const offsetOptions = [
       <li>2026-03-10 09:00 at UTC+00:00 to UTC+09:00 → 18:00 same date</li>
       <li>Late-night times can convert into the next day</li>
       <li>Use the correct seasonal UTC offset if your region observes daylight saving time</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

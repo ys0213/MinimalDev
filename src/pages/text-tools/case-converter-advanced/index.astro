@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Advanced Case Converter"
   intro="Convert one text input into multiple case styles for writing, coding, naming, and formatting workflows."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -163,10 +165,6 @@ const faqJsonLd = {
       <li>Convert headings into <strong>camelCase</strong> or <strong>PascalCase</strong> for code naming</li>
       <li>Normalize mixed input before copying your preferred format</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

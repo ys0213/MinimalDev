@@ -36,6 +36,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Fuel Consumption Converter"
   intro="Convert between US miles per gallon (MPG) and liters per 100 kilometers (L/100 km)."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <div slot="tool" data-tool="fuel-consumption-converter">
@@ -104,7 +106,7 @@ const faqJsonLd = {
       <li><strong>5 L/100 km</strong> ≈ <strong>47.04 MPG</strong></li>
     </ul>
   </div>
-  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+
   <div slot="related">
     <ul>
       <li><a href="/converter/mpg-to-l-100km/">MPG to L/100 km</a></li>

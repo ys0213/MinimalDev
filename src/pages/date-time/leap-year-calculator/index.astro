@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Leap Year Calculator"
   intro="Enter a year to check if it’s a leap year (366 days). Explains the 4/100/400 rule and shows why a year is or isn’t a leap year."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -108,14 +110,6 @@ const faqJsonLd = {
       <li><strong>2024</strong> → leap year (divisible by 4, not by 100)</li>
       <li><strong>1900</strong> → not a leap year (divisible by 100, not by 400)</li>
       <li><strong>2000</strong> → leap year (divisible by 400)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

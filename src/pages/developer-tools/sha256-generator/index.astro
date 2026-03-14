@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="SHA256 Generator"
   intro="Generate a SHA-256 hash for text input directly in your browser."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -125,12 +127,6 @@ const faqJsonLd = {
       <li>Generate a SHA-256 hash from plain text</li>
       <li>Use uppercase output if you need a display-specific format</li>
       <li>Compare against MD5 if you need a legacy format difference</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

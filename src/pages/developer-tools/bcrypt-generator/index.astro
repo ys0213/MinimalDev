@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Bcrypt Generator"
   intro="Generate a bcrypt hash for text input. Useful for password-hashing style testing and development workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -145,12 +147,6 @@ const faqJsonLd = {
       <li>Generate a bcrypt hash for password-style testing</li>
       <li>Increase cost for slower, stronger work factors</li>
       <li>Run multiple times to see different salted outputs</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

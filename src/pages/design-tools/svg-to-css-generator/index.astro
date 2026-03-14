@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="SVG to CSS Generator"
   intro="Paste SVG markup, convert it to a CSS background-image data URL, and preview the result."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -141,10 +143,6 @@ const faqJsonLd = {
       <li>Preview how the SVG will render as a CSS background</li>
       <li>Embed small vector assets without extra file requests</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

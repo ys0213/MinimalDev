@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Acres to Sq M Converter"
   intro="Convert land area from acres to square meters (m²). Useful for real estate listings, land plots, and quick comparisons."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -117,14 +119,6 @@ const faqJsonLd = {
       <li><strong>1 acre</strong> ≈ <strong>4,046.856 m²</strong></li>
       <li><strong>0.5 acre</strong> ≈ <strong>2,023.428 m²</strong></li>
       <li><strong>10 acres</strong> ≈ <strong>40,468.564 m²</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

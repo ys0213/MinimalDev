@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="MD5 Generator"
   intro="Generate an MD5 hash for text input directly in your browser."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -125,12 +127,6 @@ const faqJsonLd = {
       <li>Hash a short text string for testing or comparison</li>
       <li>Generate lowercase or uppercase hexadecimal output</li>
       <li>Use SHA-256 instead if you need a stronger modern hash</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

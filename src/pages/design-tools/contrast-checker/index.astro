@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Contrast Checker"
   intro="Choose text and background colors, preview them together, and check their contrast ratio."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -157,10 +159,6 @@ const faqJsonLd = {
       <li>Compare dark and light UI combinations quickly</li>
       <li>Test brand colors against accessibility thresholds</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

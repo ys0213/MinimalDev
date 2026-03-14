@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="JWT Encoder"
   intro="Encode JWT header and payload locally into a token-like string. Useful for testing format and structure."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -138,12 +140,6 @@ const faqJsonLd = {
       <li>Header example: <strong>{'{"alg":"HS256","typ":"JWT"}'}</strong></li>
       <li>Payload example: <strong>{'{"sub":"123","iat":1710000000}'}</strong></li>
       <li>Output is useful for format testing, not secure authentication</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="URL Parser"
   intro="Parse a URL into its main parts, inspect query parameters, and review decoded values."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -117,12 +119,6 @@ const faqJsonLd = {
       <li>Parse a URL with multiple query parameters</li>
       <li>Inspect protocol, hostname, and path separately</li>
       <li>Review the fragment and raw search string</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Fake Address Generator"
   intro="Generate fake placeholder addresses for testing forms, account records, demos, and mock datasets."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -147,12 +149,6 @@ const faqJsonLd = {
       <li>Generate 5 US-style addresses for signup form testing</li>
       <li>Generate generic international-style addresses for UI demos</li>
       <li>Use copied output in spreadsheet imports or test fixtures</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

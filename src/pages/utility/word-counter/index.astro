@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Word Counter"
   intro="Paste or type text to count words, characters, sentences, and paragraphs. Also estimates reading time with an adjustable WPM setting."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -124,14 +126,6 @@ const faqJsonLd = {
     <ul>
       <li>Great for essays, blog drafts, product descriptions, and SEO checks</li>
       <li>Adjust WPM for different audiences (e.g., technical vs general)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

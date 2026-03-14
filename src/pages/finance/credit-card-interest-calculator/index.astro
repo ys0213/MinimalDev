@@ -9,7 +9,7 @@ export const tool = {
   order: 80,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is this exact for credit cards?",
     a: "It’s an estimate. Many cards use daily compounding and statement cycles, so real results can differ. This tool uses a simple monthly simulation for planning.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/credit-card-interest-calculator/"
   h1="Credit Card Interest Calculator"
   intro="Estimate how long it takes to pay off a credit card balance and how much interest you’ll pay based on APR and monthly payment."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="credit-card-interest-calculator">
     <div class="form">

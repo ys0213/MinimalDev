@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Regex Tester"
   intro="Test a regular expression pattern against sample text. Review matches, captured groups, and pattern errors."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -160,12 +162,6 @@ const faqJsonLd = {
       <li><strong>\b\w{4}\b</strong> with <strong>g</strong> finds 4-letter words</li>
       <li><strong>\d+</strong> with <strong>g</strong> finds all number sequences</li>
       <li><strong>(cat|dog)</strong> with <strong>i</strong> matches either word case-insensitively</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

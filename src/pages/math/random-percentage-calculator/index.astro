@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Percentage Calculator"
   intro="Generate a random percentage between a minimum and maximum value. Useful for testing, simulations, games, and quick estimates."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -154,14 +156,6 @@ const faqJsonLd = {
       <li><strong>0% to 100%</strong> → common full-range percentage</li>
       <li><strong>25% to 75%</strong> → mid-range random percentage</li>
       <li><strong>90% to 100%</strong> → high-probability style range</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

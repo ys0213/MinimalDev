@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Heart Rate Zones Calculator"
   intro="Estimate training heart rate zones using age and optional resting heart rate. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -119,16 +121,6 @@ const faqJsonLd = {
     <ul>
       <li>Age 30 → Max HR ≈ 187 bpm (estimate), zones computed from that value</li>
       <li>Age 30 + Resting HR 60 → HRR zones are usually lower at the bottom end vs Max-only zones</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

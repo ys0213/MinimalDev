@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Currency Converter"
   intro="Convert an amount from one currency to another using a manually entered exchange rate. Useful when you already know the rate you want to apply."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -166,14 +168,6 @@ const faqJsonLd = {
       <li>100 USD at a rate of 1350 KRW per USD → 135,000 KRW</li>
       <li>50 EUR at a rate of 1.08 USD per EUR → 54 USD</li>
       <li>Use Swap if you want to reverse the conversion direction and enter the opposite rate</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

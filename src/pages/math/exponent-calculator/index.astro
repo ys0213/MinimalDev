@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Exponent Calculator"
   intro="Calculate powers (a^b), n-th roots, and get a scientific-notation view for very large or small results."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -128,14 +130,6 @@ const faqJsonLd = {
       <li>root_2(81) = 9</li>
       <li>root_3(27) = 3</li>
       <li>Scientific notation of 12345 = 1.2345 × 10^4</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

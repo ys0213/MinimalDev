@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Permutation and Combination Calculator"
   intro="Enter n and r to calculate permutations (nPr) and combinations (nCr). Useful for probability, counting, and combinatorics."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -143,14 +145,6 @@ const faqJsonLd = {
       <li><strong>10P3</strong> = <strong>720</strong></li>
       <li><strong>10C3</strong> = <strong>120</strong></li>
       <li>Combinations are always less than or equal to permutations for the same n and r</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

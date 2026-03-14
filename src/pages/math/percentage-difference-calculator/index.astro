@@ -55,6 +55,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Percentage Difference Calculator"
   intro="Compare two values without choosing a baseline. Percentage difference uses the average of the two numbers, making the result symmetric."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -114,14 +116,6 @@ const faqJsonLd = {
       <li>A 120, B 90 → |diff| 30, average 105 → 28.57%</li>
       <li>A 50, B 60 → |diff| 10, average 55 → 18.18%</li>
       <li>A 0, B 80 → |diff| 80, average 40 → 200%</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

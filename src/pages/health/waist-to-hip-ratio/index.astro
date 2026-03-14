@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Waist to Hip Ratio Calculator"
   intro="Calculate your waist-to-hip ratio from waist and hip measurements. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -118,14 +120,6 @@ const faqJsonLd = {
       <li>80 cm waist and 95 cm hip → ratio ≈ 0.842</li>
       <li>32 in waist and 40 in hip → ratio = 0.80</li>
       <li>Useful as a simple body-shape comparison metric</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

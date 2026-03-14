@@ -7,6 +7,29 @@ export const tool = {
   href: "/utility/random-number-generator/",
   order: 90,
 };
+
+const faqs = [
+  {
+    q: "Is this cryptographically secure?",
+    a: "For general random picks it uses your browser’s random number generator. For security-sensitive use such as passwords or tokens, use a dedicated secure generator like the Password Generator or UUID Generator.",
+  },
+  {
+    q: "Are min and max included?",
+    a: "Yes. The range is inclusive, so both min and max can appear.",
+  },
+  {
+    q: "Can numbers repeat?",
+    a: "Yes by default. Enable unique numbers to prevent duplicates.",
+  },
+  {
+    q: "What if min is greater than max?",
+    a: "Enter a valid range where min is less than or equal to max, or swap the values.",
+  },
+  {
+    q: "Does this work offline?",
+    a: "Once the page is loaded, it runs locally in your browser.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,8 @@ export const tool = {
   canonicalPath="/utility/random-number-generator/"
   h1="Random Number Generator"
   intro="Generate random integers quickly. Choose a minimum, maximum, and how many numbers you want (great for dice rolls, raffles, and quick picks)."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <div slot="tool" data-tool="random-number-generator">
     <div class="form">
@@ -65,7 +90,7 @@ export const tool = {
         </label>
 
         <div id="rng_hint" class="note" style="margin-top:8px;">
-          Range is inclusive. If “Unique numbers” is on, count must be ≤ (max − min + 1).
+          Range is inclusive. If unique numbers is on, count must be less than or equal to max − min + 1.
         </div>
 
         <div id="rng_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
@@ -77,12 +102,10 @@ export const tool = {
         <button class="btn secondary" type="button" id="rng_clear">Clear</button>
       </div>
 
-      <!-- Result card -->
       <div class="result" id="rng_result" style="margin-top:12px;" aria-live="polite">
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="rng_sr_summary"
@@ -97,18 +120,18 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      This tool generates random integers within an <strong>inclusive</strong> range: from <code>min</code> to <code>max</code>.
+      This tool generates random integers within an <strong>inclusive</strong> range, from <code>min</code> to <code>max</code>.
       If you request multiple numbers, it repeats the random draw for the selected count.
     </p>
 
     <ul>
       <li><strong>Range:</strong> inclusive (min and max can both appear)</li>
       <li><strong>Duplicates:</strong> allowed by default</li>
-      <li><strong>Optional:</strong> enable “Unique numbers” to prevent duplicates</li>
+      <li><strong>Optional:</strong> enable unique numbers to prevent duplicates</li>
     </ul>
 
     <p class="note">
-      For security-sensitive randomness (passwords, tokens), use <a href="/utility/password-generator/">Password Generator</a> or
+      For security-sensitive randomness such as passwords or tokens, use <a href="/utility/password-generator/">Password Generator</a> or
       <a href="/utility/uuid-generator/">UUID Generator</a>.
     </p>
   </div>
@@ -117,17 +140,7 @@ export const tool = {
     <ul>
       <li><strong>Dice roller:</strong> Min 1, Max 6, Count 10 → simulates dice rolls</li>
       <li><strong>Pick a 3-digit number:</strong> Min 100, Max 999, Count 1</li>
-      <li><strong>Raffle pick:</strong> Min 1, Max 500, Count 3 → pick 3 winners (duplicates possible)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is this cryptographically secure?</strong> For general randomness it uses the browser RNG; for passwords/tokens use the password/UUID tools.</li>
-      <li><strong>Are min and max included?</strong> Yes, the range is inclusive.</li>
-      <li><strong>Can numbers repeat?</strong> Yes, unless you enable “Unique numbers”.</li>
-      <li><strong>What if min is greater than max?</strong> Enter a valid range (min ≤ max) or swap the values.</li>
-      <li><strong>Does this work offline?</strong> Once the page is loaded, it runs in your browser.</li>
+      <li><strong>Raffle pick:</strong> Min 1, Max 500, Count 3 → pick 3 winners</li>
     </ul>
   </div>
 
@@ -141,9 +154,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="rng_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const minEl = document.getElementById("rng_min");
@@ -156,37 +166,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("rng_result");
   const errEl = document.getElementById("rng_error");
   const srEl = document.getElementById("rng_sr_summary");
-  const faqSchemaEl = document.getElementById("rng_faq_schema");
 
   if (
     !minEl || !maxEl || !countEl || !uniqueEl ||
-    !genBtn || !copyBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl
+    !genBtn || !copyBtn || !clearBtn || !outEl || !errEl || !srEl
   ) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "Is this cryptographically secure?",
-      a: "For general random picks it uses your browser’s random number generator. For security-sensitive use (passwords, tokens), use a dedicated secure generator such as the Password Generator or UUID Generator.",
-    },
-    { q: "Are min and max included?", a: "Yes. The range is inclusive, so both min and max can appear." },
-    { q: "Can numbers repeat?", a: "Yes by default. Enable “Unique numbers” to prevent duplicates." },
-    { q: "What if min is greater than max?", a: "Enter a valid range (min ≤ max) or swap the values." },
-    { q: "Does this work offline?", a: "Once the page is loaded, it runs locally in your browser." },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
 
   function toInt(v) {
     const n = parseInt(String(v), 10);
@@ -207,12 +191,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function randIntInclusive(min, max) {
-    // Uniform sampling using rejection (avoid modulo bias)
-    const range = (max - min + 1);
+    const range = max - min + 1;
     const maxU32 = 0x100000000;
     const limit = Math.floor(maxU32 / range) * range;
-
     const buf = new Uint32Array(1);
+
     while (true) {
       crypto.getRandomValues(buf);
       const x = buf[0];
@@ -233,18 +216,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const count = toInt(countEl.value);
     const unique = !!uniqueEl.checked;
 
-    if (!Number.isFinite(min)) return setError("Please enter a valid integer for Min.", minEl), null;
-    if (!Number.isFinite(max)) return setError("Please enter a valid integer for Max.", maxEl), null;
-
-    if (min > max) return setError("Min must be less than or equal to Max.", minEl), null;
-
+    if (!Number.isFinite(min)) {
+      setError("Please enter a valid integer for Min.", minEl);
+      return null;
+    }
+    if (!Number.isFinite(max)) {
+      setError("Please enter a valid integer for Max.", maxEl);
+      return null;
+    }
+    if (min > max) {
+      setError("Min must be less than or equal to Max.", minEl);
+      return null;
+    }
     if (!Number.isFinite(count) || count < 1 || count > 100) {
-      return setError("Count must be between 1 and 100.", countEl), null;
+      setError("Count must be between 1 and 100.", countEl);
+      return null;
     }
 
-    const size = (max - min + 1);
+    const size = max - min + 1;
     if (unique && count > size) {
-      return setError("With “Unique numbers” on, count must be ≤ " + size.toLocaleString() + ".", countEl), null;
+      setError("With unique numbers on, count must be ≤ " + size.toLocaleString() + ".", countEl);
+      return null;
     }
 
     return { min, max, count, unique, size };
@@ -255,17 +247,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderResult(nums, meta) {
-    const { min, max, count, unique } = meta;
     const list = formatList(nums);
 
     outEl.innerHTML =
       "<strong>Result:</strong> " + list + "<br/>" +
-      "<span class='note'>Range " + min.toLocaleString() + "–" + max.toLocaleString() +
-      " · " + count.toLocaleString() + " number" + (count === 1 ? "" : "s") +
-      (unique ? " · unique" : " · duplicates allowed") +
+      "<span class='note'>Range " + meta.min.toLocaleString() + "–" + meta.max.toLocaleString() +
+      " · " + meta.count.toLocaleString() + " number" + (meta.count === 1 ? "" : "s") +
+      (meta.unique ? " · unique" : " · duplicates allowed") +
       "</span>";
 
-    srEl.textContent = "Generated " + count + " number" + (count === 1 ? "" : "s") + ": " + list + ".";
+    srEl.textContent = "Generated " + meta.count + " number" + (meta.count === 1 ? "" : "s") + ": " + list + ".";
     copyBtn.disabled = nums.length === 0;
   }
 
@@ -274,7 +265,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!meta) return;
 
     const { min, max, count, unique, size } = meta;
-
     let nums = [];
 
     if (!unique) {
@@ -285,14 +275,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Unique sampling:
-    // - If count is close to range size, generate full range then shuffle (faster).
-    // - Otherwise, use a Set.
     if (count > size / 2) {
       nums = [];
       for (let v = min; v <= max; v++) nums.push(v);
 
-      // Fisher-Yates shuffle using crypto randomness
       for (let i = nums.length - 1; i > 0; i--) {
         const j = randIntInclusive(0, i);
         const tmp = nums[i];
@@ -309,22 +295,22 @@ document.addEventListener("DOMContentLoaded", function () {
     while (seen.size < count) {
       seen.add(randIntInclusive(min, max));
     }
+
     nums = Array.from(seen);
     renderResult(nums, meta);
   }
 
   async function copy() {
     const text = outEl.textContent || "";
-    // Extract just the numbers line if possible (fallback to whole text)
     const match = text.match(/Result:\s*(.*)\s*Range/i);
-    const payload = (match && match[1]) ? match[1].trim() : text.trim();
+    const payload = match && match[1] ? match[1].trim() : text.trim();
+
     if (!payload) return;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(payload);
       } else {
-        // fallback: create temp textarea
         const ta = document.createElement("textarea");
         ta.value = payload;
         ta.setAttribute("readonly", "true");
@@ -339,7 +325,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       errEl.textContent = "";
       srEl.textContent = "Copied to clipboard.";
-    } catch (e) {
+    } catch (_) {
       errEl.textContent = "Copy failed. Please select and copy manually.";
       srEl.textContent = "Copy failed.";
     }
@@ -361,26 +347,22 @@ document.addEventListener("DOMContentLoaded", function () {
   copyBtn.addEventListener("click", function () { copy(); });
   clearBtn.addEventListener("click", clearAll);
 
-  // Enter-to-generate convenience
   [minEl, maxEl, countEl].forEach((el) => {
     el.addEventListener("keydown", function (e) {
       if (e.key === "Enter") generate();
     });
   });
 
-  // Live validation (lightweight)
   [minEl, maxEl, countEl].forEach((el) => {
     el.addEventListener("input", function () {
-      // do not spam errors on empty fields
       if (!String(minEl.value || "").trim() || !String(maxEl.value || "").trim()) {
         clearError();
         return;
       }
-      validate(); // will set/clear messages
+      validate();
     });
   });
 
-  renderFaqSchema();
   copyBtn.disabled = true;
 });
 </script>

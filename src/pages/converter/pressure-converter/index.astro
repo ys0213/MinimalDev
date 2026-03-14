@@ -57,6 +57,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Pressure Converter"
   intro="Convert between common pressure units. Enter a value, choose “from” and “to” units, and see the converted result plus a quick reference table."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -145,14 +147,6 @@ const faqJsonLd = {
       <li><strong>1 atm</strong> = <strong>101.325 kPa</strong></li>
       <li><strong>1 bar</strong> ≈ <strong>14.5038 psi</strong></li>
       <li><strong>760 mmHg</strong> = <strong>1 atm</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

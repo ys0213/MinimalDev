@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Weeks Between Dates Calculator"
   intro="Find the number of weeks between two dates. Shows precise weeks, full weeks + remaining days, and total days. Optional inclusive counting."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -113,14 +115,6 @@ const faqJsonLd = {
       <li>2026-01-01 → 2026-01-15 = 14 days = 2.0000 weeks</li>
       <li>2026-01-01 → 2026-02-01 = 31 days ≈ 4.4286 weeks</li>
       <li>Inclusive example: 2026-01-01 → 2026-01-01 = 1 day (inclusive), 0 days (non-inclusive)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

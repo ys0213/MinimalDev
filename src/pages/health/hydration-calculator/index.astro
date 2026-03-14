@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Hydration Calculator"
   intro="Estimate daily water intake from body weight using a simple general hydration guideline."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -117,14 +119,6 @@ const faqJsonLd = {
       <li>70 kg × 35 ml/kg → 2,450 ml/day → about 2.45 liters/day</li>
       <li>154 lb is converted to kg internally before calculation</li>
       <li>Useful for simple daily hydration planning</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Paycheck Calculator"
   intro="Estimate your gross paycheck and take-home pay using annual salary, pay frequency, estimated tax rate, and optional paycheck deductions."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -158,14 +160,6 @@ const faqJsonLd = {
       <li>$65,000 annual salary on a biweekly schedule → about $2,500 gross per paycheck</li>
       <li>At a 20% estimated tax rate and $100 other deduction → take-home is lower than gross by both amounts</li>
       <li>Change pay frequency to compare weekly vs monthly paycheck size</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

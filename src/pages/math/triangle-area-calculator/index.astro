@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Triangle Area Calculator"
   intro="Enter the base and height of a triangle to calculate its area."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -150,14 +152,6 @@ const faqJsonLd = {
     <ul>
       <li><strong>base = 10</strong>, <strong>height = 6</strong> → area = <strong>30</strong></li>
       <li><strong>base = 5.5</strong>, <strong>height = 8</strong> → area = <strong>22</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

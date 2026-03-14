@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Regex Generator"
   intro="Generate starter regex patterns for common validation and matching tasks. Customize anchors, quantifiers, and flags."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -180,12 +182,6 @@ const faqJsonLd = {
       <li><strong>Digits only</strong> with min 4 and max 6 → useful for PIN-like values</li>
       <li><strong>Email (simple)</strong> → starter pattern for email-like text</li>
       <li><strong>Date YYYY-MM-DD</strong> → basic date format matching</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

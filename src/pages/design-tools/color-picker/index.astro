@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Color Picker"
   intro="Choose a color visually and inspect its HEX, RGB, and HSL values for design and CSS workflows."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -151,10 +153,6 @@ const faqJsonLd = {
       <li>Inspect RGB and HSL equivalents for CSS design work</li>
       <li>Preview light and dark text readability on the selected background</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

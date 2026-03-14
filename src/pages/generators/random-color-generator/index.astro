@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Color Generator"
   intro="Generate random colors for UI mockups, design testing, themes, and creative workflows."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -166,10 +168,6 @@ const faqJsonLd = {
       <li>Generate HEX values for quick CSS use</li>
       <li>Use RGB or HSL values for design tooling and color experiments</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Unix Timestamp Converter"
   intro="Convert Unix time ↔ date/time. Paste a timestamp (seconds or milliseconds) to decode it, or enter a date/time to generate Unix seconds/ms."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -165,14 +167,6 @@ const faqJsonLd = {
       <li><strong>1700000000</strong> (seconds) → date/time</li>
       <li><strong>1700000000000</strong> (milliseconds) → date/time</li>
       <li>Convert <strong>2026-01-01 00:00:00</strong> to Unix seconds</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

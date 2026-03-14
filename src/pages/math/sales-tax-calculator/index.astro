@@ -7,6 +7,21 @@ export const tool = {
   href: "/math/sales-tax-calculator/",
   order: 20,
 };
+
+const faqs = [
+  {
+    q: "Is this VAT?",
+    a: "Not exactly. VAT is often included in the listed price, while this tool is for a sales tax workflow where tax is added at checkout. If your prices already include tax, use a VAT-style calculator.",
+  },
+  {
+    q: "Why does remove-tax use division?",
+    a: "Because the tax is embedded in the total. To find the pre-tax price, divide the total by 1 plus the rate, then compute tax as total minus price.",
+  },
+  {
+    q: "Does this round like retailers?",
+    a: "This uses standard rounding for display. Real receipts may round per line item or use different rounding rules depending on jurisdiction and retailer systems.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +30,8 @@ export const tool = {
   canonicalPath="/math/sales-tax-calculator/"
   h1="Sales Tax Calculator"
   intro="Calculate sales tax quickly. Add tax to a price or remove tax from a total (pre-tax amount)."
+  faq={faqs}
+  categoryName="Math"
 >
   <div slot="tool" data-tool="sales-tax-calculator">
     <div class="form">
@@ -35,7 +52,7 @@ export const tool = {
           placeholder="e.g., 100"
           step="0.01"
           min="0"
-          max="1e15"
+          max="1000000000000000"
           aria-describedby="st_help st_error"
         />
       </div>
@@ -64,7 +81,6 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="st_sr_summary"
@@ -79,7 +95,7 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      <strong>Add tax:</strong> tax = price × rate, total = price + tax<br/>
+      <strong>Add tax:</strong> tax = price × rate, total = price + tax<br />
       <strong>Remove tax:</strong> price = total ÷ (1 + rate), tax = total − price
     </p>
   </div>
@@ -88,14 +104,6 @@ export const tool = {
     <ul>
       <li>Add: $100 at 8% → tax $8 → total $108</li>
       <li>Remove: $108 at 8% → price $100 → tax $8</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is this VAT?</strong> Not exactly. VAT is often included in the listed price; use a VAT calculator for that workflow.</li>
-      <li><strong>Why remove-tax uses division?</strong> Because the tax is embedded in the total.</li>
-      <li><strong>Does this round like retailers?</strong> We show standard rounding; receipts may round per-line item.</li>
     </ul>
   </div>
 
@@ -109,9 +117,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="st_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const modeEl = document.getElementById("st_mode");
@@ -122,38 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("st_result");
   const errEl = document.getElementById("st_error");
   const srEl = document.getElementById("st_sr_summary");
-  const faqSchemaEl = document.getElementById("st_faq_schema");
 
-  if (!modeEl || !amountEl || !rateEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "Is this VAT?",
-      a: "Not exactly. VAT is often included in the listed price; this tool is for a sales-tax workflow where tax is added at checkout. If your prices already include tax, use a VAT-style calculator.",
-    },
-    {
-      q: "Why does remove-tax use division?",
-      a: "Because the tax is embedded in the total. To find the pre-tax price, divide the total by (1 + rate), then compute tax as total − price.",
-    },
-    {
-      q: "Does this round like retailers?",
-      a: "This uses standard rounding for display. Real receipts may round per line item or use different rounding rules depending on jurisdiction and retailer systems.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!modeEl || !amountEl || !rateEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -178,7 +153,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function money(v) {
     if (!Number.isFinite(v)) return "$0.00";
-    // Avoid "-$0.00"
     const x = Math.abs(v) < 1e-10 ? 0 : v;
     return x.toLocaleString(undefined, { style: "currency", currency: "USD" });
   }
@@ -207,27 +181,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!Number.isFinite(amt) || amt < 0) {
       setError("Please enter a valid amount (0 or higher).", "amount");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (!Number.isFinite(ratePct) || ratePct < 0) {
       setError("Please enter a valid tax rate (0 or higher).", "rate");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (amt > 1e15) {
       setError("Amount is too large. Please enter a smaller value.", "amount");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (ratePct > 1000) {
       setError("Tax rate is too large. Please enter a smaller rate.", "rate");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
     const r = ratePct / 100;
-
-    // Guard against division blow-ups in remove mode when 1+r is extremely small (can only happen if negative, already blocked).
     const denom = 1 + r;
+
     if (mode === "remove" && denom <= 0) {
-      setError("Tax rate must produce a positive (1 + rate).", "rate");
+      setError("Tax rate must produce a positive 1 + rate value.", "rate");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
@@ -243,7 +226,10 @@ document.addEventListener("DOMContentLoaded", function () {
       tax = total - price;
     }
 
-    const effectiveRate = mode === "remove" ? (price === 0 ? NaN : (tax / price) * 100) : ratePct;
+    const effectiveRate = mode === "remove"
+      ? (price === 0 ? NaN : (tax / price) * 100)
+      : ratePct;
+
     const badge = mode === "add" ? "Tax added" : "Tax removed";
 
     outEl.innerHTML =
@@ -259,8 +245,8 @@ document.addEventListener("DOMContentLoaded", function () {
       "<div class='note' style='margin-top:6px;'>" +
         (mode === "add"
           ? ("Computed as tax = price × " + fmtPct(ratePct) + ", total = price + tax.")
-          : ("Computed as price = total ÷ (1 + " + fmtPct(ratePct) + "), tax = total − price."))
-      + "</div>";
+          : ("Computed as price = total ÷ (1 + " + fmtPct(ratePct) + "), tax = total − price.")) +
+      "</div>";
 
     srEl.textContent =
       "Mode " + (mode === "add" ? "add tax" : "remove tax") +
@@ -288,7 +274,6 @@ document.addEventListener("DOMContentLoaded", function () {
     amountEl.focus();
   });
 
-  // UX: update placeholder hint based on mode
   function updateAmountPlaceholder() {
     amountEl.placeholder = modeEl.value === "remove" ? "e.g., 108 (total)" : "e.g., 100 (price)";
   }
@@ -302,7 +287,6 @@ document.addEventListener("DOMContentLoaded", function () {
   rateEl.addEventListener("input", function () { compute(true); });
 
   updateAmountPlaceholder();
-  renderFaqSchema();
   clearError();
 });
 </script>

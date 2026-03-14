@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Body Mass Calculator"
   intro="Estimate fat mass and lean body mass from your weight and body fat percentage. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -114,14 +116,6 @@ const faqJsonLd = {
       <li>70 kg at 20% body fat → fat mass ≈ 14 kg, lean body mass ≈ 56 kg</li>
       <li>154 lb at 18% body fat → fat mass ≈ 27.72 lb, lean body mass ≈ 126.28 lb</li>
       <li>Useful for simple body composition tracking, not diagnosis</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Character Counter"
   intro="Paste or type text to count characters (with/without spaces), lines, and estimated UTF-8 byte size. Useful for social posts, SEO limits, and form constraints."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -141,14 +143,6 @@ const faqJsonLd = {
       <li>Check post limits (characters) before publishing</li>
       <li>Validate form inputs with strict constraints</li>
       <li>Estimate byte length for APIs that cap payload size</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

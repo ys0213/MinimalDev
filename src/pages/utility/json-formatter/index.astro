@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="JSON Formatter"
   intro="Paste JSON to format (pretty-print), minify, and validate. Shows helpful syntax error hints. Everything runs locally in your browser."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -141,14 +143,6 @@ const faqJsonLd = {
       <li>Pretty print: add indentation and new lines for readability</li>
       <li>Minify: remove whitespace to reduce size (useful for APIs)</li>
       <li>Validate: check whether the JSON is syntactically valid</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

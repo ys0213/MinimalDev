@@ -7,6 +7,29 @@ export const tool = {
   href: "/utility/uuid-generator/",
   order: 30,
 };
+
+const faqs = [
+  {
+    q: "What is a UUID?",
+    a: "A UUID is a Universally Unique Identifier used to uniquely identify records or resources.",
+  },
+  {
+    q: "Is UUID v4 secure?",
+    a: "UUID v4 is random-based and generated from cryptographically secure randomness in modern browsers. It is suitable for most development use cases, but always follow your system’s security requirements.",
+  },
+  {
+    q: "Is this the same as a GUID?",
+    a: "Yes. GUID and UUID are commonly used interchangeably.",
+  },
+  {
+    q: "Are generated UUIDs stored?",
+    a: "No. Generation happens locally in your browser and nothing is stored or transmitted.",
+  },
+  {
+    q: "Can collisions happen?",
+    a: "Collisions are theoretically possible but extremely unlikely because UUID v4 contains 122 random bits.",
+  },
+];
 ---
 
 <ToolLayout
@@ -14,7 +37,9 @@ export const tool = {
   description="Free online UUID v4 generator. Generate random UUIDs instantly using secure browser cryptographic APIs."
   canonicalPath="/utility/uuid-generator/"
   h1="UUID v4 Generator"
-  intro="Generate random UUID (version 4) values instantly using secure browser cryptographic randomness. Copy with one click."
+  intro="Generate random UUID version 4 values instantly using secure browser cryptographic randomness. Copy with one click."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <div slot="tool" data-tool="uuid-generator">
     <div class="form">
@@ -35,7 +60,6 @@ export const tool = {
 
       <div class="field" style="margin-top:12px;">
         <label for="uuid_result">UUID(s)</label>
-        <!-- textarea supports multi-value output and easy selection -->
         <textarea
           id="uuid_result"
           rows="6"
@@ -46,7 +70,6 @@ export const tool = {
         ></textarea>
       </div>
 
-      <!-- Screen-reader status -->
       <div
         class="note"
         id="uuid_sr_status"
@@ -63,7 +86,7 @@ export const tool = {
   <div slot="how">
     <p class="note">
       This tool generates <strong>UUID version 4</strong> values using the browser’s secure cryptographic APIs:
-      <code>crypto.randomUUID()</code> (if available) or <code>crypto.getRandomValues()</code>.
+      <code>crypto.randomUUID()</code> if available, or <code>crypto.getRandomValues()</code>.
     </p>
 
     <ul>
@@ -85,16 +108,6 @@ export const tool = {
     </ul>
   </div>
 
-  <div slot="faq">
-    <ul>
-      <li><strong>What is a UUID?</strong> A Universally Unique Identifier used to uniquely identify records or resources.</li>
-      <li><strong>Is UUID v4 secure?</strong> It uses random numbers from cryptographically secure sources, suitable for most development use cases.</li>
-      <li><strong>Is this the same as a GUID?</strong> Yes. GUID and UUID are often used interchangeably.</li>
-      <li><strong>Are generated UUIDs stored?</strong> No. Everything runs locally in your browser.</li>
-      <li><strong>Can collisions happen?</strong> The probability is extremely low due to 122 random bits in UUID v4.</li>
-    </ul>
-  </div>
-
   <div slot="related">
     <ul>
       <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
@@ -105,9 +118,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="uuid_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const countEl = document.getElementById("uuid_count");
@@ -117,46 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("uuid_result");
   const errEl = document.getElementById("uuid_error");
   const srEl = document.getElementById("uuid_sr_status");
-  const faqSchemaEl = document.getElementById("uuid_faq_schema");
 
-  if (!countEl || !genBtn || !copyBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "What is a UUID?",
-      a: "A Universally Unique Identifier used to uniquely identify records or resources.",
-    },
-    {
-      q: "Is UUID v4 secure?",
-      a: "UUID v4 is random-based and generated from cryptographically secure randomness in modern browsers. It is suitable for most development use cases, but always follow your system’s security requirements.",
-    },
-    {
-      q: "Is this the same as a GUID?",
-      a: "Yes. GUID and UUID are commonly used interchangeably.",
-    },
-    {
-      q: "Are generated UUIDs stored?",
-      a: "No. Generation happens locally in your browser and nothing is stored or transmitted.",
-    },
-    {
-      q: "Can collisions happen?",
-      a: "Collisions are theoretically possible but extremely unlikely because UUID v4 contains 122 random bits.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!countEl || !genBtn || !copyBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toInt(v) {
     const n = parseInt(String(v), 10);
@@ -182,16 +154,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function uuidV4Fallback() {
-    // RFC 4122 v4:
-    // Set version (byte 6 high nibble to 0100) and variant (byte 8 high bits to 10)
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
 
-    bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-    bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
     const b = Array.from(bytes, hexByte).join("");
-    // 8-4-4-4-12
     return (
       b.slice(0, 8) + "-" +
       b.slice(8, 12) + "-" +
@@ -228,14 +197,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const meta = validate();
     if (!meta) return;
 
-    const { count } = meta;
     const uuids = [];
-    for (let i = 0; i < count; i++) uuids.push(uuidV4());
+    for (let i = 0; i < meta.count; i++) {
+      uuids.push(uuidV4());
+    }
 
     outEl.value = uuids.join("\n");
     copyBtn.disabled = uuids.length === 0;
-
-    srEl.textContent = "Generated " + count.toLocaleString() + " UUID" + (count === 1 ? "" : "s") + ".";
+    srEl.textContent = "Generated " + meta.count.toLocaleString() + " UUID" + (meta.count === 1 ? "" : "s") + ".";
   }
 
   async function copy() {
@@ -246,15 +215,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
-        // fallback
         outEl.focus();
         outEl.select();
         const ok = document.execCommand && document.execCommand("copy");
         if (!ok) throw new Error("copy_failed");
       }
+
       srEl.textContent = "Copied to clipboard.";
       errEl.textContent = "";
-    } catch (e) {
+    } catch (_) {
       errEl.textContent = "Copy failed. Please select the UUIDs and copy manually.";
       srEl.textContent = "Copy failed.";
     }
@@ -273,12 +242,10 @@ document.addEventListener("DOMContentLoaded", function () {
   copyBtn.addEventListener("click", function () { copy(); });
   clearBtn.addEventListener("click", clearAll);
 
-  // Enter-to-generate
   countEl.addEventListener("keydown", function (e) {
     if (e.key === "Enter") generate();
   });
 
-  // Keep errors responsive
   countEl.addEventListener("input", function () {
     if (!String(countEl.value || "").trim()) {
       clearError();
@@ -287,10 +254,8 @@ document.addEventListener("DOMContentLoaded", function () {
     validate();
   });
 
-  renderFaqSchema();
   copyBtn.disabled = true;
 
-  // Generate one on load for convenience (only if crypto is supported)
   if (hasCryptoSupport()) generate();
 });
 </script>

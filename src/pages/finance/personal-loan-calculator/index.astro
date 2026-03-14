@@ -9,7 +9,7 @@ export const tool = {
   order: 130,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Does this personal loan calculator include origination fees?",
     a: "No. This model is principal + interest only. If you want a rough estimate, add fees into the loan amount or use the APR Calculator for fee-inclusive estimation.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/personal-loan-calculator/"
   h1="Personal Loan Calculator"
   intro="Estimate monthly payment, total interest, and a full amortization schedule for a personal loan using APR and term."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="personal-loan-calculator">
     <div class="form">
@@ -123,16 +124,6 @@ const faq = [
       <li><strong>$10,000</strong> at <strong>11.5%</strong> for <strong>3 years</strong> → monthly payment + amortization table</li>
       <li>Try <strong>0% APR</strong> to see a pure principal-only payoff schedule</li>
       <li>Compare against <a href="/finance/apr-calculator/">APR Calculator</a> if your loan has upfront fees</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

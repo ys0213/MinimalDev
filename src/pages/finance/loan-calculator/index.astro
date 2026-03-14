@@ -9,7 +9,7 @@ export const tool = {
   order: 20,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What does this loan calculator include?",
     a: "It calculates principal-and-interest (P&I) only: monthly payment, total interest, total paid, and an amortization schedule. It does not include taxes, insurance, or lender-specific fees.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/loan-calculator/"
   h1="Loan Calculator"
   intro="Calculate monthly loan payments, total interest, and view a full amortization schedule."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="loan-calculator">
     <div class="form">
@@ -130,16 +131,6 @@ const faq = [
       <li>$10,000 at 5% for 5 years → monthly payment ≈ $188.71</li>
       <li>$25,000 at 6.5% for 5 years → estimate payment and total interest</li>
       <li>0% APR loan → payment = loan amount ÷ months</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

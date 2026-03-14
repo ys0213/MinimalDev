@@ -7,6 +7,29 @@ export const tool = {
   href: "/utility/password-generator/",
   order: 10,
 };
+
+const faqs = [
+  {
+    q: "Is this password generator secure?",
+    a: "Yes. It uses your browser’s cryptographically secure random number generator, crypto.getRandomValues. Passwords are generated locally on your device.",
+  },
+  {
+    q: "Is this an online password generator?",
+    a: "Yes, but generation happens locally in your browser. No server-side generation is used.",
+  },
+  {
+    q: "Are generated passwords stored?",
+    a: "No. Inputs and results are not stored or transmitted by this page.",
+  },
+  {
+    q: "What is a strong password?",
+    a: "A strong password is long, random, and uses a mix of character types. Longer length usually improves security more than complexity alone.",
+  },
+  {
+    q: "Should I reuse passwords?",
+    a: "No. Use a unique password for each account to reduce risk if one site is compromised.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,8 @@ export const tool = {
   canonicalPath="/utility/password-generator/"
   h1="Strong Password Generator"
   intro="Generate strong, secure random passwords locally in your browser. Choose length and character types with guaranteed inclusion."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <div slot="tool" data-tool="password-generator">
     <div class="form">
@@ -82,7 +107,6 @@ export const tool = {
         </div>
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="pw_sr_summary"
@@ -104,7 +128,7 @@ export const tool = {
     <ul>
       <li><strong>Custom length:</strong> 8–64 characters</li>
       <li><strong>Character sets:</strong> uppercase, lowercase, numbers, symbols</li>
-      <li><strong>High entropy:</strong> Longer passwords with more character sets increase security</li>
+      <li><strong>High entropy:</strong> longer passwords with more character sets increase security</li>
     </ul>
   </div>
 
@@ -113,16 +137,6 @@ export const tool = {
       <li><strong>Length 16</strong> + letters + numbers → strong general account password</li>
       <li><strong>Length 24</strong> + symbols → high-entropy password for critical accounts</li>
       <li><strong>Length 32+</strong> → maximum security for password managers</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>Is this password generator secure?</strong> Yes. It uses cryptographically secure randomness provided by your browser.</li>
-      <li><strong>Is this an online password generator?</strong> Yes, but generation happens locally in your browser, not on a server.</li>
-      <li><strong>Are generated passwords stored?</strong> No. Nothing is saved or transmitted.</li>
-      <li><strong>What is a strong password?</strong> A password that is long, random, and includes multiple character types.</li>
-      <li><strong>Should I reuse passwords?</strong> No. Always use unique passwords for each account.</li>
     </ul>
   </div>
 
@@ -135,9 +149,6 @@ export const tool = {
     </ul>
   </div>
 </ToolLayout>
-
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="pw_faq_schema"></script>
 
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
@@ -153,55 +164,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const strengthEl = document.getElementById("pw_strength");
   const errEl = document.getElementById("pw_error");
   const srEl = document.getElementById("pw_sr_summary");
-  const faqSchemaEl = document.getElementById("pw_faq_schema");
 
   if (
     !lenEl || !upperEl || !lowerEl || !numEl || !symEl ||
-    !genBtn || !copyBtn || !clearBtn || !outEl || !strengthEl || !errEl || !srEl || !faqSchemaEl
+    !genBtn || !copyBtn || !clearBtn || !outEl || !strengthEl || !errEl || !srEl
   ) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "Is this password generator secure?",
-      a: "Yes. It uses your browser’s cryptographically secure random number generator (crypto.getRandomValues). Passwords are generated locally on your device.",
-    },
-    {
-      q: "Is this an online password generator?",
-      a: "Yes, but generation happens locally in your browser (no server-side generation).",
-    },
-    {
-      q: "Are generated passwords stored?",
-      a: "No. Inputs and results are not stored or transmitted by this page.",
-    },
-    {
-      q: "What is a strong password?",
-      a: "A strong password is long, random, and uses a mix of character types. Longer length generally increases security more than adding complexity alone.",
-    },
-    {
-      q: "Should I reuse passwords?",
-      a: "No. Use a unique password for each account to reduce risk if one site is compromised.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
 
   const SETS = {
     upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     lower: "abcdefghijklmnopqrstuvwxyz",
     num: "0123456789",
-    // Conservative symbol set to avoid whitespace and ambiguous chars
     sym: "!@#$%^&*()-_=+[]{};:,.?/<>~",
   };
 
@@ -230,12 +202,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function randInt(maxExclusive) {
-    // uniform sampling using rejection to avoid modulo bias
     if (!Number.isFinite(maxExclusive) || maxExclusive <= 0) return 0;
     const max = maxExclusive >>> 0;
     const limit = Math.floor(0x100000000 / max) * max;
-
     const buf = new Uint32Array(1);
+
     while (true) {
       crypto.getRandomValues(buf);
       const x = buf[0];
@@ -254,18 +225,15 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function estimateEntropyBits(length, poolSize) {
-    // bits ≈ length * log2(poolSize)
     if (!Number.isFinite(length) || !Number.isFinite(poolSize) || length <= 0 || poolSize <= 1) return 0;
     return length * (Math.log(poolSize) / Math.log(2));
   }
 
   function formatBits(bits) {
-    const b = Math.round(bits);
-    return b.toLocaleString() + " bits (approx.)";
+    return Math.round(bits).toLocaleString() + " bits (approx.)";
   }
 
   function strengthLabel(bits) {
-    // Conservative coarse labeling (informational only)
     if (bits >= 120) return "Very strong";
     if (bits >= 80) return "Strong";
     if (bits >= 60) return "Good";
@@ -287,7 +255,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function buildPool(sets) {
-    // De-duplicate characters across sets just in case
     const all = sets.join("");
     const uniq = Array.from(new Set(all.split("")));
     return uniq.join("");
@@ -323,8 +290,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const pool = buildPool(sets);
     const poolSize = pool.length;
-
-    // Guaranteed inclusion: pick 1 from each selected set
     const chars = [];
 
     for (let i = 0; i < sets.length; i++) {
@@ -332,7 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
       chars.push(s.charAt(randInt(s.length)));
     }
 
-    // Fill the rest from the full pool
     while (chars.length < length) {
       chars.push(pool.charAt(randInt(poolSize)));
     }
@@ -356,17 +320,17 @@ document.addEventListener("DOMContentLoaded", function () {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(pw);
       } else {
-        // Fallback for older browsers
         outEl.focus();
         outEl.select();
         const ok = document.execCommand && document.execCommand("copy");
         if (!ok) throw new Error("copy_failed");
         outEl.setSelectionRange(outEl.value.length, outEl.value.length);
       }
+
       errEl.textContent = "";
       strengthEl.innerHTML = "<strong>Copied</strong> <span class='note' style='margin-left:6px;'>Clipboard updated.</span>";
       srEl.textContent = "Password copied to clipboard.";
-    } catch (e) {
+    } catch (_) {
       errEl.textContent = "Copy failed. Please copy manually.";
       srEl.textContent = "Copy failed.";
       outEl.focus();
@@ -388,52 +352,52 @@ document.addEventListener("DOMContentLoaded", function () {
     lenEl.focus();
   }
 
-  // Events
   genBtn.addEventListener("click", function () {
     const pw = generatePassword();
-    if (!pw) {
-      // focus guidance
-      if (lenEl.getAttribute("aria-invalid") === "true") lenEl.focus();
+    if (!pw && lenEl.getAttribute("aria-invalid") === "true") {
+      lenEl.focus();
     }
   });
 
   copyBtn.addEventListener("click", function () { copyPassword(); });
-
   clearBtn.addEventListener("click", function () { clearAll(); });
 
-  // UX: if user changes options after generating, keep result but refresh strength estimate for the new pool
   function refreshStrengthIfPresent() {
     clearError();
     const pw = String(outEl.value || "");
     if (!pw) return;
+
     const length = pw.length;
     const sets = selectedSets();
+
     if (!sets.length) {
       strengthEl.textContent = "Select at least one character type.";
       return;
     }
+
     const pool = buildPool(sets);
     updateStrengthDisplay(length, pool.length);
   }
 
   lenEl.addEventListener("input", function () {
-    // validate live but don't block typing
     const length = toInt(lenEl.value);
+
     if (!String(lenEl.value || "").trim()) {
       clearError();
       return;
     }
+
     if (!Number.isFinite(length) || length < 8 || length > 64) {
       setError("Length must be 8–64.");
       return;
     }
+
     clearError();
     refreshStrengthIfPresent();
   });
 
   [upperEl, lowerEl, numEl, symEl].forEach((el) => {
     el.addEventListener("change", function () {
-      // Prevent "no set selected" state from being silent
       if (selectedSets().length === 0) {
         errEl.textContent = "Select at least one character type.";
       } else {
@@ -443,8 +407,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Init
-  renderFaqSchema();
   updateButtons();
 });
 </script>

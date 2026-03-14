@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="CSS Gradient Generator"
   intro="Create a three-stop linear gradient with custom stop positions and copy-ready CSS output."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -171,10 +173,6 @@ const faqJsonLd = {
       <li>Control exactly where each color appears in the gradient</li>
       <li>Copy the generated CSS directly into your stylesheet</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

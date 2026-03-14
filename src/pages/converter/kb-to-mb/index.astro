@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="KB to MB Converter"
   intro="Convert kilobytes (KB) to megabytes (MB). Choose decimal or binary interpretation to match how file sizes are labeled or displayed."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -125,14 +127,6 @@ const faqJsonLd = {
       <li><strong>2048 KB</strong> → <strong>2.048 MB</strong> (decimal)</li>
       <li><strong>2048 KB</strong> → <strong>2.000 MiB</strong> (binary KiB→MiB)</li>
       <li><strong>512 KB</strong> → <strong>0.512 MB</strong> (decimal)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

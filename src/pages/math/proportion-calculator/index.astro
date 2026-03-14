@@ -38,6 +38,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Proportion Calculator"
   intro="Solve A:B = C:D. Leave exactly one field blank, then calculate the missing value using cross multiplication."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -179,14 +181,6 @@ const faqJsonLd = {
       <li>2:3 = 10:D → D = 15</li>
       <li>A:8 = 3:12 → A = 2</li>
       <li>5:B = 20:4 → B = 1</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

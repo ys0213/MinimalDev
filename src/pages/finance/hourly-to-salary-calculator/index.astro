@@ -12,7 +12,7 @@ export const tool = {
 const SITE_NAME = "MinimalDev";
 const CANONICAL_PATH = "/finance/hourly-to-salary-calculator/";
 
-const faq = [
+const faqs = [
   {
     q: "What does this hourly to salary calculator do?",
     a: "It converts an hourly wage into estimated annual, monthly, biweekly, weekly, and daily gross pay based on your work schedule.",
@@ -42,7 +42,8 @@ const faq = [
   canonicalPath="/finance/hourly-to-salary-calculator/"
   h1="Hourly to Salary Calculator"
   intro="Enter an hourly wage and your work schedule to estimate gross earnings across common pay periods."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="hourly-to-salary-calculator">
     <style is:inline>

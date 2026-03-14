@@ -9,7 +9,7 @@ export const tool = {
   order: 100,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What does this investment calculator estimate?",
     a: "It projects an investment balance over time using an assumed annual return rate and optional recurring contributions. It shows future value, total contributions, and estimated gains.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/investment-calculator/"
   h1="Investment Calculator"
   intro="Project future value of an investment with monthly or annual contributions and an assumed annual return rate."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="investment-calculator">
     <div class="form">

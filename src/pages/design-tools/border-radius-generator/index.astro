@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Border Radius Generator"
   intro="Build a border-radius value visually by adjusting each corner and previewing the result."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -164,10 +166,6 @@ const faqJsonLd = {
       <li>Design asymmetrical corner shapes for UI blocks</li>
       <li>Copy the exact CSS radius value into your stylesheet</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

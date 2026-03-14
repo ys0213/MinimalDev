@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="km/h to mph Converter"
   intro="Convert kilometers per hour (km/h) to miles per hour (mph). Includes a quick reference table and rounding controls."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -115,14 +117,6 @@ const faqJsonLd = {
       <li><strong>100 km/h</strong> ≈ <strong>62.137 mph</strong></li>
       <li><strong>60 km/h</strong> ≈ <strong>37.282 mph</strong></li>
       <li><strong>120 km/h</strong> ≈ <strong>74.565 mph</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

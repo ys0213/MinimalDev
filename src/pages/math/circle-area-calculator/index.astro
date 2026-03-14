@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Circle Area Calculator"
   intro="Enter a radius or diameter to calculate the area of a circle."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -126,14 +128,6 @@ const faqJsonLd = {
     <ul>
       <li><strong>radius = 5</strong> → area ≈ <strong>78.54</strong></li>
       <li><strong>diameter = 10</strong> → area ≈ <strong>78.54</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

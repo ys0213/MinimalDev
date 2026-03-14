@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Time Between Times"
   intro="Calculate the elapsed time between two times of day. Useful for schedules, shift checks, and quick time comparisons."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -120,14 +122,6 @@ const faqJsonLd = {
       <li>07:45 to 12:15 → 4 hours 30 minutes</li>
       <li>23:30 to 01:00 with overnight mode → 1 hour 30 minutes</li>
       <li>Swap times if you entered them in the wrong order</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

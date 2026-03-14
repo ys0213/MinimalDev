@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Number List"
   intro="Generate random integer lists for testing, sampling, mock data, and spreadsheet workflows."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -167,10 +169,6 @@ const faqJsonLd = {
       <li>Generate a unique list of 6 lottery-style numbers</li>
       <li>Generate sorted numeric samples for spreadsheet testing</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

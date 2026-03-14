@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="JSON to CSV"
   intro="Convert a JSON array of objects into CSV output. Choose a delimiter and include headers automatically."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -157,12 +159,6 @@ const faqJsonLd = {
             <li>Nested values are stringified when needed</li>
         </ul>
     </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
-    </ul>
-  </div>
 
   <div slot="related">
     <ul>

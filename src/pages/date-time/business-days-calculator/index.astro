@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Business Days Calculator"
   intro="Count business days between two dates. Excludes selected weekend days and optional holidays. Useful for deadlines, shipping estimates, and planning."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -140,14 +142,6 @@ const faqJsonLd = {
       <li>2026-03-02 → 2026-03-06 with Sat/Sun weekends (inclusive) → 5 business days</li>
       <li>Add holiday 2026-03-04 → 4 business days</li>
       <li>Exclude Fri/Sat for weekend → matches regions where Sunday is a business day</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

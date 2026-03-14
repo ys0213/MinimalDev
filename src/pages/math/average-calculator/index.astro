@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Average Calculator"
   intro="Compute the arithmetic mean (average) from a list of numbers. Paste values separated by commas, spaces, or new lines to get mean, sum, count, min, max, and range."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -139,14 +141,6 @@ const faqJsonLd = {
       <li>10, 20, 30 → mean = 20</li>
       <li>1.5 2.5 3.0 → mean = 2.333…</li>
       <li>-5, 5 → mean = 0</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

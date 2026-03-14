@@ -47,6 +47,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="CM to Inches Converter"
   intro="Convert centimeters to inches (and inches to centimeters) using the exact 2.54 conversion."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -118,14 +120,6 @@ const faqJsonLd = {
       <li><strong>170 cm</strong> → <strong>66.929 in</strong> (approx.)</li>
       <li><strong>72 in</strong> → <strong>182.88 cm</strong> (exact)</li>
       <li><strong>10 cm</strong> → <strong>3.937 in</strong> (approx.)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

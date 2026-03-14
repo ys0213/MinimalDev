@@ -9,7 +9,7 @@ export const tool = {
   order: 140,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is refinance break-even?",
     a: "Break-even is the number of months required for monthly payment savings to recover refinance closing costs.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/refinance-calculator/"
   h1="Refinance Calculator"
   intro="Compare your current loan with a refinance option to estimate payment changes, interest savings, and break-even time."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="refinance-calculator">
     <div class="form">
@@ -121,16 +122,6 @@ const faq = [
       Break-even months = closing costs ÷ monthly savings.
       If monthly savings are negative, refinance may not produce immediate payment savings.
     </p>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
-    </ul>
   </div>
 
   <div slot="related">

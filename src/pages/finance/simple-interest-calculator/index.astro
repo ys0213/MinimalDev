@@ -9,7 +9,7 @@ export const tool = {
   order: 150,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is simple interest?",
     a: "Simple interest is calculated only on the original principal. It does not compound over time.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/simple-interest-calculator/"
   h1="Simple Interest Calculator"
   intro="Calculate simple interest using principal, annual rate, and time in years."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="simple-interest-calculator">
     <div class="form">
@@ -108,16 +109,6 @@ const faq = [
       <li>$5,000 at 6% for 2 years → Interest = $600</li>
       <li>$10,000 at 4% for 1.5 years → linear interest calculation</li>
       <li>Set rate to 0% → total equals principal</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

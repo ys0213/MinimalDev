@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Ideal Weight Calculator"
   intro="Estimate ideal body weight (IBW) using multiple reference formulas. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -160,16 +162,6 @@ const faqJsonLd = {
     <ul>
       <li>Male, 175 cm → shows IBW estimates by formula</li>
       <li>Female, 5 ft 4 in → shows IBW estimates by formula</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Area Converter"
   intro="Convert between common area units such as square meters, square feet, acres, and hectares. Useful for land, floor plans, and quick comparisons."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -147,14 +149,6 @@ const faqJsonLd = {
       <li><strong>100 m²</strong> ≈ <strong>1,076.391 ft²</strong></li>
       <li><strong>1 hectare</strong> = <strong>10,000 m²</strong></li>
       <li><strong>1 acre</strong> ≈ <strong>4,046.856 m²</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

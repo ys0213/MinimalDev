@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Distance Formula Calculator"
   intro="Enter two points (x1, y1) and (x2, y2) to calculate the straight-line distance between them."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -154,14 +156,6 @@ const faqJsonLd = {
     <ul>
       <li><strong>(1, 2)</strong> to <strong>(4, 6)</strong> → distance = <strong>5</strong></li>
       <li><strong>(0, 0)</strong> to <strong>(3, 4)</strong> → distance = <strong>5</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

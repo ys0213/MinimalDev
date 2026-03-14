@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Quadratic Equation Calculator"
   intro="Enter coefficients a, b, and c to solve a quadratic equation of the form ax² + bx + c = 0."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -163,14 +165,6 @@ const faqJsonLd = {
       <li><strong>x² − 3x + 2 = 0</strong> → roots: <strong>1</strong> and <strong>2</strong></li>
       <li><strong>x² + 2x + 1 = 0</strong> → repeated root: <strong>-1</strong></li>
       <li><strong>x² + x + 1 = 0</strong> → complex roots</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

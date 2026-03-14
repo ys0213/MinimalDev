@@ -9,7 +9,7 @@ export const tool = {
   order: 40,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is the interest compounded monthly?",
     a: "Yes. This tool applies the annual rate as a monthly rate (annual ÷ 12) and compounds month by month for a simple estimate.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/savings-calculator/"
   h1="Savings Calculator"
   intro="Estimate how your savings balance could grow with monthly deposits and an optional annual interest rate."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="savings-calculator">
     <div class="form">
@@ -127,16 +128,6 @@ const faq = [
       <li>$1,000 start, $200/mo, 3% for 10 years → estimate final balance and total interest</li>
       <li>Set interest to 0% → deposit-only savings projection</li>
       <li>Increase monthly deposit to compare how much faster you reach a target balance</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

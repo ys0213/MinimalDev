@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Whitespace Remover"
   intro="Clean up whitespace in text by collapsing spaces, removing tabs, deleting blank lines, or stripping all whitespace."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -133,10 +135,6 @@ const faqJsonLd = {
       <li>Delete blank lines in logs or lists</li>
       <li>Strip all whitespace for compact string comparisons</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

@@ -8,7 +8,7 @@ export const tool = {
   order: 20,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is this age calculator accurate?",
     a: "Yes. It uses real calendar date logic (year/month/day) and correctly handles leap years.",
@@ -38,7 +38,8 @@ const faq = [
   canonicalPath="/date-time/age-calculator/"
   h1="Age Calculator"
   intro="Calculate your exact age in years, months, and days from your date of birth. Optionally choose a reference date to find age at a specific time."
-  faq={faq}
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <div slot="tool" data-tool="age-calculator">
     <div class="form">

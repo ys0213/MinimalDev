@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Target Heart Rate Calculator"
   intro="Estimate a target heart rate range for your workout intensity. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -132,16 +134,6 @@ const faqJsonLd = {
     <ul>
       <li>Age 30 → Max HR ≈ 187 bpm (estimate). Moderate 50–70% → target range shown.</li>
       <li>Age 30 + Resting HR 60 → HRR-based moderate range will differ from Max-HR-only.</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Flexbox Generator"
   intro="Build a Flexbox container visually using direction, wrap, alignment, and gap controls."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -229,10 +231,6 @@ const faqJsonLd = {
       <li>Preview a wrapping tag layout with gap spacing</li>
       <li>Copy the flex container CSS into your component styles</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

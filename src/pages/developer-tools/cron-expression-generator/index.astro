@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Cron Expression Generator"
   intro="Generate a 5-field cron expression for hourly, daily, weekly, monthly, or interval-based schedules."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -176,12 +178,6 @@ const faqJsonLd = {
       <li>Hourly at minute 15 → <strong>15 * * * *</strong></li>
       <li>Daily at 02:30 → <strong>30 2 * * *</strong></li>
       <li>Weekly on Monday at 09:00 → <strong>0 9 * * 1</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

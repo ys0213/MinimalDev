@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random String Generator"
   intro="Generate random strings for tokens, IDs, test data, and one-time codes. Choose length, count, and character sets (including URL-safe)."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -152,14 +154,6 @@ const faqJsonLd = {
       <li><strong>URL-safe</strong>, length 32 → tokens for links and query params</li>
       <li><strong>Hex</strong>, length 24 → IDs similar to some database object IDs</li>
       <li><strong>Digits</strong>, length 6 → one-time codes (not SMS delivery)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

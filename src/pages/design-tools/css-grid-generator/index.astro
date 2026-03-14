@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="CSS Grid Generator"
   intro="Build a CSS Grid container visually with column, row, gap, and alignment controls."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -183,10 +185,6 @@ const faqJsonLd = {
       <li>Preview centered items inside a simple dashboard grid</li>
       <li>Copy the grid container CSS into a component stylesheet</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

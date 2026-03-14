@@ -9,7 +9,7 @@ export const tool = {
   order: 10,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Does the order of dates matter?",
     a: "You can use either order. The tool shows the signed difference (A→B) and also the absolute days.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/date-time/days-between-dates/"
   h1="Days Between Dates"
   intro="Calculate how many days are between two calendar dates. Useful for planning, deadlines, projects, and date tracking."
-  faq={faq}
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <div slot="tool" data-tool="days-between-dates">
     <div class="form">

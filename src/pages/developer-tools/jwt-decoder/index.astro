@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="JWT Decoder"
   intro="Decode a JWT token locally to inspect its header, payload, and common time-based claims."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -137,12 +139,6 @@ const faqJsonLd = {
       <li>JWT tokens usually have <strong>3 parts</strong> separated by dots</li>
       <li>The first two parts are base64url-encoded JSON</li>
       <li>The third part is the signature and is not decoded into JSON</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

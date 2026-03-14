@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="VAT Calculator"
   intro="Add VAT to a net amount or remove VAT from a VAT-included price. Shows net, VAT amount, and gross total."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -128,14 +130,6 @@ const faqJsonLd = {
       <li>Add VAT: net 100 at 20% → VAT 20 → gross 120</li>
       <li>Remove VAT: gross 120 at 20% → net 100 → VAT 20</li>
       <li>Add VAT: net 59.99 at 7.5% → gross 64.49 (rounded)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

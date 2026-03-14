@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Add/Subtract Days Calculator"
   intro="Add or subtract a number of days from a start date. Optionally count business days by excluding selected weekend days and holidays."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -150,14 +152,6 @@ const faqJsonLd = {
       <li>Start 2026-03-01, +10 calendar days → 2026-03-11</li>
       <li>Start 2026-03-06 (Fri), +1 business day with Sat/Sun weekends → 2026-03-09 (Mon)</li>
       <li>Start 2026-03-03, -5 business days → date 5 business days earlier</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

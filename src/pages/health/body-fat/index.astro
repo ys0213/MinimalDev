@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Body Fat Calculator"
   intro="Estimate body fat percentage using the U.S. Navy circumference method. Supports metric and imperial units. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -145,16 +147,6 @@ const faqJsonLd = {
     <ul>
       <li>Male: Height 175 cm, Neck 38 cm, Waist 85 cm → estimate body fat %</li>
       <li>Female: Height 165 cm, Neck 34 cm, Waist 75 cm, Hip 95 cm → estimate body fat %</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

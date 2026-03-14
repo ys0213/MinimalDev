@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Gradient Generator"
   intro="Build a simple two-color linear gradient and copy the CSS for UI and web design work."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -150,10 +152,6 @@ const faqJsonLd = {
       <li>Test different gradient angles quickly</li>
       <li>Copy the CSS value directly into your stylesheet</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

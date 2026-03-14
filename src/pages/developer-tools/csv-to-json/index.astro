@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="CSV to JSON"
   intro="Convert CSV data into JSON output. Use the first row as headers or generate generic column names."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -155,12 +157,6 @@ const faqJsonLd = {
       <li><strong>name,age</strong> + data rows → JSON objects with name and age keys</li>
       <li><strong>1;2;3</strong> with semicolon delimiter → JSON conversion with the chosen delimiter</li>
       <li>Header mode off → automatic keys like column1, column2</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

@@ -35,6 +35,8 @@ description="Binary arithmetic calculator with result cards and validation."
 canonicalPath={CANONICAL_PATH}
 h1="Binary Calculator"
 intro="Perform arithmetic with binary numbers."
+faq={faqs}
+categoryName="Math"
 >
 
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -69,10 +71,6 @@ intro="Perform arithmetic with binary numbers."
 <div class="result" id="bin_cards" style="display:none;"></div>
 
 </div>
-</div>
-
-<div slot="faq">
-<ul>{faqs.map(f=>(<li><strong>{f.q}</strong> {f.a}</li>))}</ul>
 </div>
 
 <div slot="related">

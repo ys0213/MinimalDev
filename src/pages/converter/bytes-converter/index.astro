@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Bytes Converter"
   intro="Convert bytes to KB/MB/GB/TB (and back). Choose decimal (1000-based) or binary (1024-based) units to match your use case."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -143,14 +145,6 @@ const faqJsonLd = {
       <li><strong>1,048,576 B</strong> → <strong>1 MiB</strong> (binary)</li>
       <li><strong>1,000,000 B</strong> → <strong>1 MB</strong> (decimal)</li>
       <li><strong>2 GB</strong> → <strong>2,000,000,000 B</strong> (decimal)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

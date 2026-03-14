@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Case Converter"
   intro="Convert text to common case styles (UPPERCASE, lowercase, Title Case, camelCase, snake_case, kebab-case) instantly. Useful for writing, coding identifiers, and formatting."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -150,14 +152,6 @@ const faqJsonLd = {
       <li><strong>"hello world"</strong> → camelCase: <strong>helloWorld</strong></li>
       <li><strong>"API response code"</strong> → snake_case: <strong>api_response_code</strong></li>
       <li><strong>"title case example"</strong> → Title Case: <strong>Title Case Example</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

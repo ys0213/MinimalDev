@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Sleep Calculator"
   intro="Estimate suggested bedtime or wake-up times using 90-minute sleep cycles. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -107,14 +109,6 @@ const faqJsonLd = {
       <li>Wake at 07:00 → suggested bedtimes around 20:45, 22:15, or 23:45</li>
       <li>Sleep at 23:00 → suggested wake times around 05:00, 06:30, or 08:00</li>
       <li>Useful for simple bedtime planning, not sleep diagnosis</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

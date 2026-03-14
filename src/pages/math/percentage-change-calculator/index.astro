@@ -7,6 +7,29 @@ export const tool = {
   href: "/math/percentage-change-calculator/",
   order: 30,
 };
+
+const faqs = [
+  {
+    q: "What is percentage change?",
+    a: "It measures how much a value increases or decreases relative to its original starting value.",
+  },
+  {
+    q: "Why can’t the from value be 0?",
+    a: "The formula divides by the starting value, so 0 makes the calculation undefined because of division by zero.",
+  },
+  {
+    q: "Is this the same as percent difference?",
+    a: "Not exactly. Percent difference compares two values without choosing a starting point, while percentage change uses the from value as the baseline.",
+  },
+  {
+    q: "Can the result be negative?",
+    a: "Yes. A negative result indicates a decrease from the starting value.",
+  },
+  {
+    q: "Is this calculation accurate?",
+    a: "Yes. It uses the standard mathematical formula for percentage change.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,8 @@ export const tool = {
   canonicalPath="/math/percentage-change-calculator/"
   h1="Percentage Change Calculator"
   intro="Calculate percentage change between two numbers. The result shows whether the value increased or decreased."
+  faq={faqs}
+  categoryName="Math"
 >
   <div slot="tool" data-tool="percentage-change-calculator">
     <div class="form">
@@ -26,8 +51,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 100"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pch_help pch_error"
         />
       </div>
@@ -40,8 +65,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 85"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pch_help pch_error"
         />
         <div id="pch_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
@@ -62,7 +87,6 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="pch_sr_summary"
@@ -100,16 +124,6 @@ export const tool = {
     </ul>
   </div>
 
-  <div slot="faq">
-    <ul>
-      <li><strong>What is percentage change?</strong> It measures how much a value increases or decreases relative to its original value.</li>
-      <li><strong>Why can’t “from value” be 0?</strong> The formula divides by the starting value, so 0 makes the calculation undefined.</li>
-      <li><strong>Is this the same as percent difference?</strong> Not exactly. Percent difference compares two values without choosing a starting point.</li>
-      <li><strong>Can the result be negative?</strong> Yes. A negative result indicates a decrease.</li>
-      <li><strong>Is this calculation accurate?</strong> Yes. It uses the standard mathematical formula.</li>
-    </ul>
-  </div>
-
   <div slot="related">
     <ul>
       <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
@@ -120,9 +134,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="pch_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const fromEl = document.getElementById("pch_from");
@@ -132,46 +143,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("pch_result");
   const errEl = document.getElementById("pch_error");
   const srEl = document.getElementById("pch_sr_summary");
-  const faqSchemaEl = document.getElementById("pch_faq_schema");
 
-  if (!fromEl || !toEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "What is percentage change?",
-      a: "It measures how much a value increases or decreases relative to its original (starting) value.",
-    },
-    {
-      q: "Why can’t “from value” be 0?",
-      a: "The formula divides by the starting value, so 0 makes the calculation undefined (division by zero).",
-    },
-    {
-      q: "Is this the same as percent difference?",
-      a: "Not exactly. Percent difference compares two values without choosing a starting point; percentage change uses the 'from' value as the baseline.",
-    },
-    {
-      q: "Can the result be negative?",
-      a: "Yes. A negative result indicates a decrease from the starting value.",
-    },
-    {
-      q: "Is this calculation accurate?",
-      a: "Yes. It uses the standard mathematical formula for percentage change.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!fromEl || !toEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -225,19 +198,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!Number.isFinite(fromV)) {
       setError("Please enter a valid from value.", "from");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (!Number.isFinite(toV)) {
       setError("Please enter a valid to value.", "to");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
     if (Math.abs(fromV) > 1e15) {
       setError("From value is too large. Please enter a smaller value.", "from");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (Math.abs(toV) > 1e15) {
       setError("To value is too large. Please enter a smaller value.", "to");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
@@ -295,11 +276,9 @@ document.addEventListener("DOMContentLoaded", function () {
     fromEl.focus();
   });
 
-  // Live update on input (keeps Calculate for explicit action)
   fromEl.addEventListener("input", function () { compute(true); });
   toEl.addEventListener("input", function () { compute(true); });
 
-  renderFaqSchema();
   clearError();
 });
 </script>

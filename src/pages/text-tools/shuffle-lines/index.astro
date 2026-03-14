@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Shuffle Lines"
   intro="Randomize the order of lines in a text block for testing, games, activities, or list randomization."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -118,10 +120,6 @@ const faqJsonLd = {
       <li>Randomize participant or task lists</li>
       <li>Prepare randomized test data order</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Decimal / Percent / Fraction Converter"
   intro="Enter a decimal, percent, or fraction and convert it to the other formats instantly. Results are simplified and shown with clear steps."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -130,14 +132,6 @@ const faqJsonLd = {
       <li>12.5% → 0.125 → 1/8</li>
       <li>1 1/2 → 1.5 → 150%</li>
       <li>-0.2 → -20% → -1/5</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

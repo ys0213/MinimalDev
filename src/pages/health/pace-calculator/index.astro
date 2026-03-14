@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Pace Calculator"
   intro="Calculate pace, distance, or time. Enter any two values to compute the third."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -165,14 +167,6 @@ const faqJsonLd = {
       <li><strong>Pace:</strong> total time ÷ distance</li>
       <li><strong>Time:</strong> pace × distance</li>
       <li><strong>Distance:</strong> total time ÷ pace</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Slope Calculator"
   intro="Enter two points (x1, y1) and (x2, y2) to calculate the slope of the line through them."
+  faq={faqs}
+  categoryName="Math"
 >
 
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -163,14 +165,6 @@ Slope formula:<br>
 <li><strong>(1, 2)</strong> to <strong>(4, 8)</strong> → slope = <strong>2</strong></li>
 <li><strong>(0, 0)</strong> to <strong>(3, 3)</strong> → slope = <strong>1</strong></li>
 <li><strong>(2, 1)</strong> to <strong>(2, 5)</strong> → slope = <strong>undefined</strong></li>
-</ul>
-</div>
-
-<div slot="faq">
-<ul>
-{faqs.map((f)=>(
-<li><strong>{f.q}</strong> {f.a}</li>
-))}
 </ul>
 </div>
 

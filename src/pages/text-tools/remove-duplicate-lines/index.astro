@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Remove Duplicate Lines"
   intro="Remove repeated lines from a text block while keeping the original first occurrence order."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -122,10 +124,6 @@ const faqJsonLd = {
       <li>Remove duplicates while ignoring case</li>
       <li>Trim spaces before comparison for cleaner deduplication</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

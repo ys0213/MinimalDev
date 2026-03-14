@@ -9,7 +9,7 @@ export const tool = {
   order: 50,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is BMR?",
     a: "BMR (Basal Metabolic Rate) estimates how many calories your body burns per day at rest to support basic functions.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/health/bmr-calculator/"
   h1="BMR Calculator"
   intro="Estimate your Basal Metabolic Rate (BMR) using the Mifflin–St Jeor formula. Informational only, not medical advice."
-  faq={faq}
+  faq={faqs}
+  categoryName="Health"
 >
   <div slot="tool" data-tool="bmr-calculator">
     <div class="form">
@@ -137,16 +138,6 @@ const faq = [
       <li><strong>Male</strong>, 30y, 175 cm, 70 kg → BMR ≈ <strong>1,649</strong> kcal/day</li>
       <li><strong>Female</strong>, 30y, 165 cm, 60 kg → BMR ≈ <strong>1,320</strong> kcal/day</li>
       <li><strong>Imperial example</strong>: 5 ft 9 in, 154 lb → converts to metric then computes</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

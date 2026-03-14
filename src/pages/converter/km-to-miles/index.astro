@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="km to miles Converter"
   intro="Convert kilometers to miles (and miles to kilometers) using standard distance conversions."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -129,14 +131,6 @@ const faqJsonLd = {
       <li><strong>5 km</strong> → <strong>3.107 mi</strong> (approx.)</li>
       <li><strong>10 km</strong> → <strong>6.214 mi</strong> (approx.)</li>
       <li><strong>26.2 mi</strong> → <strong>42.195 km</strong> (marathon distance, approx. display)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

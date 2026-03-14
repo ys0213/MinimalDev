@@ -9,7 +9,7 @@ export const tool = {
   order: 80,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What does this salary calculator estimate?",
     a: "It converts an annual salary into monthly, biweekly, weekly, daily, and hourly pay estimates based on your selected work schedule.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/salary-calculator/"
   h1="Salary Calculator"
   intro="Enter an annual salary and your work schedule to estimate monthly, biweekly, weekly, daily, and hourly gross pay."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="salary-calculator">
     <style is:inline>

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="ROI Calculator"
   intro="Calculate return on investment (ROI) from your starting investment and final value. Optionally estimate annualized ROI."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -135,14 +137,6 @@ const faqJsonLd = {
       <li>$10,000 growing to $12,500 → 25% ROI</li>
       <li>If the same result happened over 3 years, annualized ROI is lower than total ROI</li>
       <li>If final value is below initial investment, ROI is negative</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

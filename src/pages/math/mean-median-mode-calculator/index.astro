@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Mean / Median / Mode Calculator"
   intro="Paste a list of numbers and instantly compute mean (average), median, and mode. Useful for grades, surveys, quick analysis, and sanity checks."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -124,14 +126,6 @@ const faqJsonLd = {
       <li>10, 12, 12, 15, 18 → mean 13.4, median 12, mode 12</li>
       <li>1 2 3 4 → mean 2.5, median 2.5, no mode</li>
       <li>-1, -1, 0, 2 → mean 0, median -0.5, mode -1</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

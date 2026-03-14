@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Password List"
   intro="Generate a batch of random passwords for testing, placeholder accounts, and workflow setup."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -155,10 +157,6 @@ const faqJsonLd = {
       <li>Generate longer passwords with symbols for stronger placeholder credentials</li>
       <li>Use lowercase + numbers only for simplified test environments</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

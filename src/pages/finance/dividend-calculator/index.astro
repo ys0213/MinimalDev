@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Dividend Calculator"
   intro="Estimate dividend income from your share count, dividend per share, and optional share price."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -135,14 +137,6 @@ const faqJsonLd = {
       <li>100 shares × $2.40 annual dividend per share → $240 annual dividend income</li>
       <li>$2.40 dividend on a $50 share price → about 4.8% yield</li>
       <li>Use this for income planning, not guaranteed payouts</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

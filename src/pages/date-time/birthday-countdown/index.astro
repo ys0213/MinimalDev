@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Birthday Countdown"
   intro="Enter your birth date to see how long until your next birthday, plus age and a live time-remaining countdown."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -104,14 +106,6 @@ const faqJsonLd = {
     <ul>
       <li>Birth date 1995-08-10 → shows next birthday date, days left, and a live countdown</li>
       <li>Feb 29 birthdays → next occurrence uses Feb 29 on leap years, otherwise Feb 28 (for countdown only)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

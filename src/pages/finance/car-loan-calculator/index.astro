@@ -9,7 +9,7 @@ export const tool = {
   order: 60,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Does this include taxes, registration, or dealer fees?",
     a: "No. This calculator estimates principal and interest only. Add taxes/fees into the loan amount if you want them reflected in the payment.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/car-loan-calculator/"
   h1="Car Loan Calculator"
   intro="Estimate your car loan monthly payment and view a full amortization schedule (principal & interest)."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="car-loan-calculator">
     <div class="form">

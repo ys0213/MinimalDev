@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Date Generator"
   intro="Generate random dates between two selected dates for testing, mock data, and planning demos."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -148,10 +150,6 @@ const faqJsonLd = {
       <li>Create mock event dates for testing filters and dashboards</li>
       <li>Produce random date values for spreadsheets and fixtures</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

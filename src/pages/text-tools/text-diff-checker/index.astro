@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Text Diff Checker"
   intro="Compare two text inputs to see whether they match and where summary-level differences appear."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -140,10 +142,6 @@ const faqJsonLd = {
       <li>Ignore case or extra spaces before comparing</li>
       <li>Identify the first several mismatched lines quickly</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

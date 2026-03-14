@@ -9,7 +9,7 @@ export const tool = {
   order: 50,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is this retirement estimate accurate?",
     a: "It’s a simplified projection using constant monthly compounding, constant contributions, and a constant annual return. Real-world returns can vary.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/retirement-calculator/"
   h1="Retirement Calculator"
   intro="Estimate how much you may have at retirement based on current savings, monthly contributions, and an expected return rate."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="retirement-calculator">
     <div class="form">
@@ -122,16 +123,6 @@ const faq = [
       <li>Age 30 → 65, $25,000 now, $500/mo, 6% return → projected retirement balance</li>
       <li>Add 2.5% inflation → see the same balance in today’s purchasing power</li>
       <li>Set monthly contribution to 0 → growth-only projection</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

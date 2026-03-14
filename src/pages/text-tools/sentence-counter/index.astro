@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Sentence Counter"
   intro="Count estimated sentences in a text and review supporting writing metrics."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -126,10 +128,6 @@ const faqJsonLd = {
       <li>Compare sentence density across writing samples</li>
       <li>Review paragraph and word totals at the same time</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

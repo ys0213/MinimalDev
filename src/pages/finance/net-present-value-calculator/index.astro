@@ -9,7 +9,7 @@ export const tool = {
   order: 220,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is NPV (Net Present Value)?",
     a: "NPV is the present value of future cash flows minus the initial investment. A positive NPV suggests the project exceeds the required return (discount rate).",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/net-present-value-calculator/"
   h1="NPV Calculator"
   intro="Compute NPV from an initial investment, discount rate, and annual cash flows. Useful for simple project and investment comparisons."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="npv-calculator">
     <div class="form">
@@ -126,16 +127,6 @@ const faq = [
       <li><strong>Initial:</strong> -10,000, <strong>Rate:</strong> 8%, <strong>Flows:</strong> 3,000,3,000,3,000,3,000 → compute NPV</li>
       <li>Try a higher discount rate to see how NPV falls as required return increases</li>
       <li>Include a negative cash flow in later years for maintenance or reinvestment</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

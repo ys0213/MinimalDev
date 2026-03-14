@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Daily Steps Calculator"
   intro="Estimate walking distance and calories burned from your daily step count. You can enter stride length directly or let the calculator estimate it from height."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -145,14 +147,6 @@ const faqJsonLd = {
       <li>8,000 steps with an estimated 0.71 m stride → about 5.68 km</li>
       <li>10,000 steps is often roughly 7–8 km depending on stride length</li>
       <li>Useful for quick daily activity summaries and walking targets</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Countdown Timer"
   intro="Count down to a target date and time with live updates. Includes quick presets, validation, and optional business-days-left estimate (Mon–Fri)."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -115,14 +117,6 @@ const faqJsonLd = {
       <li>Set target to a meeting time → live countdown for preparation</li>
       <li>Use +1 hour / +1 day presets for quick timers</li>
       <li>Enable business-days-left to estimate weekdays remaining (holidays not included)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

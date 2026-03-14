@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Text Compare"
   intro="Compare two text inputs quickly to check whether they match after optional normalization rules."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -144,10 +146,6 @@ const faqJsonLd = {
       <li>Ignore case or spacing differences before comparing</li>
       <li>Quickly compare content length and line counts</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

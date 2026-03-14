@@ -7,6 +7,21 @@ export const tool = {
   href: "/math/reverse-percentage-calculator/",
   order: 130,
 };
+
+const faqs = [
+  {
+    q: "What if X is 0?",
+    a: "Division by zero is undefined, so the result cannot be computed when X is 0.",
+  },
+  {
+    q: "Can the result exceed 100%?",
+    a: "Yes. If Y is larger than X, then Y divided by X is greater than 1, producing a percentage above 100%.",
+  },
+  {
+    q: "Is this the same as percent of a number?",
+    a: "It is the reverse operation. Instead of finding a value from a percent, it solves for the percent given Y and X.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +30,8 @@ export const tool = {
   canonicalPath="/math/reverse-percentage-calculator/"
   h1="Reverse Percentage Calculator"
   intro="Find what percent Y is of X. Useful for grading, progress, conversion rates, and comparisons."
+  faq={faqs}
+  categoryName="Math"
 >
   <div slot="tool" data-tool="reverse-percentage-calculator">
     <div class="form">
@@ -26,8 +43,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 45"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="rp_help rp_error"
         />
       </div>
@@ -40,8 +57,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 60"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="rp_help rp_error"
         />
         <div id="rp_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
@@ -62,7 +79,6 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="rp_sr_summary"
@@ -77,8 +93,8 @@ export const tool = {
 
   <div slot="how">
     <p class="note">
-      <strong>Formula:</strong> percent = (Y ÷ X) × 100<br/>
-      Example: 45 out of 60 → (45/60)×100 = 75%
+      <strong>Formula:</strong> percent = (Y ÷ X) × 100<br />
+      Example: 45 out of 60 → (45 ÷ 60) × 100 = 75%
     </p>
   </div>
 
@@ -86,14 +102,6 @@ export const tool = {
     <ul>
       <li>45 is what percent of 60? → 75%</li>
       <li>18 is what percent of 200? → 9%</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      <li><strong>What if X is 0?</strong> Division by zero is undefined, so the result can’t be computed.</li>
-      <li><strong>Can the result exceed 100%?</strong> Yes, if Y is larger than X.</li>
-      <li><strong>Is this the same as “percent of a number”?</strong> It’s the reverse operation (solving for the percent).</li>
     </ul>
   </div>
 
@@ -107,9 +115,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="rp_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const yEl = document.getElementById("rp_y");
@@ -119,38 +124,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("rp_result");
   const errEl = document.getElementById("rp_error");
   const srEl = document.getElementById("rp_sr_summary");
-  const faqSchemaEl = document.getElementById("rp_faq_schema");
 
-  if (!yEl || !xEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "What if X is 0?",
-      a: "Division by zero is undefined, so the result can’t be computed when X is 0.",
-    },
-    {
-      q: "Can the result exceed 100%?",
-      a: "Yes. If Y is larger than X, then Y ÷ X is greater than 1, producing a percentage above 100%.",
-    },
-    {
-      q: "Is this the same as “percent of a number”?",
-      a: "It’s the reverse operation. Instead of finding a value from a percent, it solves for the percent given Y and X.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!yEl || !xEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -182,7 +157,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!Number.isFinite(p)) return "0%";
     const abs = Math.abs(p);
     const s = abs.toLocaleString(undefined, { maximumFractionDigits: 4 });
-    // Keep it unsigned here; result line uses plain percent.
     return s + "%";
   }
 
@@ -203,19 +177,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!Number.isFinite(y)) {
       setError("Please enter a valid Y (part).", "y");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (!Number.isFinite(x)) {
       setError("Please enter a valid X (whole).", "x");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
     if (Math.abs(y) > 1e15) {
       setError("Y is too large. Please enter a smaller value.", "y");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (Math.abs(x) > 1e15) {
       setError("X is too large. Please enter a smaller value.", "x");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
@@ -248,8 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "</div>";
 
     srEl.textContent =
-      "Y " + fmtNumber(y) + ", X " + fmtNumber(x) + ". " +
-      "Result " + fmtPct(pct) + ".";
+      "Y " + fmtNumber(y) + ", X " + fmtNumber(x) + ". Result " + fmtPct(pct) + ".";
 
     return { y, x, pct };
   }
@@ -272,11 +253,9 @@ document.addEventListener("DOMContentLoaded", function () {
     yEl.focus();
   });
 
-  // Live update on input (keeps Calculate for explicit action)
   yEl.addEventListener("input", function () { compute(true); });
   xEl.addEventListener("input", function () { compute(true); });
 
-  renderFaqSchema();
   clearError();
 });
 </script>

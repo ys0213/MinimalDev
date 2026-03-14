@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Keyword Density Checker"
   intro="Measure keyword or phrase frequency in a text and estimate density as a percentage of total words."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -151,10 +153,6 @@ const faqJsonLd = {
       <li>Measure phrase repetition using whole phrase matching</li>
       <li>Compare broader substring counts when needed</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

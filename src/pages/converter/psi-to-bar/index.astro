@@ -49,6 +49,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="PSI to Bar Converter"
   intro="Convert pressure from pounds per square inch (PSI) to bar. Includes rounding controls, a quick reference table, and input validation."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -114,10 +116,6 @@ const faqJsonLd = {
       <li><strong>100 PSI</strong> ≈ <strong>6.895 bar</strong></li>
       <li><strong>14.696 PSI</strong> ≈ <strong>1.013 bar</strong></li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

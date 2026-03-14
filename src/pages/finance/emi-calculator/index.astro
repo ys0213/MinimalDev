@@ -9,7 +9,7 @@ export const tool = {
   order: 240,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is EMI?",
     a: "EMI (Equated Monthly Installment) is the fixed monthly payment for a loan (principal + interest) assuming a constant interest rate and a fixed term.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/emi-calculator/"
   h1="EMI Calculator"
   intro="Calculate EMI (Equated Monthly Installment) for a loan and view the full amortization schedule month by month."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="emi-calculator">
     <div class="form">

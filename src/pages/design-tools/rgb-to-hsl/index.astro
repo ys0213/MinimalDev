@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="RGB to HSL"
   intro="Convert RGB values into HSL and preview the resulting color for CSS and design work."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -147,10 +149,6 @@ const faqJsonLd = {
       <li>Inspect hue and lightness more directly than RGB</li>
       <li>Use HSL values for more intuitive color adjustments</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

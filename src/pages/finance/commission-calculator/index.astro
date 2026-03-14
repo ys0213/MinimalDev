@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Commission Calculator"
   intro="Calculate commission amount and net payout from a sale amount and commission rate. Add optional fees and bonuses for a clearer estimate."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -130,14 +132,6 @@ const faqJsonLd = {
       <li>Sale 1,000 at 10% → commission 100 → net 900 (no fee/bonus)</li>
       <li>Sale 1,000 at 10%, fee 25 → net 875</li>
       <li>Sale 1,000 at 10%, bonus 50 → net 950</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

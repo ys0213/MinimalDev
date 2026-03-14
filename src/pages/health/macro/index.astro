@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Macro Calculator"
   intro="Convert a daily calorie target and macro split into grams of protein, carbs, and fat. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -141,16 +143,6 @@ const faqJsonLd = {
     <ul>
       <li>2,000 kcal at 30/40/30 → protein 150g, carbs 200g, fat 67g (approx.)</li>
       <li>2,500 kcal at 25/50/25 → protein 156g, carbs 313g, fat 69g (approx.)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Number Base Converter"
   intro="Convert values between binary (base 2), decimal (base 10), and hexadecimal (base 16)."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -121,14 +123,6 @@ const faqJsonLd = {
       <li>Binary <strong>1010</strong> → Decimal <strong>10</strong></li>
       <li>Decimal <strong>255</strong> → Hex <strong>FF</strong></li>
       <li>Hex <strong>A3</strong> → Decimal <strong>163</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

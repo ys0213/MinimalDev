@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Hex Calculator"
   intro="Perform arithmetic using hexadecimal numbers and view the result in both hexadecimal and decimal."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -133,14 +135,6 @@ const faqJsonLd = {
       <li><strong>10 + 10</strong> → <strong>20</strong> in hex</li>
       <li><strong>FF − 1</strong> → <strong>FE</strong></li>
       <li><strong>A × 10</strong> → <strong>A0</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

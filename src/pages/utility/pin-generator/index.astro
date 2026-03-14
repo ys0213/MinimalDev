@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="PIN Generator"
   intro="Generate random numeric PIN codes (digits only). Choose length and how many PINs to generate. Copy results with one click."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -142,14 +144,6 @@ const faqJsonLd = {
       <li><strong>4-digit PIN</strong>, count 10 → quick set of test PINs</li>
       <li><strong>6-digit PIN</strong>, no leading zero → common OTP-style format</li>
       <li><strong>Prefix 99</strong> + length 4 → generates PINs like 99xxxx (overall length increases)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

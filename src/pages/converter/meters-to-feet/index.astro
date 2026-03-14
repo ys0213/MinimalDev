@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Meters to Feet Converter"
   intro="Convert meters to feet (and feet to meters) using standard length conversions."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -129,14 +131,6 @@ const faqJsonLd = {
       <li><strong>1.75 m</strong> → <strong>5.741 ft</strong> (approx.)</li>
       <li><strong>2 m</strong> → <strong>6.562 ft</strong> (approx.)</li>
       <li><strong>6 ft</strong> → <strong>1.829 m</strong> (approx.)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

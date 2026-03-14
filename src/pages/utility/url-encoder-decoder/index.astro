@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="URL Encoder/Decoder"
   intro="Encode or decode URLs and query parameters using standard UTF-8 percent-encoding. Choose full URL or component mode for accurate results."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -132,14 +134,6 @@ const faqJsonLd = {
     <ul>
       <li>"hello world" → hello%20world</li>
       <li>"email=test@example.com" (component) → email%3Dtest%40example.com</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

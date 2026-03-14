@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="HTTP Header Parser"
   intro="Paste raw HTTP headers and parse them into structured header fields."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -117,12 +119,6 @@ const faqJsonLd = {
       <li>Parse response headers copied from developer tools</li>
       <li>Inspect repeated headers such as Set-Cookie</li>
       <li>Convert raw header blocks into structured output</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

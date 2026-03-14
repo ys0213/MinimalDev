@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Time Duration Calculator"
   intro="Calculate the duration between two times. Optionally treat the end time as the next day when it is earlier than the start time."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -125,14 +127,6 @@ const faqJsonLd = {
       <li>08:30 to 17:00 → 8 hours 30 minutes</li>
       <li>22:15 to 01:45 with overnight handling → 3 hours 30 minutes</li>
       <li>09:00 to 09:00 → 0 duration on the same day</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Favicon Generator"
   intro="Create a simple text-based SVG favicon using background color, text color, and rounded shape settings."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -158,10 +160,6 @@ const faqJsonLd = {
       <li>Use two letters for a compact monogram icon</li>
       <li>Copy the generated SVG into a favicon workflow</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Text Cleaner"
   intro="Clean messy pasted text using common formatting fixes for spaces, lines, and punctuation."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -133,10 +135,6 @@ const faqJsonLd = {
       <li>Normalize line spacing in rough drafts</li>
       <li>Fix punctuation spacing in imported content</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

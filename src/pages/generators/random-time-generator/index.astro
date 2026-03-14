@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Time Generator"
   intro="Generate random times inside a selected time range for testing, demos, and mock scheduling workflows."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -159,10 +161,6 @@ const faqJsonLd = {
       <li>Use 12-hour format for UI previews with AM/PM</li>
       <li>Use 24-hour format for scheduling or test datasets</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

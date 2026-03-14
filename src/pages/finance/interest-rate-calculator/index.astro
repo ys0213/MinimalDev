@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Interest Rate Calculator"
   intro="Estimate the annual interest rate implied by a starting amount, ending amount, and time period."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -153,14 +155,6 @@ const faqJsonLd = {
       <li>$1,000 growing to $1,200 over 2 years → solve the implied annual rate</li>
       <li>Switch to compound mode to estimate a rate under monthly compounding</li>
       <li>Use larger compounding frequency if you want a more frequent growth model</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

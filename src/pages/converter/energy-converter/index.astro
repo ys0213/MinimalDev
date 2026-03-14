@@ -55,6 +55,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Energy Converter"
   intro="Convert between common energy units used in physics, engineering, and nutrition."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -139,10 +141,6 @@ const faqJsonLd = {
       <li><strong>1 kWh</strong> = <strong>3,600,000 J</strong></li>
       <li><strong>1 BTU</strong> ≈ <strong>1055.06 J</strong></li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

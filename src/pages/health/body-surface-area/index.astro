@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Body Surface Area (BSA) Calculator"
   intro="Estimate body surface area using standard medical formulas. Supports metric and imperial inputs."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -108,14 +110,6 @@ const faqJsonLd = {
       <li><strong>Mosteller:</strong> √((height(cm) × weight(kg)) ÷ 3600)</li>
       <li><strong>Du Bois:</strong> 0.007184 × height(cm)^0.725 × weight(kg)^0.425</li>
       <li><strong>Haycock:</strong> 0.024265 × height(cm)^0.3964 × weight(kg)^0.5378</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

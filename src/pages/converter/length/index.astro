@@ -71,6 +71,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Length Converter"
   intro="Convert between common length units. Enter a value, choose “from” and “to” units, and see the converted result with quick reference conversions."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -153,14 +155,6 @@ const faqJsonLd = {
       <li><strong>2.54 cm</strong> → <strong>1 in</strong></li>
       <li><strong>1 mi</strong> → <strong>1,609.344 m</strong></li>
       <li><strong>1 m</strong> → <strong>3.28084 ft</strong> (approx.)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

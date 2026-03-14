@@ -9,7 +9,7 @@ export const tool = {
   order: 160,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is an annuity in this calculator?",
     a: "An annuity here means a series of equal payments made at a regular interval (monthly, yearly, etc.) with a constant interest rate per period.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/annuity-calculator/"
   h1="Annuity Calculator"
   intro="Compute present value (PV) or future value (FV) of an annuity using payment amount, annual interest rate, and number of periods."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="annuity-calculator">
     <div class="form">

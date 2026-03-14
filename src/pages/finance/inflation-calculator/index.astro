@@ -9,7 +9,7 @@ export const tool = {
   order: 110,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What does an inflation calculator do?",
     a: "It estimates how prices or purchasing power change over time using an annual inflation rate. You can convert a current amount to a future (inflated) amount, or compute the real value in today’s dollars.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/inflation-calculator/"
   h1="Inflation Calculator"
   intro="Estimate how an amount changes over time using an annual inflation rate. Includes nominal (future) value, real value, and a yearly breakdown."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="inflation-calculator">
     <div class="form">

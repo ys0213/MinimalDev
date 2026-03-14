@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Text Reverser"
   intro="Reverse text in different ways for editing, testing, creative writing, and formatting experiments."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -124,10 +126,6 @@ const faqJsonLd = {
       <li>Reverse the order of words in a phrase</li>
       <li>Reverse the order of lines in a text block</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

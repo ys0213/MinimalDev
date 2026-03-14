@@ -42,6 +42,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Power Converter"
   intro="Convert between common power units used in engineering, appliances, and motors."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -111,7 +113,7 @@ const faqJsonLd = {
       <li><strong>2 kW</strong> ≈ <strong>2.682 hp</strong></li>
     </ul>
   </div>
-  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+
   <div slot="related">
     <ul>
       <li><a href="/converter/watts-to-horsepower/">Watts to Horsepower</a></li>

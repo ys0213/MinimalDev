@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Years Between Dates Calculator"
   intro="Find the number of years between two dates. Shows calendar-year difference, full years plus remaining months and days, and total days. Optional inclusive counting."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -114,14 +116,6 @@ const faqJsonLd = {
       <li>2024-03-01 → 2026-03-01 = 2 calendar years, 2 full years + 0 months + 0 days</li>
       <li>2024-02-29 → 2025-02-28 = 1 calendar year boundary, but full-years breakdown depends on clamping (leap day)</li>
       <li>Inclusive example: same date → 1 day span (inclusive), 0 days (non-inclusive)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

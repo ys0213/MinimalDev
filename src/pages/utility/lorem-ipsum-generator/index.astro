@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Lorem Ipsum Generator"
   intro="Generate placeholder text for mockups and UI previews. Choose paragraphs, sentences, or words, then copy with one click."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -149,14 +151,6 @@ const faqJsonLd = {
       <li><strong>3 paragraphs</strong> → quick layout preview for landing pages</li>
       <li><strong>20 sentences</strong> → placeholder for article templates</li>
       <li><strong>120 words</strong> → mock copy for cards and components</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

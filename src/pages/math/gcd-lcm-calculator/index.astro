@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="GCD / LCM Calculator"
   intro="Enter integers to calculate GCD (HCF) and LCM. Supports multiple numbers (comma-separated) and shows Euclidean steps for the first two."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -110,14 +112,6 @@ const faqJsonLd = {
       <li>24, 60, 90 → GCD = 6, LCM = 360</li>
       <li>-8, 12 → GCD = 4, LCM = 24</li>
       <li>10, 0 → GCD = 10, LCM = 0</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

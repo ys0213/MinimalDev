@@ -8,7 +8,7 @@ export const tool = {
   order: 30,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is this converter accurate?",
     a: "Yes. It uses standard conversion constants. For example, 1 lb = 0.45359237 kg (exact), and 1 oz = 28.349523125 g (exact).",
@@ -34,7 +34,8 @@ const faq = [
   canonicalPath="/converter/weight-converter/"
   h1="Weight Converter"
   intro="Convert weight units instantly between metric and imperial measurements. Supports common conversions like kg to lb and lb to kg."
-  faq={faq}
+  faq={faqs}
+  categoryName="Converters"
 >
   <div slot="tool" data-tool="weight-converter">
     <div class="form">

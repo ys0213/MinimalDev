@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="JSON Validator"
   intro="Validate JSON input, pretty-print it for readability, or minify it for compact output."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -132,12 +134,6 @@ const faqJsonLd = {
         <li><strong>{'{"name":"Alex","age":30}'}</strong> → valid object JSON</li>
         <li><strong>{'[1,2,3]'}</strong> → valid array JSON</li>
         <li><strong>{'{"a":1,}'}</strong> → invalid because of a trailing comma</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

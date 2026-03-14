@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Compound Interest with Contributions"
   intro="Project account growth with a starting balance, recurring contributions, annual return rate, and time horizon."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -162,14 +164,6 @@ const faqJsonLd = {
       <li>$5,000 start + $300/month at 7% for 20 years</li>
       <li>$10,000 start + $2,000/year at 5% for 15 years</li>
       <li>Switch contribution timing to “Beginning of period” to model earlier deposits</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

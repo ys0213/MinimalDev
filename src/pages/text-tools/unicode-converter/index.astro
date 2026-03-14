@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Unicode Converter"
   intro="Convert between plain text and Unicode code points for debugging, development, and encoding inspection."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -134,10 +136,6 @@ const faqJsonLd = {
       <li>Convert <strong>U+1F600</strong> into the matching character</li>
       <li>Inspect multilingual or emoji text in Unicode form</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

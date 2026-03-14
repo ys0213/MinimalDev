@@ -36,6 +36,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Horsepower to Watts Converter"
   intro="Convert power from horsepower (hp) to watts (W)."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <div slot="tool" data-tool="horsepower-to-watts">
@@ -81,7 +83,7 @@ const faqJsonLd = {
       <li><strong>5 hp</strong> ≈ <strong>3728.499 W</strong></li>
     </ul>
   </div>
-  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
+
   <div slot="related">
     <ul>
       <li><a href="/converter/watts-to-horsepower/">Watts to Horsepower</a></li>

@@ -9,7 +9,7 @@ export const tool = {
   order: 10,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Does this mortgage calculator include taxes and insurance?",
     a: "Yes—optionally. Property tax and homeowners insurance are entered as annual amounts, converted to monthly, and added to the total payment. Principal & interest (P&I) are calculated separately.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/mortgage-calculator/"
   h1="Mortgage Calculator"
   intro="Estimate monthly mortgage payments: principal & interest (P&I) plus optional property tax and homeowners insurance."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="mortgage-calculator">
     <div class="form">
@@ -148,16 +149,6 @@ const faq = [
       <li>$300,000 home, $60,000 down, 6% for 30 years → view P&amp;I + tax/insurance breakdown</li>
       <li>Set tax/insurance to 0 to see pure principal &amp; interest payment</li>
       <li>Compare different down payments to see how loan amount affects interest cost</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

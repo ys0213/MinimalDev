@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Working Hours Calculator"
   intro="Calculate worked time between start and end, subtract break time, and compare the result with a target workday length."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -169,14 +171,6 @@ const faqJsonLd = {
       <li>09:00 to 18:00 with a 60-minute break → 8.00 worked hours</li>
       <li>22:00 to 06:00 with a 30-minute break → overnight shift</li>
       <li>Use target hours to compare actual worked time with a standard workday</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

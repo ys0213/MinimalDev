@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="User Agent Parser"
   intro="Parse a user agent string to inspect likely browser, engine, operating system, and device details."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -118,12 +120,6 @@ const faqJsonLd = {
       <li>Parse a Chrome, Safari, Firefox, or Edge user agent string</li>
       <li>Check likely OS such as Windows, macOS, Android, or iOS</li>
       <li>Inspect whether the UA looks like mobile, tablet, or desktop</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

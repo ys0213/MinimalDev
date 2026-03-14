@@ -9,7 +9,7 @@ export const tool = {
   order: 70,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is APR (Annual Percentage Rate)?",
     a: "APR is the effective annual cost of borrowing that includes interest plus certain fees. It helps compare loans more fairly than the nominal interest rate alone.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/apr-calculator/"
   h1="APR Calculator"
   intro="Estimate APR by including upfront fees in the effective cost of borrowing. Useful for comparing loan offers beyond the nominal interest rate."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="apr-calculator">
     <div class="form">

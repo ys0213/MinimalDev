@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Budget Calculator"
   intro="Enter monthly income and common expenses to estimate remaining savings or monthly deficit."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -187,14 +189,6 @@ const faqJsonLd = {
       <li>$4,000 income and $2,500 total expenses → $1,500 remaining</li>
       <li>If expenses are greater than income, the calculator shows a monthly deficit</li>
       <li>Use this as a quick budgeting snapshot rather than a full accounting system</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

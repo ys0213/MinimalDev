@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Date Difference Calculator"
   intro="Calculate the difference between two dates and view the result in multiple time units."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -120,14 +122,6 @@ const faqJsonLd = {
       <li>2026-01-01 to 2026-01-31 → 30 days</li>
       <li>2024-02-28 to 2024-03-01 → leap-year aware result</li>
       <li>Signed mode shows whether the end date is before or after the start date</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

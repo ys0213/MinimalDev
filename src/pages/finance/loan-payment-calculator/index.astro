@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Loan Payment Calculator"
   intro="Estimate loan payments from loan amount, annual interest rate, repayment term, and payment frequency."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -176,14 +178,6 @@ const faqJsonLd = {
       <li>$25,000 loan at 6.5% for 5 years → estimate monthly payment and total interest</li>
       <li>Switch to weekly or biweekly frequency to compare payment sizes</li>
       <li>Try 0% interest to see equal principal-only repayment</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

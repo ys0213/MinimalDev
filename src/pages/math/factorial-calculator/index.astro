@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Factorial Calculator"
   intro="Enter a non-negative integer to calculate n! and view digit count, notation details, and quick reference information."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -120,14 +122,6 @@ const faqJsonLd = {
       <li><strong>5!</strong> = <strong>120</strong></li>
       <li><strong>10!</strong> = <strong>3,628,800</strong></li>
       <li><strong>20!</strong> is already a very large integer</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

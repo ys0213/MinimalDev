@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Pythagorean Theorem Calculator"
   intro="Enter any two sides of a right triangle and leave one blank to solve it. Uses a² + b² = c²."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -171,14 +173,6 @@ const faqJsonLd = {
       <li><strong>a=3, b=4</strong> → <strong>c=5</strong></li>
       <li><strong>a=5, c=13</strong> → <strong>b=12</strong></li>
       <li><strong>b=8, c=17</strong> → <strong>a=15</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

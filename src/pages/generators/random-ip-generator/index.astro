@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random IP Generator"
   intro="Generate random IPv4 addresses for test data, demos, placeholder systems, and networking UI mockups."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -146,10 +148,6 @@ const faqJsonLd = {
       <li>Generate public-style IPs for placeholder API responses</li>
       <li>Generate mixed IPv4 values for tables and dashboards</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

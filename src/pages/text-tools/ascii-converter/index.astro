@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="ASCII Converter"
   intro="Convert between plain text and ASCII decimal codes for debugging, learning, and encoding inspection."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -134,10 +136,6 @@ const faqJsonLd = {
       <li>Convert <strong>72 101 108 108 111</strong> back into text</li>
       <li>Inspect plain English text in basic ASCII form</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

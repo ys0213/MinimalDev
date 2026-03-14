@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Square Root Calculator"
   intro="Calculate the principal square root (√x) for non-negative numbers. Includes step view, result cards, and scientific-notation formatting."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -104,14 +106,6 @@ const faqJsonLd = {
       <li>√2 ≈ 1.41421356</li>
       <li>√0.25 = 0.5</li>
       <li>√0 = 0</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

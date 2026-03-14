@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Radians to Degrees Converter"
   intro="Convert radians (rad) to degrees (°). Includes rounding controls, common reference angles, and input validation."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -112,14 +114,6 @@ const faqJsonLd = {
       <li><strong>π rad</strong> = <strong>180°</strong></li>
       <li><strong>π/2 rad</strong> = <strong>90°</strong></li>
       <li><strong>2π rad</strong> = <strong>360°</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

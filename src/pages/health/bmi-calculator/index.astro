@@ -8,7 +8,7 @@ export const tool = {
   order: 10,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Is BMI accurate?",
     a: "BMI is a screening tool based on height and weight. It does not directly measure body fat, muscle mass, or health risk.",
@@ -38,7 +38,8 @@ const faq = [
   canonicalPath="/health/bmi-calculator/"
   h1="BMI Calculator"
   intro="Calculate your Body Mass Index (BMI) using metric or imperial units. See your BMI value and category instantly."
-  faq={faq}
+  faq={faqs}
+  categoryName="Health"
 >
   <div slot="tool" data-tool="bmi-calculator">
     <div class="form">
@@ -105,16 +106,6 @@ const faq = [
       <li><strong>170 cm, 65 kg</strong> → BMI ≈ <strong>22.49</strong> (Normal range)</li>
       <li><strong>180 cm, 90 kg</strong> → BMI ≈ <strong>27.78</strong> (Overweight)</li>
       <li><strong>70 in, 160 lb</strong> → BMI ≈ <strong>22.96</strong> (Normal range)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

@@ -8,7 +8,7 @@ export const tool = {
   order: 20,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is TDEE?",
     a: "TDEE (Total Daily Energy Expenditure) is an estimate of how many calories you burn per day including activity.",
@@ -38,7 +38,8 @@ const faq = [
   canonicalPath="/health/tdee-calculator/"
   h1="TDEE Calculator"
   intro="Estimate your Total Daily Energy Expenditure (TDEE) using BMR and activity level. Informational only."
-  faq={faq}
+  faq={faqs}
+  categoryName="Health"
 >
   <div slot="tool" data-tool="tdee-calculator">
     <div class="form">
@@ -141,16 +142,6 @@ const faq = [
     <ul>
       <li>Male 30y, 175 cm, 70 kg, moderate (1.55) → TDEE ≈ 2,556 kcal/day</li>
       <li>Female 30y, 165 cm, 60 kg, light (1.375) → TDEE ≈ 1,815 kcal/day</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faq.map((item) => (
-        <li>
-          <strong>{item.q}</strong> {item.a}
-        </li>
-      ))}
     </ul>
   </div>
 

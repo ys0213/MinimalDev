@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Angle Converter"
   intro="Convert between common angle units. Enter a value, choose “from” and “to” units, and see the converted result with a quick reference table."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -144,14 +146,6 @@ const faqJsonLd = {
       <li><strong>180°</strong> = <strong>π rad</strong></li>
       <li><strong>90°</strong> = <strong>100 grad</strong></li>
       <li><strong>1°</strong> = <strong>60 arcminutes</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

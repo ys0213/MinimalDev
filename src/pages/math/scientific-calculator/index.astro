@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Scientific Calculator"
   intro="Evaluate scientific expressions with arithmetic, powers, roots, trig functions, logs, parentheses, and constants. Choose degrees or radians for trig."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -158,14 +160,6 @@ const faqJsonLd = {
       <li><strong>2^3 + sqrt(16)</strong> = <strong>12</strong></li>
       <li><strong>sin(30)</strong> in degrees = <strong>0.5</strong></li>
       <li><strong>ln(e)</strong> = <strong>1</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

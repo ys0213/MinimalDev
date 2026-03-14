@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Base64 Encoder/Decoder"
   intro="Encode text or files to Base64, or decode Base64 back to text/files. Runs locally in your browser with validation, URL-safe mode, and download options."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -175,14 +177,6 @@ const faqJsonLd = {
       <li><strong>Encode:</strong> "hello" → aGVsbG8=</li>
       <li><strong>Decode:</strong> aGVsbG8= → "hello"</li>
       <li><strong>URL-safe:</strong> replace '+'/'/' with '-'/'_' (and optionally remove '=')</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

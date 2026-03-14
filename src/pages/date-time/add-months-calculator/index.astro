@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Add Months Calculator"
   intro="Add or subtract months from a start date. Handles end-of-month dates correctly and can optionally adjust the result to the nearest business day."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -162,14 +164,6 @@ const faqJsonLd = {
       <li>2026-01-15 + 2 months → 2026-03-15</li>
       <li>2026-01-31 + 1 month → 2026-02-28 (or 02-29 in leap years)</li>
       <li>2026-03-31 - 1 month → 2026-02-28/29</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Ratio Calculator"
   intro="Work with ratios in three ways: simplify A:B, scale A:B to a target for A or B, or solve a proportion (A:B = C:D)."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -168,14 +170,6 @@ const faqJsonLd = {
       <li>10:15 → 2:3</li>
       <li>2:3 scaled to A=10 → 10:15</li>
       <li>2:3 = 10:D → D = 15</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -9,7 +9,7 @@ export const tool = {
   order: 120,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What is future value (FV)?",
     a: "Future value is the projected value of a starting amount after a period of time, given a growth rate and optional ongoing contributions.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/future-value-calculator/"
   h1="Future Value Calculator"
   intro="Estimate future value using a starting balance, monthly contributions, and an annual return rate. Includes a yearly breakdown table."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="future-value-calculator">
     <div class="form">

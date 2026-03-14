@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="QR Code Generator"
   intro="Generate QR codes locally in your browser. Supports URL/text plus Wi-Fi, email, phone, and SMS formats. Download PNG/SVG for sharing or printing."
+  faq={faqs}
+  categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -257,14 +259,6 @@ const faqJsonLd = {
       <li><strong>URL:</strong> https://example.com</li>
       <li><strong>Wi-Fi:</strong> SSID “CafeWiFi”, WPA, password “secret123”</li>
       <li><strong>Email:</strong> mailto:help@example.com?subject=Support</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

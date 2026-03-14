@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="UUID Validator"
   intro="Validate a UUID string, inspect its version and variant, and compare the normalized lowercase form."
+  faq={faqs}
+  categoryName="Developer Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -121,12 +123,6 @@ const faqJsonLd = {
       <li><strong>550e8400-e29b-41d4-a716-446655440000</strong> → valid UUID v4-style format</li>
       <li>Letters may be uppercase or lowercase in the input</li>
       <li>The normalized output is shown in lowercase</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

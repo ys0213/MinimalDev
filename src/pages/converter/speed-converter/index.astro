@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Speed Converter"
   intro="Convert speed between common units (km/h, mph, m/s, knots). Includes quick comparisons and a reference table."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -136,14 +138,6 @@ const faqJsonLd = {
       <li><strong>100 mph</strong> ≈ <strong>160.934 km/h</strong></li>
       <li><strong>10 m/s</strong> = <strong>36 km/h</strong></li>
       <li><strong>20 knots</strong> ≈ <strong>10.289 m/s</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Sort Lines"
   intro="Sort line-based text for cleanup, deduplication workflows, lists, logs, and structured editing."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -143,10 +145,6 @@ const faqJsonLd = {
       <li>Sort text items by shortest or longest length</li>
       <li>Prepare cleaner line-based data before further editing</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

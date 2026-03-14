@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Reading Time Calculator"
   intro="Estimate reading time based on word count and a configurable words-per-minute reading speed."
+  faq={faqs}
+  categoryName="Text Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -146,10 +148,6 @@ const faqJsonLd = {
       <li>Use slower reading speeds for technical documentation</li>
       <li>Compare content length across multiple drafts</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

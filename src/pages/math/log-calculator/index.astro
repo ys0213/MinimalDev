@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Log Calculator"
   intro="Calculate log10, ln, or log base b. Enter a value (> 0) and optionally a base (b > 0, b ≠ 1)."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -137,14 +139,6 @@ const faqJsonLd = {
       <li>ln(e) = 1</li>
       <li>log2(8) = 3</li>
       <li>log0.5(2) = −1</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

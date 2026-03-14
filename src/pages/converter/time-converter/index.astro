@@ -72,6 +72,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Time Converter"
   intro="Convert between common time units. Choose a value and units, then see the conversion plus a quick reference table."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -166,14 +168,6 @@ const faqJsonLd = {
       <li><strong>90 seconds</strong> → <strong>1.5 minutes</strong></li>
       <li><strong>2 hours</strong> → <strong>120 minutes</strong></li>
       <li><strong>1 week</strong> → <strong>604,800 seconds</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Tax Calculator"
   intro="Calculate tax amount and total using a simple percentage rate, or reverse-calculate the pre-tax amount from a tax-inclusive total."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -154,14 +156,6 @@ const faqJsonLd = {
       <li>$100 with 10% tax → $10 tax, $110 total</li>
       <li>$110 tax-inclusive total at 10% → $100 pre-tax and $10 tax</li>
       <li>Useful for sales tax, VAT-style examples, and simple tax planning</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

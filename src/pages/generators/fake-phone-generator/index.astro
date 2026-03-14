@@ -51,6 +51,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Fake Phone Generator"
   intro="Generate fake placeholder phone numbers for demos, testing, mock accounts, and UI previews."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -148,12 +150,6 @@ const faqJsonLd = {
       <li>Generate 10 US-style sample phone numbers</li>
       <li>Generate international-style numbers for profile mockups</li>
       <li>Use mixed mode for more varied demo data</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}
     </ul>
   </div>
 

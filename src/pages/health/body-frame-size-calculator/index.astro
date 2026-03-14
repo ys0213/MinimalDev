@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Body Frame Size Calculator"
   intro="Estimate body frame size from height and wrist circumference. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -130,14 +132,6 @@ const faqJsonLd = {
       <li>170 cm height and 16 cm wrist → height-to-wrist ratio ≈ 10.63</li>
       <li>5 ft 7 in height and 6.3 in wrist → imperial values are converted internally</li>
       <li>Useful as a broad reference alongside other body measurements</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

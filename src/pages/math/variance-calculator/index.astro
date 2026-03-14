@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Variance Calculator"
   intro="Enter a list of numbers to calculate variance. Choose sample or population mode and see mean, standard deviation, count, min, and max."
+  faq={faqs}
+  categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -127,14 +129,6 @@ const faqJsonLd = {
     <ul>
       <li>Population example: 2, 4, 4, 4, 5, 5, 7, 9 → variance = 4</li>
       <li>Use sample mode when your values are only part of a larger group</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

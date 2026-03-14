@@ -45,6 +45,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Digital Storage Converter"
   intro="Convert between common digital storage units such as bits, bytes, KB, MB, GB, and TB."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <div slot="tool" data-tool="digital-storage-converter">
@@ -123,7 +125,6 @@ const faqJsonLd = {
     </ul>
   </div>
 
-  <div slot="faq"><ul>{faqs.map((f)=><li><strong>{f.q}</strong> {f.a}</li>)}</ul></div>
   <div slot="related">
     <ul>
       <li><a href="/converter/bytes-converter/">Bytes Converter</a></li>

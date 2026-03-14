@@ -9,7 +9,7 @@ export const tool = {
   order: 30,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Does this assume monthly compounding?",
     a: "Yes. This calculator compounds monthly and (optionally) adds a monthly contribution each month.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/compound-interest-calculator/"
   h1="Compound Interest Calculator"
   intro="Estimate investment growth with compound interest and optional monthly contributions. Includes a year-by-year table for planning."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="compound-interest-calculator">
     <div class="form">

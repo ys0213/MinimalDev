@@ -9,7 +9,7 @@ export const tool = {
   order: 70,
 };
 
-const faq = [
+const faqs = [
   {
     q: "What does this tip calculator do?",
     a: "It calculates the tip amount, total bill including tip, and optional split amount per person based on your bill and chosen tip percentage.",
@@ -39,7 +39,8 @@ const faq = [
   canonicalPath="/finance/tip-calculator/"
   h1="Tip Calculator"
   intro="Calculate tip amount, final total, and per-person split. Useful for restaurants, delivery, taxis, and shared bills."
-  faq={faq}
+  faq={faqs}
+  categoryName="Finance"
 >
   <div slot="tool" data-tool="tip-calculator">
     <div class="form" role="form" aria-describedby="tip_note tip_privacy">

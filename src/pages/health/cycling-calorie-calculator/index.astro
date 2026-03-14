@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Cycling Calorie Calculator"
   intro="Estimate calories burned while cycling from body weight and distance. Informational only, not medical advice."
+  faq={faqs}
+  categoryName="Health"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -122,14 +124,6 @@ const faqJsonLd = {
       <li>70 kg cycling 20 km → rough calorie estimate</li>
       <li>154 lb cycling 12 miles → imperial inputs are converted internally</li>
       <li>Useful for quick ride-planning estimates</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((item) => (
-        <li><strong>{item.q}</strong> {item.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Week Number Calculator"
   intro="Enter a date to find its ISO week number and ISO week year."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -106,14 +108,6 @@ const faqJsonLd = {
       <li>2026-01-01 may not always be in ISO week 1 depending on the calendar alignment</li>
       <li>Dates in late December can belong to week 1 of the next ISO year</li>
       <li>Useful for project schedules, reporting, and international planning</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

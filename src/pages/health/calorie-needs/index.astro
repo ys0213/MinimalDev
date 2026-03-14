@@ -59,6 +59,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Calorie Needs Calculator"
   intro="Estimate daily calorie needs using BMR (Mifflin–St Jeor) and an activity multiplier. Shows maintenance, weight loss, and weight gain targets."
+  faq={faqs}
+  categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -220,16 +222,6 @@ const faqJsonLd = {
       <li>Male, 30y, 175 cm, 70 kg, moderate → maintenance estimate</li>
       <li>Female, 30y, 165 cm, 60 kg, light → maintenance estimate</li>
       <li>Use loss/gain cards to pick a starting target, then adjust based on real progress</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

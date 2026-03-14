@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Stock Average Calculator"
   intro="Estimate your weighted average stock cost basis after up to four purchases. Optionally compare it with a current market price."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -200,14 +202,6 @@ const faqJsonLd = {
       <li>10 shares at $50 and 15 shares at $45 → weighted average below $50</li>
       <li>Buying more at lower prices can reduce average cost</li>
       <li>Enter current price to estimate unrealized position value</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

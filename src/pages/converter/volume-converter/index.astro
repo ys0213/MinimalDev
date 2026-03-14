@@ -87,6 +87,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Volume Converter"
   intro="Convert between common volume units. Enter a value, pick “from” and “to” units, and see the converted result plus a quick reference table."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -183,14 +185,6 @@ const faqJsonLd = {
       <li><strong>1 L</strong> → <strong>1,000 mL</strong></li>
       <li><strong>2 cups (US)</strong> → <strong>16 fl oz (US)</strong></li>
       <li><strong>1 ft³</strong> → <strong>28.316846592 L</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

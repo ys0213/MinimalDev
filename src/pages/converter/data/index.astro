@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Data Converter"
   intro="Convert data sizes between bits, bytes, and common decimal/binary units. Helpful for files, storage, and bandwidth math."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -134,14 +136,6 @@ const faqJsonLd = {
       <li><strong>1 GB</strong> → <strong>0.931 GiB</strong> (approx.)</li>
       <li><strong>100 MB</strong> → <strong>95.367 MiB</strong> (approx.)</li>
       <li><strong>10 Mb</strong> (megabits) → <strong>1.25 MB</strong> (megabytes)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

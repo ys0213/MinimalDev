@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Joules to Calories Converter"
   intro="Convert energy from joules (J) to calories (cal). Includes rounding controls, quick references, and input validation."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -113,10 +115,6 @@ const faqJsonLd = {
       <li><strong>100 J</strong> ≈ <strong>23.901 cal</strong></li>
       <li><strong>1000 J</strong> ≈ <strong>239.006 cal</strong></li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

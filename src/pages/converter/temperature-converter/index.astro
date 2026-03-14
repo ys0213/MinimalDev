@@ -8,7 +8,7 @@ export const tool = {
   order: 20,
 };
 
-const faq = [
+const faqs = [
   {
     q: "Why is temperature conversion different from other unit converters?",
     a: "Temperature scales include offsets (such as +32 or +273.15) in addition to ratios. Unlike length or weight, you cannot convert using multiplication alone.",
@@ -34,7 +34,8 @@ const faq = [
   canonicalPath="/converter/temperature-converter/"
   h1="Temperature Converter"
   intro="Convert Celsius, Fahrenheit, and Kelvin instantly. Supports common conversions like C to F and F to C with live updates."
-  faq={faq}
+  faq={faqs}
+  categoryName="Converters"
 >
   <div slot="tool" data-tool="temperature-converter">
     <div class="form">

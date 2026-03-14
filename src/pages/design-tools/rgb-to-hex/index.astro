@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="RGB to HEX"
   intro="Convert RGB channel values into a HEX color code and preview the resulting color."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -147,10 +149,6 @@ const faqJsonLd = {
       <li>Convert design token RGB values into CSS-friendly HEX</li>
       <li>Preview the resulting color before copying it</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

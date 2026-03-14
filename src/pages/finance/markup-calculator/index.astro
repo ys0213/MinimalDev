@@ -56,6 +56,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Markup Calculator"
   intro="Calculate markup, margin, and profit from cost and price — or solve for the selling price using a target markup."
+  faq={faqs}
+  categoryName="Finance"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -136,14 +138,6 @@ const faqJsonLd = {
       <li>Cost 60, price 75 → profit 15 → markup 25% → margin 20%</li>
       <li>Cost 60, target markup 25% → price 75</li>
       <li>Cost 50, price 120 → profit 70 → markup 140%</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

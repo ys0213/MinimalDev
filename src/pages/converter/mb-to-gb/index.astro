@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="MB to GB Converter"
   intro="Convert megabytes (MB) to gigabytes (GB). Choose decimal or binary interpretation to match how storage is labeled or displayed."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -124,14 +126,6 @@ const faqJsonLd = {
       <li><strong>1500 MB</strong> → <strong>1.5 GB</strong> (decimal)</li>
       <li><strong>1500 MB</strong> → about <strong>1.397 GiB</strong> (binary-equivalent)</li>
       <li><strong>500 MB</strong> → <strong>0.5 GB</strong> (decimal)</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

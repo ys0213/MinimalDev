@@ -7,6 +7,29 @@ export const tool = {
   href: "/math/percent-decrease-calculator/",
   order: 60,
 };
+
+const faqs = [
+  {
+    q: "What is percentage decrease?",
+    a: "It measures how much a value has decreased relative to its original old value.",
+  },
+  {
+    q: "What if the old value is 0?",
+    a: "The calculation is undefined because it would require division by zero.",
+  },
+  {
+    q: "What if the new value is larger than the old value?",
+    a: "That represents an increase, not a decrease. The computed result would be negative.",
+  },
+  {
+    q: "Is this used for discounts?",
+    a: "Yes. It can calculate discount percentages and general price reductions.",
+  },
+  {
+    q: "Is this accurate?",
+    a: "Yes. It uses the standard mathematical formula for percentage decrease.",
+  },
+];
 ---
 
 <ToolLayout
@@ -15,6 +38,8 @@ export const tool = {
   canonicalPath="/math/percent-decrease-calculator/"
   h1="Percentage Decrease Calculator"
   intro="Calculate percentage decrease between two numbers. Useful for discounts, price drops, reductions, and comparisons."
+  faq={faqs}
+  categoryName="Math"
 >
   <div slot="tool" data-tool="percent-decrease-calculator">
     <div class="form">
@@ -26,8 +51,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 120"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pd_help pd_error"
         />
       </div>
@@ -40,8 +65,8 @@ export const tool = {
           inputmode="decimal"
           placeholder="e.g., 90"
           step="0.01"
-          min="-1e15"
-          max="1e15"
+          min="-1000000000000000"
+          max="1000000000000000"
           aria-describedby="pd_help pd_error"
         />
         <div id="pd_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
@@ -62,7 +87,6 @@ export const tool = {
         Result will appear here.
       </div>
 
-      <!-- Screen-reader summary -->
       <div
         class="note"
         id="pd_sr_summary"
@@ -96,16 +120,6 @@ export const tool = {
     </ul>
   </div>
 
-  <div slot="faq">
-    <ul>
-      <li><strong>What is percentage decrease?</strong> It measures how much a value has decreased relative to its original value.</li>
-      <li><strong>What if the old value is 0?</strong> The calculation is undefined because division by zero is not possible.</li>
-      <li><strong>What if the new value is larger than the old value?</strong> That represents an increase, not a decrease.</li>
-      <li><strong>Is this used for discounts?</strong> Yes. It can calculate discount percentages and price reductions.</li>
-      <li><strong>Is this accurate?</strong> Yes. It uses the standard mathematical formula.</li>
-    </ul>
-  </div>
-
   <div slot="related">
     <ul>
       <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
@@ -116,9 +130,6 @@ export const tool = {
   </div>
 </ToolLayout>
 
-<!-- FAQ schema (auto-generated from a single source of truth in this file) -->
-<script is:inline type="application/ld+json" id="pd_faq_schema"></script>
-
 <script is:inline>
 document.addEventListener("DOMContentLoaded", function () {
   const oldEl = document.getElementById("pd_old");
@@ -128,46 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const outEl = document.getElementById("pd_result");
   const errEl = document.getElementById("pd_error");
   const srEl = document.getElementById("pd_sr_summary");
-  const faqSchemaEl = document.getElementById("pd_faq_schema");
 
-  if (!oldEl || !newEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl || !faqSchemaEl) return;
-
-  // Single source of truth for FAQ content (schema uses this)
-  const FAQ = [
-    {
-      q: "What is percentage decrease?",
-      a: "It measures how much a value has decreased relative to its original (old) value.",
-    },
-    {
-      q: "What if the old value is 0?",
-      a: "The calculation is undefined because it would require division by zero.",
-    },
-    {
-      q: "What if the new value is larger than the old value?",
-      a: "That represents an increase, not a decrease. The computed result would be negative.",
-    },
-    {
-      q: "Is this used for discounts?",
-      a: "Yes. It can calculate discount percentages and general price reductions.",
-    },
-    {
-      q: "Is this accurate?",
-      a: "Yes. It uses the standard mathematical formula for percentage decrease.",
-    },
-  ];
-
-  function renderFaqSchema() {
-    const json = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQ.map((item) => ({
-        "@type": "Question",
-        name: item.q,
-        acceptedAnswer: { "@type": "Answer", text: item.a },
-      })),
-    };
-    faqSchemaEl.textContent = JSON.stringify(json);
-  }
+  if (!oldEl || !newEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -197,7 +170,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function fmtPct(n) {
     if (!Number.isFinite(n)) return "0%";
-    // Up to 4 decimals, trimmed by locale formatter
     return n.toLocaleString(undefined, { maximumFractionDigits: 4 }) + "%";
   }
 
@@ -208,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const nRaw = String(newEl.value || "").trim();
 
     if (!oRaw || !nRaw) {
-      outEl.textContent = showEmptyAsPlaceholder ? "Result will appear here." : outEl.textContent;
+      if (showEmptyAsPlaceholder) outEl.textContent = "Result will appear here.";
       srEl.textContent = "";
       return null;
     }
@@ -218,19 +190,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!Number.isFinite(oldV)) {
       setError("Please enter a valid old value.", "old");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (!Number.isFinite(newV)) {
       setError("Please enter a valid new value.", "new");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
     if (Math.abs(oldV) > 1e15) {
       setError("Old value is too large. Please enter a smaller value.", "old");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
     if (Math.abs(newV) > 1e15) {
       setError("New value is too large. Please enter a smaller value.", "new");
+      outEl.textContent = "Please fix the input above.";
+      srEl.textContent = "";
       return null;
     }
 
@@ -244,13 +224,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const diff = oldV - newV;
     const pct = (diff / oldV) * 100;
 
-    // UX category (not a claim of “good/bad”, just classification)
     let tag = "Decrease";
     if (pct === 0) tag = "No change";
     else if (pct < 0) tag = "Increase";
     else if (pct >= 50) tag = "Large decrease";
-
-    const absDiff = Math.abs(diff);
 
     outEl.innerHTML =
       "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
@@ -267,18 +244,15 @@ document.addEventListener("DOMContentLoaded", function () {
         "Computed as ((" + fmt(oldV) + " − " + fmt(newV) + ") ÷ " + fmt(oldV) + ") × 100" +
       "</div>" +
       (pct < 0
-        ? "<div class='note' style='margin-top:6px;'><strong>Note:</strong> New is larger than old, so this is an increase (negative “decrease”).</div>"
+        ? "<div class='note' style='margin-top:6px;'><strong>Note:</strong> New is larger than old, so this is an increase (negative decrease).</div>"
         : "");
 
     srEl.textContent =
       "Old value " + fmt(oldV) + ", new value " + fmt(newV) + ". " +
-      (pct >= 0 ? "Percentage decrease " : "Percentage change ") + fmtPct(pct) + "." +
-      " Difference " + fmt(diff) + ".";
+      (pct >= 0 ? "Percentage decrease " : "Percentage change ") + fmtPct(pct) + ". " +
+      "Difference " + fmt(diff) + ".";
 
-    // Extra: if user is doing “discount math”, show final after “decrease” only when pct >= 0 (already implied by new)
-    // No extra computed fields needed beyond what’s displayed.
-
-    return { oldV, newV, diff, absDiff, pct };
+    return { oldV, newV, diff, pct };
   }
 
   calcBtn.addEventListener("click", function () {
@@ -299,11 +273,9 @@ document.addEventListener("DOMContentLoaded", function () {
     oldEl.focus();
   });
 
-  // Live update on input (keeps Calculate for explicit action)
   oldEl.addEventListener("input", function () { compute(true); });
   newEl.addEventListener("input", function () { compute(true); });
 
-  renderFaqSchema();
   clearError();
 });
 </script>

@@ -53,6 +53,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Protein Intake Calculator"
   intro="Estimate a daily protein target (grams/day) from your weight and goal. Informational only."
+  faq={faqs}
+  categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
@@ -157,16 +159,6 @@ const faqJsonLd = {
       <li>70 kg, general → about 56–84 g/day</li>
       <li>70 kg, fat loss → about 112–154 g/day</li>
       <li>150 lb (≈ 68.0 kg), endurance → about 82–116 g/day</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li>
-          <strong>{f.q}</strong> {f.a}
-        </li>
-      ))}
     </ul>
   </div>
 

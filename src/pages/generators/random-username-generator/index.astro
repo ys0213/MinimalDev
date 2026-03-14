@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Random Username Generator"
   intro="Generate random usernames for testing, mock accounts, forms, and placeholder profile data."
+  faq={faqs}
+  categoryName="Generators"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -153,10 +155,6 @@ const faqJsonLd = {
       <li>Create a batch of login IDs for UI demos</li>
       <li>Use numeric suffixes to reduce duplicate-looking names</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

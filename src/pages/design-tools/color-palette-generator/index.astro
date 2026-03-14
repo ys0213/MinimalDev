@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Color Palette Generator"
   intro="Choose a base color and generate a quick palette of lighter and darker variations for design work."
+  faq={faqs}
+  categoryName="Design Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -158,10 +160,6 @@ const faqJsonLd = {
       <li>Build a quick UI palette for buttons and backgrounds</li>
       <li>Copy the generated HEX values into your design tokens</li>
     </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>{faqs.map((f) => <li><strong>{f.q}</strong> {f.a}</li>)}</ul>
   </div>
 
   <div slot="related">

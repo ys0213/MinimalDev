@@ -48,6 +48,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="F to C Converter"
   intro="Convert Fahrenheit (°F) to Celsius (°C). Includes rounding controls, common temperature references, and input validation."
+  faq={faqs}
+  categoryName="Converters"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -122,14 +124,6 @@ const faqJsonLd = {
       <li><strong>32°F</strong> = <strong>0°C</strong></li>
       <li><strong>77°F</strong> = <strong>25°C</strong></li>
       <li><strong>212°F</strong> = <strong>100°C</strong></li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 

@@ -52,6 +52,8 @@ const faqJsonLd = {
   canonicalPath={CANONICAL_PATH}
   h1="Timestamp Now"
   intro="View the current Unix timestamp in seconds and milliseconds, along with the current UTC and local time."
+  faq={faqs}
+  categoryName="Date & Time"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
@@ -103,14 +105,6 @@ const faqJsonLd = {
       <li>Use Unix seconds for many API timestamps</li>
       <li>Use Unix milliseconds for JavaScript-style time values</li>
       <li>Use ISO 8601 when you need a readable machine-friendly format</li>
-    </ul>
-  </div>
-
-  <div slot="faq">
-    <ul>
-      {faqs.map((f) => (
-        <li><strong>{f.q}</strong> {f.a}</li>
-      ))}
     </ul>
   </div>
 
