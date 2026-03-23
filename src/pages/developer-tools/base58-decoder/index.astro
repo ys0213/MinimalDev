@@ -1,0 +1,309 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base58 Decoder",
+  description:
+    "Decode Base58 using the Bitcoin alphabet back to UTF-8 text, with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base58-decoder/",
+  order: 333,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base58-decoder/";
+
+const faqs = [
+  {
+    q: "What Base58 alphabet does this decoder use?",
+    a: "It uses the Bitcoin Base58 alphabet: 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz.",
+  },
+  {
+    q: "Can it decode any Base58 string?",
+    a: "It can decode valid Base58 strings that use the Bitcoin alphabet. The resulting bytes must also be valid UTF-8 for text output.",
+  },
+  {
+    q: "Why might decoding fail even if the characters look valid?",
+    a: "The Base58 part may be valid, but the decoded bytes may not represent valid UTF-8 text.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base58 Decoder — ${SITE_NAME}`}
+  description="Decode Base58 using the Bitcoin alphabet back to UTF-8 text, with validation and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base58 Decoder"
+  intro="Decode Base58 text using the Bitcoin alphabet and convert the result to UTF-8 text."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base58-decoder">
+    <style is:inline>
+      #b58d_input,
+      #b58d_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b58d-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b58d_help b58d_privacy">
+      <div class="field">
+        <label for="b58d_input">Base58 input</label>
+        <textarea id="b58d_input" rows="10" spellcheck="false" placeholder="Enter Base58 text to decode"></textarea>
+      </div>
+
+      <p class="note" id="b58d_help" style="margin-top:6px;">
+        Uses the Bitcoin Base58 alphabet and decodes the result as UTF-8 text.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b58d_decode">Decode</button>
+        <button class="btn secondary" type="button" id="b58d_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b58d_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b58d_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b58d_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b58d_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b58d_output">Decoded text output</label>
+        <textarea id="b58d_output" rows="10" readonly spellcheck="false" placeholder="Decoded text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b58d_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b58d_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool converts Base58 text into bytes using the Bitcoin alphabet, then interprets those bytes as UTF-8 text.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Valid Base58</strong> → decodes to bytes first</li>
+      <li><strong>UTF-8 required</strong> → decoded bytes must form valid text for this page to show output</li>
+      <li><strong>No 0, O, I, l</strong> → those characters are not part of Bitcoin Base58</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base58-encoder/">Base58 Encoder</a></li>
+      <li><a href="/developer-tools/base32-decoder/">Base32 Decoder</a></li>
+      <li><a href="/developer-tools/base85-decoder/">Base85 Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b58d_input");
+  const outputEl = document.getElementById("b58d_output");
+  const decodeBtn = document.getElementById("b58d_decode");
+  const copyBtn = document.getElementById("b58d_copy");
+  const clearBtn = document.getElementById("b58d_clear");
+  const errEl = document.getElementById("b58d_error");
+  const resultEl = document.getElementById("b58d_result");
+  const cardsEl = document.getElementById("b58d_cards");
+  const tbodyEl = document.getElementById("b58d_tbody");
+
+  if (!inputEl || !outputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const MAP = {};
+  for (let i = 0; i < ALPHABET.length; i++) MAP[ALPHABET[i]] = i;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base58Decode(str) {
+    const clean = String(str || "").trim();
+    if (!clean.length) return new Uint8Array(0);
+
+    for (let i = 0; i < clean.length; i++) {
+      if (!(clean[i] in MAP)) {
+        throw new Error('Invalid Base58 character: "' + clean[i] + '"');
+      }
+    }
+
+    let zeros = 0;
+    while (zeros < clean.length && clean[zeros] === "1") zeros++;
+
+    const bytes = [0];
+    for (let i = zeros; i < clean.length; i++) {
+      let carry = MAP[clean[i]];
+      for (let j = 0; j < bytes.length; j++) {
+        carry += bytes[j] * 58;
+        bytes[j] = carry & 255;
+        carry >>= 8;
+      }
+      while (carry > 0) {
+        bytes.push(carry & 255);
+        carry >>= 8;
+      }
+    }
+
+    const output = new Uint8Array(zeros + bytes.length);
+    for (let i = 0; i < zeros; i++) output[i] = 0;
+    for (let i = 0; i < bytes.length; i++) {
+      output[output.length - 1 - i] = bytes[i];
+    }
+    return output;
+  }
+
+  function decode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw.length) {
+      showError("Please enter Base58 text to decode.");
+      return;
+    }
+
+    let bytes;
+    try {
+      bytes = base58Decode(raw);
+    } catch (e) {
+      showError(e && e.message ? e.message : "Invalid Base58 input.");
+      return;
+    }
+
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (_) {
+      showError("Decoded bytes are not valid UTF-8 text.");
+      return;
+    }
+
+    lastOutput = text;
+    outputEl.value = text;
+
+    resultEl.innerHTML = "<strong>Base58 decoded to UTF-8 text.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Bitcoin alphabet") +
+      badge("Valid Base58") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      badge("UTF-8 decoded") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Decoded byte length", String(bytes.length)],
+      ["Output characters", String(text.length)],
+      ["Leading zero marker (1)", raw.startsWith("1") ? "Possible" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded text.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decode();
+  });
+});
+</script>

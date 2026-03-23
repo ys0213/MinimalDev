@@ -1,0 +1,280 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Probability Density Calculator",
+  description:
+    "Calculate normal distribution probability density from x, mean, and standard deviation.",
+  href: "/math/probability-density-calculator/",
+  order: 386,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/probability-density-calculator/";
+
+const faqs = [
+  {
+    q: "What does this probability density calculator compute?",
+    a: "It computes the normal distribution probability density f(x) at a given x, using a mean and standard deviation.",
+  },
+  {
+    q: "Is density the same as probability?",
+    a: "No. A probability density is not the same as a probability at a single point. For continuous distributions, the probability at an exact point is 0, while density describes relative concentration around that point.",
+  },
+  {
+    q: "What formula is used?",
+    a: "This page uses the normal density formula f(x) = 1 / (σ√(2π)) × exp(−(x−μ)² / (2σ²)).",
+  },
+  {
+    q: "Why must standard deviation be positive?",
+    a: "Because the normal density formula divides by the standard deviation and uses its square in the denominator.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Probability Density Calculator — ${SITE_NAME}`}
+  description="Calculate normal probability density f(x) from x, mean, and standard deviation."
+  canonicalPath={CANONICAL_PATH}
+  h1="Probability Density Calculator"
+  intro="Calculate the probability density of a normal distribution at a chosen x value, using a mean and standard deviation."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="probability-density-calculator">
+    <style is:inline>
+      .pdf-wrap, .pdf-wrap * { box-sizing: border-box; }
+      .pdf-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .pdf-grid input {
+        width: 100%;
+        min-width: 0;
+      }
+      .pdf-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 860px) {
+        .pdf-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form pdf-wrap" role="form" aria-describedby="pdf_help pdf_privacy">
+      <div class="pdf-grid">
+        <div class="field">
+          <label for="pdf_x">x value</label>
+          <input id="pdf_x" type="number" inputmode="decimal" step="any" placeholder="e.g., 70" />
+        </div>
+
+        <div class="field">
+          <label for="pdf_mean">Mean (μ)</label>
+          <input id="pdf_mean" type="number" inputmode="decimal" step="any" placeholder="e.g., 65" />
+        </div>
+
+        <div class="field">
+          <label for="pdf_sd">Standard deviation (σ)</label>
+          <input id="pdf_sd" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <p class="note" id="pdf_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="pdf-code">
+          f(x) = 1 / (σ√(2π)) × exp(−(x−μ)² / (2σ²))
+        </span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pdf_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pdf_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pdf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pdf_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pdf_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pdf_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pdf_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pdf_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This page evaluates the <strong>normal distribution density</strong> at a single x value.
+      A larger density means the x value is more concentrated around the mean for the given standard deviation.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>x = 70</strong>, <strong>μ = 65</strong>, <strong>σ = 10</strong></li>
+      <li>The result is the normal density at x = 70, not the probability of exactly 70.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/normal-distribution-calculator/">Normal Distribution Calculator</a></li>
+      <li><a href="/math/cumulative-distribution-calculator/">Cumulative Distribution Calculator</a></li>
+      <li><a href="/math/z-score-calculator/">Z Score Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("pdf_x");
+  const meanEl = document.getElementById("pdf_mean");
+  const sdEl = document.getElementById("pdf_sd");
+  const calcBtn = document.getElementById("pdf_calc");
+  const fillBtn = document.getElementById("pdf_fill_demo");
+  const clearBtn = document.getElementById("pdf_clear");
+  const errorEl = document.getElementById("pdf_error");
+  const resultEl = document.getElementById("pdf_result");
+  const cardsEl = document.getElementById("pdf_cards");
+  const tbodyEl = document.getElementById("pdf_tbody");
+
+  if (!xEl || !meanEl || !sdEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 12 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const x = Number(String(xEl.value || "").trim());
+    const mean = Number(String(meanEl.value || "").trim());
+    const sd = Number(String(sdEl.value || "").trim());
+
+    if (![x, mean, sd].every(Number.isFinite)) {
+      showError("Please enter valid numeric values for x, mean, and standard deviation.");
+      return;
+    }
+
+    if (sd <= 0) {
+      showError("Standard deviation must be greater than 0.");
+      return;
+    }
+
+    const z = (x - mean) / sd;
+    const coeff = 1 / (sd * Math.sqrt(2 * Math.PI));
+    const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(sd, 2));
+    const density = coeff * Math.exp(exponent);
+
+    let label = "Lower density";
+    if (Math.abs(z) < 1) label = "Near center";
+    else if (Math.abs(z) < 2) label = "Moderate distance from mean";
+    else label = "Far from mean";
+
+    resultEl.innerHTML =
+      "<strong>Probability density result</strong><br/>" +
+      "<span class='pdf-code'>f(x) = " + fmt(density, 12) + "</span>" +
+      "<br/><span class='note'>z = " + fmt(z, 8) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(label) +
+      badge("z = " + fmt(z, 4)) +
+      badge("σ = " + fmt(sd, 4)) +
+      "</div>";
+
+    fillTable([
+      ["x", fmt(x, 8)],
+      ["Mean (μ)", fmt(mean, 8)],
+      ["Standard deviation (σ)", fmt(sd, 8)],
+      ["z score", fmt(z, 8)],
+      ["Coefficient 1/(σ√(2π))", fmt(coeff, 12)],
+      ["Exponent", fmt(exponent, 12)],
+      ["Density f(x)", fmt(density, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    xEl.value = "70";
+    meanEl.value = "65";
+    sdEl.value = "10";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    meanEl.value = "";
+    sdEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [xEl, meanEl, sdEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

@@ -1,0 +1,366 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Logarithm Solver",
+  description:
+    "Solve logarithm equations by finding the exponent, base, or result in b^x = y. Includes validation, result cards, and FAQ schema.",
+  href: "/math/logarithm-solver/",
+  order: 395,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/logarithm-solver/";
+
+const faqs = [
+  {
+    q: "What does this logarithm solver do?",
+    a: "It solves equations of the form b^x = y by finding the exponent x, the base b, or the result y.",
+  },
+  {
+    q: "When is a logarithm valid?",
+    a: "For real-number logs, the base must be positive and not equal to 1, and the result y must be positive when solving for the exponent.",
+  },
+  {
+    q: "What formula is used to solve for the exponent?",
+    a: "It uses x = log(y) / log(b), which is the change-of-base formula.",
+  },
+  {
+    q: "Can I solve for the base?",
+    a: "Yes. If x is known and not 0, the base is b = y^(1/x).",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Logarithm Solver — ${SITE_NAME}`}
+  description="Solve b^x = y by finding the exponent, base, or result."
+  canonicalPath={CANONICAL_PATH}
+  h1="Logarithm Solver"
+  intro="Solve logarithm-style equations of the form b^x = y. You can solve for the exponent x, the base b, or the result y."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="logarithm-solver">
+    <style is:inline>
+      .logsolve-wrap, .logsolve-wrap * { box-sizing: border-box; }
+      .logsolve-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .logsolve-grid input,
+      .logsolve-grid select {
+        width:100%;
+        min-width:0;
+      }
+      .logsolve-code {
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break:break-word;
+      }
+      @media (max-width: 760px) {
+        .logsolve-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form logsolve-wrap" role="form" aria-describedby="ls_help ls_privacy">
+      <div class="field">
+        <label for="ls_mode">Solve for</label>
+        <select id="ls_mode">
+          <option value="x" selected>Exponent x in b^x = y</option>
+          <option value="b">Base b in b^x = y</option>
+          <option value="y">Result y in b^x = y</option>
+        </select>
+      </div>
+
+      <div class="logsolve-grid">
+        <div class="field">
+          <label for="ls_b" id="ls_b_label">Base (b)</label>
+          <input id="ls_b" type="number" inputmode="decimal" step="any" placeholder="e.g., 2" />
+        </div>
+
+        <div class="field">
+          <label for="ls_x" id="ls_x_label">Exponent (x)</label>
+          <input id="ls_x" type="number" inputmode="decimal" step="any" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field" style="grid-column:1 / -1;">
+          <label for="ls_y" id="ls_y_label">Result (y)</label>
+          <input id="ls_y" type="number" inputmode="decimal" step="any" placeholder="e.g., 8" />
+        </div>
+      </div>
+
+      <p class="note" id="ls_help" style="margin-top:6px;">
+        Equation form:
+        <br />
+        <span class="logsolve-code">b^x = y</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ls_calc">Solve</button>
+        <button class="btn secondary" type="button" id="ls_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="ls_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ls_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ls_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ls_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ls_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ls_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This solver works with the equation <strong>b^x = y</strong>.
+    </p>
+    <ul>
+      <li><strong>Solve for x:</strong> x = log(y) / log(b)</li>
+      <li><strong>Solve for b:</strong> b = y^(1/x)</li>
+      <li><strong>Solve for y:</strong> y = b^x</li>
+    </ul>
+    <p class="note">
+      For real-number logarithms, the base must be positive and not equal to 1, and y must be positive when solving for x.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2^x = 8</strong> → <strong>x = 3</strong></li>
+      <li><strong>b^3 = 27</strong> → <strong>b = 3</strong></li>
+      <li><strong>10^2 = y</strong> → <strong>y = 100</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/logarithm-base-calculator/">Logarithm Base Calculator</a></li>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("ls_mode");
+  const bEl = document.getElementById("ls_b");
+  const xEl = document.getElementById("ls_x");
+  const yEl = document.getElementById("ls_y");
+  const calcBtn = document.getElementById("ls_calc");
+  const fillBtn = document.getElementById("ls_fill_demo");
+  const clearBtn = document.getElementById("ls_clear");
+  const errorEl = document.getElementById("ls_error");
+  const resultEl = document.getElementById("ls_result");
+  const cardsEl = document.getElementById("ls_cards");
+  const tbodyEl = document.getElementById("ls_tbody");
+
+  if (!modeEl || !bEl || !xEl || !yEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function num(v) {
+    const n = parseFloat(String(v).trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n, d) {
+    return Number.isFinite(n)
+      ? n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 12 })
+      : "—";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const a = document.createElement("td");
+      const b = document.createElement("td");
+      a.textContent = row[0];
+      b.textContent = row[1];
+      tr.appendChild(a);
+      tr.appendChild(b);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function setDisabledFields() {
+    const mode = modeEl.value;
+    bEl.disabled = mode === "b";
+    xEl.disabled = mode === "x";
+    yEl.disabled = mode === "y";
+  }
+
+  function compute() {
+    clearOutput();
+
+    const mode = String(modeEl.value || "x");
+    const b = num(bEl.value);
+    const x = num(xEl.value);
+    const y = num(yEl.value);
+
+    let solved, label, rows, note = "";
+
+    if (mode === "x") {
+      if (!Number.isFinite(b) || !Number.isFinite(y)) {
+        showError("Please enter valid values for base b and result y.");
+        return;
+      }
+      if (b <= 0 || b === 1) {
+        showError("Base b must be positive and cannot be 1.");
+        return;
+      }
+      if (y <= 0) {
+        showError("Result y must be greater than 0 when solving for the exponent.");
+        return;
+      }
+
+      solved = Math.log(y) / Math.log(b);
+      label = "Solved exponent";
+      rows = [
+        ["Base (b)", fmt(b, 12)],
+        ["Result (y)", fmt(y, 12)],
+        ["Exponent (x)", fmt(solved, 12)],
+        ["Check", fmt(Math.pow(b, solved), 12)],
+      ];
+    } else if (mode === "b") {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        showError("Please enter valid values for exponent x and result y.");
+        return;
+      }
+      if (x === 0) {
+        showError("Exponent x cannot be 0 when solving for the base.");
+        return;
+      }
+      if (y <= 0) {
+        showError("Result y must be greater than 0 when solving for a real base.");
+        return;
+      }
+
+      solved = Math.pow(y, 1 / x);
+      if (!Number.isFinite(solved) || solved <= 0 || Math.abs(solved - 1) < 1e-12) {
+        note = "The computed base is not valid for standard real-number logarithms, or it is effectively 1.";
+      }
+      label = "Solved base";
+      rows = [
+        ["Exponent (x)", fmt(x, 12)],
+        ["Result (y)", fmt(y, 12)],
+        ["Base (b)", fmt(solved, 12)],
+        ["Check", fmt(Math.pow(solved, x), 12)],
+      ];
+    } else {
+      if (!Number.isFinite(b) || !Number.isFinite(x)) {
+        showError("Please enter valid values for base b and exponent x.");
+        return;
+      }
+      if (b <= 0 || b === 1) {
+        showError("Base b must be positive and cannot be 1.");
+        return;
+      }
+
+      solved = Math.pow(b, x);
+      label = "Solved result";
+      rows = [
+        ["Base (b)", fmt(b, 12)],
+        ["Exponent (x)", fmt(x, 12)],
+        ["Result (y)", fmt(solved, 12)],
+      ];
+    }
+
+    resultEl.innerHTML =
+      "<strong>Logarithm solver result</strong><br/>" +
+      "<span class='logsolve-code'>" +
+      (mode === "x" ? (fmt(b, 8) + "^x = " + fmt(y, 8) + " → x = " + fmt(solved, 12))
+        : mode === "b" ? ("b^" + fmt(x, 8) + " = " + fmt(y, 8) + " → b = " + fmt(solved, 12))
+        : (fmt(b, 8) + "^" + fmt(x, 8) + " = y → y = " + fmt(solved, 12))) +
+      "</span>" +
+      (note ? "<br/><span class='note'>" + note + "</span>" : "");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(label) +
+      badge(mode === "x" ? "Using change of base" : mode === "b" ? "Using y^(1/x)" : "Using exponentiation") +
+      badge(Number.isFinite(solved) ? "Real result" : "No real result") +
+      "</div>";
+
+    fillTable(rows);
+  }
+
+  function fillDemo() {
+    modeEl.value = "x";
+    bEl.value = "2";
+    xEl.value = "";
+    yEl.value = "8";
+    setDisabledFields();
+    clearOutput();
+  }
+
+  function reset() {
+    modeEl.value = "x";
+    bEl.value = "";
+    xEl.value = "";
+    yEl.value = "";
+    setDisabledFields();
+    clearOutput();
+    bEl.focus();
+  }
+
+  modeEl.addEventListener("change", function () {
+    setDisabledFields();
+    clearOutput();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [bEl, xEl, yEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  setDisabledFields();
+  clearOutput();
+});
+</script>

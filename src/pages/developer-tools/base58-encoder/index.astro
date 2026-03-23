@@ -1,0 +1,285 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base58 Encoder",
+  description:
+    "Encode UTF-8 text to Base58 using the Bitcoin alphabet, with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base58-encoder/",
+  order: 332,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base58-encoder/";
+
+const faqs = [
+  {
+    q: "What Base58 alphabet does this tool use?",
+    a: "It uses the Bitcoin Base58 alphabet: 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz.",
+  },
+  {
+    q: "Why are some characters missing in Base58?",
+    a: "Base58 avoids visually confusing characters such as 0, O, I, and l.",
+  },
+  {
+    q: "Can I encode non-English text?",
+    a: "Yes. The text is first converted to UTF-8 bytes and then Base58-encoded.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Encoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base58 Encoder — ${SITE_NAME}`}
+  description="Encode UTF-8 text to Base58 using the Bitcoin alphabet, with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base58 Encoder"
+  intro="Encode text to Base58 using the Bitcoin alphabet. Useful when you want compact text without visually ambiguous characters."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base58-encoder">
+    <style is:inline>
+      #b58e_input,
+      #b58e_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b58e-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b58e_help b58e_privacy">
+      <div class="field">
+        <label for="b58e_input">Text input</label>
+        <textarea id="b58e_input" rows="10" spellcheck="false" placeholder="Enter text to encode as Base58"></textarea>
+      </div>
+
+      <p class="note" id="b58e_help" style="margin-top:6px;">
+        Uses the Bitcoin Base58 alphabet and UTF-8 text input.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b58e_encode">Encode</button>
+        <button class="btn secondary" type="button" id="b58e_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b58e_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b58e_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b58e_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b58e_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b58e_output">Base58 output</label>
+        <textarea id="b58e_output" rows="10" readonly spellcheck="false" placeholder="Encoded Base58 output will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b58e_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b58e_privacy" style="margin-top:10px;">
+        Privacy: encoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The input text is converted to UTF-8 bytes and then encoded using Base58 with the Bitcoin alphabet.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Hello</strong> → Base58 text without ambiguous characters like 0 or O</li>
+      <li><strong>developer-tools</strong> → compact Base58 output</li>
+      <li><strong>UTF-8 text</strong> → non-English characters supported through UTF-8 conversion</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base58-decoder/">Base58 Decoder</a></li>
+      <li><a href="/developer-tools/base32-encoder/">Base32 Encoder</a></li>
+      <li><a href="/developer-tools/base85-encoder/">Base85 Encoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b58e_input");
+  const outputEl = document.getElementById("b58e_output");
+  const encodeBtn = document.getElementById("b58e_encode");
+  const copyBtn = document.getElementById("b58e_copy");
+  const clearBtn = document.getElementById("b58e_clear");
+  const errEl = document.getElementById("b58e_error");
+  const resultEl = document.getElementById("b58e_result");
+  const cardsEl = document.getElementById("b58e_cards");
+  const tbodyEl = document.getElementById("b58e_tbody");
+
+  if (!inputEl || !outputEl || !encodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+  const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base58Encode(bytes) {
+    if (!bytes.length) return "";
+
+    let zeros = 0;
+    while (zeros < bytes.length && bytes[zeros] === 0) zeros++;
+
+    let digits = [0];
+    for (let i = zeros; i < bytes.length; i++) {
+      let carry = bytes[i];
+      for (let j = 0; j < digits.length; j++) {
+        carry += digits[j] << 8;
+        digits[j] = carry % 58;
+        carry = Math.floor(carry / 58);
+      }
+      while (carry > 0) {
+        digits.push(carry % 58);
+        carry = Math.floor(carry / 58);
+      }
+    }
+
+    let output = "1".repeat(zeros);
+    for (let i = digits.length - 1; i >= 0; i--) {
+      output += ALPHABET[digits[i]];
+    }
+    return output;
+  }
+
+  function encode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.length) {
+      showError("Please enter text to encode.");
+      return;
+    }
+
+    const bytes = new TextEncoder().encode(raw);
+    const encoded = base58Encode(bytes);
+
+    lastOutput = encoded;
+    outputEl.value = encoded;
+
+    resultEl.innerHTML = "<strong>Text encoded to Base58.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Bitcoin alphabet") +
+      badge("UTF-8 input") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      "</div>";
+
+    fillTable([
+      ["Input characters", String(raw.length)],
+      ["UTF-8 byte length", String(bytes.length)],
+      ["Output length", String(encoded.length)],
+      ["Alphabet excludes", "0 O I l"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No encoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied Base58 output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  encodeBtn.addEventListener("click", encode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") encode();
+  });
+});
+</script>

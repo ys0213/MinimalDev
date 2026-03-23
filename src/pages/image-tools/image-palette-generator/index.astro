@@ -1,0 +1,727 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Palette Generator",
+  description:
+    "Generate a clean color palette from an image with dominant colors, HEX values, copy tools, sorting options, and FAQ schema.",
+  href: "/image-tools/image-palette-generator/",
+  order: 112,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-palette-generator/";
+
+const faqs = [
+  {
+    q: "How does this image palette generator work?",
+    a: "It samples pixels from your uploaded image, groups similar colors, ranks them, and then shows a compact palette with HEX codes.",
+  },
+  {
+    q: "Does this tool upload my image anywhere?",
+    a: "No. Everything runs locally in your browser. Your image is not uploaded or transmitted.",
+  },
+  {
+    q: "Why do extracted colors sometimes differ slightly from what I expect?",
+    a: "The tool reduces and groups similar pixel colors so the palette stays useful and readable. Very close shades may be merged together.",
+  },
+  {
+    q: "Can I copy the HEX palette?",
+    a: "Yes. You can copy all HEX values at once or click individual palette swatches to copy one color.",
+  },
+  {
+    q: "What image types are supported?",
+    a: "Most common browser-supported image formats such as JPG, PNG, WebP, and GIF are supported for palette extraction.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Palette Generator — ${SITE_NAME}`}
+  description="Extract dominant colors from an image, preview a palette, copy HEX codes, sort results, and export palette text. Runs locally with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Palette Generator"
+  intro="Upload an image to extract dominant colors and generate a clean palette with HEX codes. Useful for UI design, branding, mood boards, and quick visual analysis."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-palette-generator">
+    <style is:inline>
+      #ipg_file,
+      #ipg_palette_count,
+      #ipg_sort_mode,
+      #ipg_sample_step,
+      #ipg_hex_output {
+        width: 100%;
+        min-width: 0;
+      }
+      #ipg_preview_wrap {
+        width: 100%;
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: rgba(255,255,255,0.03);
+      }
+      #ipg_preview {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+      }
+      #ipg_palette_grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+        width: 100%;
+      }
+      .ipg-swatch-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.03);
+        min-width: 0;
+      }
+      .ipg-swatch-color {
+        height: 72px;
+        width: 100%;
+      }
+      .ipg-swatch-meta {
+        padding: 10px;
+      }
+      .ipg-swatch-btn {
+        width: 100%;
+        margin-top: 8px;
+        border: 1px solid rgba(255,255,255,0.18);
+        background: transparent;
+        color: inherit;
+        border-radius: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .ipg-card-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        width: 100%;
+      }
+      .ipg-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .ipg-big {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-top: 4px;
+        word-break: break-word;
+      }
+      .ipg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      @media (max-width: 640px) {
+        .ipg-big {
+          font-size: 22px;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ipg_help ipg_privacy">
+      <div class="field">
+        <label for="ipg_file">Image file</label>
+        <input id="ipg_file" type="file" accept="image/*" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+        <div class="field">
+          <label for="ipg_palette_count">Palette size</label>
+          <select id="ipg_palette_count">
+            <option value="4">4 colors</option>
+            <option value="5">5 colors</option>
+            <option value="6" selected>6 colors</option>
+            <option value="8">8 colors</option>
+            <option value="10">10 colors</option>
+            <option value="12">12 colors</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ipg_sort_mode">Sort palette by</label>
+          <select id="ipg_sort_mode">
+            <option value="frequency" selected>Frequency (most common first)</option>
+            <option value="brightness">Brightness</option>
+            <option value="hue">Hue</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ipg_sample_step">Sampling density</label>
+          <select id="ipg_sample_step">
+            <option value="4">High detail</option>
+            <option value="8" selected>Balanced</option>
+            <option value="12">Fast</option>
+            <option value="16">Very fast</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <label>
+          <input id="ipg_ignore_bw" type="checkbox" />
+          Ignore near-black and near-white colors
+        </label>
+        <label>
+          <input id="ipg_dedupe_close" type="checkbox" checked />
+          Merge very similar colors
+        </label>
+      </div>
+
+      <p class="note" id="ipg_help" style="margin-top:6px;">
+        Upload an image, choose the palette size and sort mode, then generate a palette.
+        Click any swatch to copy its HEX value. All processing runs locally.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ipg_generate">Generate Palette</button>
+        <button class="btn secondary" type="button" id="ipg_copy_all">Copy All HEX</button>
+        <button class="btn secondary" type="button" id="ipg_download_txt">Download TXT</button>
+        <button class="btn secondary" type="button" id="ipg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ipg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="ipg_summary" role="status" style="margin-top:12px;">
+        Palette results will appear here.
+      </div>
+
+      <div id="ipg_preview_wrap" style="margin-top:14px; display:none;">
+        <img id="ipg_preview" alt="Uploaded image preview for palette extraction" />
+      </div>
+
+      <div class="result" id="ipg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="ipg_palette_grid" style="margin-top:12px; display:none;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ipg_hex_output">Palette HEX output</label>
+        <textarea
+          id="ipg_hex_output"
+          class="ipg-output"
+          rows="6"
+          readonly
+          spellcheck="false"
+          placeholder="Generated HEX values will appear here."
+        ></textarea>
+      </div>
+
+      <p class="note" id="ipg_privacy" style="margin-top:10px;">
+        Privacy: palette extraction runs locally in your browser. No image data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool samples pixels from your image, reduces close shades into grouped colors, and returns a cleaner palette.
+      The result is designed to be practical rather than mathematically exhaustive, so it is better suited for design use,
+      quick inspiration, and dominant color identification.
+    </p>
+    <ul>
+      <li><strong>Frequency:</strong> best for dominant color extraction</li>
+      <li><strong>Brightness:</strong> useful when you want a light-to-dark palette</li>
+      <li><strong>Hue:</strong> useful when you want a rainbow-like ordering</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Extract branding colors from a logo or hero image</li>
+      <li>Generate inspiration palettes from photographs</li>
+      <li>Find a quick set of HEX colors for UI mockups</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-color-extractor/">Image Color Extractor</a></li>
+      <li><a href="/image-tools/image-blur/">Image Blur</a></li>
+      <li><a href="/image-tools/image-to-base64/">Image to Base64</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("ipg_file");
+  const paletteCountEl = document.getElementById("ipg_palette_count");
+  const sortModeEl = document.getElementById("ipg_sort_mode");
+  const sampleStepEl = document.getElementById("ipg_sample_step");
+  const ignoreBwEl = document.getElementById("ipg_ignore_bw");
+  const dedupeCloseEl = document.getElementById("ipg_dedupe_close");
+
+  const generateBtn = document.getElementById("ipg_generate");
+  const copyAllBtn = document.getElementById("ipg_copy_all");
+  const downloadTxtBtn = document.getElementById("ipg_download_txt");
+  const clearBtn = document.getElementById("ipg_clear");
+
+  const errorEl = document.getElementById("ipg_error");
+  const summaryEl = document.getElementById("ipg_summary");
+  const previewWrapEl = document.getElementById("ipg_preview_wrap");
+  const previewEl = document.getElementById("ipg_preview");
+  const cardsEl = document.getElementById("ipg_cards");
+  const paletteGridEl = document.getElementById("ipg_palette_grid");
+  const hexOutputEl = document.getElementById("ipg_hex_output");
+
+  if (
+    !fileEl || !paletteCountEl || !sortModeEl || !sampleStepEl ||
+    !ignoreBwEl || !dedupeCloseEl || !generateBtn || !copyAllBtn ||
+    !downloadTxtBtn || !clearBtn || !errorEl || !summaryEl ||
+    !previewWrapEl || !previewEl || !cardsEl || !paletteGridEl || !hexOutputEl
+  ) return;
+
+  const hiddenCanvas = document.createElement("canvas");
+  const hiddenCtx = hiddenCanvas.getContext("2d");
+
+  let currentImageDataUrl = "";
+  let currentFileName = "";
+  let currentPalette = [];
+  let imageNaturalWidth = 0;
+  let imageNaturalHeight = 0;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    summaryEl.textContent = "Palette results will appear here.";
+    previewWrapEl.style.display = "none";
+    previewEl.removeAttribute("src");
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    paletteGridEl.style.display = "none";
+    paletteGridEl.innerHTML = "";
+    hexOutputEl.value = "";
+    currentPalette = [];
+    imageNaturalWidth = 0;
+    imageNaturalHeight = 0;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function miniCard(label, value, sub) {
+    return (
+      '<div class="ipg-mini-card">' +
+        '<strong>' + escapeHtml(label) + '</strong>' +
+        '<div class="ipg-big">' + escapeHtml(value) + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + '</div>' +
+      '</div>'
+    );
+  }
+
+  function rgbToHex(r, g, b) {
+    function h(v) { return Number(v).toString(16).padStart(2, "0").toUpperCase(); }
+    return "#" + h(r) + h(g) + h(b);
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s;
+    const l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+        case g: h = ((b - r) / d + 2); break;
+        default: h = ((r - g) / d + 4); break;
+      }
+      h /= 6;
+    }
+
+    return {
+      h: h * 360,
+      s: s * 100,
+      l: l * 100
+    };
+  }
+
+  function brightness(r, g, b) {
+    return 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
+  function colorDistance(a, b) {
+    const dr = a.r - b.r;
+    const dg = a.g - b.g;
+    const db = a.b - b.b;
+    return Math.sqrt(dr * dr + dg * dg + db * db);
+  }
+
+  function isNearBlackOrWhite(r, g, b) {
+    const br = brightness(r, g, b);
+    return br <= 18 || br >= 238;
+  }
+
+  function samplePalette(imageData, step, ignoreBw, targetCount, dedupeClose) {
+    const freq = new Map();
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+
+    for (let y = 0; y < height; y += step) {
+      for (let x = 0; x < width; x += step) {
+        const i = (y * width + x) * 4;
+        const alpha = data[i + 3];
+        if (alpha < 24) continue;
+
+        // Quantize slightly so near-identical shades group together.
+        const r = Math.round(data[i] / 16) * 16;
+        const g = Math.round(data[i + 1] / 16) * 16;
+        const b = Math.round(data[i + 2] / 16) * 16;
+
+        if (ignoreBw && isNearBlackOrWhite(r, g, b)) continue;
+
+        const key = r + "," + g + "," + b;
+        freq.set(key, (freq.get(key) || 0) + 1);
+      }
+    }
+
+    let palette = Array.from(freq.entries()).map(function (entry) {
+      const parts = entry[0].split(",").map(Number);
+      return {
+        r: parts[0],
+        g: parts[1],
+        b: parts[2],
+        count: entry[1],
+      };
+    });
+
+    palette.sort(function (a, b) {
+      return b.count - a.count;
+    });
+
+    if (dedupeClose) {
+      const merged = [];
+      palette.forEach(function (c) {
+        const existing = merged.find(function (m) {
+          return colorDistance(m, c) < 24;
+        });
+        if (existing) {
+          existing.count += c.count;
+          existing.r = Math.round((existing.r + c.r) / 2);
+          existing.g = Math.round((existing.g + c.g) / 2);
+          existing.b = Math.round((existing.b + c.b) / 2);
+        } else {
+          merged.push({ ...c });
+        }
+      });
+      palette = merged.sort(function (a, b) { return b.count - a.count; });
+    }
+
+    return palette.slice(0, targetCount).map(function (c) {
+      const hex = rgbToHex(c.r, c.g, c.b);
+      const hsl = rgbToHsl(c.r, c.g, c.b);
+      return {
+        ...c,
+        hex,
+        brightness: brightness(c.r, c.g, c.b),
+        hue: hsl.h,
+        lightness: hsl.l,
+      };
+    });
+  }
+
+  function sortPalette(palette, mode) {
+    const arr = palette.slice();
+    if (mode === "brightness") {
+      arr.sort(function (a, b) { return a.brightness - b.brightness; });
+    } else if (mode === "hue") {
+      arr.sort(function (a, b) { return a.hue - b.hue; });
+    } else {
+      arr.sort(function (a, b) { return b.count - a.count; });
+    }
+    return arr;
+  }
+
+  function renderPalette(palette, sortMode) {
+    const sorted = sortPalette(palette, sortMode);
+    currentPalette = sorted;
+
+    paletteGridEl.innerHTML = "";
+    paletteGridEl.style.display = sorted.length ? "grid" : "none";
+
+    const hexList = [];
+
+    sorted.forEach(function (c, index) {
+      hexList.push(c.hex);
+
+      const wrap = document.createElement("div");
+      wrap.className = "ipg-swatch-card";
+
+      const pct = sorted.reduce(function (sum, item) { return sum + item.count; }, 0) > 0
+        ? ((c.count / sorted.reduce(function (sum, item) { return sum + item.count; }, 0)) * 100)
+        : 0;
+
+      wrap.innerHTML =
+        '<div class="ipg-swatch-color" style="background:' + escapeHtml(c.hex) + ';"></div>' +
+        '<div class="ipg-swatch-meta">' +
+          '<strong>' + escapeHtml(c.hex) + '</strong>' +
+          '<div class="note" style="margin-top:4px;">' +
+            'RGB ' + escapeHtml(c.r + ", " + c.g + ", " + c.b) + '<br />' +
+            'Share: ' + pct.toFixed(1) + '%<br />' +
+            'Brightness: ' + Math.round(c.brightness) +
+          '</div>' +
+          '<button class="ipg-swatch-btn" type="button" data-hex="' + escapeHtml(c.hex) + '" aria-label="Copy color ' + escapeHtml(c.hex) + '">' +
+            'Copy ' + escapeHtml(c.hex) +
+          '</button>' +
+        '</div>';
+
+      paletteGridEl.appendChild(wrap);
+    });
+
+    hexOutputEl.value = hexList.join(", ");
+
+    const totalSamples = sorted.reduce(function (sum, item) { return sum + item.count; }, 0);
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="ipg-card-row">' +
+        miniCard("Palette colors", String(sorted.length), "Returned after grouping") +
+        miniCard("Image size", imageNaturalWidth + " × " + imageNaturalHeight, "Original upload dimensions") +
+        miniCard("Top color", sorted[0] ? sorted[0].hex : "—", "Most prominent after current sort") +
+        miniCard("Sample weight", totalSamples.toLocaleString(), "Grouped pixel samples used") +
+      '</div>';
+
+    summaryEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">' +
+        '<strong>Palette generated.</strong>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          badge(sorted.length + " colors", "good") +
+          badge(sortMode === "frequency" ? "Sorted by frequency" : sortMode === "brightness" ? "Sorted by brightness" : "Sorted by hue", "neutral") +
+          badge(dedupeCloseEl.checked ? "Similar colors merged" : "No color merging", dedupeCloseEl.checked ? "good" : "warn") +
+        '</div>' +
+      '</div>' +
+      '<div class="note" style="margin-top:8px;">' +
+        'Use the palette grid below to copy individual HEX values or copy the full list at once.' +
+      '</div>';
+  }
+
+  function loadImageFromFile(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () {
+          resolve({ img, dataUrl: String(ev.target.result || "") });
+        };
+        img.onerror = function () {
+          reject(new Error("Could not load the selected image."));
+        };
+        img.src = String(ev.target.result || "");
+      };
+      reader.onerror = function () {
+        reject(new Error("Could not read the selected file."));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function generatePalette() {
+    clearError();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please upload a valid image file.");
+      return;
+    }
+
+    if (!hiddenCtx) {
+      showError("Canvas is not available in this browser.");
+      return;
+    }
+
+    try {
+      summaryEl.innerHTML = "<strong>Generating palette…</strong>";
+      cardsEl.style.display = "none";
+      paletteGridEl.style.display = "none";
+      paletteGridEl.innerHTML = "";
+      hexOutputEl.value = "";
+
+      const loaded = await loadImageFromFile(file);
+      currentImageDataUrl = loaded.dataUrl;
+      currentFileName = file.name || "image";
+
+      previewEl.src = currentImageDataUrl;
+      previewWrapEl.style.display = "block";
+
+      imageNaturalWidth = loaded.img.naturalWidth || loaded.img.width;
+      imageNaturalHeight = loaded.img.naturalHeight || loaded.img.height;
+
+      hiddenCanvas.width = imageNaturalWidth;
+      hiddenCanvas.height = imageNaturalHeight;
+      hiddenCtx.clearRect(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+      hiddenCtx.drawImage(loaded.img, 0, 0);
+
+      const imageData = hiddenCtx.getImageData(0, 0, hiddenCanvas.width, hiddenCanvas.height);
+
+      const paletteCount = Number(paletteCountEl.value || 6);
+      const sampleStep = Number(sampleStepEl.value || 8);
+      const ignoreBw = !!ignoreBwEl.checked;
+      const dedupeClose = !!dedupeCloseEl.checked;
+      const sortMode = String(sortModeEl.value || "frequency");
+
+      const palette = samplePalette(imageData, sampleStep, ignoreBw, paletteCount, dedupeClose);
+
+      if (!palette.length) {
+        showError("No usable colors were found. Try turning off the black/white filter or using a different image.");
+        summaryEl.textContent = "Palette results will appear here.";
+        return;
+      }
+
+      renderPalette(palette, sortMode);
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not generate a palette from this image.");
+      summaryEl.textContent = "Palette results will appear here.";
+    }
+  }
+
+  async function copyAllHex() {
+    clearError();
+
+    if (!hexOutputEl.value.trim()) {
+      showError("No palette HEX values are available to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(hexOutputEl.value);
+      summaryEl.innerHTML =
+        "<strong>Copied palette HEX values.</strong>" +
+        '<div class="note" style="margin-top:6px;">The full HEX list is now in your clipboard.</div>';
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function downloadPaletteTxt() {
+    clearError();
+
+    const value = String(hexOutputEl.value || "").trim();
+    if (!value) {
+      showError("No palette output is available to download yet.");
+      return;
+    }
+
+    const lines = [];
+    lines.push("Image Palette Generator");
+    lines.push("Source: " + (currentFileName || "image"));
+    lines.push("Image size: " + imageNaturalWidth + " x " + imageNaturalHeight);
+    lines.push("");
+    currentPalette.forEach(function (c, i) {
+      lines.push((i + 1) + ". " + c.hex + " | RGB(" + c.r + ", " + c.g + ", " + c.b + ")");
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (currentFileName ? currentFileName.replace(/\.[^.]+$/, "") : "palette") + "-palette.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    paletteCountEl.value = "6";
+    sortModeEl.value = "frequency";
+    sampleStepEl.value = "8";
+    ignoreBwEl.checked = false;
+    dedupeCloseEl.checked = true;
+    currentImageDataUrl = "";
+    currentFileName = "";
+    resetOutput();
+    fileEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generatePalette);
+  copyAllBtn.addEventListener("click", copyAllHex);
+  downloadTxtBtn.addEventListener("click", downloadPaletteTxt);
+  clearBtn.addEventListener("click", clearAll);
+
+  sortModeEl.addEventListener("change", function () {
+    if (currentPalette.length) {
+      renderPalette(currentPalette, String(sortModeEl.value || "frequency"));
+    }
+  });
+
+  paletteGridEl.addEventListener("click", async function (e) {
+    const btn = e.target.closest("[data-hex]");
+    if (!btn) return;
+
+    const hex = String(btn.getAttribute("data-hex") || "");
+    if (!hex) return;
+
+    try {
+      await navigator.clipboard.writeText(hex);
+      summaryEl.innerHTML =
+        "<strong>Copied " + escapeHtml(hex) + ".</strong>" +
+        '<div class="note" style="margin-top:6px;">Individual swatch HEX copied to clipboard.</div>';
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  });
+
+  clearAll();
+});
+</script>

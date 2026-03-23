@@ -1,0 +1,267 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Logarithm Base Calculator",
+  description:
+    "Calculate log base b of x with validation, domain checks, result cards, and FAQ support.",
+  href: "/math/logarithm-base-calculator/",
+  order: 348,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/logarithm-base-calculator/";
+
+const faqs = [
+  {
+    q: "What does log base b of x mean?",
+    a: "It asks what exponent y makes b^y = x. That exponent y is the logarithm value.",
+  },
+  {
+    q: "Why must x be positive?",
+    a: "Real logarithms are defined only for positive arguments x.",
+  },
+  {
+    q: "Why can’t the base be 1 or negative?",
+    a: "For real logarithms, the base must be positive and not equal to 1.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Logarithm Base Calculator — ${SITE_NAME}`}
+  description="Compute log base b of x with validation, domain checks, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Logarithm Base Calculator"
+  intro="Calculate logarithms with any valid positive base other than 1 and view the equivalent exponential form."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="logarithm-base-calculator">
+    <style is:inline>
+      .lbc-wrap, .lbc-wrap * { box-sizing: border-box; }
+      .lbc-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 720px) {
+        .lbc-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form lbc-wrap" role="form" aria-describedby="lbc_help lbc_privacy">
+      <div class="lbc-grid">
+        <div class="field">
+          <label for="lbc_x">Value x</label>
+          <input id="lbc_x" type="number" step="any" inputmode="decimal" placeholder="e.g., 8" />
+        </div>
+        <div class="field">
+          <label for="lbc_base">Base b</label>
+          <input id="lbc_base" type="number" step="any" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+      </div>
+
+      <p class="note" id="lbc_help" style="margin-top:8px;">
+        Domain rules: <strong>x &gt; 0</strong>, <strong>base &gt; 0</strong>, and <strong>base ≠ 1</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="lbc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="lbc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="lbc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="lbc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="lbc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="lbc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="lbc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="lbc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Formula:
+      <br />
+      <strong>logᵦ(x) = ln(x) / ln(b)</strong>
+      <br />
+      Equivalent meaning:
+      <br />
+      <strong>bʸ = x</strong> where <strong>y = logᵦ(x)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>log₂(8)</strong> = <strong>3</strong></li>
+      <li><strong>log₁₀(1000)</strong> = <strong>3</strong></li>
+      <li><strong>log₃(9)</strong> = <strong>2</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/log2-calculator/">Log2 Calculator</a></li>
+      <li><a href="/math/log10-calculator/">Log10 Calculator</a></li>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("lbc_x");
+  const baseEl = document.getElementById("lbc_base");
+  const calcBtn = document.getElementById("lbc_calc");
+  const demoBtn = document.getElementById("lbc_fill_demo");
+  const clearBtn = document.getElementById("lbc_clear");
+  const errorEl = document.getElementById("lbc_error");
+  const resultEl = document.getElementById("lbc_result");
+  const cardsEl = document.getElementById("lbc_cards");
+  const tbodyEl = document.getElementById("lbc_tbody");
+
+  if (!xEl || !baseEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter both x and base.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number for " + label + ".");
+    return n;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const x = getNum(xEl, "x");
+      const b = getNum(baseEl, "base");
+
+      if (!(x > 0)) {
+        showError("x must be greater than 0.");
+        return;
+      }
+      if (!(b > 0)) {
+        showError("Base must be greater than 0.");
+        return;
+      }
+      if (Math.abs(b - 1) < 1e-12) {
+        showError("Base cannot be 1.");
+        return;
+      }
+
+      const y = Math.log(x) / Math.log(b);
+
+      resultEl.innerHTML =
+        "<strong>Logarithm result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>log base " + fmt(b) + " of " + fmt(x) + " = " + fmt(y) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Valid logarithm domain") +
+        badge("b^y = x") +
+        badge("y = " + fmt(y)) +
+        "</div>";
+
+      fillTable([
+        ["x", fmt(x)],
+        ["Base b", fmt(b)],
+        ["Formula used", "ln(x) / ln(b)"],
+        ["Result y", fmt(y)],
+        ["Equivalent exponential form", fmt(b) + "^" + fmt(y) + " = " + fmt(x)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the logarithm.");
+    }
+  }
+
+  function fillDemo() {
+    xEl.value = "8";
+    baseEl.value = "2";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    baseEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [xEl, baseEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

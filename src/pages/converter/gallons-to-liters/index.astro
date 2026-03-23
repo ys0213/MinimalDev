@@ -1,0 +1,270 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Gallons to Liters",
+  description:
+    "Convert US gallons to liters instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/gallons-to-liters/",
+  order: 301,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/gallons-to-liters/";
+
+const faqs = [
+  {
+    q: "How do you convert gallons to liters?",
+    a: "Multiply US gallons by 3.785411784 to get liters.",
+  },
+  {
+    q: "Does this use US gallons or UK gallons?",
+    a: "This tool uses US liquid gallons. UK imperial gallons are larger and need a different factor.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between gallons to liters and liters to gallons.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Gallons to Liters Converter — ${SITE_NAME}`}
+  description="Convert US gallons to liters instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Gallons to Liters Converter"
+  intro="Convert volume from US gallons to liters instantly. Useful for fuel, tanks, liquids, and volume comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="gallons-to-liters">
+    <div class="form" role="form" aria-describedby="g2l_hint g2l_privacy">
+      <div class="field">
+        <label for="g2l_input">US gallons</label>
+        <input id="g2l_input" type="number" inputmode="decimal" placeholder="e.g., 5" />
+        <p class="note" id="g2l_hint" style="margin-top:6px;">
+          Uses US liquid gallons. Enter a non-negative value.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="g2l_round">Rounding</label>
+        <select id="g2l_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="g2l_convert">Convert</button>
+        <button class="btn secondary" type="button" id="g2l_swap">Reverse (L → gal)</button>
+        <button class="btn secondary" type="button" id="g2l_clear">Clear</button>
+      </div>
+
+      <div class="result" id="g2l_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="g2l_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="g2l_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="g2l_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="g2l_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 US gallon = 3.785411784 liters</strong>.<br />
+      Formula: <strong>L = US gal × 3.785411784</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 US gal</strong> ≈ <strong>3.7854 L</strong></li>
+      <li><strong>5 US gal</strong> ≈ <strong>18.9271 L</strong></li>
+      <li><strong>10 US gal</strong> ≈ <strong>37.8541 L</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/volume-converter/">Volume Converter</a></li>
+      <li><a href="/converter/liters-to-gallons/">Liters to Gallons</a></li>
+      <li><a href="/converter/cubic-meters-to-liters/">Cubic Meters to Liters</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("g2l_input");
+  const roundEl = document.getElementById("g2l_round");
+  const convertBtn = document.getElementById("g2l_convert");
+  const swapBtn = document.getElementById("g2l_swap");
+  const clearBtn = document.getElementById("g2l_clear");
+  const errEl = document.getElementById("g2l_error");
+  const outEl = document.getElementById("g2l_result");
+  const cardsEl = document.getElementById("g2l_cards");
+  const tbodyEl = document.getElementById("g2l_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const GAL_TO_L = 3.785411784;
+  const L_TO_GAL = 1 / GAL_TO_L;
+  let mode = "gal-to-l";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="g2l_input"]');
+    if (!label) return;
+
+    if (mode === "gal-to-l") {
+      label.textContent = "US gallons";
+      inEl.placeholder = "e.g., 5";
+      swapBtn.textContent = "Reverse (L → gal)";
+    } else {
+      label.textContent = "Liters";
+      inEl.placeholder = "e.g., 20";
+      swapBtn.textContent = "Reverse (gal → L)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "gal-to-l"
+      ? [
+          ["Conversion factor", "1 US gal = 3.785411784 L"],
+          ["Reverse factor", "1 L ≈ " + fmtSmart(L_TO_GAL) + " US gal"],
+          ["Input", fmt(input) + " US gal"],
+          ["Output", fmt(output) + " L"],
+        ]
+      : [
+          ["Conversion factor", "1 L ≈ " + fmtSmart(L_TO_GAL) + " US gal"],
+          ["Reverse factor", "1 US gal = 3.785411784 L"],
+          ["Input", fmt(input) + " L"],
+          ["Output", fmt(output) + " US gal"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const output = mode === "gal-to-l" ? raw * GAL_TO_L : raw * L_TO_GAL;
+
+    if (mode === "gal-to-l") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} L<br/><span class="note">${fmt(raw)} US gal = ${fmt(output)} L</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} US gal<br/><span class="note">${fmt(raw)} L = ${fmt(output)} US gal</span>`;
+    }
+
+    const liters = mode === "gal-to-l" ? output : raw;
+    let scale = "Typical";
+    if (liters < 1) scale = "Small volume";
+    else if (liters >= 100) scale = "Large volume";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "gal-to-l" ? "US gal → L" : "L → US gal")}
+      ${badge("Base ≈ " + fmtSmart(liters) + " L")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(raw, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "gal-to-l" ? "l-to-gal" : "gal-to-l";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

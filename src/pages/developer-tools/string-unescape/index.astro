@@ -1,0 +1,349 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "String Unescape",
+  description:
+    "Convert escaped string sequences back into readable text with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/string-unescape/",
+  order: 395,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/string-unescape/";
+
+const faqs = [
+  {
+    q: "What does string unescape do?",
+    a: "It converts common escape sequences such as \\n, \\t, \\\\, \\\", \\\', \\xHH, and \\uXXXX back into regular characters.",
+  },
+  {
+    q: "Does it support wrapped string literals?",
+    a: "Yes. If the input is wrapped in matching single or double quotes, the wrapper can be removed during unescaping.",
+  },
+  {
+    q: "What happens with invalid escape sequences?",
+    a: "The tool shows a validation error instead of silently producing ambiguous output.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Unescaping runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`String Unescape — ${SITE_NAME}`}
+  description="Convert escaped string sequences back into readable text with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="String Unescape"
+  intro="Convert escaped string-literal content such as \\n, \\t, \\\\, \\x41, and \\u0041 back into readable text."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="string-unescape">
+    <style is:inline>
+      #su_input,
+      #su_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .su-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="su_help su_privacy">
+      <div class="field">
+        <label for="su_input">Escaped input</label>
+        <textarea id="su_input" rows="10" spellcheck="false" placeholder={`e.g. "Line 1\\nLine 2\\tTabbed \\"quote\\" \\\\ slash"`}></textarea>
+      </div>
+
+      <p class="note" id="su_help" style="margin-top:6px;">
+        Supports <code>\\n</code>, <code>\\r</code>, <code>\\t</code>, <code>\\b</code>, <code>\\f</code>, <code>\\\\</code>,
+        <code>\\'</code>, <code>\\"</code>, <code>\\xHH</code>, <code>\\uXXXX</code>, and <code>\\u{"{...}"}</code>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="su_unescape">Unescape</button>
+        <button class="btn secondary" type="button" id="su_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="su_clear">Clear</button>
+      </div>
+
+      <div class="result" id="su_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result su-mono" id="su_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="su_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="su_output">Decoded output</label>
+        <textarea id="su_output" rows="10" spellcheck="false" readonly placeholder="Unescaped text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="su_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="su_privacy" style="margin-top:10px;">
+        Privacy: unescaping runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool decodes common programming-style escape sequences back into literal text characters.
+      It can also decode wrapped string-literal input such as <code>"hello\\nworld"</code>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>\n</strong> → actual line break</li>
+      <li><strong>\t</strong> → actual tab</li>
+      <li><strong>\x41</strong> or <strong>\u0041</strong> → <strong>A</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/string-escape/">String Escape</a></li>
+      <li><a href="/developer-tools/unicode-unescape/">Unicode Unescape</a></li>
+      <li><a href="/developer-tools/html-entity-decoder/">HTML Entity Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("su_input");
+  const unescapeBtn = document.getElementById("su_unescape");
+  const copyBtn = document.getElementById("su_copy");
+  const clearBtn = document.getElementById("su_clear");
+  const errEl = document.getElementById("su_error");
+  const resultEl = document.getElementById("su_result");
+  const cardsEl = document.getElementById("su_cards");
+  const outputEl = document.getElementById("su_output");
+  const tbodyEl = document.getElementById("su_tbody");
+
+  if (!inputEl || !unescapeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function unescapeString(raw) {
+    let str = raw;
+    let strippedQuotes = false;
+
+    if (
+      (str.startsWith('"') && str.endsWith('"')) ||
+      (str.startsWith("'") && str.endsWith("'"))
+    ) {
+      if (str.length >= 2) {
+        str = str.slice(1, -1);
+        strippedQuotes = true;
+      }
+    }
+
+    let out = "";
+    let i = 0;
+    let decodedUnits = 0;
+
+    while (i < str.length) {
+      const ch = str[i];
+
+      if (ch !== "\\") {
+        out += ch;
+        i++;
+        continue;
+      }
+
+      const next = str[i + 1];
+      if (next == null) throw new Error("Trailing backslash at end of input.");
+
+      if (next === "n") { out += "\n"; i += 2; decodedUnits++; continue; }
+      if (next === "r") { out += "\r"; i += 2; decodedUnits++; continue; }
+      if (next === "t") { out += "\t"; i += 2; decodedUnits++; continue; }
+      if (next === "b") { out += "\b"; i += 2; decodedUnits++; continue; }
+      if (next === "f") { out += "\f"; i += 2; decodedUnits++; continue; }
+      if (next === "\\") { out += "\\"; i += 2; decodedUnits++; continue; }
+      if (next === '"') { out += '"'; i += 2; decodedUnits++; continue; }
+      if (next === "'") { out += "'"; i += 2; decodedUnits++; continue; }
+
+      if (next === "x") {
+        const hex = str.slice(i + 2, i + 4);
+        if (!/^[0-9a-fA-F]{2}$/.test(hex)) throw new Error("Invalid \\xHH escape.");
+        out += String.fromCharCode(parseInt(hex, 16));
+        i += 4;
+        decodedUnits++;
+        continue;
+      }
+
+      if (next === "u") {
+        if (str[i + 2] === "{") {
+          const end = str.indexOf("}", i + 3);
+          if (end === -1) throw new Error("Unclosed \\u{...} escape.");
+          const hex = str.slice(i + 3, end);
+          if (!/^[0-9a-fA-F]+$/.test(hex)) throw new Error("Invalid hex digits in \\u{...} escape.");
+          const cp = parseInt(hex, 16);
+          if (cp < 0 || cp > 0x10FFFF) throw new Error("Unicode code point out of range.");
+          out += String.fromCodePoint(cp);
+          i = end + 1;
+          decodedUnits++;
+          continue;
+        }
+
+        const hex4 = str.slice(i + 2, i + 6);
+        if (!/^[0-9a-fA-F]{4}$/.test(hex4)) throw new Error("Invalid \\uXXXX escape.");
+        out += String.fromCharCode(parseInt(hex4, 16));
+        i += 6;
+        decodedUnits++;
+        continue;
+      }
+
+      throw new Error("Unsupported escape sequence: \\" + next);
+    }
+
+    return { text: out, strippedQuotes, decodedUnits };
+  }
+
+  function countEscapePatterns(str) {
+    const matches = str.match(/\\(?:n|r|t|b|f|\\|'|"|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4})/g);
+    return matches ? matches.length : 0;
+  }
+
+  function unescapeNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      showError("Please enter escaped text to decode.");
+      return;
+    }
+
+    let decoded;
+    try {
+      decoded = unescapeString(trimmed);
+    } catch (e) {
+      showError("Invalid escaped input: " + (e && e.message ? e.message : "parse error"));
+      return;
+    }
+
+    const patternCount = countEscapePatterns(trimmed);
+    outputEl.value = decoded.text;
+    lastOutput = decoded.text;
+
+    resultEl.innerHTML =
+      "<strong>Unescaped successfully.</strong><br/><span class='note'>Escape sequences were converted into readable text.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Patterns found: " + patternCount) +
+      badge("Decoded units: " + decoded.decodedUnits) +
+      badge(decoded.strippedQuotes ? "Outer quotes removed" : "No outer quotes removed") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(trimmed.length)],
+      ["Output length", String(decoded.text.length)],
+      ["Length delta", String(decoded.text.length - trimmed.length)],
+      ["Escape patterns found", String(patternCount)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  unescapeBtn.addEventListener("click", unescapeNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") unescapeNow();
+  });
+});
+</script>

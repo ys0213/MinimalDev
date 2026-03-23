@@ -1,0 +1,382 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "API Key Generator",
+  description:
+    "Generate secure API keys with customizable length, prefixes, separators, and character sets. Includes result cards and FAQ schema.",
+  href: "/developer-tools/api-key-generator/",
+  order: 431,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/api-key-generator/";
+
+const faqs = [
+  {
+    q: "What is an API key?",
+    a: "An API key is a generated credential string commonly used to identify or authenticate requests made to an API.",
+  },
+  {
+    q: "Is this generator secure?",
+    a: "Yes. It uses the browser’s cryptographically secure randomness API, crypto.getRandomValues(), and runs locally in your browser.",
+  },
+  {
+    q: "Can I customize the format?",
+    a: "Yes. You can choose length, character sets, optional prefix, count, and grouping separators.",
+  },
+  {
+    q: "Are generated keys stored?",
+    a: "No. Nothing is stored or transmitted by this page.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`API Key Generator — ${SITE_NAME}`}
+  description="Generate secure API keys with customizable settings, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="API Key Generator"
+  intro="Generate secure API keys with configurable length, prefixes, separators, and character sets."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="api-key-generator">
+    <style is:inline>
+      #ak_prefix,
+      #ak_length,
+      #ak_count,
+      #ak_group,
+      #ak_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .ak-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      .ak-option-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:10px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ak_help ak_privacy">
+      <div class="ak-option-grid">
+        <div class="field">
+          <label for="ak_prefix">Prefix (optional)</label>
+          <input id="ak_prefix" type="text" spellcheck="false" placeholder="e.g. pk_live_" />
+        </div>
+
+        <div class="field">
+          <label for="ak_length">Random part length</label>
+          <input id="ak_length" type="number" inputmode="numeric" min="8" max="256" value="32" />
+        </div>
+
+        <div class="field">
+          <label for="ak_count">How many keys</label>
+          <input id="ak_count" type="number" inputmode="numeric" min="1" max="20" value="1" />
+        </div>
+
+        <div class="field">
+          <label for="ak_group">Group every N chars (optional)</label>
+          <input id="ak_group" type="number" inputmode="numeric" min="0" max="16" value="0" />
+        </div>
+      </div>
+
+      <fieldset class="field" style="margin-top:8px;">
+        <legend class="note" style="font-weight:700;">Character sets</legend>
+        <div class="ak-option-grid">
+          <label><input id="ak_upper" type="checkbox" checked /> Uppercase (A-Z)</label>
+          <label><input id="ak_lower" type="checkbox" checked /> Lowercase (a-z)</label>
+          <label><input id="ak_num" type="checkbox" checked /> Numbers (0-9)</label>
+          <label><input id="ak_sym" type="checkbox" /> Symbols (_-)</label>
+        </div>
+      </fieldset>
+
+      <p class="note" id="ak_help" style="margin-top:6px;">
+        Uses secure browser randomness. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to generate.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ak_generate">Generate</button>
+        <button class="btn secondary" type="button" id="ak_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="ak_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ak_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result ak-mono" id="ak_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ak_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ak_output">Generated key(s)</label>
+        <textarea id="ak_output" rows="10" spellcheck="false" readonly placeholder="Generated API key(s) will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ak_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ak_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No API keys are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose the random length, optional prefix, and character sets. The tool uses <code>crypto.getRandomValues()</code> to generate secure random characters locally in your browser.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>pk_live_</strong> + 32 random chars → typical public/private key style prefix</li>
+      <li><strong>sk_test_</strong> + grouped output → easier visual scanning during development</li>
+      <li><strong>64-char key</strong> with letters and numbers → higher entropy output</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/random-token-generator/">Random Token Generator</a></li>
+      <li><a href="/developer-tools/salt-generator/">Salt Generator</a></li>
+      <li><a href="/developer-tools/nonce-generator/">Nonce Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const prefixEl = document.getElementById("ak_prefix");
+  const lengthEl = document.getElementById("ak_length");
+  const countEl = document.getElementById("ak_count");
+  const groupEl = document.getElementById("ak_group");
+  const upperEl = document.getElementById("ak_upper");
+  const lowerEl = document.getElementById("ak_lower");
+  const numEl = document.getElementById("ak_num");
+  const symEl = document.getElementById("ak_sym");
+  const generateBtn = document.getElementById("ak_generate");
+  const copyBtn = document.getElementById("ak_copy");
+  const clearBtn = document.getElementById("ak_clear");
+  const errEl = document.getElementById("ak_error");
+  const resultEl = document.getElementById("ak_result");
+  const cardsEl = document.getElementById("ak_cards");
+  const outputEl = document.getElementById("ak_output");
+  const tbodyEl = document.getElementById("ak_tbody");
+
+  if (!prefixEl || !lengthEl || !countEl || !groupEl || !upperEl || !lowerEl || !numEl || !symEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  const SETS = {
+    upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    lower: "abcdefghijklmnopqrstuvwxyz",
+    num: "0123456789",
+    sym: "_-",
+  };
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function randInt(maxExclusive) {
+    const buf = new Uint32Array(1);
+    const max = maxExclusive >>> 0;
+    const limit = Math.floor(0x100000000 / max) * max;
+    while (true) {
+      crypto.getRandomValues(buf);
+      if (buf[0] < limit) return buf[0] % max;
+    }
+  }
+
+  function selectedPool() {
+    let pool = "";
+    if (upperEl.checked) pool += SETS.upper;
+    if (lowerEl.checked) pool += SETS.lower;
+    if (numEl.checked) pool += SETS.num;
+    if (symEl.checked) pool += SETS.sym;
+    return pool;
+  }
+
+  function formatGroups(s, groupSize) {
+    if (!groupSize || groupSize <= 0) return s;
+    const parts = [];
+    for (let i = 0; i < s.length; i += groupSize) {
+      parts.push(s.slice(i, i + groupSize));
+    }
+    return parts.join("-");
+  }
+
+  function generateOne(prefix, length, groupSize, pool) {
+    let out = "";
+    for (let i = 0; i < length; i++) {
+      out += pool.charAt(randInt(pool.length));
+    }
+    const grouped = formatGroups(out, groupSize);
+    return prefix + grouped;
+  }
+
+  function entropyBits(length, poolSize) {
+    if (length <= 0 || poolSize <= 1) return 0;
+    return length * (Math.log(poolSize) / Math.log(2));
+  }
+
+  function generateKeys() {
+    resetOutput();
+
+    const prefix = String(prefixEl.value || "");
+    const length = parseInt(String(lengthEl.value || ""), 10);
+    const count = parseInt(String(countEl.value || ""), 10);
+    const groupSize = parseInt(String(groupEl.value || ""), 10) || 0;
+
+    if (!Number.isFinite(length) || length < 8 || length > 256) {
+      showError("Random part length must be between 8 and 256.");
+      return;
+    }
+
+    if (!Number.isFinite(count) || count < 1 || count > 20) {
+      showError("How many keys must be between 1 and 20.");
+      return;
+    }
+
+    if (groupSize < 0 || groupSize > 16) {
+      showError("Group size must be between 0 and 16.");
+      return;
+    }
+
+    const pool = selectedPool();
+    if (!pool) {
+      showError("Select at least one character set.");
+      return;
+    }
+
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      list.push(generateOne(prefix, length, groupSize, pool));
+    }
+
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Generated API key" + (count === 1 ? "" : "s") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Secure randomness") +
+      badge("Count: " + count) +
+      badge("Pool size: " + pool.length) +
+      badge("Approx entropy: " + entropyBits(length, pool.length).toFixed(1) + " bits") +
+      "</div>";
+
+    fillTable([
+      ["Prefix", prefix || "(none)"],
+      ["Random part length", String(length)],
+      ["Generated count", String(count)],
+      ["Character pool size", String(pool.length)],
+      ["Grouping", groupSize > 0 ? ("every " + groupSize + " chars") : "none"],
+      ["Approx entropy per key", entropyBits(length, pool.length).toFixed(1) + " bits"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated API key output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied API key output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    prefixEl.value = "";
+    lengthEl.value = "32";
+    countEl.value = "1";
+    groupEl.value = "0";
+    upperEl.checked = true;
+    lowerEl.checked = true;
+    numEl.checked = true;
+    symEl.checked = false;
+    resetOutput();
+    lengthEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateKeys);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [prefixEl, lengthEl, countEl, groupEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateKeys();
+    });
+  });
+});
+</script>

@@ -1,0 +1,372 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hreflang Generator",
+  description:
+    "Generate hreflang link tags for multilingual and multi-region pages with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/hreflang-generator/",
+  order: 180,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/hreflang-generator/";
+
+const faqs = [
+  {
+    q: "What does hreflang do?",
+    a: "Hreflang helps search engines understand which page version is intended for a specific language or region, such as en, en-US, or ko-KR.",
+  },
+  {
+    q: "What format should hreflang use?",
+    a: "Use ISO language codes such as en or ko, and optionally combine them with a region like en-US or en-GB. You can also use x-default for a fallback page.",
+  },
+  {
+    q: "Does this tool validate real page availability?",
+    a: "No. It validates the input format and generates tags, but it does not crawl or fetch the URLs.",
+  },
+  {
+    q: "Are my entries stored?",
+    a: "No. Everything runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Hreflang Generator — ${SITE_NAME}`}
+  description="Generate hreflang link tags for multilingual and regional SEO with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hreflang Generator"
+  intro="Create hreflang link tags for language and region-targeted pages. Useful for international SEO and alternate page markup."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hreflang-generator">
+    <style is:inline>
+      #hlg_input,
+      #hlg_output,
+      #hlg_canonical {
+        width: 100%;
+        min-width: 0;
+      }
+      .hlg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .hlg-code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hlg_help hlg_privacy">
+      <div class="field">
+        <label for="hlg_canonical">Canonical / current page URL (optional)</label>
+        <input
+          id="hlg_canonical"
+          type="url"
+          inputmode="url"
+          placeholder="e.g. https://example.com/"
+        />
+      </div>
+
+      <div class="field">
+        <label for="hlg_input">Entries</label>
+        <textarea
+          id="hlg_input"
+          rows="10"
+          spellcheck="false"
+          placeholder={`One entry per line:\nen|https://example.com/\nen-US|https://example.com/us/\nko|https://example.com/ko/\nx-default|https://example.com/`}
+        ></textarea>
+      </div>
+
+      <p class="note" id="hlg_help" style="margin-top:6px;">
+        Use one line per entry in the format <strong>code|url</strong>. Examples:
+        <strong>en|https://example.com/</strong>,
+        <strong>en-US|https://example.com/us/</strong>,
+        <strong>x-default|https://example.com/</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hlg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="hlg_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="hlg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hlg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hlg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hlg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hlg_output">Generated hreflang tags</label>
+        <textarea
+          id="hlg_output"
+          rows="12"
+          readonly
+          spellcheck="false"
+          placeholder="Generated hreflang tags will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hlg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hlg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No entries are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste one alternate page per line in the format <strong>language-code|url</strong>.
+      The tool validates each entry and then generates the corresponding
+      <code>&lt;link rel="alternate" hreflang="..." href="..." /&gt;</code> tags.
+    </p>
+    <p class="note">
+      Use plain language codes like <strong>en</strong> or region-specific values like
+      <strong>en-US</strong>. Use <strong>x-default</strong> for a fallback page.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>en|https://example.com/</strong> → English page</li>
+      <li><strong>en-US|https://example.com/us/</strong> → English (United States)</li>
+      <li><strong>ko|https://example.com/ko/</strong> → Korean page</li>
+      <li><strong>x-default|https://example.com/</strong> → default fallback</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/canonical-tag-generator/">Canonical Tag Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/schema-markup-generator/">Schema Markup Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const canonicalEl = document.getElementById("hlg_canonical");
+  const inputEl = document.getElementById("hlg_input");
+  const generateBtn = document.getElementById("hlg_generate");
+  const copyBtn = document.getElementById("hlg_copy");
+  const clearBtn = document.getElementById("hlg_clear");
+  const errEl = document.getElementById("hlg_error");
+  const resultEl = document.getElementById("hlg_result");
+  const cardsEl = document.getElementById("hlg_cards");
+  const outputEl = document.getElementById("hlg_output");
+  const tbodyEl = document.getElementById("hlg_tbody");
+
+  if (!canonicalEl || !inputEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function isValidUrl(str) {
+    try {
+      const u = new URL(str);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function normalizeCode(code) {
+    return code.trim();
+  }
+
+  function isValidHreflangCode(code) {
+    if (code === "x-default") return true;
+    return /^[a-zA-Z]{2,3}(-[a-zA-Z]{2,4})?$/.test(code);
+  }
+
+  function generate() {
+    clearOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const canonical = String(canonicalEl.value || "").trim();
+
+    if (!raw) {
+      showError("Please enter at least one hreflang entry.");
+      return;
+    }
+
+    if (canonical && !isValidUrl(canonical)) {
+      showError("Canonical/current page URL is not a valid http/https URL.");
+      return;
+    }
+
+    const lines = raw.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+    if (!lines.length) {
+      showError("Please enter at least one valid line.");
+      return;
+    }
+
+    const seenCodes = new Set();
+    const seenUrls = new Set();
+    const rows = [];
+    const tags = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const parts = line.split("|");
+
+      if (parts.length !== 2) {
+        showError("Line " + (i + 1) + ' must use the format code|url.');
+        return;
+      }
+
+      const code = normalizeCode(parts[0]);
+      const url = String(parts[1] || "").trim();
+
+      if (!code) {
+        showError("Line " + (i + 1) + " is missing a language/region code.");
+        return;
+      }
+
+      if (!isValidHreflangCode(code)) {
+        showError('Line ' + (i + 1) + ' has an invalid hreflang code: "' + code + '".');
+        return;
+      }
+
+      if (!isValidUrl(url)) {
+        showError("Line " + (i + 1) + " contains an invalid URL.");
+        return;
+      }
+
+      if (seenCodes.has(code)) {
+        showError('Duplicate hreflang code found: "' + code + '".');
+        return;
+      }
+
+      seenCodes.add(code);
+      seenUrls.add(url);
+
+      tags.push('<link rel="alternate" hreflang="' + code + '" href="' + url + '" />');
+      rows.push([code, url]);
+    }
+
+    lastOutput = tags.join("\n");
+    outputEl.value = lastOutput;
+
+    const hasXDefault = seenCodes.has("x-default");
+    resultEl.innerHTML = "<strong>Generated " + tags.length + " hreflang tag" + (tags.length === 1 ? "" : "s") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid input") +
+      badge(tags.length + " entries") +
+      badge(hasXDefault ? "x-default included" : "No x-default") +
+      badge(seenUrls.size + " unique URL" + (seenUrls.size === 1 ? "" : "s")) +
+      "</div>";
+
+    fillTable([
+      ["Entry count", String(tags.length)],
+      ["Unique codes", String(seenCodes.size)],
+      ["Unique URLs", String(seenUrls.size)],
+      ["Includes x-default", hasXDefault ? "Yes" : "No"],
+      ["Canonical URL provided", canonical ? "Yes" : "No"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated output to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated hreflang tags.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    canonicalEl.value = "";
+    inputEl.value = "";
+    clearOutput();
+    inputEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  });
+});
+</script>

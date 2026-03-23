@@ -1,0 +1,400 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random License Plate Generator",
+  description:
+    "Generate random mock license plate strings in multiple formats for testing, demos, and placeholder data. Includes validation, result cards, accessibility, and FAQ schema.",
+  href: "/generators/random-license-plate/",
+  order: 184,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-license-plate/";
+
+const faqs = [
+  {
+    q: "What does this random license plate generator do?",
+    a: "It creates random mock license plate strings in configurable formats for testing, placeholder data, games, and UI demos.",
+  },
+  {
+    q: "Are these real license plates?",
+    a: "No. These are random mock values. They are not verified against official registration systems.",
+  },
+  {
+    q: "Can I choose different patterns?",
+    a: "Yes. You can choose from several common alphanumeric formats and separator styles.",
+  },
+  {
+    q: "Can I generate multiple plates at once?",
+    a: "Yes. You can generate up to 100 plates in one batch.",
+  },
+  {
+    q: "Does this tool store generated output?",
+    a: "No. Everything runs locally in your browser and no generated plates are stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random License Plate Generator — ${SITE_NAME}`}
+  description="Generate random mock license plate strings with configurable formats, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random License Plate Generator"
+  intro="Generate mock license plate strings for interface testing, fictional data, demos, and placeholder records."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-license-plate">
+    <style is:inline>
+      .rlp-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rlp-grid > * {
+        min-width: 0;
+      }
+      .rlp-output {
+        width: 100%;
+        min-width: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rlp-cards-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .rlp-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        flex: 1 1 170px;
+        min-width: 0;
+      }
+      .rlp-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rlp-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      @media (min-width: 780px) {
+        .rlp-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rlp_help rlp_privacy">
+      <div class="rlp-grid">
+        <div class="field">
+          <label for="rlp_count">How many plates</label>
+          <input id="rlp_count" type="number" inputmode="numeric" min="1" max="100" value="12" />
+        </div>
+
+        <div class="field">
+          <label for="rlp_format">Pattern</label>
+          <select id="rlp_format">
+            <option value="AAA-1234" selected>AAA-1234</option>
+            <option value="ABC-123">ABC-123</option>
+            <option value="12-ABC-34">12-ABC-34</option>
+            <option value="AB12CD">AB12CD</option>
+            <option value="123-ABC">123-ABC</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rlp-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rlp_uppercase">
+            <input id="rlp_uppercase" type="checkbox" checked />
+            Uppercase letters
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rlp_unique">
+            <input id="rlp_unique" type="checkbox" />
+            Avoid duplicates in this batch
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rlp_help" style="margin-top:6px;">
+        These are mock license plate values for testing and fictional content only. They are not checked against real registration systems.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rlp_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rlp_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rlp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rlp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rlp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rlp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rlp_output">Generated plates</label>
+        <textarea id="rlp_output" class="rlp-output" rows="12" readonly spellcheck="false" placeholder="Generated license plates will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rlp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rlp_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Select a plate pattern, choose how many results you want, optionally avoid duplicates, and then generate a batch of mock license plate strings.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>AAA-1234</strong> for generic testing data</li>
+      <li><strong>AB12CD</strong> for compact alphanumeric formats</li>
+      <li><strong>123-ABC</strong> for alternate UI mockups</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-number-list/">Random Number List</a></li>
+      <li><a href="/generators/random-letter-generator/">Random Letter Generator</a></li>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rlp_count");
+  const formatEl = document.getElementById("rlp_format");
+  const uppercaseEl = document.getElementById("rlp_uppercase");
+  const uniqueEl = document.getElementById("rlp_unique");
+  const generateBtn = document.getElementById("rlp_generate");
+  const copyBtn = document.getElementById("rlp_copy");
+  const clearBtn = document.getElementById("rlp_clear");
+  const errorEl = document.getElementById("rlp_error");
+  const resultEl = document.getElementById("rlp_result");
+  const cardsEl = document.getElementById("rlp_cards");
+  const outputEl = document.getElementById("rlp_output");
+  const tbodyEl = document.getElementById("rlp_tbody");
+
+  if (!countEl || !formatEl || !uppercaseEl || !uniqueEl || !generateBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits = "0123456789";
+
+  let lastOutput = "";
+  let lastList = [];
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, sub) {
+    return (
+      '<div class="rlp-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+    lastList = [];
+  }
+
+  function randChar(pool) {
+    return pool.charAt(Math.floor(Math.random() * pool.length));
+  }
+
+  function buildPlate(pattern, uppercase) {
+    let out = "";
+    for (const ch of pattern) {
+      if (ch === "A") out += randChar(uppercase ? LETTERS : LETTERS.toLowerCase());
+      else if (ch === "1") out += randChar(digits);
+      else out += ch;
+    }
+    return out;
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const pattern = String(formatEl.value || "AAA-1234");
+    const uppercase = !!uppercaseEl.checked;
+    const unique = !!uniqueEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const list = [];
+    const seen = new Set();
+    const maxAttempts = count * 25;
+    let attempts = 0;
+
+    while (list.length < count && attempts < maxAttempts) {
+      attempts++;
+      const plate = buildPlate(pattern, uppercase);
+      if (unique) {
+        if (seen.has(plate)) continue;
+        seen.add(plate);
+      }
+      list.push(plate);
+    }
+
+    lastList = list.slice();
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>License plates generated.</strong><br/><span class='note'>These are mock strings for testing and fictional use.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rlp-cards-wrap">' +
+      card("Requested", String(count), "Requested output size") +
+      card("Generated", String(list.length), "Returned in this batch") +
+      card("Pattern", pattern, "Selected format") +
+      card("Case", uppercase ? "Upper" : "Lower", "Letter casing mode") +
+      "</div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+      badge(unique ? "Duplicate avoidance enabled" : "Duplicates allowed") +
+      badge("Mock data only") +
+      badge("Client-side only") +
+      "</div>";
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(list.length)],
+      ["Pattern", pattern],
+      ["Uppercase letters", uppercase ? "Yes" : "No"],
+      ["Duplicate avoidance", unique ? "Enabled" : "Disabled"],
+      ["Attempt limit reached", list.length < count ? "Yes" : "No"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated license plates to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated license plates.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "12";
+    formatEl.value = "AAA-1234";
+    uppercaseEl.checked = true;
+    uniqueEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, formatEl, uppercaseEl, uniqueEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

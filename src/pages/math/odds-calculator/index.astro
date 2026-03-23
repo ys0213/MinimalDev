@@ -1,0 +1,304 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Odds Calculator",
+  description:
+    "Calculate odds in favor, odds against, probability, and percentage from favorable and unfavorable outcomes.",
+  href: "/math/odds-calculator/",
+  order: 370,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/odds-calculator/";
+
+const faqs = [
+  {
+    q: "What are odds in favor?",
+    a: "Odds in favor compare favorable outcomes to unfavorable outcomes, usually written as a:b.",
+  },
+  {
+    q: "What is the difference between odds and probability?",
+    a: "Probability is favorable outcomes divided by total outcomes, while odds compare favorable outcomes directly to unfavorable outcomes.",
+  },
+  {
+    q: "Can both favorable and unfavorable outcomes be zero?",
+    a: "No. At least one of them must be greater than zero, otherwise odds and probability are undefined.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Odds Calculator — ${SITE_NAME}`}
+  description="Calculate odds in favor, odds against, probability, and percentage from favorable and unfavorable outcomes."
+  canonicalPath={CANONICAL_PATH}
+  h1="Odds Calculator"
+  intro="Calculate odds in favor, odds against, probability, percentage, and simplified ratios from favorable and unfavorable outcomes."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="odds-calculator">
+    <style is:inline>
+      .od-wrap, .od-wrap * { box-sizing: border-box; }
+      .od-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .od-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .od-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form od-wrap" role="form" aria-describedby="od_help od_privacy">
+      <div class="od-grid">
+        <div class="field">
+          <label for="od_fav">Favorable outcomes</label>
+          <input id="od_fav" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 3" />
+        </div>
+        <div class="field">
+          <label for="od_unfav">Unfavorable outcomes</label>
+          <input id="od_unfav" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 7" />
+        </div>
+      </div>
+
+      <p class="note" id="od_help" style="margin-top:6px;">
+        Odds in favor = favorable : unfavorable
+        <br />
+        Probability = favorable / (favorable + unfavorable)
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="od_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="od_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="od_clear">Clear</button>
+      </div>
+
+      <div class="result" id="od_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="od_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="od_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="od_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="od_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts counts into:
+      <br />
+      <strong>odds in favor</strong>, <strong>odds against</strong>, and <strong>probability</strong>.
+    </p>
+    <p class="note">
+      If favorable = 3 and unfavorable = 7:
+      <br />
+      odds in favor = 3:7
+      <br />
+      probability = 3 / (3 + 7) = 0.3
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>3 favorable</strong>, <strong>7 unfavorable</strong> → probability = <strong>0.3</strong></li>
+      <li><strong>1 favorable</strong>, <strong>1 unfavorable</strong> → probability = <strong>0.5</strong></li>
+      <li><strong>0 favorable</strong>, <strong>5 unfavorable</strong> → probability = <strong>0</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/ratio-calculator/">Ratio Calculator</a></li>
+      <li><a href="/math/proportion-calculator/">Proportion Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const favEl = document.getElementById("od_fav");
+  const unfavEl = document.getElementById("od_unfav");
+  const calcBtn = document.getElementById("od_calc");
+  const fillBtn = document.getElementById("od_fill_demo");
+  const clearBtn = document.getElementById("od_clear");
+  const errorEl = document.getElementById("od_error");
+  const resultEl = document.getElementById("od_result");
+  const cardsEl = document.getElementById("od_cards");
+  const tbodyEl = document.getElementById("od_tbody");
+
+  if (!favEl || !unfavEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function gcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y !== 0) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x || 1;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const fav = toInt(favEl, "favorable outcomes");
+      const unfav = toInt(unfavEl, "unfavorable outcomes");
+
+      if (fav < 0 || unfav < 0) {
+        showError("Both values must be 0 or greater.");
+        return;
+      }
+      if (fav === 0 && unfav === 0) {
+        showError("At least one of favorable or unfavorable outcomes must be greater than 0.");
+        return;
+      }
+
+      const total = fav + unfav;
+      const probability = fav / total;
+      const complement = unfav / total;
+      const percent = probability * 100;
+
+      const g1 = gcd(fav, unfav);
+      const oddsFav = fav + ":" + unfav;
+      const oddsFavReduced = (fav / g1) + ":" + (unfav / g1);
+
+      const g2 = gcd(unfav, fav);
+      const oddsAgainst = unfav + ":" + fav;
+      const oddsAgainstReduced = (unfav / g2) + ":" + (fav / g2);
+
+      let classification = "Possible";
+      if (probability === 0) classification = "Impossible";
+      else if (probability === 1) classification = "Certain";
+      else if (probability < 0.5) classification = "Less likely than not";
+      else if (probability > 0.5) classification = "More likely than not";
+      else classification = "Even chance";
+
+      resultEl.innerHTML =
+        "<strong>Odds result</strong><br/>" +
+        "<span class='od-code'>Odds in favor = " + oddsFavReduced + "</span>" +
+        "<br/><span class='note'>Probability = " + fmt(probability, 8) + " (" + fmt(percent, 4) + "%)</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(classification) +
+        badge("Odds against = " + oddsAgainstReduced) +
+        badge("Total outcomes = " + total) +
+        "</div>";
+
+      fillTable([
+        ["Favorable outcomes", String(fav)],
+        ["Unfavorable outcomes", String(unfav)],
+        ["Total outcomes", String(total)],
+        ["Odds in favor", oddsFav],
+        ["Odds in favor (reduced)", oddsFavReduced],
+        ["Odds against", oddsAgainst],
+        ["Odds against (reduced)", oddsAgainstReduced],
+        ["Probability", fmt(probability, 8)],
+        ["Complement probability", fmt(complement, 8)],
+        ["Percentage", fmt(percent, 4) + "%"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    favEl.value = "3";
+    unfavEl.value = "7";
+    clearOutput();
+  }
+
+  function reset() {
+    favEl.value = "";
+    unfavEl.value = "";
+    clearOutput();
+    favEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [favEl, unfavEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

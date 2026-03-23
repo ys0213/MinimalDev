@@ -1,0 +1,254 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Confidence Level Calculator",
+  description:
+    "Calculate two-sided confidence level from a z critical value, with tail areas and percentage form.",
+  href: "/math/confidence-level-calculator/",
+  order: 372,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/confidence-level-calculator/";
+
+const faqs = [
+  {
+    q: "What does this confidence level calculator compute?",
+    a: "It converts a z critical value into the corresponding two-sided confidence level and tail areas under the standard normal distribution.",
+  },
+  {
+    q: "What is a z critical value?",
+    a: "It is the cutoff value on the standard normal distribution used for constructing confidence intervals.",
+  },
+  {
+    q: "Is this for two-sided confidence intervals?",
+    a: "Yes. This calculator interprets the input z value as a symmetric two-sided confidence interval cutoff.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Confidence Level Calculator — ${SITE_NAME}`}
+  description="Calculate two-sided confidence level from a z critical value."
+  canonicalPath={CANONICAL_PATH}
+  h1="Confidence Level Calculator"
+  intro="Convert a z critical value into a two-sided confidence level, central area, and tail probabilities under the standard normal distribution."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="confidence-level-calculator">
+    <style is:inline>
+      .cl-wrap, .cl-wrap * { box-sizing: border-box; }
+      .cl-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form cl-wrap" role="form" aria-describedby="cl_help cl_privacy">
+      <div class="field">
+        <label for="cl_z">Z critical value</label>
+        <input id="cl_z" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 1.96" />
+      </div>
+
+      <p class="note" id="cl_help" style="margin-top:6px;">
+        Two-sided confidence level:
+        <br />
+        <span class="cl-code">CL = 2Φ(z) − 1</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cl_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cl_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="cl_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cl_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cl_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cl_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cl_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cl_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses the standard normal CDF to convert a z critical value into:
+      <br />
+      <strong>central confidence level</strong>, <strong>left-tail area</strong>, and <strong>right-tail area</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>z = 1.645</strong> → about <strong>90%</strong> confidence</li>
+      <li><strong>z = 1.96</strong> → about <strong>95%</strong> confidence</li>
+      <li><strong>z = 2.576</strong> → about <strong>99%</strong> confidence</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/confidence-interval-calculator/">Confidence Interval Calculator</a></li>
+      <li><a href="/math/sample-size-calculator/">Sample Size Calculator</a></li>
+      <li><a href="/math/z-score-calculator/">Z-Score Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const zEl = document.getElementById("cl_z");
+  const calcBtn = document.getElementById("cl_calc");
+  const fillBtn = document.getElementById("cl_fill_demo");
+  const clearBtn = document.getElementById("cl_clear");
+  const errorEl = document.getElementById("cl_error");
+  const resultEl = document.getElementById("cl_result");
+  const cardsEl = document.getElementById("cl_cards");
+  const tbodyEl = document.getElementById("cl_tbody");
+
+  if (!zEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function erf(x) {
+    const sign = x >= 0 ? 1 : -1;
+    const ax = Math.abs(x);
+    const a1 = 0.254829592;
+    const a2 = -0.284496736;
+    const a3 = 1.421413741;
+    const a4 = -1.453152027;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
+    const t = 1 / (1 + p * ax);
+    const y = 1 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-ax * ax));
+    return sign * y;
+  }
+
+  function phi(x) {
+    return 0.5 * (1 + erf(x / Math.sqrt(2)));
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const raw = String(zEl.value || "").trim();
+      if (!raw) {
+        showError("Please enter a z critical value.");
+        return;
+      }
+      const z = Number(raw);
+      if (!Number.isFinite(z)) {
+        showError("Please enter a valid z critical value.");
+        return;
+      }
+      if (z < 0) {
+        showError("Use a non-negative z critical value for a symmetric two-sided confidence interval.");
+        return;
+      }
+
+      const cdf = phi(z);
+      const central = 2 * cdf - 1;
+      const leftTail = (1 - central) / 2;
+      const rightTail = leftTail;
+
+      let label = "Moderate confidence";
+      if (central >= 0.99) label = "Very high confidence";
+      else if (central >= 0.95) label = "High confidence";
+      else if (central <= 0.90) label = "Lower confidence";
+
+      resultEl.innerHTML =
+        "<strong>Confidence level result</strong><br/>" +
+        "<span class='cl-code'>CL ≈ " + fmt(central, 8) + "</span>" +
+        "<br/><span class='note'>" + fmt(central * 100, 4) + "%</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("Each tail ≈ " + fmt(leftTail, 8)) +
+        badge("z = " + fmt(z, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Z critical value", fmt(z, 6)],
+        ["Φ(z)", fmt(cdf, 8)],
+        ["Central confidence level", fmt(central, 8)],
+        ["Central confidence level (%)", fmt(central * 100, 4) + "%"],
+        ["Left-tail area", fmt(leftTail, 8)],
+        ["Right-tail area", fmt(rightTail, 8)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    zEl.value = "1.96";
+    clearOutput();
+  }
+  function reset() {
+    zEl.value = "";
+    clearOutput();
+    zEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  zEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+  clearOutput();
+});
+</script>

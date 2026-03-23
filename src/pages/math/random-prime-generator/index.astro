@@ -1,0 +1,293 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Prime Generator",
+  description:
+    "Generate random prime numbers in a range with validation, multiple results, and FAQ support.",
+  href: "/math/random-prime-generator/",
+  order: 356,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/random-prime-generator/";
+
+const faqs = [
+  {
+    q: "What does this tool generate?",
+    a: "It generates random prime numbers within the integer range you provide.",
+  },
+  {
+    q: "What if there are no primes in the range?",
+    a: "The tool will show an error telling you that no prime numbers were found in that range.",
+  },
+  {
+    q: "Can it generate more than one prime at a time?",
+    a: "Yes. You can choose how many prime results to generate from the available primes in the range.",
+  },
+  {
+    q: "Are generated values stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Random Prime Generator — ${SITE_NAME}`}
+  description="Random prime generator with range validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Prime Generator"
+  intro="Generate one or more random prime numbers from a custom integer range."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="random-prime-generator">
+    <style is:inline>
+      .rpg-wrap, .rpg-wrap * { box-sizing: border-box; }
+      .rpg-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 760px) {
+        .rpg-grid { grid-template-columns: 1fr; }
+      }
+      .rpg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form rpg-wrap" role="form" aria-describedby="rpg_help rpg_privacy">
+      <div class="rpg-grid">
+        <div class="field">
+          <label for="rpg_min">Min</label>
+          <input id="rpg_min" type="number" step="1" inputmode="numeric" placeholder="e.g., 2" />
+        </div>
+        <div class="field">
+          <label for="rpg_max">Max</label>
+          <input id="rpg_max" type="number" step="1" inputmode="numeric" placeholder="e.g., 100" />
+        </div>
+        <div class="field">
+          <label for="rpg_count">Count</label>
+          <input id="rpg_count" type="number" step="1" inputmode="numeric" value="1" min="1" max="20" />
+        </div>
+      </div>
+
+      <p class="note" id="rpg_help" style="margin-top:8px;">
+        Range is inclusive. This tool uses standard browser randomness and is intended for math and learning use, not cryptographic use.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rpg_calc">Generate</button>
+        <button class="btn secondary" type="button" id="rpg_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="rpg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rpg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rpg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rpg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rpg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rpg_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool finds all prime numbers in the selected range, then randomly picks the requested number of results from that set.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Range <strong>2 to 20</strong> may return <strong>13</strong> or <strong>17</strong></li>
+      <li>Range <strong>100 to 150</strong> may return several primes such as <strong>101, 107, 139</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/prime-number-checker/">Prime Number Checker</a></li>
+      <li><a href="/math/prime-factorization/">Prime Factorization</a></li>
+      <li><a href="/math/random-number-generator/">Random Percentage Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const minEl = document.getElementById("rpg_min");
+  const maxEl = document.getElementById("rpg_max");
+  const countEl = document.getElementById("rpg_count");
+  const calcBtn = document.getElementById("rpg_calc");
+  const demoBtn = document.getElementById("rpg_fill_demo");
+  const clearBtn = document.getElementById("rpg_clear");
+  const errorEl = document.getElementById("rpg_error");
+  const resultEl = document.getElementById("rpg_result");
+  const cardsEl = document.getElementById("rpg_cards");
+  const tbodyEl = document.getElementById("rpg_tbody");
+
+  if (!minEl || !maxEl || !countEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please fill min, max, and count.");
+    const n = Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      throw new Error("Enter a valid integer for " + label + ".");
+    }
+    return n;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  function isPrime(n) {
+    if (n <= 1) return false;
+    if (n === 2) return true;
+    if (n % 2 === 0) return false;
+    const limit = Math.floor(Math.sqrt(n));
+    for (let i = 3; i <= limit; i += 2) {
+      if (n % i === 0) return false;
+    }
+    return true;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const min = getInt(minEl, "min");
+      const max = getInt(maxEl, "max");
+      const count = getInt(countEl, "count");
+
+      if (min > max) {
+        showError("Min must be less than or equal to max.");
+        return;
+      }
+
+      if (count < 1 || count > 20) {
+        showError("Count must be between 1 and 20.");
+        return;
+      }
+
+      const primes = [];
+      for (let n = Math.max(2, min); n <= max; n++) {
+        if (isPrime(n)) primes.push(n);
+      }
+
+      if (primes.length === 0) {
+        showError("No prime numbers were found in this range.");
+        return;
+      }
+
+      const picks = [];
+      for (let i = 0; i < count; i++) {
+        const idx = Math.floor(Math.random() * primes.length);
+        picks.push(primes[idx]);
+      }
+
+      resultEl.innerHTML =
+        "<strong>Random prime result</strong><br/>" +
+        "<span class='rpg-code'>" + picks.map(fmt).join(", ") + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Available primes: " + fmt(primes.length)) +
+        badge("Generated count: " + fmt(picks.length)) +
+        badge("Range: " + fmt(min) + " to " + fmt(max)) +
+        "</div>";
+
+      fillTable([
+        ["Range", fmt(min) + " to " + fmt(max)],
+        ["Prime count in range", fmt(primes.length)],
+        ["Generated result(s)", picks.map(fmt).join(", ")],
+        ["Smallest prime in range", fmt(primes[0])],
+        ["Largest prime in range", fmt(primes[primes.length - 1])],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not generate prime values.");
+    }
+  }
+
+  function fillDemo() {
+    minEl.value = "2";
+    maxEl.value = "100";
+    countEl.value = "3";
+    clearOutput();
+  }
+
+  function reset() {
+    minEl.value = "";
+    maxEl.value = "";
+    countEl.value = "1";
+    clearOutput();
+    minEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [minEl, maxEl, countEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

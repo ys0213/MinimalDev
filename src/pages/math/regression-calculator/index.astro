@@ -1,0 +1,339 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Regression Calculator",
+  description:
+    "Calculate simple linear regression slope, intercept, correlation, and predicted y from x-y pairs.",
+  href: "/math/regression-calculator/",
+  order: 376,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/regression-calculator/";
+
+const faqs = [
+  {
+    q: "What does this regression calculator compute?",
+    a: "It computes a simple linear regression line, including slope, intercept, Pearson correlation r, and coefficient of determination r².",
+  },
+  {
+    q: "How should I enter the data?",
+    a: "Enter one x,y pair per line, separated by a comma.",
+  },
+  {
+    q: "Can I predict y for a given x?",
+    a: "Yes. You can optionally enter an x value to calculate the predicted y from the fitted regression line.",
+  },
+  {
+    q: "How many points are required?",
+    a: "At least 2 valid points are required, and the x values must not all be identical.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Regression Calculator — ${SITE_NAME}`}
+  description="Calculate simple linear regression slope, intercept, correlation, and predictions from x-y data."
+  canonicalPath={CANONICAL_PATH}
+  h1="Regression Calculator"
+  intro="Fit a simple linear regression line from x-y pairs. Calculate slope, intercept, correlation, coefficient of determination, and optional predicted y."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="regression-calculator">
+    <style is:inline>
+      .reg-wrap, .reg-wrap * { box-sizing: border-box; }
+      .reg-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 220px);
+        gap: 10px;
+      }
+      .reg-grid textarea,
+      .reg-grid input {
+        width: 100%;
+        min-width: 0;
+      }
+      .reg-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 860px) {
+        .reg-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form reg-wrap" role="form" aria-describedby="reg_help reg_privacy">
+      <div class="reg-grid">
+        <div class="field">
+          <label for="reg_pairs">x,y pairs (one pair per line)</label>
+          <textarea
+            id="reg_pairs"
+            rows="8"
+            placeholder="e.g.
+1,2
+2,3
+3,5
+4,4"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="reg_predict_x">Predict y for x (optional)</label>
+          <input id="reg_predict_x" type="number" inputmode="decimal" step="any" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <p class="note" id="reg_help" style="margin-top:6px;">
+        This page fits a simple linear model:
+        <br />
+        <span class="reg-code">y = a + bx</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="reg_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="reg_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="reg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="reg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="reg_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="reg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="reg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="reg_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool calculates a least-squares regression line, slope <strong>b</strong>, intercept <strong>a</strong>,
+      correlation <strong>r</strong>, and <strong>r²</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1,2</strong></li>
+      <li><strong>2,3</strong></li>
+      <li><strong>3,5</strong></li>
+      <li><strong>4,4</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/correlation-calculator/">Correlation Calculator</a></li>
+      <li><a href="/math/slope-calculator/">Slope Calculator</a></li>
+      <li><a href="/math/covariance-calculator/">Covariance Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const pairsEl = document.getElementById("reg_pairs");
+  const predictXEl = document.getElementById("reg_predict_x");
+  const calcBtn = document.getElementById("reg_calc");
+  const fillBtn = document.getElementById("reg_fill_demo");
+  const clearBtn = document.getElementById("reg_clear");
+  const errorEl = document.getElementById("reg_error");
+  const resultEl = document.getElementById("reg_result");
+  const cardsEl = document.getElementById("reg_cards");
+  const tbodyEl = document.getElementById("reg_tbody");
+
+  if (!pairsEl || !predictXEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parsePairs(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 2 x,y pairs.");
+
+    const lines = text.split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+    if (lines.length < 2) throw new Error("Please enter at least 2 x,y pairs.");
+
+    return lines.map(function (line, idx) {
+      const parts = line.split(",");
+      if (parts.length !== 2) throw new Error("Line " + (idx + 1) + " must contain exactly one x,y pair separated by a comma.");
+      const x = Number(parts[0].trim());
+      const y = Number(parts[1].trim());
+      if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error("Line " + (idx + 1) + " contains an invalid x or y value.");
+      return { x: x, y: y };
+    });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const pts = parsePairs(pairsEl.value);
+      const n = pts.length;
+
+      const sumX = pts.reduce(function (s, p) { return s + p.x; }, 0);
+      const sumY = pts.reduce(function (s, p) { return s + p.y; }, 0);
+      const meanX = sumX / n;
+      const meanY = sumY / n;
+
+      let sxx = 0;
+      let syy = 0;
+      let sxy = 0;
+
+      pts.forEach(function (p) {
+        const dx = p.x - meanX;
+        const dy = p.y - meanY;
+        sxx += dx * dx;
+        syy += dy * dy;
+        sxy += dx * dy;
+      });
+
+      if (sxx === 0) {
+        showError("Regression is undefined because all x values are identical.");
+        return;
+      }
+
+      const slope = sxy / sxx;
+      const intercept = meanY - slope * meanX;
+      const r = (sxx === 0 || syy === 0) ? 0 : sxy / Math.sqrt(sxx * syy);
+      const r2 = r * r;
+
+      const predictRaw = String(predictXEl.value || "").trim();
+      const hasPrediction = !!predictRaw;
+      let predictedY = null;
+
+      if (hasPrediction) {
+        const px = Number(predictRaw);
+        if (!Number.isFinite(px)) {
+          showError("Prediction x value is invalid.");
+          return;
+        }
+        predictedY = intercept + slope * px;
+      }
+
+      let relation = "Weak linear relationship";
+      const ar = Math.abs(r);
+      if (ar >= 0.8) relation = "Strong linear relationship";
+      else if (ar >= 0.5) relation = "Moderate linear relationship";
+
+      resultEl.innerHTML =
+        "<strong>Regression result</strong><br/>" +
+        "<span class='reg-code'>y = " + fmt(intercept, 8) + " + " + fmt(slope, 8) + "x</span>" +
+        "<br/><span class='note'>r = " + fmt(r, 8) + ", r² = " + fmt(r2, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(relation) +
+        badge("Slope = " + fmt(slope, 6)) +
+        badge("Points = " + n) +
+        "</div>";
+
+      const rows = [
+        ["Number of points", String(n)],
+        ["Mean x", fmt(meanX, 8)],
+        ["Mean y", fmt(meanY, 8)],
+        ["Slope (b)", fmt(slope, 8)],
+        ["Intercept (a)", fmt(intercept, 8)],
+        ["Correlation (r)", fmt(r, 8)],
+        ["Coefficient of determination (r²)", fmt(r2, 8)],
+      ];
+
+      if (hasPrediction && predictedY !== null) {
+        rows.push(["Predicted y", fmt(predictedY, 8)]);
+      }
+
+      fillTable(rows);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    pairsEl.value = "1,2\n2,3\n3,5\n4,4";
+    predictXEl.value = "5";
+    clearOutput();
+  }
+
+  function reset() {
+    pairsEl.value = "";
+    predictXEl.value = "";
+    clearOutput();
+    pairsEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  pairsEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  predictXEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

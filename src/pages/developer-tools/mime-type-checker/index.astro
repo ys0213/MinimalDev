@@ -1,0 +1,349 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "MIME Type Checker",
+  description:
+    "Check likely MIME type from filename or uploaded file metadata, with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/mime-type-checker/",
+  order: 534,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/mime-type-checker/";
+
+const faqs = [
+  {
+    q: "What does this MIME type checker do?",
+    a: "It estimates a file MIME type from a filename extension and can also read browser-reported metadata from an uploaded file.",
+  },
+  {
+    q: "Does it inspect raw file bytes?",
+    a: "No. This page does not do full binary signature analysis. It uses filename extension mapping and browser file metadata when available.",
+  },
+  {
+    q: "Why can MIME type results differ across tools?",
+    a: "Different tools may rely on different sources such as file extensions, browser metadata, OS file associations, or binary sniffing.",
+  },
+  {
+    q: "Is my file uploaded to a server?",
+    a: "No. File inspection runs locally in your browser and no file is uploaded or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`MIME Type Checker — ${SITE_NAME}`}
+  description="Check likely MIME type from filename extension or browser file metadata with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="MIME Type Checker"
+  intro="Check a likely MIME type from a filename or inspect browser-reported metadata from an uploaded file."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="mime-type-checker">
+    <style is:inline>
+      #mime_input,
+      #mime_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .mime-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="mime_help mime_privacy">
+      <div class="field">
+        <label for="mime_input">Filename or extension</label>
+        <input
+          id="mime_input"
+          type="text"
+          spellcheck="false"
+          class="mime-mono"
+          placeholder="e.g. report.pdf or .pdf"
+        />
+      </div>
+
+      <div class="field">
+        <label for="mime_file">Optional file upload</label>
+        <input id="mime_file" type="file" />
+      </div>
+
+      <p class="note" id="mime_help" style="margin-top:6px;">
+        This page estimates MIME type from extension and browser metadata. It does not perform deep binary sniffing.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mime_run">Check MIME Type</button>
+        <button class="btn secondary" type="button" id="mime_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="mime_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mime_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mime_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mime_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="mime_output">Detected MIME information</label>
+        <textarea id="mime_output" rows="8" readonly spellcheck="false" class="mime-mono" placeholder="Detected MIME information will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mime_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mime_privacy" style="margin-top:10px;">
+        Privacy: checks run locally in your browser. Files are not uploaded or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This page looks at the filename extension and compares it to a built-in MIME mapping.
+      If you upload a file, it also shows browser-reported metadata such as <code>File.type</code> and size.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>document.pdf</strong> → <strong>application/pdf</strong></li>
+      <li><strong>photo.jpg</strong> → <strong>image/jpeg</strong></li>
+      <li><strong>data.json</strong> → <strong>application/json</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/data-uri-generator/">Data URI Generator</a></li>
+      <li><a href="/developer-tools/html-entity-encoder/">HTML Entity Encoder</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("mime_input");
+  const fileEl = document.getElementById("mime_file");
+  const outputEl = document.getElementById("mime_output");
+  const runBtn = document.getElementById("mime_run");
+  const copyBtn = document.getElementById("mime_copy");
+  const clearBtn = document.getElementById("mime_clear");
+  const errEl = document.getElementById("mime_error");
+  const resultEl = document.getElementById("mime_result");
+  const cardsEl = document.getElementById("mime_cards");
+  const tbodyEl = document.getElementById("mime_tbody");
+
+  if (!inputEl || !fileEl || !outputEl || !runBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  const MIME_MAP = {
+    txt: "text/plain",
+    html: "text/html",
+    htm: "text/html",
+    css: "text/css",
+    js: "text/javascript",
+    mjs: "text/javascript",
+    json: "application/json",
+    xml: "application/xml",
+    yaml: "application/x-yaml",
+    yml: "application/x-yaml",
+    csv: "text/csv",
+    tsv: "text/tab-separated-values",
+    pdf: "application/pdf",
+    zip: "application/zip",
+    gz: "application/gzip",
+    tar: "application/x-tar",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    ico: "image/x-icon",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+    md: "text/markdown",
+    wasm: "application/wasm",
+    exe: "application/octet-stream",
+    bin: "application/octet-stream",
+  };
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    outputEl.value = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getExtension(name) {
+    const s = String(name || "").trim();
+    if (!s) return "";
+    const cleaned = s.startsWith(".") ? s.slice(1) : s;
+    const idx = cleaned.lastIndexOf(".");
+    const ext = idx >= 0 ? cleaned.slice(idx + 1) : cleaned;
+    return ext.toLowerCase();
+  }
+
+  function formatSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+
+  function run() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const file = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+
+    if (!raw && !file) {
+      showError("Enter a filename/extension or choose a file.");
+      return;
+    }
+
+    const effectiveName = file ? file.name : raw;
+    const ext = getExtension(effectiveName);
+
+    if (!ext) {
+      showError("Could not determine a file extension.");
+      return;
+    }
+
+    const mappedMime = MIME_MAP[ext] || "unknown/unknown";
+    const browserMime = file && file.type ? file.type : "(not available)";
+    const source = file ? "extension + browser metadata" : "extension mapping";
+
+    const lines = [
+      "Extension: " + ext,
+      "Mapped MIME: " + mappedMime
+    ];
+
+    if (file) {
+      lines.push("Browser file.type: " + browserMime);
+      lines.push("Filename: " + file.name);
+      lines.push("Size: " + formatSize(file.size));
+    }
+
+    lastOutput = lines.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>MIME check complete.</strong><br/><span class='note'>Likely MIME: " + mappedMime + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Extension: ." + ext) +
+      badge("Source: " + source) +
+      badge(file ? "File selected" : "No file upload") +
+      badge(mappedMime === "unknown/unknown" ? "Unknown mapping" : "Mapped MIME found") +
+      "</div>";
+
+    fillTable([
+      ["Input extension", ext],
+      ["Mapped MIME", mappedMime],
+      ["Browser-reported MIME", browserMime],
+      ["Inspection method", source],
+      ["Filename", file ? file.name : raw],
+      ["Size", file ? formatSize(file.size) : "—"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No MIME result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied MIME information.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    fileEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  runBtn.addEventListener("click", run);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run();
+  });
+});
+</script>

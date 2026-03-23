@@ -1,0 +1,252 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Range Calculator",
+  description:
+    "Calculate the range of a dataset with validation, sorted values, result cards, and FAQ support.",
+  href: "/math/range-calculator/",
+  order: 360,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/range-calculator/";
+
+const faqs = [
+  {
+    q: "What is range in statistics?",
+    a: "Range is the difference between the largest value and the smallest value in a dataset.",
+  },
+  {
+    q: "How is range calculated?",
+    a: "Subtract the minimum value from the maximum value: range = max − min.",
+  },
+  {
+    q: "Does the order of values matter?",
+    a: "No. Range depends only on the smallest and largest values, not the order you enter them.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Range Calculator — ${SITE_NAME}`}
+  description="Range calculator with validation, sorted values, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Range Calculator"
+  intro="Calculate the statistical range of a dataset by finding the difference between the maximum and minimum values."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="range-calculator">
+    <style is:inline>
+      .rc-wrap, .rc-wrap * { box-sizing: border-box; }
+      .rc-textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      .rc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form rc-wrap" role="form" aria-describedby="rc_help rc_privacy">
+      <div class="field">
+        <label for="rc_values">Values</label>
+        <textarea
+          id="rc_values"
+          class="rc-textarea"
+          rows="6"
+          placeholder="e.g., 4, 8, 15, 16, 23, 42"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="rc_help" style="margin-top:6px;">
+        Enter numbers separated by commas, spaces, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="rc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="rc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Formula:
+      <br />
+      <strong>Range = Maximum − Minimum</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2, 5, 9</strong> → range = <strong>9 − 2 = 7</strong></li>
+      <li><strong>10, 10, 10</strong> → range = <strong>0</strong></li>
+      <li><strong>-4, 3, 8</strong> → range = <strong>8 − (-4) = 12</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/iqr-calculator/">IQR Calculator</a></li>
+      <li><a href="/math/mean-median-mode-calculator/">Mean Median Mode Calculator</a></li>
+      <li><a href="/math/variance-calculator/">Variance Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("rc_values");
+  const calcBtn = document.getElementById("rc_calc");
+  const demoBtn = document.getElementById("rc_fill_demo");
+  const clearBtn = document.getElementById("rc_clear");
+  const errorEl = document.getElementById("rc_error");
+  const resultEl = document.getElementById("rc_result");
+  const cardsEl = document.getElementById("rc_cards");
+  const tbodyEl = document.getElementById("rc_tbody");
+
+  if (!valuesEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseValues() {
+    const raw = String(valuesEl.value || "").trim();
+    if (!raw) throw new Error("Please enter one or more numbers.");
+    const tokens = raw.split(/[\s,]+/).filter(Boolean);
+    if (!tokens.length) throw new Error("Please enter one or more numbers.");
+
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    return nums;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const nums = parseValues();
+      const sorted = nums.slice().sort(function (a, b) { return a - b; });
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+      const range = max - min;
+
+      resultEl.innerHTML =
+        "<strong>Range result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(range) + "</span>" +
+        "<br/><span class='note rc-code'>" + fmt(max) + " − " + fmt(min) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Count: " + nums.length) +
+        badge("Min: " + fmt(min)) +
+        badge("Max: " + fmt(max)) +
+        "</div>";
+
+      fillTable([
+        ["Input count", String(nums.length)],
+        ["Minimum", fmt(min)],
+        ["Maximum", fmt(max)],
+        ["Range", fmt(range)],
+        ["Sorted values", sorted.map(fmt).join(", ")],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the range.");
+    }
+  }
+
+  function fillDemo() {
+    valuesEl.value = "4, 8, 15, 16, 23, 42";
+    clearOutput();
+  }
+
+  function reset() {
+    valuesEl.value = "";
+    clearOutput();
+    valuesEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

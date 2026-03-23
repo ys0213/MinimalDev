@@ -1,0 +1,372 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Vector Calculator",
+  description:
+    "Add, subtract, or scalar-multiply vectors with validation, result cards, and FAQ support.",
+  href: "/math/vector-calculator/",
+  order: 343,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/vector-calculator/";
+
+const faqs = [
+  {
+    q: "What operations does this vector calculator support?",
+    a: "This tool supports vector addition, subtraction, and scalar multiplication.",
+  },
+  {
+    q: "Do vectors need the same dimension?",
+    a: "Yes. Vector addition and subtraction require both vectors to have the same dimension. Scalar multiplication uses only Vector A.",
+  },
+  {
+    q: "Can I use decimals and negative values?",
+    a: "Yes. The calculator accepts integers, decimals, and negative values.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Vector Calculator — ${SITE_NAME}`}
+  description="Vector addition, subtraction, and scalar multiplication with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Vector Calculator"
+  intro="Perform basic vector operations such as addition, subtraction, and scalar multiplication in 2D to 6D."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="vector-calculator">
+    <style is:inline>
+      .vc-wrap, .vc-wrap * { box-sizing: border-box; }
+      .vc-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .vc-vectors {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .vc-row {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+      }
+      .vc-row-wrap {
+        overflow-x: auto;
+        width: 100%;
+      }
+      .vc-row input {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 900px) {
+        .vc-vectors {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form vc-wrap" role="form" aria-describedby="vc_help vc_privacy">
+      <div class="vc-controls">
+        <div class="field">
+          <label for="vc_dim">Dimension</label>
+          <select id="vc_dim">
+            <option value="2">2D</option>
+            <option value="3" selected>3D</option>
+            <option value="4">4D</option>
+            <option value="5">5D</option>
+            <option value="6">6D</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="vc_op">Operation</label>
+          <select id="vc_op">
+            <option value="add" selected>Add (A + B)</option>
+            <option value="sub">Subtract (A − B)</option>
+            <option value="scalar">Scalar multiply (k × A)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="vc_scalar">Scalar k</label>
+          <input id="vc_scalar" type="number" inputmode="decimal" value="2" step="any" />
+        </div>
+      </div>
+
+      <p class="note" id="vc_help" style="margin-top:8px;">
+        Addition and subtraction compare vectors component by component. Scalar multiplication multiplies each component of Vector A by the same number.
+      </p>
+
+      <div class="vc-vectors">
+        <section>
+          <h3 style="margin:0 0 8px;">Vector A</h3>
+          <div class="vc-row-wrap">
+            <div id="vc_row_a" class="vc-row" aria-label="Vector A input row"></div>
+          </div>
+        </section>
+
+        <section id="vc_panel_b">
+          <h3 style="margin:0 0 8px;">Vector B</h3>
+          <div class="vc-row-wrap">
+            <div id="vc_row_b" class="vc-row" aria-label="Vector B input row"></div>
+          </div>
+        </section>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="btn" type="button" id="vc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="vc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="vc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="vc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="vc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="vc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="vc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="vc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No vector values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Vectors are processed component by component. For example, vector addition adds each component in A to the matching component in B.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Add:</strong> [1, 2, 3] + [4, 5, 6] = [5, 7, 9]</li>
+      <li><strong>Subtract:</strong> [5, 7] − [2, 3] = [3, 4]</li>
+      <li><strong>Scalar:</strong> 2 × [1, -3, 4] = [2, -6, 8]</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/dot-product-calculator/">Dot Product Calculator</a></li>
+      <li><a href="/math/cross-product-calculator/">Cross Product Calculator</a></li>
+      <li><a href="/math/matrix-calculator/">Matrix Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dimEl = document.getElementById("vc_dim");
+  const opEl = document.getElementById("vc_op");
+  const scalarEl = document.getElementById("vc_scalar");
+  const rowAEl = document.getElementById("vc_row_a");
+  const rowBEl = document.getElementById("vc_row_b");
+  const panelBEl = document.getElementById("vc_panel_b");
+  const calcBtn = document.getElementById("vc_calc");
+  const demoBtn = document.getElementById("vc_fill_demo");
+  const clearBtn = document.getElementById("vc_clear");
+  const errorEl = document.getElementById("vc_error");
+  const resultEl = document.getElementById("vc_result");
+  const cardsEl = document.getElementById("vc_cards");
+  const tbodyEl = document.getElementById("vc_tbody");
+
+  if (!dimEl || !opEl || !scalarEl || !rowAEl || !rowBEl || !panelBEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function dimension() {
+    return parseInt(String(dimEl.value), 10);
+  }
+
+  function createVector(container, prefix, dim) {
+    container.innerHTML = "";
+    container.style.gridTemplateColumns = "repeat(" + dim + ", minmax(56px, 1fr))";
+    for (let i = 0; i < dim; i++) {
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "any";
+      input.inputMode = "decimal";
+      input.placeholder = "0";
+      input.id = prefix + "_" + i;
+      input.setAttribute("aria-label", prefix.toUpperCase() + " component " + (i + 1));
+      container.appendChild(input);
+    }
+  }
+
+  function syncUI() {
+    const dim = dimension();
+    createVector(rowAEl, "vc_a", dim);
+    createVector(rowBEl, "vc_b", dim);
+    const scalarMode = String(opEl.value) === "scalar";
+    panelBEl.style.display = scalarMode ? "none" : "";
+    scalarEl.parentElement.style.display = scalarMode ? "" : "none";
+  }
+
+  function readVector(prefix, dim) {
+    const out = [];
+    for (let i = 0; i < dim; i++) {
+      const el = document.getElementById(prefix + "_" + i);
+      const raw = el ? String(el.value || "").trim() : "";
+      if (!raw) throw new Error("Please fill every vector component.");
+      const n = Number(raw);
+      if (!Number.isFinite(n)) throw new Error("Enter only valid numbers in vector components.");
+      out.push(n);
+    }
+    return out;
+  }
+
+  function formatNum(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function formatVector(v) {
+    return "[" + v.map(formatNum).join(", ") + "]";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function magnitude(v) {
+    let sum = 0;
+    for (let i = 0; i < v.length; i++) sum += v[i] * v[i];
+    return Math.sqrt(sum);
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const dim = dimension();
+      const op = String(opEl.value);
+      const A = readVector("vc_a", dim);
+      let result;
+      let label = "";
+
+      if (op === "add") {
+        const B = readVector("vc_b", dim);
+        result = A.map(function (v, i) { return v + B[i]; });
+        label = "Addition";
+      } else if (op === "sub") {
+        const B = readVector("vc_b", dim);
+        result = A.map(function (v, i) { return v - B[i]; });
+        label = "Subtraction";
+      } else if (op === "scalar") {
+        const k = Number(String(scalarEl.value || "").trim());
+        if (!Number.isFinite(k)) {
+          showError("Please enter a valid scalar value.");
+          return;
+        }
+        result = A.map(function (v) { return v * k; });
+        label = "Scalar multiplication";
+      } else {
+        showError("Invalid operation selected.");
+        return;
+      }
+
+      resultEl.innerHTML =
+        "<strong>Vector result</strong><br/>" +
+        "<span style='font-size:1.05rem;font-weight:700;'>" + formatVector(result) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge(dim + "D vector") +
+        badge("‖result‖ = " + formatNum(magnitude(result))) +
+        "</div>";
+
+      fillTable([
+        ["Dimension", String(dim)],
+        ["Operation", label],
+        ["Result vector", formatVector(result)],
+        ["Result magnitude", formatNum(magnitude(result))],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the vector result.");
+    }
+  }
+
+  function fillDemo() {
+    const dim = dimension();
+    for (let i = 0; i < dim; i++) {
+      const a = document.getElementById("vc_a_" + i);
+      const b = document.getElementById("vc_b_" + i);
+      if (a) a.value = String(i + 1);
+      if (b) b.value = String((i + 1) * 2);
+    }
+    scalarEl.value = "2";
+    clearOutput();
+  }
+
+  function reset() {
+    syncUI();
+    scalarEl.value = "2";
+    clearOutput();
+  }
+
+  dimEl.addEventListener("change", reset);
+  opEl.addEventListener("change", function () {
+    syncUI();
+    clearOutput();
+  });
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  syncUI();
+  scalarEl.parentElement.style.display = "none";
+});
+</script>

@@ -1,0 +1,335 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Dot Product Calculator",
+  description:
+    "Calculate the dot product of two vectors with validation, result cards, and FAQ support.",
+  href: "/math/dot-product-calculator/",
+  order: 344,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/dot-product-calculator/";
+
+const faqs = [
+  {
+    q: "What is a dot product?",
+    a: "The dot product multiplies matching vector components and adds them together, producing a single scalar value.",
+  },
+  {
+    q: "Do both vectors need the same dimension?",
+    a: "Yes. Both vectors must have exactly the same number of components.",
+  },
+  {
+    q: "What does a dot product of 0 mean?",
+    a: "If the dot product is 0, the vectors are orthogonal (perpendicular) when neither vector is the zero vector.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Dot Product Calculator — ${SITE_NAME}`}
+  description="Dot product calculator with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Dot Product Calculator"
+  intro="Calculate the dot product of two vectors in 2D to 6D and see the component-by-component multiplication."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="dot-product-calculator">
+    <style is:inline>
+      .dp-wrap, .dp-wrap * { box-sizing: border-box; }
+      .dp-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+      .dp-vectors {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .dp-row {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+      }
+      .dp-row-wrap {
+        overflow-x: auto;
+        width: 100%;
+      }
+      .dp-row input {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 900px) {
+        .dp-vectors {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form dp-wrap" role="form" aria-describedby="dp_help dp_privacy">
+      <div class="dp-controls">
+        <div class="field">
+          <label for="dp_dim">Dimension</label>
+          <select id="dp_dim">
+            <option value="2">2D</option>
+            <option value="3" selected>3D</option>
+            <option value="4">4D</option>
+            <option value="5">5D</option>
+            <option value="6">6D</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="dp_help" style="margin-top:8px;">
+        Dot product formula: <strong>a₁b₁ + a₂b₂ + ... + aₙbₙ</strong>
+      </p>
+
+      <div class="dp-vectors">
+        <section>
+          <h3 style="margin:0 0 8px;">Vector A</h3>
+          <div class="dp-row-wrap">
+            <div id="dp_row_a" class="dp-row" aria-label="Vector A input row"></div>
+          </div>
+        </section>
+
+        <section>
+          <h3 style="margin:0 0 8px;">Vector B</h3>
+          <div class="dp-row-wrap">
+            <div id="dp_row_b" class="dp-row" aria-label="Vector B input row"></div>
+          </div>
+        </section>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="btn" type="button" id="dp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="dp_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="dp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="dp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="dp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="dp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="dp_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No vector values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Multiply each matching pair of components, then add all those products together.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>[1, 2, 3] · [4, 5, 6]</strong> = <strong>32</strong></li>
+      <li><strong>[1, 0] · [0, 1]</strong> = <strong>0</strong> (orthogonal vectors)</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/vector-calculator/">Vector Calculator</a></li>
+      <li><a href="/math/cross-product-calculator/">Cross Product Calculator</a></li>
+      <li><a href="/math/matrix-multiplication/">Matrix Multiplication</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dimEl = document.getElementById("dp_dim");
+  const rowAEl = document.getElementById("dp_row_a");
+  const rowBEl = document.getElementById("dp_row_b");
+  const calcBtn = document.getElementById("dp_calc");
+  const demoBtn = document.getElementById("dp_fill_demo");
+  const clearBtn = document.getElementById("dp_clear");
+  const errorEl = document.getElementById("dp_error");
+  const resultEl = document.getElementById("dp_result");
+  const cardsEl = document.getElementById("dp_cards");
+  const tbodyEl = document.getElementById("dp_tbody");
+
+  if (!dimEl || !rowAEl || !rowBEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function dimension() {
+    return parseInt(String(dimEl.value), 10);
+  }
+
+  function createVector(container, prefix, dim) {
+    container.innerHTML = "";
+    container.style.gridTemplateColumns = "repeat(" + dim + ", minmax(56px, 1fr))";
+    for (let i = 0; i < dim; i++) {
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "any";
+      input.inputMode = "decimal";
+      input.placeholder = "0";
+      input.id = prefix + "_" + i;
+      input.setAttribute("aria-label", prefix.toUpperCase() + " component " + (i + 1));
+      container.appendChild(input);
+    }
+  }
+
+  function syncUI() {
+    const dim = dimension();
+    createVector(rowAEl, "dp_a", dim);
+    createVector(rowBEl, "dp_b", dim);
+  }
+
+  function readVector(prefix, dim) {
+    const out = [];
+    for (let i = 0; i < dim; i++) {
+      const el = document.getElementById(prefix + "_" + i);
+      const raw = el ? String(el.value || "").trim() : "";
+      if (!raw) throw new Error("Please fill every vector component.");
+      const n = Number(raw);
+      if (!Number.isFinite(n)) throw new Error("Enter only valid numbers in vector components.");
+      out.push(n);
+    }
+    return out;
+  }
+
+  function magnitude(v) {
+    let sum = 0;
+    for (let i = 0; i < v.length; i++) sum += v[i] * v[i];
+    return Math.sqrt(sum);
+  }
+
+  function dot(A, B) {
+    let sum = 0;
+    for (let i = 0; i < A.length; i++) sum += A[i] * B[i];
+    return sum;
+  }
+
+  function formatNum(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function formatVector(v) {
+    return "[" + v.map(formatNum).join(", ") + "]";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const dim = dimension();
+      const A = readVector("dp_a", dim);
+      const B = readVector("dp_b", dim);
+      const products = A.map(function (v, i) { return v * B[i]; });
+      const result = dot(A, B);
+      const magA = magnitude(A);
+      const magB = magnitude(B);
+      const orthogonal = Math.abs(result) < 1e-12 && magA > 0 && magB > 0;
+
+      resultEl.innerHTML =
+        "<strong>Dot product</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + formatNum(result) + "</span>" +
+        "<br/><span class='note'>" + products.map(formatNum).join(" + ") + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(dim + "D vectors") +
+        badge("‖A‖ = " + formatNum(magA)) +
+        badge("‖B‖ = " + formatNum(magB)) +
+        badge(orthogonal ? "Orthogonal" : "Not orthogonal") +
+        "</div>";
+
+      fillTable([
+        ["Dimension", String(dim)],
+        ["Vector A", formatVector(A)],
+        ["Vector B", formatVector(B)],
+        ["Component products", products.map(formatNum).join(", ")],
+        ["Dot product", formatNum(result)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the dot product.");
+    }
+  }
+
+  function fillDemo() {
+    const dim = dimension();
+    for (let i = 0; i < dim; i++) {
+      const a = document.getElementById("dp_a_" + i);
+      const b = document.getElementById("dp_b_" + i);
+      if (a) a.value = String(i + 1);
+      if (b) b.value = String(i + 2);
+    }
+    clearOutput();
+  }
+
+  function reset() {
+    syncUI();
+    clearOutput();
+  }
+
+  dimEl.addEventListener("change", reset);
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  syncUI();
+});
+</script>

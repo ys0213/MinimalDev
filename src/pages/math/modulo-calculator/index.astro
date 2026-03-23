@@ -1,0 +1,260 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Modulo Calculator",
+  description:
+    "Calculate the modulo of two integers with validation, quotient details, normalized result, and FAQ support.",
+  href: "/math/modulo-calculator/",
+  order: 357,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/modulo-calculator/";
+
+const faqs = [
+  {
+    q: "What does modulo mean?",
+    a: "Modulo gives the remainder after division. For example, 17 mod 5 = 2.",
+  },
+  {
+    q: "What happens if the divisor is 0?",
+    a: "Modulo by zero is undefined, so the calculator will show an error.",
+  },
+  {
+    q: "How are negative values handled here?",
+    a: "This tool shows both the JavaScript remainder and a normalized modulo value based on the absolute divisor.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Modulo Calculator — ${SITE_NAME}`}
+  description="Modulo calculator with validation, quotient details, normalized result, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Modulo Calculator"
+  intro="Calculate a mod b, view the integer quotient, and compare remainder handling for positive or negative inputs."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="modulo-calculator">
+    <style is:inline>
+      .mod-wrap, .mod-wrap * { box-sizing: border-box; }
+      .mod-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 720px) {
+        .mod-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form mod-wrap" role="form" aria-describedby="mod_help mod_privacy">
+      <div class="mod-grid">
+        <div class="field">
+          <label for="mod_a">Dividend a</label>
+          <input id="mod_a" type="number" step="1" inputmode="numeric" placeholder="e.g., 17" />
+        </div>
+        <div class="field">
+          <label for="mod_b">Divisor b</label>
+          <input id="mod_b" type="number" step="1" inputmode="numeric" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <p class="note" id="mod_help" style="margin-top:8px;">
+        This tool expects integers. It shows both the raw remainder and a normalized modulo value.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mod_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mod_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="mod_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mod_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mod_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mod_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mod_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mod_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Division relationship:
+      <br />
+      <strong>a = b × q + r</strong>
+      <br />
+      where <strong>q</strong> is the integer quotient and <strong>r</strong> is the remainder or modulo value.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>17 mod 5</strong> = <strong>2</strong></li>
+      <li><strong>20 mod 4</strong> = <strong>0</strong></li>
+      <li><strong>-17 mod 5</strong> normalized = <strong>3</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/prime-number-checker/">Prime Number Checker</a></li>
+      <li><a href="/math/factorial-calculator/">Factorial Calculator</a></li>
+      <li><a href="/math/number-base-converter/">Number Base Converter</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("mod_a");
+  const bEl = document.getElementById("mod_b");
+  const calcBtn = document.getElementById("mod_calc");
+  const demoBtn = document.getElementById("mod_fill_demo");
+  const clearBtn = document.getElementById("mod_clear");
+  const errorEl = document.getElementById("mod_error");
+  const resultEl = document.getElementById("mod_result");
+  const cardsEl = document.getElementById("mod_cards");
+  const tbodyEl = document.getElementById("mod_tbody");
+
+  if (!aEl || !bEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter both integers.");
+    const n = Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      throw new Error("Enter a valid integer for " + label + ".");
+    }
+    return n;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const a = getInt(aEl, "a");
+      const b = getInt(bEl, "b");
+
+      if (b === 0) {
+        showError("Modulo by zero is undefined.");
+        return;
+      }
+
+      const quotient = Math.trunc(a / b);
+      const remainder = a % b;
+      const normalized = ((a % Math.abs(b)) + Math.abs(b)) % Math.abs(b);
+
+      resultEl.innerHTML =
+        "<strong>Modulo result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(a) + " mod " + fmt(b) + " = " + fmt(normalized) + "</span>" +
+        "<br/><span class='note'>Raw remainder: " + fmt(remainder) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Quotient q = " + fmt(quotient)) +
+        badge("Raw remainder r = " + fmt(remainder)) +
+        badge("Normalized modulo = " + fmt(normalized)) +
+        "</div>";
+
+      fillTable([
+        ["Dividend a", fmt(a)],
+        ["Divisor b", fmt(b)],
+        ["Integer quotient q", fmt(quotient)],
+        ["JavaScript remainder a % b", fmt(remainder)],
+        ["Normalized modulo", fmt(normalized)],
+        ["Identity", fmt(a) + " = " + fmt(b) + " × " + fmt(quotient) + " + " + fmt(remainder)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate modulo.");
+    }
+  }
+
+  function fillDemo() {
+    aEl.value = "-17";
+    bEl.value = "5";
+    clearOutput();
+  }
+
+  function reset() {
+    aEl.value = "";
+    bEl.value = "";
+    clearOutput();
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

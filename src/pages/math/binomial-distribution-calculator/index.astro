@@ -1,0 +1,294 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Binomial Distribution Calculator",
+  description:
+    "Calculate exact and cumulative binomial probabilities with validation, result cards, and FAQ schema.",
+  href: "/math/binomial-distribution-calculator/",
+  order: 366,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/binomial-distribution-calculator/";
+
+const faqs = [
+  {
+    q: "What does this binomial calculator compute?",
+    a: "It computes the exact probability P(X = k) and cumulative probabilities for a binomial distribution.",
+  },
+  {
+    q: "What inputs are required?",
+    a: "You need number of trials n, probability of success p, and desired number of successes k.",
+  },
+  {
+    q: "What range can probability p take?",
+    a: "Probability p must be between 0 and 1 inclusive.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Binomial Distribution Calculator — ${SITE_NAME}`}
+  description="Calculate exact and cumulative binomial probabilities."
+  canonicalPath={CANONICAL_PATH}
+  h1="Binomial Distribution Calculator"
+  intro="Calculate exact probability P(X = k), cumulative probability P(X ≤ k), and upper-tail probability P(X ≥ k) for a binomial distribution."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="binomial-distribution-calculator">
+    <style is:inline>
+      .bd-wrap, .bd-wrap * { box-sizing: border-box; }
+      .bd-grid {
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+      }
+      .bd-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 800px) {
+        .bd-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form bd-wrap" role="form" aria-describedby="bd_help bd_privacy">
+      <div class="bd-grid">
+        <div class="field">
+          <label for="bd_n">Trials (n)</label>
+          <input id="bd_n" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 10" />
+        </div>
+        <div class="field">
+          <label for="bd_p">Success probability (p)</label>
+          <input id="bd_p" type="number" inputmode="decimal" step="any" min="0" max="1" placeholder="e.g., 0.5" />
+        </div>
+        <div class="field">
+          <label for="bd_k">Successes (k)</label>
+          <input id="bd_k" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 3" />
+        </div>
+      </div>
+
+      <p class="note" id="bd_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="bd-code">P(X = k) = C(n,k) · p^k · (1-p)^(n-k)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bd_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="bd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bd_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="bd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="bd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="bd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bd_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The binomial distribution models the number of successes in <strong>n</strong> independent trials with fixed success probability <strong>p</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>n = 10</strong>, <strong>p = 0.5</strong>, <strong>k = 3</strong></li>
+      <li>Exact probability is <strong>P(X = 3)</strong></li>
+      <li>Cumulative probability is <strong>P(X ≤ 3)</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/poisson-distribution-calculator/">Poisson Distribution Calculator</a></li>
+      <li><a href="/math/cumulative-distribution-calculator/">Cumulative Distribution Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const nEl = document.getElementById("bd_n");
+  const pEl = document.getElementById("bd_p");
+  const kEl = document.getElementById("bd_k");
+  const calcBtn = document.getElementById("bd_calc");
+  const fillBtn = document.getElementById("bd_fill_demo");
+  const clearBtn = document.getElementById("bd_clear");
+  const errorEl = document.getElementById("bd_error");
+  const resultEl = document.getElementById("bd_result");
+  const cardsEl = document.getElementById("bd_cards");
+  const tbodyEl = document.getElementById("bd_tbody");
+
+  if (!nEl || !pEl || !kEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+  function toNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function combination(n, k) {
+    if (k < 0 || k > n) return 0;
+    const kk = Math.min(k, n - k);
+    let result = 1;
+    for (let i = 1; i <= kk; i++) {
+      result = result * (n - kk + i) / i;
+    }
+    return result;
+  }
+  function exactProb(n, p, k) {
+    return combination(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const n = toInt(nEl, "trials (n)");
+      const p = toNum(pEl, "success probability (p)");
+      const k = toInt(kEl, "successes (k)");
+
+      if (n < 0) {
+        showError("Trials (n) must be 0 or greater.");
+        return;
+      }
+      if (p < 0 || p > 1) {
+        showError("Success probability (p) must be between 0 and 1.");
+        return;
+      }
+      if (k < 0 || k > n) {
+        showError("Successes (k) must be between 0 and n.");
+        return;
+      }
+
+      const exact = exactProb(n, p, k);
+
+      let cdf = 0;
+      for (let i = 0; i <= k; i++) cdf += exactProb(n, p, i);
+
+      let upper = 0;
+      for (let i = k; i <= n; i++) upper += exactProb(n, p, i);
+
+      let rarity = "Typical";
+      if (exact < 0.01) rarity = "Rare exact outcome";
+      else if (exact < 0.05) rarity = "Uncommon exact outcome";
+
+      resultEl.innerHTML =
+        "<strong>Binomial distribution result</strong><br/>" +
+        "<span class='bd-code'>P(X = " + k + ") ≈ " + fmt(exact, 10) + "</span>" +
+        "<br/><span class='note'>P(X ≤ " + k + ") ≈ " + fmt(cdf, 10) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("n = " + n) +
+        badge("p = " + fmt(p, 6)) +
+        badge(rarity) +
+        "</div>";
+
+      fillTable([
+        ["Trials (n)", String(n)],
+        ["Success probability (p)", fmt(p, 8)],
+        ["Successes (k)", String(k)],
+        ["P(X = k)", fmt(exact, 10)],
+        ["P(X ≤ k)", fmt(cdf, 10)],
+        ["P(X ≥ k)", fmt(upper, 10)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    nEl.value = "10";
+    pEl.value = "0.5";
+    kEl.value = "3";
+    clearOutput();
+  }
+  function reset() {
+    nEl.value = "";
+    pEl.value = "";
+    kEl.value = "";
+    clearOutput();
+    nEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [nEl, pEl, kEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

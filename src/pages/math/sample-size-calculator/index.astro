@@ -1,0 +1,302 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sample Size Calculator",
+  description:
+    "Estimate sample size for a proportion using confidence level, margin of error, expected proportion, and optional finite population correction.",
+  href: "/math/sample-size-calculator/",
+  order: 371,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/sample-size-calculator/";
+
+const faqs = [
+  {
+    q: "What does this sample size calculator estimate?",
+    a: "It estimates the sample size needed for a proportion using confidence level, margin of error, and expected proportion.",
+  },
+  {
+    q: "What if I do not know the expected proportion?",
+    a: "A common conservative choice is 0.5 because it usually produces the largest required sample size.",
+  },
+  {
+    q: "What is finite population correction?",
+    a: "If you provide a population size, the calculator applies a finite population correction to reduce the required sample size when the population is not very large.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Sample Size Calculator — ${SITE_NAME}`}
+  description="Estimate required sample size for a proportion with confidence level, margin of error, expected proportion, and optional population size."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sample Size Calculator"
+  intro="Estimate the sample size needed for a proportion using confidence level, margin of error, expected proportion, and optional finite population size."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="sample-size-calculator">
+    <style is:inline>
+      .ss-wrap, .ss-wrap * { box-sizing: border-box; }
+      .ss-grid {
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+      }
+      .ss-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 900px) {
+        .ss-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form ss-wrap" role="form" aria-describedby="ss_help ss_privacy">
+      <div class="ss-grid">
+        <div class="field">
+          <label for="ss_level">Confidence level</label>
+          <select id="ss_level">
+            <option value="0.90">90%</option>
+            <option value="0.95" selected>95%</option>
+            <option value="0.99">99%</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ss_margin">Margin of error</label>
+          <input id="ss_margin" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 0.05" />
+        </div>
+        <div class="field">
+          <label for="ss_prop">Expected proportion (p)</label>
+          <input id="ss_prop" type="number" inputmode="decimal" step="any" min="0" max="1" placeholder="e.g., 0.5" />
+        </div>
+        <div class="field">
+          <label for="ss_pop">Population size (optional)</label>
+          <input id="ss_pop" type="number" inputmode="numeric" step="1" min="1" placeholder="e.g., 10000" />
+        </div>
+      </div>
+
+      <p class="note" id="ss_help" style="margin-top:6px;">
+        Formula without finite population correction:
+        <br />
+        <span class="ss-code">n₀ = z² · p(1-p) / E²</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ss_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ss_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="ss_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ss_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ss_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ss_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ss_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ss_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool estimates sample size for a proportion. If population size is provided, it also applies finite population correction.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>95%</strong> confidence, <strong>5%</strong> margin, <strong>p = 0.5</strong></li>
+      <li>Without population correction, this is a common survey planning setup</li>
+      <li>Providing population size can reduce the required sample size</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/confidence-interval-calculator/">Confidence Interval Calculator</a></li>
+      <li><a href="/math/confidence-level-calculator/">Confidence Level Calculator</a></li>
+      <li><a href="/math/standard-error-calculator/">Standard Error Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const levelEl = document.getElementById("ss_level");
+  const marginEl = document.getElementById("ss_margin");
+  const propEl = document.getElementById("ss_prop");
+  const popEl = document.getElementById("ss_pop");
+  const calcBtn = document.getElementById("ss_calc");
+  const fillBtn = document.getElementById("ss_fill_demo");
+  const clearBtn = document.getElementById("ss_clear");
+  const errorEl = document.getElementById("ss_error");
+  const resultEl = document.getElementById("ss_result");
+  const cardsEl = document.getElementById("ss_cards");
+  const tbodyEl = document.getElementById("ss_tbody");
+
+  if (!levelEl || !marginEl || !propEl || !popEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  const zMap = {
+    "0.90": 1.645,
+    "0.95": 1.96,
+    "0.99": 2.576
+  };
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toNum(el, label, required) {
+    const raw = String(el.value || "").trim();
+    if (!raw) {
+      if (required) throw new Error("Please enter " + label + ".");
+      return null;
+    }
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 6 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const level = String(levelEl.value || "0.95");
+      const z = zMap[level];
+      const E = toNum(marginEl, "margin of error", true);
+      const p = toNum(propEl, "expected proportion (p)", true);
+      const N = toNum(popEl, "population size", false);
+
+      if (!Number.isFinite(z)) {
+        showError("Unsupported confidence level.");
+        return;
+      }
+      if (E <= 0 || E >= 1) {
+        showError("Margin of error must be greater than 0 and less than 1.");
+        return;
+      }
+      if (p < 0 || p > 1) {
+        showError("Expected proportion (p) must be between 0 and 1.");
+        return;
+      }
+      if (N !== null && (!Number.isInteger(N) || N <= 0)) {
+        showError("Population size must be a positive integer when provided.");
+        return;
+      }
+
+      const n0 = (z * z * p * (1 - p)) / (E * E);
+      let finalN = n0;
+      let correctionApplied = false;
+
+      if (N !== null) {
+        finalN = n0 / (1 + ((n0 - 1) / N));
+        correctionApplied = true;
+      }
+
+      const roundedUp = Math.ceil(finalN);
+
+      let sizeLabel = "Moderate sample";
+      if (roundedUp < 100) sizeLabel = "Small sample";
+      else if (roundedUp >= 1000) sizeLabel = "Large sample";
+
+      resultEl.innerHTML =
+        "<strong>Sample size result</strong><br/>" +
+        "<span class='ss-code'>Required sample size ≈ " + fmt(finalN, 4) + "</span>" +
+        "<br/><span class='note'>Rounded up: " + roundedUp.toLocaleString() + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge((Number(level) * 100).toFixed(0) + "% confidence") +
+        badge(sizeLabel) +
+        badge(correctionApplied ? "Population correction used" : "No population correction") +
+        "</div>";
+
+      fillTable([
+        ["Confidence level", (Number(level) * 100).toFixed(0) + "%"],
+        ["Critical z*", fmt(z, 6)],
+        ["Margin of error", fmt(E, 6)],
+        ["Expected proportion p", fmt(p, 6)],
+        ["Initial sample size n₀", fmt(n0, 4)],
+        ["Population size", N === null ? "Not provided" : String(N)],
+        ["Corrected sample size", fmt(finalN, 4)],
+        ["Rounded up final sample size", String(roundedUp)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    levelEl.value = "0.95";
+    marginEl.value = "0.05";
+    propEl.value = "0.5";
+    popEl.value = "10000";
+    clearOutput();
+  }
+  function reset() {
+    levelEl.value = "0.95";
+    marginEl.value = "";
+    propEl.value = "";
+    popEl.value = "";
+    clearOutput();
+    marginEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [marginEl, propEl, popEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

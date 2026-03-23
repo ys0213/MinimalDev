@@ -1,0 +1,289 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Text to Binary",
+  description:
+    "Convert UTF-8 text to binary bytes with grouping options, result cards, and FAQ schema.",
+  href: "/developer-tools/text-to-binary/",
+  order: 361,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/text-to-binary/";
+
+const faqs = [
+  {
+    q: "How does this tool convert text to binary?",
+    a: "It encodes the input text as UTF-8 bytes and then shows each byte as an 8-bit binary value.",
+  },
+  {
+    q: "Does it support non-English text?",
+    a: "Yes. It uses UTF-8, so non-English characters are supported.",
+  },
+  {
+    q: "Why do some characters use multiple bytes?",
+    a: "UTF-8 uses one byte for many ASCII characters, but other characters can require multiple bytes.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Text to Binary — ${SITE_NAME}`}
+  description="Convert UTF-8 text to binary bytes with grouping options, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Text to Binary"
+  intro="Convert plain text to binary. Useful for encoding demos, UTF-8 byte inspection, and developer workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="text-to-binary">
+    <style is:inline>
+      #ttb_input,
+      #ttb_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .ttb-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ttb_help ttb_privacy">
+      <div class="field">
+        <label for="ttb_input">Text input</label>
+        <textarea
+          id="ttb_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="Enter text to convert to binary"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="ttb_group">Output grouping</label>
+        <select id="ttb_group">
+          <option value="space" selected>Space-separated bytes</option>
+          <option value="line">One byte per line</option>
+          <option value="none">No separators</option>
+        </select>
+      </div>
+
+      <p class="note" id="ttb_help" style="margin-top:6px;">
+        Text is encoded as UTF-8. Each output byte is shown as 8 binary digits.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ttb_convert">Convert</button>
+        <button class="btn secondary" type="button" id="ttb_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="ttb_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ttb_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ttb_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ttb_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ttb_output">Binary output</label>
+        <textarea
+          id="ttb_output"
+          rows="10"
+          readonly
+          spellcheck="false"
+          placeholder="Binary output will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ttb_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ttb_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts text to UTF-8 bytes, then formats each byte as an 8-bit binary string.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>A</strong> → <strong>01000001</strong></li>
+      <li><strong>Hi</strong> → two UTF-8 bytes, each shown in binary</li>
+      <li><strong>Non-English text</strong> → may use multiple bytes per character in UTF-8</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/binary-to-text/">Binary to Text</a></li>
+      <li><a href="/developer-tools/base32-encoder/">Base32 Encoder</a></li>
+      <li><a href="/developer-tools/data-uri-generator/">Data URI Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("ttb_input");
+  const groupEl = document.getElementById("ttb_group");
+  const outputEl = document.getElementById("ttb_output");
+  const convertBtn = document.getElementById("ttb_convert");
+  const copyBtn = document.getElementById("ttb_copy");
+  const clearBtn = document.getElementById("ttb_clear");
+  const errEl = document.getElementById("ttb_error");
+  const resultEl = document.getElementById("ttb_result");
+  const cardsEl = document.getElementById("ttb_cards");
+  const tbodyEl = document.getElementById("ttb_tbody");
+
+  if (!inputEl || !groupEl || !outputEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function toBinaryByte(n) {
+    return n.toString(2).padStart(8, "0");
+  }
+
+  function convert() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.length) {
+      showError("Please enter text to convert.");
+      return;
+    }
+
+    const bytes = Array.from(new TextEncoder().encode(raw));
+    const parts = bytes.map(toBinaryByte);
+
+    let output = "";
+    if (groupEl.value === "line") output = parts.join("\n");
+    else if (groupEl.value === "none") output = parts.join("");
+    else output = parts.join(" ");
+
+    lastOutput = output;
+    outputEl.value = output;
+
+    resultEl.innerHTML = "<strong>Text converted to binary.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("UTF-8 encoded") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      badge(groupEl.value === "line" ? "Line grouped" : groupEl.value === "none" ? "No separators" : "Space grouped") +
+      "</div>";
+
+    fillTable([
+      ["Input characters", String(raw.length)],
+      ["UTF-8 byte length", String(bytes.length)],
+      ["Output length", String(output.length)],
+      ["Bits shown", String(bytes.length * 8)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No binary output to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied binary output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    groupEl.value = "space";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") convert();
+  });
+});
+</script>

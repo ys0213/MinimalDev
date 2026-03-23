@@ -1,0 +1,141 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Product Name Generator",
+  description:
+    "Generate creative product names using adjectives and nouns. Includes validation, result cards, and FAQ schema.",
+  href: "/generators/random-product-name/",
+  order: 210,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-product-name/";
+
+const faqs = [
+  { q: "What does this tool generate?", a: "It creates random product names by combining descriptive words and nouns." },
+  { q: "Are these names unique?", a: "No guarantee. They are randomly generated combinations." },
+  { q: "Can I use these commercially?", a: "You must verify trademarks before using them." },
+  { q: "How many names can I generate?", a: "Up to 100 at once." },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(f => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Product Name Generator — ${SITE_NAME}`}
+  description="Generate creative product names instantly."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Product Name Generator"
+  intro="Generate product names for startups, apps, or creative projects."
+  faq={faqs}
+  categoryName="Generators"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<style is:inline>
+.grid{display:grid;gap:12px}
+@media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+textarea{width:100%;word-break:break-word}
+.cards{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+
+<div class="form">
+<div class="grid">
+<div class="field">
+<label>Count</label>
+<input id="count" type="number" min="1" max="100" value="5"/>
+</div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button id="gen" class="btn">Generate</button>
+<button id="copy" class="btn secondary">Copy</button>
+<button id="clear" class="btn secondary">Clear</button>
+</div>
+
+<div id="error" class="result" style="display:none"></div>
+<div id="result" class="result">Result will appear here.</div>
+<div id="cards" class="result" style="display:none"></div>
+
+<textarea id="out" rows="12" readonly></textarea>
+</div>
+</div>
+
+<div slot="how">
+<ul>
+<li>Select number of names</li>
+<li>Generate combinations instantly</li>
+<li>Copy for use</li>
+</ul>
+</div>
+
+<div slot="related">
+<ul>
+<li><a href="/generators/random-company-name/">Company Name Generator</a></li>
+<li><a href="/generators/random-domain-name/">Domain Name Generator</a></li>
+</ul>
+</div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+const adj=["Smart","Quick","Bright","Eco","Next","Hyper","Ultra","Nova"];
+const noun=["Tech","Labs","Solutions","Works","Hub","Core","Zone","Systems"];
+
+const countEl=document.getElementById("count");
+const out=document.getElementById("out");
+const result=document.getElementById("result");
+const error=document.getElementById("error");
+const cards=document.getElementById("cards");
+
+function showError(msg){
+error.style.display="block";error.textContent=msg;
+}
+function clearError(){error.style.display="none";}
+
+function gen(){
+clearError();
+const n=Number(countEl.value);
+if(!n||n<1||n>100){showError("Enter 1~100");return;}
+
+const list=[];
+for(let i=0;i<n;i++){
+list.push(adj[Math.random()*adj.length|0]+" "+noun[Math.random()*noun.length|0]);
+}
+
+out.value=list.join("\n");
+result.innerHTML="<strong>Generated</strong>";
+
+cards.style.display="block";
+cards.innerHTML=`<div class="cards">
+<span>Count: ${n}</span>
+<span>Type: Product</span>
+</div>`;
+}
+
+document.getElementById("gen").onclick=gen;
+
+document.getElementById("copy").onclick=async()=>{
+if(!out.value)return;
+await navigator.clipboard.writeText(out.value);
+result.innerHTML="<strong>Copied</strong>";
+};
+
+document.getElementById("clear").onclick=()=>{
+out.value="";
+cards.style.display="none";
+result.textContent="Result will appear here.";
+};
+});
+</script>

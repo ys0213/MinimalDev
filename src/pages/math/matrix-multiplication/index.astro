@@ -1,0 +1,381 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Matrix Multiplication",
+  description:
+    "Multiply two matrices with validation, accessible matrix grids, result cards, and FAQ support.",
+  href: "/math/matrix-multiplication/",
+  order: 341,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/matrix-multiplication/";
+
+const faqs = [
+  {
+    q: "When can two matrices be multiplied?",
+    a: "Matrix A can be multiplied by Matrix B only when the number of columns in A equals the number of rows in B.",
+  },
+  {
+    q: "What size will the result matrix be?",
+    a: "If A is m×n and B is n×p, the result will be m×p.",
+  },
+  {
+    q: "Can I use decimals and negative values?",
+    a: "Yes. This calculator accepts integers, decimals, and negative values.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Matrix Multiplication — ${SITE_NAME}`}
+  description="Multiply two matrices with validation, result cards, accessible matrix grids, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Matrix Multiplication"
+  intro="Multiply two matrices by defining compatible dimensions and entering values for Matrix A and Matrix B."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="matrix-multiplication">
+    <style is:inline>
+      .mm-wrap, .mm-wrap * { box-sizing: border-box; }
+      .mm-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .mm-mats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .mm-panel { min-width: 0; overflow: hidden; }
+      .mm-grid-wrap { width: 100%; overflow-x: auto; }
+      .mm-grid {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+      }
+      .mm-grid input {
+        width: 100%;
+        min-width: 0;
+      }
+      .mm-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      @media (min-width: 900px) {
+        .mm-mats { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+
+    <div class="form mm-wrap" role="form" aria-describedby="mm_help mm_privacy">
+      <div class="mm-controls">
+        <div class="field">
+          <label for="mm_rows_a">A rows</label>
+          <select id="mm_rows_a">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mm_cols_a">A cols / B rows</label>
+          <select id="mm_cols_a">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="mm_cols_b">B cols</label>
+          <select id="mm_cols_b">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="mm_help" style="margin-top:8px;">
+        If Matrix A is <strong>m×n</strong> and Matrix B is <strong>n×p</strong>, the result is <strong>m×p</strong>.
+      </p>
+
+      <div class="mm-mats">
+        <section class="mm-panel">
+          <h3 style="margin:0 0 8px;">Matrix A</h3>
+          <div class="mm-grid-wrap">
+            <div id="mm_grid_a" class="mm-grid" aria-label="Matrix A input grid"></div>
+          </div>
+        </section>
+
+        <section class="mm-panel">
+          <h3 style="margin:0 0 8px;">Matrix B</h3>
+          <div class="mm-grid-wrap">
+            <div id="mm_grid_b" class="mm-grid" aria-label="Matrix B input grid"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="mm-actions">
+        <button class="btn" type="button" id="mm_calc">Multiply</button>
+        <button class="btn secondary" type="button" id="mm_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="mm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mm_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mm_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mm_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mm_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mm_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No matrix values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Each cell in the result matrix is computed from the dot product of a row in Matrix A and a column in Matrix B.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2×3 × 3×2</strong> → result is <strong>2×2</strong></li>
+      <li>Use this for linear algebra practice, coordinate transforms, and matrix workflows</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/matrix-calculator/">Matrix Calculator</a></li>
+      <li><a href="/math/matrix-determinant/">Matrix Determinant</a></li>
+      <li><a href="/math/dot-product-calculator/">Dot Product Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rowsAEl = document.getElementById("mm_rows_a");
+  const colsAEl = document.getElementById("mm_cols_a");
+  const colsBEl = document.getElementById("mm_cols_b");
+  const gridAEl = document.getElementById("mm_grid_a");
+  const gridBEl = document.getElementById("mm_grid_b");
+  const calcBtn = document.getElementById("mm_calc");
+  const demoBtn = document.getElementById("mm_fill_demo");
+  const clearBtn = document.getElementById("mm_clear");
+  const errorEl = document.getElementById("mm_error");
+  const resultEl = document.getElementById("mm_result");
+  const cardsEl = document.getElementById("mm_cards");
+  const tbodyEl = document.getElementById("mm_tbody");
+
+  if (!rowsAEl || !colsAEl || !colsBEl || !gridAEl || !gridBEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function dims() {
+    return {
+      rowsA: parseInt(String(rowsAEl.value), 10),
+      colsA: parseInt(String(colsAEl.value), 10),
+      rowsB: parseInt(String(colsAEl.value), 10),
+      colsB: parseInt(String(colsBEl.value), 10)
+    };
+  }
+
+  function createGrid(container, prefix, rows, cols) {
+    container.innerHTML = "";
+    container.style.gridTemplateColumns = "repeat(" + cols + ", minmax(56px, 1fr))";
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = "any";
+        input.inputMode = "decimal";
+        input.placeholder = "0";
+        input.id = prefix + "_" + r + "_" + c;
+        input.setAttribute("aria-label", prefix.toUpperCase() + " row " + (r + 1) + " column " + (c + 1));
+        container.appendChild(input);
+      }
+    }
+  }
+
+  function syncUI() {
+    const d = dims();
+    createGrid(gridAEl, "mm_a", d.rowsA, d.colsA);
+    createGrid(gridBEl, "mm_b", d.rowsB, d.colsB);
+  }
+
+  function readMatrix(prefix, rows, cols) {
+    const out = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        const el = document.getElementById(prefix + "_" + r + "_" + c);
+        const raw = el ? String(el.value || "").trim() : "";
+        if (!raw) throw new Error("Please fill every matrix cell.");
+        const n = Number(raw);
+        if (!Number.isFinite(n)) throw new Error("Enter only valid numbers in matrix cells.");
+        row.push(n);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function multiply(A, B) {
+    const rows = A.length;
+    const cols = B[0].length;
+    const inner = B.length;
+    const out = [];
+
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        let sum = 0;
+        for (let k = 0; k < inner; k++) {
+          sum += A[r][k] * B[k][c];
+        }
+        row.push(sum);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function formatNum(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function matrixToHtmlTable(m) {
+    let html = "<div style='overflow:auto;'><table style='border-collapse:collapse; width:auto; min-width:220px;'>";
+    for (let r = 0; r < m.length; r++) {
+      html += "<tr>";
+      for (let c = 0; c < m[r].length; c++) {
+        html += "<td style='padding:8px 10px; border:1px solid rgba(255,255,255,0.12); text-align:right; white-space:nowrap;'>" +
+          formatNum(m[r][c]) +
+          "</td>";
+      }
+      html += "</tr>";
+    }
+    html += "</table></div>";
+    return html;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+    try {
+      const d = dims();
+      const A = readMatrix("mm_a", d.rowsA, d.colsA);
+      const B = readMatrix("mm_b", d.rowsB, d.colsB);
+      const R = multiply(A, B);
+
+      resultEl.innerHTML = "<strong>Product matrix</strong><br/>" + matrixToHtmlTable(R);
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("A: " + d.rowsA + " × " + d.colsA) +
+        badge("B: " + d.rowsB + " × " + d.colsB) +
+        badge("Result: " + d.rowsA + " × " + d.colsB) +
+        "</div>";
+
+      fillTable([
+        ["Matrix A size", d.rowsA + " × " + d.colsA],
+        ["Matrix B size", d.rowsB + " × " + d.colsB],
+        ["Result size", d.rowsA + " × " + d.colsB],
+        ["Inner dimension", String(d.colsA)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not multiply the matrices.");
+    }
+  }
+
+  function fillDemo() {
+    const d = dims();
+    for (let r = 0; r < d.rowsA; r++) {
+      for (let c = 0; c < d.colsA; c++) {
+        const a = document.getElementById("mm_a_" + r + "_" + c);
+        if (a) a.value = String(r + c + 1);
+      }
+    }
+    for (let r = 0; r < d.rowsB; r++) {
+      for (let c = 0; c < d.colsB; c++) {
+        const b = document.getElementById("mm_b_" + r + "_" + c);
+        if (b) b.value = String((r + 1) * (c + 2));
+      }
+    }
+    clearOutput();
+  }
+
+  function reset() {
+    syncUI();
+    clearOutput();
+  }
+
+  rowsAEl.addEventListener("change", reset);
+  colsAEl.addEventListener("change", reset);
+  colsBEl.addEventListener("change", reset);
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  syncUI();
+});
+</script>

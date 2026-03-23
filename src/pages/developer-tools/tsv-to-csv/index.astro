@@ -1,0 +1,298 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "TSV to CSV",
+  description:
+    "Convert TSV to CSV with validation, quoting, result cards, and FAQ schema.",
+  href: "/developer-tools/tsv-to-csv/",
+  order: 400,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/tsv-to-csv/";
+
+const faqs = [
+  {
+    q: "What does this TSV to CSV tool do?",
+    a: "It converts tab-separated values into standard comma-separated CSV output.",
+  },
+  {
+    q: "Does it quote values when needed?",
+    a: "Yes. Fields containing commas, quotes, or line breaks are quoted using standard CSV escaping rules.",
+  },
+  {
+    q: "Does it support quoted TSV input?",
+    a: "This tool treats tabs as field separators and preserves text exactly. It is intended for normal TSV-style input.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`TSV to CSV — ${SITE_NAME}`}
+  description="Convert TSV to CSV with validation, quoting, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="TSV to CSV"
+  intro="Convert tab-separated values into standard CSV with proper quoting."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="tsv-to-csv">
+    <style is:inline>
+      #t2c_input,
+      #t2c_output,
+      #t2c_lineEnding {
+        width: 100%;
+        min-width: 0;
+      }
+      .t2c-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="t2c_help t2c_privacy">
+      <div class="field">
+        <label for="t2c_input">TSV input</label>
+        <textarea
+          id="t2c_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={'e.g. name\tage\tcity\nAlex\t30\tNew York\nSam\t28\tLos Angeles'}
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="t2c_lineEnding">CSV line ending</label>
+        <select id="t2c_lineEnding">
+          <option value="lf" selected>LF (\n)</option>
+          <option value="crlf">CRLF (\r\n)</option>
+        </select>
+      </div>
+
+      <p class="note" id="t2c_help" style="margin-top:6px;">
+        Tabs are treated as separators. Output uses standard CSV quoting when required.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="t2c_convert">Convert to CSV</button>
+        <button class="btn secondary" type="button" id="t2c_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="t2c_clear">Clear</button>
+      </div>
+
+      <div class="result" id="t2c_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result t2c-mono" id="t2c_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="t2c_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="t2c_output">CSV output</label>
+        <textarea id="t2c_output" rows="12" readonly spellcheck="false" placeholder="Converted CSV will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="t2c_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="t2c_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No TSV or CSV data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The converter splits input rows on tab characters and writes the result as CSV, adding quotes where needed.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>name[TAB]age</strong> → <strong>name,age</strong></li>
+      <li><strong>New York, NY</strong> in a field → quoted in CSV output</li>
+      <li><strong>Tabs preserved as columns</strong> → row structure carried into CSV</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/csv-to-tsv/">CSV to TSV</a></li>
+      <li><a href="/developer-tools/csv-formatter/">CSV Formatter</a></li>
+      <li><a href="/developer-tools/csv-to-json/">CSV to JSON</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("t2c_input");
+  const lineEndingEl = document.getElementById("t2c_lineEnding");
+  const convertBtn = document.getElementById("t2c_convert");
+  const copyBtn = document.getElementById("t2c_copy");
+  const clearBtn = document.getElementById("t2c_clear");
+  const errEl = document.getElementById("t2c_error");
+  const resultEl = document.getElementById("t2c_result");
+  const cardsEl = document.getElementById("t2c_cards");
+  const outputEl = document.getElementById("t2c_output");
+  const tbodyEl = document.getElementById("t2c_tbody");
+
+  if (!inputEl || !lineEndingEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseTsv(text) {
+    return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").map(function (line) {
+      return line.split("\t");
+    });
+  }
+
+  function serializeCsv(rows, lineEnding) {
+    const eol = lineEnding === "crlf" ? "\r\n" : "\n";
+    return rows.map(function (row) {
+      return row.map(function (field) {
+        const s = String(field == null ? "" : field);
+        const needsQuote =
+          s.includes(",") ||
+          s.includes('"') ||
+          s.includes("\n") ||
+          s.includes("\r") ||
+          /^\s|\s$/.test(s);
+        if (!needsQuote) return s;
+        return '"' + s.replace(/"/g, '""') + '"';
+      }).join(",");
+    }).join(eol);
+  }
+
+  function convertNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.trim()) {
+      showError("Please paste TSV input.");
+      return;
+    }
+
+    const rows = parseTsv(raw);
+    const widths = rows.map(function (r) { return r.length; });
+    const minCols = Math.min.apply(null, widths);
+    const maxCols = Math.max.apply(null, widths);
+    const lineEnding = String(lineEndingEl.value || "lf");
+    const csv = serializeCsv(rows, lineEnding);
+
+    lastOutput = csv;
+    outputEl.value = csv;
+
+    resultEl.innerHTML = "<strong>TSV converted to CSV.</strong><br/><span class='note'>CSV output is ready.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Rows: " + rows.length) +
+      badge("Cols: " + minCols + (minCols === maxCols ? "" : "–" + maxCols)) +
+      badge(lineEnding === "crlf" ? "CRLF output" : "LF output") +
+      "</div>";
+
+    fillTable([
+      ["Row count", String(rows.length)],
+      ["Minimum columns in a row", String(minCols)],
+      ["Maximum columns in a row", String(maxCols)],
+      ["Input length", String(raw.length)],
+      ["Output length", String(csv.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No CSV output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied CSV output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    lineEndingEl.value = "lf";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convertNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") convertNow();
+  });
+});
+</script>

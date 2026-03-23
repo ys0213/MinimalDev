@@ -1,0 +1,319 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "String Escape",
+  description:
+    "Escape text for JavaScript-style string literals with validation, options, result cards, and FAQ schema.",
+  href: "/developer-tools/string-escape/",
+  order: 394,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/string-escape/";
+
+const faqs = [
+  {
+    q: "What does string escape do?",
+    a: "It converts special characters such as newlines, tabs, backslashes, and quotes into escaped forms suitable for string literals.",
+  },
+  {
+    q: "Is this only for JavaScript?",
+    a: "This tool follows common JavaScript-style escape sequences like \\n, \\t, \\\\, \\\", and \\uXXXX, which are also familiar in many programming contexts.",
+  },
+  {
+    q: "Can I choose the quote style?",
+    a: "Yes. You can escape for double-quoted or single-quoted string contexts, and optionally wrap the output with quotes.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Escaping runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`String Escape — ${SITE_NAME}`}
+  description="Escape text for JavaScript-style string literals with validation, options, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="String Escape"
+  intro="Convert raw text into escaped string-literal form for code snippets, testing, debugging, and serialization."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="string-escape">
+    <style is:inline>
+      #se_input,
+      #se_output,
+      #se_quote,
+      #se_wrap {
+        width: 100%;
+        min-width: 0;
+      }
+      .se-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="se_help se_privacy">
+      <div class="field">
+        <label for="se_input">Text input</label>
+        <textarea id="se_input" rows="10" spellcheck="false" placeholder={`e.g. Line 1\nLine 2\tTabbed "quoted" text \\ slash`}></textarea>
+      </div>
+
+      <div class="field">
+        <label for="se_quote">Target quote style</label>
+        <select id="se_quote">
+          <option value="double" selected>Double-quoted string context</option>
+          <option value="single">Single-quoted string context</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="se_wrap">Output wrapping</label>
+        <select id="se_wrap">
+          <option value="yes" selected>Wrap output with quotes</option>
+          <option value="no">Do not wrap output</option>
+        </select>
+      </div>
+
+      <p class="note" id="se_help" style="margin-top:6px;">
+        Newlines, tabs, carriage returns, backslashes, quotes, and control characters will be escaped. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="se_escape">Escape</button>
+        <button class="btn secondary" type="button" id="se_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="se_clear">Clear</button>
+      </div>
+
+      <div class="result" id="se_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result se-mono" id="se_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="se_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="se_output">Escaped output</label>
+        <textarea id="se_output" rows="10" spellcheck="false" readonly placeholder="Escaped string will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="se_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="se_privacy" style="margin-top:10px;">
+        Privacy: escaping runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts raw text into string-literal-safe escaped text. It escapes backslashes, quotes for the selected quote style,
+      line breaks, tabs, and other control characters.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Line break</strong> → <strong>\n</strong></li>
+      <li><strong>Tab</strong> → <strong>\t</strong></li>
+      <li><strong>"Hello"</strong> → <strong>\"Hello\"</strong> in double-quote mode</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/string-unescape/">String Unescape</a></li>
+      <li><a href="/developer-tools/unicode-escape/">Unicode Escape</a></li>
+      <li><a href="/developer-tools/html-entity-encoder/">HTML Entity Encoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("se_input");
+  const quoteEl = document.getElementById("se_quote");
+  const wrapEl = document.getElementById("se_wrap");
+  const escapeBtn = document.getElementById("se_escape");
+  const copyBtn = document.getElementById("se_copy");
+  const clearBtn = document.getElementById("se_clear");
+  const errEl = document.getElementById("se_error");
+  const resultEl = document.getElementById("se_result");
+  const cardsEl = document.getElementById("se_cards");
+  const outputEl = document.getElementById("se_output");
+  const tbodyEl = document.getElementById("se_tbody");
+
+  if (!inputEl || !quoteEl || !wrapEl || !escapeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function pad4(hex) {
+    return hex.toUpperCase().padStart(4, "0");
+  }
+
+  function escapeText(raw, quoteMode, wrapMode) {
+    let out = "";
+    let escapedUnits = 0;
+
+    for (let i = 0; i < raw.length; i++) {
+      const ch = raw[i];
+      const code = raw.charCodeAt(i);
+      let replacement = null;
+
+      if (ch === "\\") replacement = "\\\\";
+      else if (ch === "\n") replacement = "\\n";
+      else if (ch === "\r") replacement = "\\r";
+      else if (ch === "\t") replacement = "\\t";
+      else if (ch === "\b") replacement = "\\b";
+      else if (ch === "\f") replacement = "\\f";
+      else if (quoteMode === "double" && ch === '"') replacement = '\\"';
+      else if (quoteMode === "single" && ch === "'") replacement = "\\'";
+      else if (code < 32 || code === 127) replacement = "\\u" + pad4(code.toString(16));
+      else replacement = ch;
+
+      if (replacement !== ch) escapedUnits++;
+      out += replacement;
+    }
+
+    if (wrapMode === "yes") {
+      out = (quoteMode === "double" ? '"' : "'") + out + (quoteMode === "double" ? '"' : "'");
+    }
+
+    return { text: out, escapedUnits };
+  }
+
+  function escapeNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    const quoteMode = String(quoteEl.value || "double");
+    const wrapMode = String(wrapEl.value || "yes");
+
+    if (!trimmed) {
+      showError("Please enter text to escape.");
+      return;
+    }
+
+    const escaped = escapeText(raw, quoteMode, wrapMode);
+
+    outputEl.value = escaped.text;
+    lastOutput = escaped.text;
+
+    resultEl.innerHTML =
+      "<strong>Escaped successfully.</strong><br/><span class='note'>Text has been converted into string-literal-safe output.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Quote mode: " + quoteMode) +
+      badge(wrapMode === "yes" ? "Wrapped output" : "Unwrapped output") +
+      badge("Escaped units: " + escaped.escapedUnits) +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Output length", String(escaped.text.length)],
+      ["Length delta", String(escaped.text.length - raw.length)],
+      ["Escaped units", String(escaped.escapedUnits)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No escaped output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied escaped output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    quoteEl.value = "double";
+    wrapEl.value = "yes";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  escapeBtn.addEventListener("click", escapeNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") escapeNow();
+  });
+});
+</script>

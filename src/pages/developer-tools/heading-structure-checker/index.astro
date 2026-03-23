@@ -1,0 +1,296 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Heading Structure Checker",
+  description:
+    "Analyze HTML heading structure (H1-H6), count heading usage, and detect skipped levels with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/heading-structure-checker/",
+  order: 186,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/heading-structure-checker/";
+
+const faqs = [
+  {
+    q: "What does this heading structure checker analyze?",
+    a: "It analyzes pasted HTML for H1 through H6 headings, counts each level, lists them in order, and flags common structural issues such as missing H1 or skipped levels.",
+  },
+  {
+    q: "Do I need to paste a full HTML page?",
+    a: "No. You can paste a full page, a content section, or only the HTML snippet you want to inspect.",
+  },
+  {
+    q: "What is a skipped heading level?",
+    a: "A skipped level happens when the structure jumps, such as from H1 directly to H3, without an H2 in between.",
+  },
+  {
+    q: "Does this tool judge content quality?",
+    a: "No. It checks heading structure only, not whether the heading wording is good.",
+  },
+  {
+    q: "Is the pasted HTML stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Heading Structure Checker — ${SITE_NAME}`}
+  description="Analyze H1-H6 structure, detect skipped levels, and review heading order."
+  canonicalPath={CANONICAL_PATH}
+  h1="Heading Structure Checker"
+  intro="Paste HTML content or a full page to inspect heading structure, count H1-H6 usage, and detect skipped heading levels."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="heading-structure-checker">
+    <style is:inline>
+      .hsc-wrap, .hsc-wrap * { box-sizing: border-box; }
+      #hsc_input,
+      #hsc_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .hsc-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form hsc-wrap" role="form" aria-describedby="hsc_help hsc_privacy">
+      <div class="field">
+        <label for="hsc_input">HTML input</label>
+        <textarea id="hsc_input" rows="14" spellcheck="false" placeholder="<h1>Main Title</h1>&#10;<h2>Section</h2>&#10;<h3>Subsection</h3>"></textarea>
+      </div>
+
+      <p class="note" id="hsc_help" style="margin-top:6px;">
+        Paste a full page or only the relevant content section. The checker inspects heading tags from H1 to H6.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hsc_check">Check Structure</button>
+        <button class="btn secondary" type="button" id="hsc_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="hsc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hsc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hsc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hsc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hsc_output">Heading order</label>
+        <textarea id="hsc_output" rows="14" readonly spellcheck="false" placeholder="Detected heading order will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hsc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hsc_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No HTML is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste HTML, run the checker, and review whether the heading order is logical and whether common structure issues appear.
+    </p>
+    <ul>
+      <li><strong>Counts:</strong> shows how many H1-H6 tags exist</li>
+      <li><strong>Order:</strong> lists headings as they appear</li>
+      <li><strong>Issues:</strong> flags missing H1 or skipped levels</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Good structure:</strong> H1 → H2 → H3</li>
+      <li><strong>Skipped level:</strong> H1 → H3</li>
+      <li><strong>Possible issue:</strong> multiple H1 tags depending on page design choice</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/title-length-checker/">Title Length Checker</a></li>
+      <li><a href="/developer-tools/description-length-checker/">Description Length Checker</a></li>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("hsc_input");
+  const checkBtn = document.getElementById("hsc_check");
+  const fillBtn = document.getElementById("hsc_fill_demo");
+  const clearBtn = document.getElementById("hsc_clear");
+  const errorEl = document.getElementById("hsc_error");
+  const resultEl = document.getElementById("hsc_result");
+  const cardsEl = document.getElementById("hsc_cards");
+  const outputEl = document.getElementById("hsc_output");
+  const tbodyEl = document.getElementById("hsc_tbody");
+
+  if (!inputEl || !checkBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function checkStructure() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste HTML to analyze.");
+      return;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(raw, "text/html");
+    const headings = Array.from(doc.querySelectorAll("h1,h2,h3,h4,h5,h6"));
+
+    if (headings.length === 0) {
+      showError("No H1-H6 headings were found in the pasted HTML.");
+      return;
+    }
+
+    const counts = { h1:0, h2:0, h3:0, h4:0, h5:0, h6:0 };
+    const lines = [];
+    const issues = [];
+
+    let prevLevel = null;
+
+    headings.forEach(function (node, idx) {
+      const tag = node.tagName.toLowerCase();
+      const level = parseInt(tag.replace("h", ""), 10);
+      const text = (node.textContent || "").trim().replace(/\s+/g, " ");
+      counts[tag] += 1;
+      lines.push((idx + 1) + ". " + tag.toUpperCase() + " — " + text);
+
+      if (prevLevel !== null && level > prevLevel + 1) {
+        issues.push("Skipped heading level: " + "H" + prevLevel + " → H" + level);
+      }
+      prevLevel = level;
+    });
+
+    if (counts.h1 === 0) issues.push("No H1 heading found.");
+    if (counts.h1 > 1) issues.push("Multiple H1 headings found (" + counts.h1 + ").");
+
+    outputEl.value = lines.join("\n");
+
+    const issueLabel = issues.length ? "Issues found: " + issues.length : "No obvious structure issues";
+    resultEl.innerHTML =
+      "<strong>Heading structure analyzed.</strong><br/>" +
+      '<span class="note">' + issueLabel + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("H1: " + counts.h1) +
+      badge("H2: " + counts.h2) +
+      badge("H3: " + counts.h3) +
+      badge("Headings total: " + headings.length) +
+      badge(issues.length ? "Needs review" : "Looks consistent") +
+      "</div>";
+
+    fillTable([
+      ["Total headings", String(headings.length)],
+      ["H1 count", String(counts.h1)],
+      ["H2 count", String(counts.h2)],
+      ["H3 count", String(counts.h3)],
+      ["H4 count", String(counts.h4)],
+      ["H5 count", String(counts.h5)],
+      ["H6 count", String(counts.h6)],
+      ["Issues", issues.length ? issues.join(" | ") : "None detected"],
+    ]);
+  }
+
+  function fillDemo() {
+    inputEl.value =
+`<article>
+  <h1>Meta Tag Generator</h1>
+  <p>Intro paragraph</p>
+  <h2>Features</h2>
+  <h3>SEO tags</h3>
+  <h3>Social tags</h3>
+  <h2>How to use it</h2>
+  <h4>Step details</h4>
+</article>`;
+    resetOutput();
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  checkBtn.addEventListener("click", checkStructure);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") checkStructure();
+  });
+});
+</script>

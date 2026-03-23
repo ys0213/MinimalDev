@@ -1,0 +1,270 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Grams to Ounces",
+  description:
+    "Convert grams to ounces instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/grams-to-ounces/",
+  order: 302,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/grams-to-ounces/";
+
+const faqs = [
+  {
+    q: "How do you convert grams to ounces?",
+    a: "Multiply grams by 0.0352739619 to get ounces.",
+  },
+  {
+    q: "Does this use avoirdupois ounces?",
+    a: "Yes. This tool uses the standard avoirdupois ounce commonly used for everyday weight conversion.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between grams to ounces and ounces to grams.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Grams to Ounces Converter — ${SITE_NAME}`}
+  description="Convert grams to ounces instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Grams to Ounces Converter"
+  intro="Convert weight from grams to ounces instantly. Useful for cooking, packages, nutrition, and product measurements."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="grams-to-ounces">
+    <div class="form" role="form" aria-describedby="g2o_hint g2o_privacy">
+      <div class="field">
+        <label for="g2o_input">Grams</label>
+        <input id="g2o_input" type="number" inputmode="decimal" placeholder="e.g., 500" />
+        <p class="note" id="g2o_hint" style="margin-top:6px;">
+          Uses the standard avoirdupois ounce. Enter a non-negative value.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="g2o_round">Rounding</label>
+        <select id="g2o_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="g2o_convert">Convert</button>
+        <button class="btn secondary" type="button" id="g2o_swap">Reverse (oz → g)</button>
+        <button class="btn secondary" type="button" id="g2o_clear">Clear</button>
+      </div>
+
+      <div class="result" id="g2o_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="g2o_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="g2o_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="g2o_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="g2o_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 gram = 0.0352739619 ounces</strong>.<br />
+      Formula: <strong>oz = g × 0.0352739619</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>100 g</strong> ≈ <strong>3.5274 oz</strong></li>
+      <li><strong>500 g</strong> ≈ <strong>17.6370 oz</strong></li>
+      <li><strong>1000 g</strong> ≈ <strong>35.2740 oz</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/ounces-to-grams/">Ounces to Grams</a></li>
+      <li><a href="/converter/kg-to-pounds/">kg to Pounds</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("g2o_input");
+  const roundEl = document.getElementById("g2o_round");
+  const convertBtn = document.getElementById("g2o_convert");
+  const swapBtn = document.getElementById("g2o_swap");
+  const clearBtn = document.getElementById("g2o_clear");
+  const errEl = document.getElementById("g2o_error");
+  const outEl = document.getElementById("g2o_result");
+  const cardsEl = document.getElementById("g2o_cards");
+  const tbodyEl = document.getElementById("g2o_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const G_TO_OZ = 0.0352739619;
+  const OZ_TO_G = 1 / G_TO_OZ;
+  let mode = "g-to-oz";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="g2o_input"]');
+    if (!label) return;
+
+    if (mode === "g-to-oz") {
+      label.textContent = "Grams";
+      inEl.placeholder = "e.g., 500";
+      swapBtn.textContent = "Reverse (oz → g)";
+    } else {
+      label.textContent = "Ounces";
+      inEl.placeholder = "e.g., 16";
+      swapBtn.textContent = "Reverse (g → oz)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "g-to-oz"
+      ? [
+          ["Conversion factor", "1 g = 0.0352739619 oz"],
+          ["Reverse factor", "1 oz ≈ " + fmtSmart(OZ_TO_G) + " g"],
+          ["Input", fmt(input) + " g"],
+          ["Output", fmt(output) + " oz"],
+        ]
+      : [
+          ["Conversion factor", "1 oz ≈ " + fmtSmart(OZ_TO_G) + " g"],
+          ["Reverse factor", "1 g = 0.0352739619 oz"],
+          ["Input", fmt(input) + " oz"],
+          ["Output", fmt(output) + " g"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const output = mode === "g-to-oz" ? raw * G_TO_OZ : raw * OZ_TO_G;
+
+    if (mode === "g-to-oz") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} oz<br/><span class="note">${fmt(raw)} g = ${fmt(output)} oz</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} g<br/><span class="note">${fmt(raw)} oz = ${fmt(output)} g</span>`;
+    }
+
+    const grams = mode === "g-to-oz" ? raw : output;
+    let scale = "Typical";
+    if (grams < 100) scale = "Light weight";
+    else if (grams >= 1000) scale = "Kilogram-scale";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "g-to-oz" ? "g → oz" : "oz → g")}
+      ${badge("Base ≈ " + fmtSmart(grams) + " g")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(raw, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "g-to-oz" ? "oz-to-g" : "g-to-oz";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

@@ -1,0 +1,247 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Title Length Checker",
+  description:
+    "Check title tag length, preview common SEO guidance ranges, and review word count with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/title-length-checker/",
+  order: 184,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/title-length-checker/";
+
+const faqs = [
+  {
+    q: "What does this title length checker measure?",
+    a: "It measures title character count, word count, and reports whether the title is generally short, typical, or long for common SEO usage.",
+  },
+  {
+    q: "What is a common title length target?",
+    a: "Many pages aim roughly around 30 to 60 characters, though exact display can vary by device, language, and search result layout.",
+  },
+  {
+    q: "Does this tool measure pixels?",
+    a: "No. It checks characters and words, not rendered pixel width.",
+  },
+  {
+    q: "Can I use this for page titles and article headlines?",
+    a: "Yes. It is useful for title tags, article headlines, and similar short SEO-facing titles.",
+  },
+  {
+    q: "Is my title text stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Title Length Checker — ${SITE_NAME}`}
+  description="Check title tag character count and review common SEO title length guidance."
+  canonicalPath={CANONICAL_PATH}
+  h1="Title Length Checker"
+  intro="Check your title length, word count, and common SEO-friendly guidance ranges. Useful for page titles, article headlines, and search result snippets."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <div slot="tool" data-tool="title-length-checker">
+    <style is:inline>
+      .tlc-wrap, .tlc-wrap * { box-sizing: border-box; }
+      #tlc_title,
+      #tlc_preview {
+        width:100%;
+        min-width:0;
+      }
+      .tlc-preview {
+        white-space:pre-wrap;
+        word-break:break-word;
+      }
+    </style>
+
+    <div class="form tlc-wrap" role="form" aria-describedby="tlc_help tlc_privacy">
+      <div class="field">
+        <label for="tlc_title">Title text</label>
+        <textarea id="tlc_title" rows="4" placeholder="e.g. Meta Tag Generator for SEO and Social Sharing"></textarea>
+      </div>
+
+      <p class="note" id="tlc_help" style="margin-top:6px;">
+        Common guidance often places titles roughly around 30–60 characters, but actual search display can vary.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tlc_check">Check</button>
+        <button class="btn secondary" type="button" id="tlc_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="tlc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tlc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result tlc-preview" id="tlc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tlc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="tlc_preview">Preview</label>
+        <textarea id="tlc_preview" rows="5" readonly spellcheck="false" placeholder="Title preview will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="tlc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tlc_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No title text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste or type your title, then review the character count, word count, and a simple guidance status for SEO-focused usage.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Short title:</strong> may miss useful context</li>
+      <li><strong>Typical title:</strong> often balances clarity and brevity</li>
+      <li><strong>Long title:</strong> may be truncated in some search displays</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/description-length-checker/">Description Length Checker</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const titleEl = document.getElementById("tlc_title");
+  const checkBtn = document.getElementById("tlc_check");
+  const fillBtn = document.getElementById("tlc_fill_demo");
+  const clearBtn = document.getElementById("tlc_clear");
+  const errorEl = document.getElementById("tlc_error");
+  const resultEl = document.getElementById("tlc_result");
+  const cardsEl = document.getElementById("tlc_cards");
+  const previewEl = document.getElementById("tlc_preview");
+  const tbodyEl = document.getElementById("tlc_tbody");
+
+  if (!titleEl || !checkBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !previewEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    previewEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function wordCount(text) {
+    const words = String(text || "").trim().match(/\S+/g);
+    return words ? words.length : 0;
+  }
+
+  function checkTitle() {
+    resetOutput();
+
+    const title = String(titleEl.value || "").trim();
+    if (!title) {
+      showError("Please enter a title to analyze.");
+      return;
+    }
+
+    const chars = title.length;
+    const words = wordCount(title);
+
+    let status = "Typical";
+    if (chars < 30) status = "Short";
+    else if (chars > 60) status = "Long";
+
+    let guidance = "Common SEO title range";
+    if (status === "Short") guidance = "Consider adding more context if needed";
+    else if (status === "Long") guidance = "May be truncated in some search displays";
+
+    previewEl.value = title;
+
+    resultEl.innerHTML =
+      "<strong>Title analyzed.</strong><br/>" +
+      '<span class="note">' + guidance + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Characters: " + chars) +
+      badge("Words: " + words) +
+      badge("Status: " + status) +
+      "</div>";
+
+    fillTable([
+      ["Title text", title],
+      ["Character count", String(chars)],
+      ["Word count", String(words)],
+      ["Guidance status", status],
+      ["Length note", guidance],
+    ]);
+  }
+
+  function fillDemo() {
+    titleEl.value = "Meta Tag Generator for SEO and Social Sharing";
+    resetOutput();
+  }
+
+  function clearAll() {
+    titleEl.value = "";
+    resetOutput();
+    titleEl.focus();
+  }
+
+  checkBtn.addEventListener("click", checkTitle);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  titleEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") checkTitle();
+  });
+});
+</script>

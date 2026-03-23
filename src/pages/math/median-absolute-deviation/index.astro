@@ -1,0 +1,297 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Median Absolute Deviation Calculator",
+  description:
+    "Calculate median absolute deviation (MAD), median, absolute deviations, and a robust spread summary from a dataset.",
+  href: "/math/median-absolute-deviation/",
+  order: 380,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/median-absolute-deviation/";
+
+const faqs = [
+  {
+    q: "What is median absolute deviation?",
+    a: "Median absolute deviation (MAD) is a robust measure of spread. It is the median of the absolute differences between each value and the dataset median.",
+  },
+  {
+    q: "Why use MAD instead of standard deviation?",
+    a: "MAD is less sensitive to outliers, so it can be more stable when the dataset contains extreme values.",
+  },
+  {
+    q: "How should I enter the data?",
+    a: "Enter values separated by commas, spaces, or line breaks.",
+  },
+  {
+    q: "Can MAD be 0?",
+    a: "Yes. If many values cluster around the same median, the median absolute deviation can be 0.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Median Absolute Deviation Calculator — ${SITE_NAME}`}
+  description="Calculate median absolute deviation (MAD), dataset median, and robust spread summary from numeric data."
+  canonicalPath={CANONICAL_PATH}
+  h1="Median Absolute Deviation Calculator"
+  intro="Calculate the median absolute deviation (MAD), median, sorted data, and absolute deviations from a dataset. MAD is a robust measure of spread that is less sensitive to outliers than variance-based measures."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="median-absolute-deviation">
+    <style is:inline>
+      .mad-wrap, .mad-wrap * { box-sizing: border-box; }
+      .mad-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+      .mad-grid textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      .mad-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      .mad-list {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+    </style>
+
+    <div class="form mad-wrap" role="form" aria-describedby="mad_help mad_privacy">
+      <div class="mad-grid">
+        <div class="field">
+          <label for="mad_data">Data values</label>
+          <textarea
+            id="mad_data"
+            rows="7"
+            placeholder="e.g.
+12, 15, 18, 21, 24"
+            spellcheck="false"
+            aria-describedby="mad_help"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="mad_help" style="margin-top:6px;">
+        Enter values separated by commas, spaces, or line breaks.
+        <br />
+        Formula:
+        <br />
+        <span class="mad-code">MAD = median(|xᵢ − median(x)|)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mad_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mad_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="mad_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mad_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="mad_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="mad_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mad_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mad_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator first finds the <strong>median</strong> of the dataset, then computes each absolute deviation
+      from that median, and finally takes the median of those absolute deviations.
+    </p>
+    <p class="note">
+      Because MAD is based on medians rather than squared deviations, it is often used as a more robust measure of spread.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>12, 15, 18, 21, 24</strong> → median = <strong>18</strong></li>
+      <li>Absolute deviations from 18 → <strong>6, 3, 0, 3, 6</strong></li>
+      <li>MAD = median of those deviations = <strong>3</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/quartile-calculator/">Quartile Calculator</a></li>
+      <li><a href="/math/iqr-calculator/">IQR Calculator</a></li>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("mad_data");
+  const calcBtn = document.getElementById("mad_calc");
+  const fillBtn = document.getElementById("mad_fill_demo");
+  const clearBtn = document.getElementById("mad_clear");
+  const errorEl = document.getElementById("mad_error");
+  const resultEl = document.getElementById("mad_result");
+  const cardsEl = document.getElementById("mad_cards");
+  const tbodyEl = document.getElementById("mad_tbody");
+
+  if (!dataEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseData(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 1 numeric value.");
+
+    const nums = text.split(/[\s,]+/).filter(Boolean).map(function (part) {
+      const n = Number(part);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    if (!nums.length) throw new Error("Please enter at least 1 numeric value.");
+    return nums;
+  }
+
+  function median(arr) {
+    const s = arr.slice().sort(function (a, b) { return a - b; });
+    const n = s.length;
+    const mid = Math.floor(n / 2);
+    return n % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      if (row[2] === "html") td2.innerHTML = row[1];
+      else td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const arr = parseData(dataEl.value);
+      const sorted = arr.slice().sort(function (a, b) { return a - b; });
+      const med = median(sorted);
+      const deviations = sorted.map(function (x) { return Math.abs(x - med); });
+      const sortedDevs = deviations.slice().sort(function (a, b) { return a - b; });
+      const mad = median(sortedDevs);
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+
+      let label = "Moderate robust spread";
+      if (mad === 0) label = "No robust spread";
+      else if (mad < 1) label = "Low robust spread";
+      else if (mad >= 10) label = "High robust spread";
+
+      resultEl.innerHTML =
+        "<strong>MAD result</strong><br/>" +
+        "<span class='mad-code'>MAD = " + fmt(mad, 8) + "</span>" +
+        "<br/><span class='note'>Median = " + fmt(med, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("Count = " + sorted.length) +
+        badge("Median = " + fmt(med, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Count", String(sorted.length)],
+        ["Median", fmt(med, 8)],
+        ["Median absolute deviation (MAD)", fmt(mad, 8)],
+        ["Minimum", fmt(min, 8)],
+        ["Maximum", fmt(max, 8)],
+        ["Sorted data", "<span class='mad-list'>" + sorted.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+        ["Absolute deviations", "<span class='mad-list'>" + deviations.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+        ["Sorted absolute deviations", "<span class='mad-list'>" + sortedDevs.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    dataEl.value = "12, 15, 18, 21, 24";
+    clearOutput();
+  }
+
+  function reset() {
+    dataEl.value = "";
+    clearOutput();
+    dataEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  dataEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

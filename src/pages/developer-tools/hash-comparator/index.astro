@@ -1,0 +1,276 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Hash Comparator",
+  description:
+    "Compare two hash strings, inspect likely algorithms, and review result cards with FAQ schema.",
+  href: "/developer-tools/hash-comparator/",
+  order: 300,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/hash-comparator/";
+
+const faqs = [
+  {
+    q: "What does this hash comparator do?",
+    a: "It compares two hash strings for exact equality and also inspects likely hash formats such as MD5, SHA-1, SHA-256, and SHA-512 based on length and character pattern.",
+  },
+  {
+    q: "Does matching mean the source content is definitely the same?",
+    a: "If two hashes are identical and were generated with the same algorithm and encoding, the source content is expected to be the same. This tool itself only compares the strings you provide.",
+  },
+  {
+    q: "Does this calculate hashes from files or text?",
+    a: "No. This page compares hash strings that you already have.",
+  },
+  {
+    q: "Are the hash values stored?",
+    a: "No. All comparisons run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Hash Comparator — ${SITE_NAME}`}
+  description="Compare two hash strings, detect likely hash patterns, and inspect the result with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Hash Comparator"
+  intro="Compare two hash strings for an exact match and inspect likely hash format information."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="hash-comparator">
+    <style is:inline>
+      #hc_a,
+      #hc_b {
+        width: 100%;
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .hc-break {
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hc_help hc_privacy">
+      <div class="field">
+        <label for="hc_a">Hash A</label>
+        <textarea id="hc_a" rows="4" spellcheck="false" placeholder="Paste first hash value"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="hc_b">Hash B</label>
+        <textarea id="hc_b" rows="4" spellcheck="false" placeholder="Paste second hash value"></textarea>
+      </div>
+
+      <div class="field">
+        <label style="display:flex; gap:10px; align-items:center;">
+          <input id="hc_ignore_case" type="checkbox" checked />
+          <span>Ignore letter case when comparing</span>
+        </label>
+      </div>
+
+      <p class="note" id="hc_help" style="margin-top:6px;">
+        This tool compares the hash strings you provide. It does not compute hashes from raw data.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hc_compare">Compare</button>
+        <button class="btn secondary" type="button" id="hc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hc_privacy" style="margin-top:10px;">
+        Privacy: comparison runs locally in your browser. No hash values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste both hashes, choose whether case should be ignored, and compare them. The tool also estimates likely formats from character pattern and length.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>32 hex chars</strong> → commonly MD5 format</li>
+      <li><strong>40 hex chars</strong> → commonly SHA-1 format</li>
+      <li><strong>64 hex chars</strong> → commonly SHA-256 format</li>
+      <li><strong>128 hex chars</strong> → commonly SHA-512 format</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/hash-generator/">Hash Generator</a></li>
+      <li><a href="/developer-tools/md5-generator/">MD5 Generator</a></li>
+      <li><a href="/developer-tools/sha256-generator/">SHA256 Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("hc_a");
+  const bEl = document.getElementById("hc_b");
+  const ignoreCaseEl = document.getElementById("hc_ignore_case");
+  const compareBtn = document.getElementById("hc_compare");
+  const clearBtn = document.getElementById("hc_clear");
+  const errEl = document.getElementById("hc_error");
+  const resultEl = document.getElementById("hc_result");
+  const cardsEl = document.getElementById("hc_cards");
+  const tbodyEl = document.getElementById("hc_tbody");
+
+  if (!aEl || !bEl || !ignoreCaseEl || !compareBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function normalize(s, ignoreCase) {
+    let v = String(s || "").trim();
+    if (ignoreCase) v = v.toLowerCase();
+    return v;
+  }
+
+  function looksHex(s) {
+    return /^[0-9a-fA-F]+$/.test(s);
+  }
+
+  function guessAlgo(s) {
+    const len = s.length;
+    if (!looksHex(s)) return "Non-hex / unknown";
+    if (len === 32) return "Likely MD5";
+    if (len === 40) return "Likely SHA-1";
+    if (len === 56) return "Likely SHA-224";
+    if (len === 64) return "Likely SHA-256";
+    if (len === 96) return "Likely SHA-384";
+    if (len === 128) return "Likely SHA-512";
+    return "Hex, unknown length";
+  }
+
+  function compare() {
+    clearOutput();
+
+    const ignoreCase = !!ignoreCaseEl.checked;
+    const aRaw = String(aEl.value || "").trim();
+    const bRaw = String(bEl.value || "").trim();
+
+    if (!aRaw || !bRaw) {
+      showError("Please paste both hash values.");
+      return;
+    }
+
+    const a = normalize(aRaw, ignoreCase);
+    const b = normalize(bRaw, ignoreCase);
+
+    const match = a === b;
+    const lenA = aRaw.length;
+    const lenB = bRaw.length;
+    const algoA = guessAlgo(aRaw.trim());
+    const algoB = guessAlgo(bRaw.trim());
+    const sameLength = lenA === lenB;
+
+    resultEl.innerHTML =
+      "<strong>" + (match ? "Hashes match." : "Hashes do not match.") + "</strong>" +
+      '<br/><span class="note">Comparison mode: ' + (ignoreCase ? "case-insensitive" : "case-sensitive") + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(match ? "Exact match" : "Different") +
+      badge(sameLength ? "Same length" : "Different lengths") +
+      badge(ignoreCase ? "Ignore case" : "Case-sensitive") +
+      badge(algoA) +
+      badge(algoB) +
+      "</div>";
+
+    fillTable([
+      ["Hash A length", String(lenA)],
+      ["Hash B length", String(lenB)],
+      ["A likely format", algoA],
+      ["B likely format", algoB],
+      ["A is hex", looksHex(aRaw.trim()) ? "Yes" : "No"],
+      ["B is hex", looksHex(bRaw.trim()) ? "Yes" : "No"],
+      ["Match result", match ? "Match" : "Different"],
+    ]);
+  }
+
+  function clearAll() {
+    aEl.value = "";
+    bEl.value = "";
+    ignoreCaseEl.checked = true;
+    clearOutput();
+    aEl.focus();
+  }
+
+  compareBtn.addEventListener("click", compare);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

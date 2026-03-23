@@ -1,0 +1,306 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cross Product Calculator",
+  description:
+    "Calculate the 3D cross product of two vectors with validation, result cards, geometric interpretation, and FAQ support.",
+  href: "/math/cross-product-calculator/",
+  order: 345,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/cross-product-calculator/";
+
+const faqs = [
+  {
+    q: "What is a cross product?",
+    a: "The cross product combines two 3D vectors and returns a new 3D vector perpendicular to both input vectors.",
+  },
+  {
+    q: "Does cross product work in any dimension?",
+    a: "This calculator is for 3D vectors. The standard vector cross product is defined in 3D.",
+  },
+  {
+    q: "What does a zero cross product mean?",
+    a: "A zero result means the vectors are parallel, anti-parallel, or one of them is the zero vector.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Cross Product Calculator — ${SITE_NAME}`}
+  description="3D vector cross product calculator with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cross Product Calculator"
+  intro="Calculate the cross product of two 3D vectors and view the perpendicular result vector and its magnitude."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="cross-product-calculator">
+    <style is:inline>
+      .cp-wrap, .cp-wrap * { box-sizing: border-box; }
+      .cp-vectors {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 12px;
+      }
+      .cp-row-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .cp-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(72px, 1fr));
+        gap: 8px;
+        min-width: 280px;
+      }
+      .cp-row input {
+        width: 100%;
+        min-width: 0;
+      }
+      @media (min-width: 900px) {
+        .cp-vectors {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form cp-wrap" role="form" aria-describedby="cp_help cp_privacy">
+      <p class="note" id="cp_help" style="margin-top:0;">
+        Enter two 3D vectors <strong>A = (x, y, z)</strong> and <strong>B = (x, y, z)</strong>. The result is <strong>A × B</strong>.
+      </p>
+
+      <div class="cp-vectors">
+        <section>
+          <h3 style="margin:0 0 8px;">Vector A</h3>
+          <div class="cp-row-wrap">
+            <div class="cp-row">
+              <input id="cp_ax" type="number" step="any" inputmode="decimal" placeholder="Ax" aria-label="Vector A x" />
+              <input id="cp_ay" type="number" step="any" inputmode="decimal" placeholder="Ay" aria-label="Vector A y" />
+              <input id="cp_az" type="number" step="any" inputmode="decimal" placeholder="Az" aria-label="Vector A z" />
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 style="margin:0 0 8px;">Vector B</h3>
+          <div class="cp-row-wrap">
+            <div class="cp-row">
+              <input id="cp_bx" type="number" step="any" inputmode="decimal" placeholder="Bx" aria-label="Vector B x" />
+              <input id="cp_by" type="number" step="any" inputmode="decimal" placeholder="By" aria-label="Vector B y" />
+              <input id="cp_bz" type="number" step="any" inputmode="decimal" placeholder="Bz" aria-label="Vector B z" />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="btn" type="button" id="cp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cp_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="cp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cp_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No vector values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      For vectors <strong>A = (a₁, a₂, a₃)</strong> and <strong>B = (b₁, b₂, b₃)</strong>,
+      the cross product is:
+      <br />
+      <strong>A × B = (a₂b₃ − a₃b₂, a₃b₁ − a₁b₃, a₁b₂ − a₂b₁)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>(1, 0, 0) × (0, 1, 0)</strong> = <strong>(0, 0, 1)</strong></li>
+      <li><strong>(1, 2, 3) × (4, 5, 6)</strong> = <strong>(-3, 6, -3)</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/dot-product-calculator/">Dot Product Calculator</a></li>
+      <li><a href="/math/vector-calculator/">Vector Calculator</a></li>
+      <li><a href="/math/matrix-multiplication/">Matrix Multiplication</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const axEl = document.getElementById("cp_ax");
+  const ayEl = document.getElementById("cp_ay");
+  const azEl = document.getElementById("cp_az");
+  const bxEl = document.getElementById("cp_bx");
+  const byEl = document.getElementById("cp_by");
+  const bzEl = document.getElementById("cp_bz");
+  const calcBtn = document.getElementById("cp_calc");
+  const demoBtn = document.getElementById("cp_fill_demo");
+  const clearBtn = document.getElementById("cp_clear");
+  const errorEl = document.getElementById("cp_error");
+  const resultEl = document.getElementById("cp_result");
+  const cardsEl = document.getElementById("cp_cards");
+  const tbodyEl = document.getElementById("cp_tbody");
+
+  if (!axEl || !ayEl || !azEl || !bxEl || !byEl || !bzEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please fill all vector components.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter only valid numbers in vector components.");
+    return n;
+  }
+
+  function formatNum(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function formatVec(v) {
+    return "(" + v.map(formatNum).join(", ") + ")";
+  }
+
+  function magnitude(v) {
+    let s = 0;
+    for (let i = 0; i < v.length; i++) s += v[i] * v[i];
+    return Math.sqrt(s);
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const A = [getNum(axEl), getNum(ayEl), getNum(azEl)];
+      const B = [getNum(bxEl), getNum(byEl), getNum(bzEl)];
+
+      const C = [
+        A[1] * B[2] - A[2] * B[1],
+        A[2] * B[0] - A[0] * B[2],
+        A[0] * B[1] - A[1] * B[0]
+      ];
+
+      const mag = magnitude(C);
+      const zero = Math.abs(mag) < 1e-12;
+
+      resultEl.innerHTML =
+        "<strong>Cross product</strong><br/>" +
+        "<span style='font-size:1.1rem;font-weight:700;'>" + formatVec(C) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("3D vectors") +
+        badge("‖A × B‖ = " + formatNum(mag)) +
+        badge(zero ? "Parallel / zero-vector case" : "Perpendicular result") +
+        "</div>";
+
+      fillTable([
+        ["Vector A", formatVec(A)],
+        ["Vector B", formatVec(B)],
+        ["Cross product", formatVec(C)],
+        ["Magnitude", formatNum(mag)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the cross product.");
+    }
+  }
+
+  function fillDemo() {
+    axEl.value = "1";
+    ayEl.value = "2";
+    azEl.value = "3";
+    bxEl.value = "4";
+    byEl.value = "5";
+    bzEl.value = "6";
+    clearOutput();
+  }
+
+  function reset() {
+    axEl.value = "";
+    ayEl.value = "";
+    azEl.value = "";
+    bxEl.value = "";
+    byEl.value = "";
+    bzEl.value = "";
+    clearOutput();
+    axEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [axEl, ayEl, azEl, bxEl, byEl, bzEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

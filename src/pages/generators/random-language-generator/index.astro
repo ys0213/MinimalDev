@@ -1,0 +1,436 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Language Generator",
+  description:
+    "Generate random language names for writing prompts, datasets, testing, and educational use. Includes validation, result cards, FAQ schema, and accessibility.",
+  href: "/generators/random-language-generator/",
+  order: 182,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-language-generator/";
+
+const faqs = [
+  {
+    q: "What does this random language generator do?",
+    a: "It generates random language names from a built-in list for prompts, mock data, testing, brainstorming, and educational use.",
+  },
+  {
+    q: "Are these real languages?",
+    a: "Yes. This generator uses real language names. It does not generate fictional languages.",
+  },
+  {
+    q: "Can I generate multiple languages at once?",
+    a: "Yes. You can generate one or many results in a single batch, with optional duplicate control.",
+  },
+  {
+    q: "Does this tool store my data?",
+    a: "No. Everything runs locally in your browser and no generated results are stored or transmitted.",
+  },
+  {
+    q: "Can I filter by region or script?",
+    a: "This version focuses on easy random generation and optional alphabetical sorting. It does not include region or script filtering.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Language Generator — ${SITE_NAME}`}
+  description="Generate random language names with validation, duplicate control, sorting, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Language Generator"
+  intro="Generate random language names for prompts, educational lists, testing, mock data, and idea generation."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-language-generator">
+    <style is:inline>
+      .rlg-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rlg-grid > * {
+        min-width: 0;
+      }
+      .rlg-controls-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .rlg-cards-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+      .rlg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+      .rlg-output {
+        width: 100%;
+        min-width: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rlg-inline-options {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rlg-inline-options label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      @media (min-width: 780px) {
+        .rlg-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rlg_help rlg_privacy">
+      <div class="rlg-grid">
+        <div class="field">
+          <label for="rlg_count">How many languages</label>
+          <input
+            id="rlg_count"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="100"
+            value="10"
+          />
+        </div>
+
+        <div class="field">
+          <label for="rlg_separator">Output format</label>
+          <select id="rlg_separator">
+            <option value="lines" selected>One per line</option>
+            <option value="comma">Comma-separated</option>
+            <option value="bullets">Bullet list</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rlg-inline-options" style="margin-top:6px;">
+        <div class="field" style="min-width:240px;">
+          <label for="rlg_unique">
+            <input id="rlg_unique" type="checkbox" checked />
+            Avoid duplicates when possible
+          </label>
+        </div>
+
+        <div class="field" style="min-width:220px;">
+          <label for="rlg_sort">
+            <input id="rlg_sort" type="checkbox" />
+            Sort alphabetically
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rlg_help" style="margin-top:6px;">
+        Generates random real language names from a built-in list. Duplicate-free generation is limited by the size of the list.
+      </p>
+
+      <div class="rlg-controls-row">
+        <button class="btn" type="button" id="rlg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rlg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rlg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rlg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rlg_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rlg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rlg_output">Generated languages</label>
+        <textarea
+          id="rlg_output"
+          class="rlg-output"
+          rows="12"
+          readonly
+          spellcheck="false"
+          placeholder="Generated languages will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rlg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rlg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many language names you want, decide whether duplicates should be avoided, optionally sort the result, and then copy the output in your preferred format.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate a random language list for quiz practice</li>
+      <li>Build mock dropdown options for interface testing</li>
+      <li>Create prompt material for geography or linguistics activities</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-country-generator/">Random Country Generator</a></li>
+      <li><a href="/generators/random-city-generator/">Random City Generator</a></li>
+      <li><a href="/generators/random-name-generator/">Random Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rlg_count");
+  const separatorEl = document.getElementById("rlg_separator");
+  const uniqueEl = document.getElementById("rlg_unique");
+  const sortEl = document.getElementById("rlg_sort");
+  const generateBtn = document.getElementById("rlg_generate");
+  const copyBtn = document.getElementById("rlg_copy");
+  const clearBtn = document.getElementById("rlg_clear");
+  const errorEl = document.getElementById("rlg_error");
+  const resultEl = document.getElementById("rlg_result");
+  const cardsEl = document.getElementById("rlg_cards");
+  const outputEl = document.getElementById("rlg_output");
+  const tbodyEl = document.getElementById("rlg_tbody");
+
+  if (!countEl || !separatorEl || !uniqueEl || !sortEl || !generateBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const languages = [
+    "Arabic","Bengali","Bulgarian","Catalan","Chinese","Croatian","Czech","Danish","Dutch","English",
+    "Estonian","Finnish","French","German","Greek","Hebrew","Hindi","Hungarian","Icelandic","Indonesian",
+    "Irish","Italian","Japanese","Korean","Latvian","Lithuanian","Malay","Norwegian","Persian","Polish",
+    "Portuguese","Romanian","Russian","Serbian","Slovak","Slovenian","Spanish","Swahili","Swedish","Tagalog",
+    "Tamil","Thai","Turkish","Ukrainian","Urdu","Vietnamese","Welsh","Yoruba","Zulu","Afrikaans",
+    "Albanian","Amharic","Armenian","Azerbaijani","Basque","Belarusian","Bosnian","Burmese","Georgian","Gujarati",
+    "Haitian Creole","Kannada","Kazakh","Khmer","Kurdish","Lao","Macedonian","Malayalam","Marathi","Mongolian",
+    "Nepali","Pashto","Punjabi","Sinhala","Somali","Sundanese","Tajik","Telugu","Uzbek","Xhosa"
+  ];
+
+  let lastOutput = "";
+  let lastList = [];
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+    lastList = [];
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, sub) {
+    return (
+      '<div class="rlg-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function generateUnique(count) {
+    const pool = languages.slice();
+    const picked = [];
+    while (picked.length < count && pool.length > 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      picked.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    return picked;
+  }
+
+  function generateAny(count) {
+    const picked = [];
+    for (let i = 0; i < count; i++) picked.push(randItem(languages));
+    return picked;
+  }
+
+  function formatOutput(list, style) {
+    if (style === "comma") return list.join(", ");
+    if (style === "bullets") return list.map(function (x) { return "• " + x; }).join("\n");
+    return list.join("\n");
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const format = String(separatorEl.value || "lines");
+    const unique = !!uniqueEl.checked;
+    const shouldSort = !!sortEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    let list = unique ? generateUnique(Math.min(count, languages.length)) : generateAny(count);
+
+    if (shouldSort) {
+      list = list.slice().sort(function (a, b) {
+        return a.localeCompare(b);
+      });
+    }
+
+    lastList = list.slice();
+    lastOutput = formatOutput(list, format);
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>Languages generated.</strong><br/><span class='note'>Use the output for prompts, lists, and mock datasets.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rlg-cards-wrap">' +
+      card("Requested", String(count), "Number entered") +
+      card("Generated", String(list.length), unique && count > languages.length ? "Limited by unique pool size" : "Total results returned") +
+      card("Unique mode", unique ? "On" : "Off", unique ? "Duplicates avoided when possible" : "Duplicates allowed") +
+      card("Format", format === "lines" ? "Lines" : format === "comma" ? "Comma" : "Bullets", "Selected output style") +
+      "</div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+      badge("Real languages") +
+      badge(shouldSort ? "Sorted A–Z" : "Random order") +
+      badge(unique ? "Duplicate control enabled" : "Duplicate control disabled") +
+      "</div>";
+
+    fillTable([
+      ["Available language pool", String(languages.length)],
+      ["Requested count", String(count)],
+      ["Generated count", String(list.length)],
+      ["Output format", format],
+      ["Duplicate control", unique ? "Enabled" : "Disabled"],
+      ["Sorted alphabetically", shouldSort ? "Yes" : "No"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated language list to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated languages.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "10";
+    separatorEl.value = "lines";
+    uniqueEl.checked = true;
+    sortEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, separatorEl, uniqueEl, sortEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

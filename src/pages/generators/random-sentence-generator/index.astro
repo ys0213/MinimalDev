@@ -1,0 +1,563 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Sentence Generator",
+  description:
+    "Generate random sentences for writing prompts, placeholder text, UI testing, and demo content with validation, result cards, FAQ schema, and accessibility.",
+  href: "/generators/random-sentence-generator/",
+  order: 191,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-sentence-generator/";
+
+const faqs = [
+  {
+    q: "What does this random sentence generator do?",
+    a: "It generates random readable sentences from built-in word patterns for prompts, placeholder content, testing, and creative brainstorming.",
+  },
+  {
+    q: "Are the sentences grammatically perfect?",
+    a: "They are designed to be readable and reasonably natural, but they are not guaranteed to be perfect or context-aware.",
+  },
+  {
+    q: "Can I generate multiple sentences at once?",
+    a: "Yes. You can generate one sentence or a larger batch in a single run.",
+  },
+  {
+    q: "Can I control sentence length?",
+    a: "Yes. You can choose shorter, medium, longer, or mixed sentence patterns.",
+  },
+  {
+    q: "Does this tool store generated text?",
+    a: "No. Everything runs locally in your browser and generated sentences are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Sentence Generator — ${SITE_NAME}`}
+  description="Generate random sentences with configurable count, length patterns, punctuation options, result cards, FAQ schema, and accessibility."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Sentence Generator"
+  intro="Generate random sentences for writing prompts, seed content, demo interfaces, testing, placeholder text, and brainstorming."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-sentence-generator">
+    <style is:inline>
+      .rsg-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rsg-grid > * {
+        min-width: 0;
+      }
+      .rsg-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rsg-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .rsg-output,
+      #rsg_count,
+      #rsg_length,
+      #rsg_output_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      .rsg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .rsg-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rsg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .rsg-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      @media (min-width: 760px) {
+        .rsg-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .rsg-cards {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rsg_help rsg_privacy">
+      <div class="rsg-grid">
+        <div class="field">
+          <label for="rsg_count">How many sentences</label>
+          <input id="rsg_count" type="number" inputmode="numeric" min="1" max="100" value="8" />
+        </div>
+
+        <div class="field">
+          <label for="rsg_length">Sentence length</label>
+          <select id="rsg_length">
+            <option value="short">Short</option>
+            <option value="medium" selected>Medium</option>
+            <option value="long">Long</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rsg_output_mode">Output format</label>
+          <select id="rsg_output_mode">
+            <option value="paragraph" selected>Paragraph</option>
+            <option value="lines">One per line</option>
+            <option value="numbered">Numbered list</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rsg_theme">Theme style</label>
+          <select id="rsg_theme">
+            <option value="general" selected>General</option>
+            <option value="creative">Creative</option>
+            <option value="business">Business</option>
+            <option value="tech">Tech</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rsg-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rsg_varied_endings">
+            <input id="rsg_varied_endings" type="checkbox" checked />
+            Mix punctuation endings
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rsg_unique">
+            <input id="rsg_unique" type="checkbox" checked />
+            Avoid duplicate sentences when possible
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rsg_help" style="margin-top:6px;">
+        This generator creates random readable sentences for prompts and placeholder text. It does not perform topic research, fact-checking, or plagiarism checks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rsg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rsg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rsg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rsg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rsg_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rsg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rsg_output">Generated sentences</label>
+        <textarea
+          id="rsg_output"
+          class="rsg-output"
+          rows="16"
+          readonly
+          spellcheck="false"
+          placeholder="Generated sentences will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rsg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rsg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated sentence content is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose the number of sentences, select a sentence length and theme, generate the output, and then copy it into prompts, placeholders, or test content.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Generate writing prompts for a blank editor state</li>
+      <li>Create readable placeholder text for cards and tables</li>
+      <li>Prepare mock content for preview screens and CMS demos</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-paragraph-generator/">Random Paragraph Generator</a></li>
+      <li><a href="/generators/random-hashtag-generator/">Random Hashtag Generator</a></li>
+      <li><a href="/generators/random-team-name-generator/">Random Team Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rsg_count");
+  const lengthEl = document.getElementById("rsg_length");
+  const outputModeEl = document.getElementById("rsg_output_mode");
+  const themeEl = document.getElementById("rsg_theme");
+  const variedEndingsEl = document.getElementById("rsg_varied_endings");
+  const uniqueEl = document.getElementById("rsg_unique");
+  const generateBtn = document.getElementById("rsg_generate");
+  const copyBtn = document.getElementById("rsg_copy");
+  const clearBtn = document.getElementById("rsg_clear");
+  const errEl = document.getElementById("rsg_error");
+  const resultEl = document.getElementById("rsg_result");
+  const cardsEl = document.getElementById("rsg_cards");
+  const outputEl = document.getElementById("rsg_output");
+  const tbodyEl = document.getElementById("rsg_tbody");
+
+  if (!countEl || !lengthEl || !outputModeEl || !themeEl || !variedEndingsEl || !uniqueEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const subjectsGeneral = ["The team","A traveler","The project","A student","The designer","The writer","The manager","The group","A customer","The brand"];
+  const verbsGeneral = ["noticed","shared","built","reviewed","explored","organized","improved","planned","described","tested"];
+  const objectsGeneral = ["a simple idea","a new routine","the final draft","a better approach","a small update","the main concept","an early prototype","the weekly plan","the public message","the next step"];
+
+  const subjectsCreative = ["The painter","The storyteller","A musician","The poet","The director","The artist","A dreamer","The editor","A creator","The actor"];
+  const verbsCreative = ["imagined","sketched","rewrote","framed","composed","captured","reshaped","refined","expanded","translated"];
+  const objectsCreative = ["a brighter scene","an emotional arc","a layered idea","a quiet moment","a visual rhythm","a stronger concept","a softer ending","a vivid detail","a playful concept","a memorable image"];
+
+  const subjectsBusiness = ["The company","The client","The analyst","The leadership team","The department","A consultant","The board","The vendor","The founder","The partner"];
+  const verbsBusiness = ["approved","reviewed","adjusted","presented","measured","tracked","outlined","prioritized","improved","reported"];
+  const objectsBusiness = ["the quarterly plan","the growth target","the budget proposal","the customer feedback","the market strategy","the launch timeline","the internal process","the campaign result","the partnership scope","the decision framework"];
+
+  const subjectsTech = ["The developer","The engineer","The platform","The service","The system","The script","The tool","The application","The interface","The pipeline"];
+  const verbsTech = ["processed","rendered","validated","deployed","logged","optimized","parsed","generated","connected","monitored"];
+  const objectsTech = ["the request payload","the test environment","a cleaner response","the production build","the component tree","the dataset preview","a local result","the runtime state","the debug output","the release candidate"];
+
+  const openers = ["Today","In practice","For now","At first","By design","In many cases","Sometimes","During testing","In the end","On most days"];
+  const connectors = ["while","because","although","when","after","before","if","as","since","so that"];
+  const closers = [
+    "with clear intent",
+    "for better consistency",
+    "without extra overhead",
+    "to keep things simple",
+    "for the next revision",
+    "with useful context",
+    "under normal conditions",
+    "for a cleaner result",
+    "with minimal friction",
+    "for practical use"
+  ];
+
+  let lastOutput = "";
+  let lastItems = [];
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function capitalizeFirst(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+    lastItems = [];
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makeCard(title, value, desc) {
+    return (
+      '<div class="rsg-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(desc) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function getThemePack(theme) {
+    if (theme === "creative") {
+      return { subjects: subjectsCreative, verbs: verbsCreative, objects: objectsCreative };
+    }
+    if (theme === "business") {
+      return { subjects: subjectsBusiness, verbs: verbsBusiness, objects: objectsBusiness };
+    }
+    if (theme === "tech") {
+      return { subjects: subjectsTech, verbs: verbsTech, objects: objectsTech };
+    }
+    return { subjects: subjectsGeneral, verbs: verbsGeneral, objects: objectsGeneral };
+  }
+
+  function getLengthMode(mode) {
+    if (mode === "mixed") return randItem(["short","medium","long"]);
+    return mode;
+  }
+
+  function ending(varied) {
+    if (!varied) return ".";
+    return randItem([".", ".", ".", "!", "?"]);
+  }
+
+  function buildSentence(lengthMode, theme, variedEndings) {
+    const pack = getThemePack(theme);
+    const subject = randItem(pack.subjects);
+    const verb = randItem(pack.verbs);
+    const object = randItem(pack.objects);
+    const end = ending(variedEndings);
+
+    if (lengthMode === "short") {
+      return capitalizeFirst(subject + " " + verb + " " + object + end);
+    }
+
+    if (lengthMode === "long") {
+      return capitalizeFirst(
+        randItem(openers) +
+        ", " +
+        subject.toLowerCase() +
+        " " +
+        verb +
+        " " +
+        object +
+        " " +
+        randItem(connectors) +
+        " it aligned with the broader goal " +
+        randItem(closers) +
+        end
+      );
+    }
+
+    return capitalizeFirst(
+      subject + " " + verb + " " + object + " " + randItem(closers) + end
+    );
+  }
+
+  function formatOutput(items, mode) {
+    if (mode === "lines") return items.join("\n");
+    if (mode === "numbered") {
+      return items.map(function (item, i) {
+        return String(i + 1) + ". " + item;
+      }).join("\n");
+    }
+    return items.join(" ");
+  }
+
+  function avgWords(items) {
+    if (!items.length) return 0;
+    const total = items.reduce(function (sum, item) {
+      const count = item.trim().split(/\s+/).filter(Boolean).length;
+      return sum + count;
+    }, 0);
+    return Math.round(total / items.length);
+  }
+
+  function categoryByLength(mode, theme) {
+    if (mode === "short") return "Compact";
+    if (mode === "long") return "Detailed";
+    if (mode === "mixed") return "Varied";
+    if (theme === "tech" || theme === "business") return "Structured";
+    return "Balanced";
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const lengthMode = String(lengthEl.value || "medium");
+    const outputMode = String(outputModeEl.value || "paragraph");
+    const theme = String(themeEl.value || "general");
+    const variedEndings = !!variedEndingsEl.checked;
+    const unique = !!uniqueEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const items = [];
+    const seen = new Set();
+    let attempts = 0;
+    const maxAttempts = count * 40;
+
+    while (items.length < count && attempts < maxAttempts) {
+      attempts++;
+      const sentence = buildSentence(getLengthMode(lengthMode), theme, variedEndings);
+
+      if (unique) {
+        if (seen.has(sentence)) continue;
+        seen.add(sentence);
+      }
+
+      items.push(sentence);
+    }
+
+    lastItems = items.slice();
+    lastOutput = formatOutput(items, outputMode);
+    outputEl.value = lastOutput;
+
+    const averageWords = avgWords(items);
+    const category = categoryByLength(lengthMode, theme);
+
+    resultEl.innerHTML =
+      "<strong>Sentences generated.</strong><br/><span class='note'>Use them for prompts, placeholders, and demos, then revise for real publishing if needed.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rsg-cards">' +
+      makeCard("Requested", String(count), "Requested sentence count") +
+      makeCard("Generated", String(items.length), "Returned in this batch") +
+      makeCard("Avg words", String(averageWords), "Average words per sentence") +
+      makeCard("Profile", category, "Practical style category") +
+      "</div>" +
+      '<div class="rsg-tags" style="margin-top:10px;">' +
+      badge("Length: " + lengthMode) +
+      badge("Theme: " + theme) +
+      badge("Output: " + outputMode) +
+      badge("Mixed endings: " + (variedEndings ? "On" : "Off")) +
+      badge("Duplicates: " + (unique ? "Avoided" : "Allowed")) +
+      "</div>";
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(items.length)],
+      ["Sentence length mode", lengthMode],
+      ["Theme", theme],
+      ["Output format", outputMode],
+      ["Mixed punctuation endings", variedEndings ? "Enabled" : "Disabled"],
+      ["Avoid duplicates", unique ? "Enabled" : "Disabled"],
+      ["Average words per sentence", String(averageWords)],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+
+    if (!lastOutput) {
+      showError("No generated sentences to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated sentences.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "8";
+    lengthEl.value = "medium";
+    outputModeEl.value = "paragraph";
+    themeEl.value = "general";
+    variedEndingsEl.checked = true;
+    uniqueEl.checked = true;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, lengthEl, outputModeEl, themeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

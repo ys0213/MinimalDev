@@ -1,0 +1,287 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Correlation Calculator",
+  description:
+    "Calculate Pearson correlation for two datasets with validation, paired input checks, and FAQ support.",
+  href: "/math/correlation-calculator/",
+  order: 363,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/correlation-calculator/";
+
+const faqs = [
+  {
+    q: "What does correlation measure?",
+    a: "Correlation measures the strength and direction of a linear relationship between two variables.",
+  },
+  {
+    q: "What values can correlation take?",
+    a: "Pearson correlation ranges from -1 to 1. Values near 1 indicate strong positive linear association, near -1 strong negative linear association, and near 0 weak linear association.",
+  },
+  {
+    q: "Do both datasets need the same number of values?",
+    a: "Yes. Correlation requires paired observations, so both lists must have the same length.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Correlation Calculator — ${SITE_NAME}`}
+  description="Pearson correlation calculator with validation, paired input checks, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Correlation Calculator"
+  intro="Calculate Pearson correlation between two datasets and view the strength and direction of their linear relationship."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="correlation-calculator">
+    <style is:inline>
+      .corr-wrap, .corr-wrap * { box-sizing: border-box; }
+      .corr-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .corr-grid textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      @media (max-width: 760px) {
+        .corr-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form corr-wrap" role="form" aria-describedby="corr_help corr_privacy">
+      <div class="corr-grid">
+        <div class="field">
+          <label for="corr_x">X values</label>
+          <textarea id="corr_x" rows="6" placeholder="e.g., 2, 4, 6, 8" spellcheck="false"></textarea>
+        </div>
+        <div class="field">
+          <label for="corr_y">Y values</label>
+          <textarea id="corr_y" rows="6" placeholder="e.g., 1, 3, 5, 7" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="corr_help" style="margin-top:6px;">
+        Enter paired datasets of equal length. Values can be separated by commas, spaces, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="corr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="corr_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="corr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="corr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="corr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="corr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="corr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="corr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pearson correlation compares paired standardized variation in X and Y.
+      It is often written as <strong>r</strong> and ranges from <strong>-1</strong> to <strong>1</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Perfect upward linear pattern → correlation close to <strong>1</strong></li>
+      <li>Perfect downward linear pattern → correlation close to <strong>-1</strong></li>
+      <li>No clear linear pattern → correlation near <strong>0</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/covariance-calculator/">Covariance Calculator</a></li>
+      <li><a href="/math/regression-calculator/">Regression Calculator</a></li>
+      <li><a href="/math/z-score-calculator/">Z-Score Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("corr_x");
+  const yEl = document.getElementById("corr_y");
+  const calcBtn = document.getElementById("corr_calc");
+  const demoBtn = document.getElementById("corr_fill_demo");
+  const clearBtn = document.getElementById("corr_clear");
+  const errorEl = document.getElementById("corr_error");
+  const resultEl = document.getElementById("corr_result");
+  const cardsEl = document.getElementById("corr_cards");
+  const tbodyEl = document.getElementById("corr_tbody");
+
+  if (!xEl || !yEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function parseValues(raw) {
+    const s = String(raw || "").trim();
+    if (!s) throw new Error("Please enter both X and Y datasets.");
+    const tokens = s.split(/[\s,]+/).filter(Boolean);
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All dataset entries must be valid numbers.");
+      return n;
+    });
+    if (!nums.length) throw new Error("Please enter both X and Y datasets.");
+    return nums;
+  }
+  function mean(arr) {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) sum += arr[i];
+    return sum / arr.length;
+  }
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const xs = parseValues(xEl.value);
+      const ys = parseValues(yEl.value);
+      if (xs.length !== ys.length) {
+        showError("X and Y must contain the same number of values.");
+        return;
+      }
+      if (xs.length < 2) {
+        showError("Please enter at least 2 paired values.");
+        return;
+      }
+
+      const mx = mean(xs);
+      const my = mean(ys);
+      let num = 0;
+      let sumSqX = 0;
+      let sumSqY = 0;
+
+      for (let i = 0; i < xs.length; i++) {
+        const dx = xs[i] - mx;
+        const dy = ys[i] - my;
+        num += dx * dy;
+        sumSqX += dx * dx;
+        sumSqY += dy * dy;
+      }
+
+      if (sumSqX === 0 || sumSqY === 0) {
+        showError("Correlation is undefined when one dataset has zero variance.");
+        return;
+      }
+
+      const r = num / Math.sqrt(sumSqX * sumSqY);
+
+      let strength = "Very weak";
+      const ar = Math.abs(r);
+      if (ar >= 0.9) strength = "Very strong";
+      else if (ar >= 0.7) strength = "Strong";
+      else if (ar >= 0.5) strength = "Moderate";
+      else if (ar >= 0.3) strength = "Weak";
+
+      let direction = "No linear direction";
+      if (r > 0) direction = "Positive";
+      else if (r < 0) direction = "Negative";
+
+      resultEl.innerHTML =
+        "<strong>Correlation result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>r = " + fmt(r) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(direction) +
+        badge(strength + " linear relationship") +
+        badge("Pairs: " + xs.length) +
+        "</div>";
+
+      fillTable([
+        ["Pair count", String(xs.length)],
+        ["Mean of X", fmt(mx)],
+        ["Mean of Y", fmt(my)],
+        ["Correlation r", fmt(r)],
+        ["Interpretation", direction + " / " + strength],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate correlation.");
+    }
+  }
+  function fillDemo() {
+    xEl.value = "2, 4, 6, 8";
+    yEl.value = "1, 3, 5, 7";
+    clearOutput();
+  }
+  function reset() {
+    xEl.value = "";
+    yEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [xEl, yEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

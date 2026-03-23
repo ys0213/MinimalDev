@@ -1,0 +1,254 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Word Frequency Analyzer",
+  description:
+    "Analyze word frequency, keyword distribution, and text statistics with validation, result cards, sorting, filtering, and FAQ schema.",
+  href: "/text-tools/word-frequency-analyzer/",
+  order: 120,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/text-tools/word-frequency-analyzer/";
+
+const faqs = [
+  {
+    q: "What does this word frequency analyzer do?",
+    a: "It analyzes text and shows how often each word appears, including counts, percentages, and ranking.",
+  },
+  {
+    q: "Does it ignore punctuation?",
+    a: "Yes. Punctuation is removed and words are normalized before analysis.",
+  },
+  {
+    q: "Can I filter short words?",
+    a: "Yes. You can exclude short words or common stopwords for better keyword insights.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. All processing happens locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Word Frequency Analyzer — ${SITE_NAME}`}
+  description="Analyze word frequency, keyword density, and text statistics with sorting, filtering, and result visualization."
+  canonicalPath={CANONICAL_PATH}
+  h1="Word Frequency Analyzer"
+  intro="Analyze how often words appear in your text. Useful for SEO, keyword research, writing optimization, and content analysis."
+  faq={faqs}
+  categoryName="Text Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="word-frequency-analyzer">
+    <style is:inline>
+      #wfa_input, #wfa_output { width:100%; min-width:0; }
+
+      .wfa-grid {
+        display:grid;
+        gap:10px;
+      }
+
+      .wfa-table {
+        width:100%;
+        border-collapse:collapse;
+      }
+
+      .wfa-table th, .wfa-table td {
+        padding:8px;
+        border-bottom:1px solid rgba(255,255,255,0.1);
+        text-align:left;
+      }
+
+      .wfa-card-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+        gap:10px;
+      }
+
+      .wfa-card {
+        border:1px solid rgba(255,255,255,0.14);
+        border-radius:12px;
+        padding:10px;
+      }
+
+      @media(min-width:768px){
+        .wfa-grid { grid-template-columns:1fr 1fr; }
+      }
+    </style>
+
+    <div class="form">
+      <div class="field">
+        <label for="wfa_input">Input text</label>
+        <textarea id="wfa_input" rows="10" placeholder="Paste text to analyze..."></textarea>
+      </div>
+
+      <div class="wfa-grid">
+        <div class="field">
+          <label>Options</label>
+          <div>
+            <label><input type="checkbox" id="wfa_lower" checked/> Normalize lowercase</label><br/>
+            <label><input type="checkbox" id="wfa_stop"/> Remove common stopwords</label><br/>
+            <label><input type="checkbox" id="wfa_short"/> Exclude short words (&lt;=2)</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="wfa_sort">Sort by</label>
+          <select id="wfa_sort">
+            <option value="count">Frequency</option>
+            <option value="alpha">Alphabetical</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" id="wfa_analyze">Analyze</button>
+        <button class="btn secondary" id="wfa_copy">Copy Result</button>
+        <button class="btn secondary" id="wfa_clear">Clear</button>
+      </div>
+
+      <div id="wfa_error" class="result" style="display:none; margin-top:10px;"></div>
+      <div id="wfa_summary" class="result" style="margin-top:10px;">Result will appear here.</div>
+
+      <div id="wfa_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table class="wfa-table">
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Count</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody id="wfa_table"></tbody>
+        </table>
+      </div>
+
+      <textarea id="wfa_output" rows="8" readonly style="margin-top:10px;"></textarea>
+    </div>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/text-tools/keyword-density-checker/">Keyword Density Checker</a></li>
+      <li><a href="/text-tools/sentence-counter/">Sentence Counter</a></li>
+      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/">All Text Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function(){
+
+const input = document.getElementById("wfa_input");
+const analyzeBtn = document.getElementById("wfa_analyze");
+const table = document.getElementById("wfa_table");
+const output = document.getElementById("wfa_output");
+const summary = document.getElementById("wfa_summary");
+const error = document.getElementById("wfa_error");
+const cards = document.getElementById("wfa_cards");
+
+function cleanText(text, lower){
+  let t = text.replace(/[^\w\s]/g," ");
+  if(lower) t = t.toLowerCase();
+  return t.split(/\s+/).filter(Boolean);
+}
+
+function analyze(){
+  error.style.display="none";
+  const raw = input.value;
+
+  if(!raw.trim()){
+    error.style.display="block";
+    error.textContent="Enter text first.";
+    return;
+  }
+
+  const lower = document.getElementById("wfa_lower").checked;
+  const stop = document.getElementById("wfa_stop").checked;
+  const short = document.getElementById("wfa_short").checked;
+  const sort = document.getElementById("wfa_sort").value;
+
+  let words = cleanText(raw, lower);
+
+  const STOPWORDS = ["the","is","and","to","of","in","a","on","for","with"];
+
+  if(stop){
+    words = words.filter(w => !STOPWORDS.includes(w));
+  }
+
+  if(short){
+    words = words.filter(w => w.length > 2);
+  }
+
+  const total = words.length;
+  const freq = {};
+
+  words.forEach(w => {
+    freq[w] = (freq[w] || 0) + 1;
+  });
+
+  let entries = Object.entries(freq);
+
+  if(sort==="count"){
+    entries.sort((a,b)=>b[1]-a[1]);
+  } else {
+    entries.sort();
+  }
+
+  table.innerHTML="";
+  entries.forEach(([word,count])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td>${word}</td><td>${count}</td><td>${((count/total)*100).toFixed(2)}%</td>`;
+    table.appendChild(tr);
+  });
+
+  const unique = entries.length;
+
+  summary.innerHTML = `<strong>Analysis complete.</strong> ${total} words, ${unique} unique.`;
+
+  cards.style.display="block";
+  cards.innerHTML = `
+    <div class="wfa-card-grid">
+      <div class="wfa-card"><strong>Total words</strong><div>${total}</div></div>
+      <div class="wfa-card"><strong>Unique words</strong><div>${unique}</div></div>
+      <div class="wfa-card"><strong>Top word</strong><div>${entries[0]?.[0] || "-"}</div></div>
+    </div>
+  `;
+
+  output.value = entries.map(e=>e[0]+": "+e[1]).join("\n");
+}
+
+analyzeBtn.addEventListener("click", analyze);
+
+document.getElementById("wfa_copy").onclick = async ()=>{
+  if(!output.value) return;
+  await navigator.clipboard.writeText(output.value);
+};
+
+document.getElementById("wfa_clear").onclick = ()=>{
+  input.value="";
+  output.value="";
+  table.innerHTML="";
+  summary.textContent="Result will appear here.";
+  cards.style.display="none";
+};
+
+});
+</script>

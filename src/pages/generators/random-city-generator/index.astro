@@ -1,0 +1,96 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random City Generator",
+  description: "Generate random cities for testing, travel ideas, and datasets.",
+  href: "/generators/random-city-generator/",
+  order: 202,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-city-generator/";
+
+const faqs = [
+  { q: "What cities are included?", a: "Major global cities are included for realistic results." },
+  { q: "Can I generate multiple cities?", a: "Yes, up to 100 at once." },
+  { q: "Is data stored?", a: "No. Everything runs locally." },
+  { q: "Is this suitable for testing?", a: "Yes. Useful for mock datasets." },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(f => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random City Generator — ${SITE_NAME}`}
+  description="Generate random cities instantly."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random City Generator"
+  intro="Generate random cities for testing, travel inspiration, or datasets."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool">
+    <div class="form">
+      <label>Count</label>
+      <input id="count" type="number" min="1" max="100" value="5"/>
+
+      <div style="margin-top:10px;">
+        <button id="gen" class="btn">Generate</button>
+        <button id="copy" class="btn secondary">Copy</button>
+      </div>
+
+      <textarea id="out" rows="12" style="width:100%; margin-top:12px;" readonly></textarea>
+      <div id="status" class="result">Result will appear here.</div>
+    </div>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-country-generator/">Country Generator</a></li>
+      <li><a href="/generators/random-language-generator/">Language Generator</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", () => {
+  const cities = ["Seoul","Tokyo","Paris","London","New York","Berlin","Sydney","Toronto","Dubai","Rome"];
+
+  const countEl = document.getElementById("count");
+  const out = document.getElementById("out");
+  const status = document.getElementById("status");
+
+  document.getElementById("gen").onclick = () => {
+    const n = Number(countEl.value);
+    if(!n || n<1 || n>100){
+      status.textContent="Invalid count";
+      return;
+    }
+
+    const result = [];
+    for(let i=0;i<n;i++){
+      result.push(cities[Math.floor(Math.random()*cities.length)]);
+    }
+
+    out.value = result.join("\n");
+    status.innerHTML="<strong>Generated</strong>";
+  };
+
+  document.getElementById("copy").onclick = async () => {
+    if(!out.value) return;
+    await navigator.clipboard.writeText(out.value);
+    status.innerHTML="<strong>Copied</strong>";
+  };
+});
+</script>

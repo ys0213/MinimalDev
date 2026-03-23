@@ -1,0 +1,373 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Equation Solver",
+  description:
+    "Solve linear equations and quadratic equations. Includes validation, result cards, and FAQ schema.",
+  href: "/math/equation-solver/",
+  order: 396,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/equation-solver/";
+
+const faqs = [
+  {
+    q: "What equations does this solver support?",
+    a: "It supports linear equations of the form ax + b = c and quadratic equations of the form ax² + bx + c = 0.",
+  },
+  {
+    q: "How does the linear solver work?",
+    a: "It rearranges ax + b = c into x = (c − b) / a, provided a is not 0.",
+  },
+  {
+    q: "How does the quadratic solver work?",
+    a: "It uses the quadratic formula x = (-b ± sqrt(b² − 4ac)) / (2a).",
+  },
+  {
+    q: "What if the quadratic discriminant is negative?",
+    a: "Then there are no real-number solutions. This page reports that the real roots do not exist.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Equation Solver — ${SITE_NAME}`}
+  description="Solve linear and quadratic equations."
+  canonicalPath={CANONICAL_PATH}
+  h1="Equation Solver"
+  intro="Solve common equations quickly. This page supports linear equations of the form ax + b = c and quadratic equations of the form ax² + bx + c = 0."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="equation-solver">
+    <style is:inline>
+      .eq-wrap, .eq-wrap * { box-sizing: border-box; }
+      .eq-grid {
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+      }
+      .eq-grid input,
+      .eq-grid select {
+        width:100%;
+        min-width:0;
+      }
+      .eq-code {
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break:break-word;
+      }
+      @media (max-width: 760px) {
+        .eq-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form eq-wrap" role="form" aria-describedby="eq_help eq_privacy">
+      <div class="field">
+        <label for="eq_mode">Equation type</label>
+        <select id="eq_mode">
+          <option value="linear" selected>Linear: ax + b = c</option>
+          <option value="quadratic">Quadratic: ax² + bx + c = 0</option>
+        </select>
+      </div>
+
+      <div class="eq-grid">
+        <div class="field">
+          <label for="eq_a" id="eq_a_label">a</label>
+          <input id="eq_a" type="number" inputmode="decimal" step="any" placeholder="e.g., 2" />
+        </div>
+
+        <div class="field">
+          <label for="eq_b" id="eq_b_label">b</label>
+          <input id="eq_b" type="number" inputmode="decimal" step="any" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="eq_c" id="eq_c_label">c</label>
+          <input id="eq_c" type="number" inputmode="decimal" step="any" placeholder="e.g., 7" />
+        </div>
+      </div>
+
+      <p class="note" id="eq_help" style="margin-top:6px;">
+        <span class="eq-code" id="eq_formula_text">Linear form: ax + b = c</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="eq_calc">Solve</button>
+        <button class="btn secondary" type="button" id="eq_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="eq_clear">Clear</button>
+      </div>
+
+      <div class="result" id="eq_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="eq_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="eq_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="eq_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="eq_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This solver supports two common forms:
+    </p>
+    <ul>
+      <li><strong>Linear:</strong> ax + b = c → x = (c − b) / a</li>
+      <li><strong>Quadratic:</strong> ax² + bx + c = 0 → quadratic formula</li>
+    </ul>
+    <p class="note">
+      For quadratics, the discriminant is <strong>D = b² − 4ac</strong>. If D is negative, there are no real-number roots.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2x + 3 = 7</strong> → <strong>x = 2</strong></li>
+      <li><strong>x² − 5x + 6 = 0</strong> → <strong>x = 2, 3</strong></li>
+      <li><strong>x² + 1 = 0</strong> → no real roots</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/linear-equation-solver/">Linear Equation Solver</a></li>
+      <li><a href="/math/quadratic-equation-calculator/">Quadratic Equation Calculator</a></li>
+      <li><a href="/math/inequality-solver/">Inequality Solver</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("eq_mode");
+  const aEl = document.getElementById("eq_a");
+  const bEl = document.getElementById("eq_b");
+  const cEl = document.getElementById("eq_c");
+  const formulaTextEl = document.getElementById("eq_formula_text");
+  const calcBtn = document.getElementById("eq_calc");
+  const fillBtn = document.getElementById("eq_fill_demo");
+  const clearBtn = document.getElementById("eq_clear");
+  const errorEl = document.getElementById("eq_error");
+  const resultEl = document.getElementById("eq_result");
+  const cardsEl = document.getElementById("eq_cards");
+  const tbodyEl = document.getElementById("eq_tbody");
+
+  if (!modeEl || !aEl || !bEl || !cEl || !formulaTextEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function num(v) {
+    const n = parseFloat(String(v).trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n, d) {
+    return Number.isFinite(n)
+      ? n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 12 })
+      : "—";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const a = document.createElement("td");
+      const b = document.createElement("td");
+      a.textContent = row[0];
+      b.textContent = row[1];
+      tr.appendChild(a);
+      tr.appendChild(b);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function updateModeText() {
+    formulaTextEl.textContent = modeEl.value === "linear"
+      ? "Linear form: ax + b = c"
+      : "Quadratic form: ax² + bx + c = 0";
+  }
+
+  function compute() {
+    clearOutput();
+
+    const mode = String(modeEl.value || "linear");
+    const a = num(aEl.value);
+    const b = num(bEl.value);
+    const c = num(cEl.value);
+
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !Number.isFinite(c)) {
+      showError("Please enter valid numeric values for all coefficients.");
+      return;
+    }
+
+    if (mode === "linear") {
+      if (a === 0) {
+        showError("For a linear equation, a cannot be 0.");
+        return;
+      }
+
+      const x = (c - b) / a;
+
+      resultEl.innerHTML =
+        "<strong>Equation solver result</strong><br/>" +
+        "<span class='eq-code'>" + fmt(a, 8) + "x + " + fmt(b, 8) + " = " + fmt(c, 8) + " → x = " + fmt(x, 12) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Linear equation") +
+        badge("One real solution") +
+        badge("x = " + fmt(x, 8)) +
+        "</div>";
+
+      fillTable([
+        ["Equation type", "Linear"],
+        ["a", fmt(a, 12)],
+        ["b", fmt(b, 12)],
+        ["c", fmt(c, 12)],
+        ["Solution x", fmt(x, 12)],
+        ["Check ax + b", fmt(a * x + b, 12)],
+      ]);
+      return;
+    }
+
+    if (a === 0) {
+      showError("For a quadratic equation, a cannot be 0.");
+      return;
+    }
+
+    const D = b * b - 4 * a * c;
+
+    if (D < 0) {
+      resultEl.innerHTML =
+        "<strong>Equation solver result</strong><br/>" +
+        "<span class='eq-code'>" + fmt(a, 8) + "x² + " + fmt(b, 8) + "x + " + fmt(c, 8) + " = 0</span>" +
+        "<br/><span class='note'>No real-number roots because the discriminant is negative.</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Quadratic equation") +
+        badge("Negative discriminant") +
+        badge("No real roots") +
+        "</div>";
+
+      fillTable([
+        ["Equation type", "Quadratic"],
+        ["a", fmt(a, 12)],
+        ["b", fmt(b, 12)],
+        ["c", fmt(c, 12)],
+        ["Discriminant", fmt(D, 12)],
+        ["Real roots", "None"],
+      ]);
+      return;
+    }
+
+    const sqrtD = Math.sqrt(D);
+    const x1 = (-b + sqrtD) / (2 * a);
+    const x2 = (-b - sqrtD) / (2 * a);
+    const repeated = Math.abs(x1 - x2) < 1e-12;
+
+    resultEl.innerHTML =
+      "<strong>Equation solver result</strong><br/>" +
+      "<span class='eq-code'>" +
+      fmt(a, 8) + "x² + " + fmt(b, 8) + "x + " + fmt(c, 8) + " = 0 → " +
+      (repeated ? ("x = " + fmt(x1, 12)) : ("x₁ = " + fmt(x1, 12) + ", x₂ = " + fmt(x2, 12))) +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("Quadratic equation") +
+      badge(repeated ? "Repeated root" : "Two real roots") +
+      badge("D = " + fmt(D, 8)) +
+      "</div>";
+
+    fillTable([
+      ["Equation type", "Quadratic"],
+      ["a", fmt(a, 12)],
+      ["b", fmt(b, 12)],
+      ["c", fmt(c, 12)],
+      ["Discriminant", fmt(D, 12)],
+      ["Root x1", fmt(x1, 12)],
+      ["Root x2", fmt(x2, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "quadratic";
+    aEl.value = "1";
+    bEl.value = "-5";
+    cEl.value = "6";
+    updateModeText();
+    clearOutput();
+  }
+
+  function reset() {
+    modeEl.value = "linear";
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    updateModeText();
+    clearOutput();
+    aEl.focus();
+  }
+
+  modeEl.addEventListener("change", function () {
+    updateModeText();
+    clearOutput();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [modeEl, aEl, bEl, cEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  updateModeText();
+  clearOutput();
+});
+</script>

@@ -1,0 +1,335 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Meta Tag Analyzer",
+  description:
+    "Analyze HTML head markup for title, meta description, canonical, robots, Open Graph, and Twitter tags with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/meta-tag-analyzer/",
+  order: 181,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/meta-tag-analyzer/";
+
+const faqs = [
+  {
+    q: "What does this meta tag analyzer check?",
+    a: "It checks pasted HTML or head markup for title, meta description, robots, canonical, Open Graph, and Twitter Card tags.",
+  },
+  {
+    q: "Do I need to paste a full HTML page?",
+    a: "No. You can paste a full page, just the head section, or only the relevant meta tags.",
+  },
+  {
+    q: "Does it validate SEO length guidance?",
+    a: "Yes. It reports title and description lengths and flags common short or long ranges.",
+  },
+  {
+    q: "Will it fetch a live URL for me?",
+    a: "No. This page analyzes pasted markup only.",
+  },
+  {
+    q: "Is the pasted code stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Meta Tag Analyzer — ${SITE_NAME}`}
+  description="Analyze pasted HTML head markup for SEO, canonical, Open Graph, and Twitter tags."
+  canonicalPath={CANONICAL_PATH}
+  h1="Meta Tag Analyzer"
+  intro="Paste HTML head markup or a full page to inspect common SEO and social-sharing tags such as title, description, canonical, robots, Open Graph, and Twitter Card tags."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <div slot="tool" data-tool="meta-tag-analyzer">
+    <style is:inline>
+      .mta-wrap, .mta-wrap * { box-sizing: border-box; }
+      #mta_input,
+      #mta_summary {
+        width:100%;
+        min-width:0;
+      }
+      .mta-output {
+        white-space:pre-wrap;
+        word-break:break-word;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:14px;
+      }
+    </style>
+
+    <div class="form mta-wrap" role="form" aria-describedby="mta_help mta_privacy">
+      <div class="field">
+        <label for="mta_input">HTML or head markup</label>
+        <textarea
+          id="mta_input"
+          rows="16"
+          spellcheck="false"
+          placeholder='e.g. <title>Example</title><meta name="description" content="...">'
+        ></textarea>
+      </div>
+
+      <p class="note" id="mta_help" style="margin-top:6px;">
+        Paste a full page, a &lt;head&gt; section, or just the meta tags you want to inspect.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mta_analyze">Analyze</button>
+        <button class="btn secondary" type="button" id="mta_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="mta_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mta_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mta_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mta_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="mta_summary">Analysis summary</label>
+        <textarea id="mta_summary" rows="14" readonly spellcheck="false" placeholder="Analysis summary will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Tag / Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mta_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mta_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No markup is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste your markup and run the analyzer. It extracts common SEO and social-sharing elements and highlights missing or unusual items.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Page title</strong> → reports title text and length</li>
+      <li><strong>Meta description</strong> → reports content and common length guidance</li>
+      <li><strong>Open Graph / Twitter</strong> → reports whether social-sharing tags are present</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/title-length-checker/">Title Length Checker</a></li>
+      <li><a href="/developer-tools/description-length-checker/">Description Length Checker</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("mta_input");
+  const analyzeBtn = document.getElementById("mta_analyze");
+  const fillBtn = document.getElementById("mta_fill_demo");
+  const clearBtn = document.getElementById("mta_clear");
+  const errorEl = document.getElementById("mta_error");
+  const resultEl = document.getElementById("mta_result");
+  const cardsEl = document.getElementById("mta_cards");
+  const summaryEl = document.getElementById("mta_summary");
+  const tbodyEl = document.getElementById("mta_tbody");
+
+  if (!inputEl || !analyzeBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !summaryEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    summaryEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getTitle(doc) {
+    const titleNode = doc.querySelector("title");
+    return titleNode ? titleNode.textContent.trim() : "";
+  }
+
+  function getMetaByName(doc, name) {
+    const el = doc.querySelector('meta[name="' + name + '"]');
+    return el ? String(el.getAttribute("content") || "").trim() : "";
+  }
+
+  function getMetaByProperty(doc, prop) {
+    const el = doc.querySelector('meta[property="' + prop + '"]');
+    return el ? String(el.getAttribute("content") || "").trim() : "";
+  }
+
+  function analyzeMarkup() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste HTML or head markup to analyze.");
+      return;
+    }
+
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(raw, "text/html");
+
+    const title = getTitle(doc);
+    const description = getMetaByName(doc, "description");
+    const robots = getMetaByName(doc, "robots");
+    const canonicalEl = doc.querySelector('link[rel="canonical"]');
+    const canonical = canonicalEl ? String(canonicalEl.getAttribute("href") || "").trim() : "";
+
+    const ogTitle = getMetaByProperty(doc, "og:title");
+    const ogDescription = getMetaByProperty(doc, "og:description");
+    const ogType = getMetaByProperty(doc, "og:type");
+    const ogUrl = getMetaByProperty(doc, "og:url");
+    const ogImage = getMetaByProperty(doc, "og:image");
+
+    const twitterCard = getMetaByName(doc, "twitter:card");
+    const twitterSite = getMetaByName(doc, "twitter:site");
+    const twitterTitle = getMetaByName(doc, "twitter:title");
+    const twitterDescription = getMetaByName(doc, "twitter:description");
+    const twitterImage = getMetaByName(doc, "twitter:image");
+
+    const titleLen = title.length;
+    const descLen = description.length;
+
+    const presentCount = [
+      title, description, robots, canonical,
+      ogTitle, ogDescription, ogType, ogUrl, ogImage,
+      twitterCard, twitterSite, twitterTitle, twitterDescription, twitterImage
+    ].filter(Boolean).length;
+
+    let summary = [];
+    summary.push("Meta Tag Analysis");
+    summary.push("-----------------");
+    summary.push("Title: " + (title || "Missing"));
+    summary.push("Description: " + (description || "Missing"));
+    summary.push("Canonical: " + (canonical || "Missing"));
+    summary.push("Robots: " + (robots || "Missing"));
+    summary.push("");
+    summary.push("Open Graph");
+    summary.push("og:title: " + (ogTitle || "Missing"));
+    summary.push("og:description: " + (ogDescription || "Missing"));
+    summary.push("og:type: " + (ogType || "Missing"));
+    summary.push("og:url: " + (ogUrl || "Missing"));
+    summary.push("og:image: " + (ogImage || "Missing"));
+    summary.push("");
+    summary.push("Twitter");
+    summary.push("twitter:card: " + (twitterCard || "Missing"));
+    summary.push("twitter:site: " + (twitterSite || "Missing"));
+    summary.push("twitter:title: " + (twitterTitle || "Missing"));
+    summary.push("twitter:description: " + (twitterDescription || "Missing"));
+    summary.push("twitter:image: " + (twitterImage || "Missing"));
+
+    summaryEl.value = summary.join("\n");
+
+    let titleState = "Missing";
+    if (title) titleState = titleLen < 30 ? "Short" : titleLen > 60 ? "Long" : "Typical";
+
+    let descState = "Missing";
+    if (description) descState = descLen < 70 ? "Short" : descLen > 160 ? "Long" : "Typical";
+
+    resultEl.innerHTML = "<strong>Meta tags analyzed.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Title: " + titleState) +
+      badge("Description: " + descState) +
+      badge(canonical ? "Canonical found" : "Canonical missing") +
+      badge(ogImage ? "Social image found" : "Social image missing") +
+      badge("Detected fields: " + presentCount) +
+      "</div>";
+
+    fillTable([
+      ["Title", title || "Missing"],
+      ["Title length", title ? String(titleLen) : "—"],
+      ["Meta description", description || "Missing"],
+      ["Description length", description ? String(descLen) : "—"],
+      ["Robots", robots || "Missing"],
+      ["Canonical", canonical || "Missing"],
+      ["og:title", ogTitle || "Missing"],
+      ["og:description", ogDescription || "Missing"],
+      ["og:type", ogType || "Missing"],
+      ["og:url", ogUrl || "Missing"],
+      ["og:image", ogImage || "Missing"],
+      ["twitter:card", twitterCard || "Missing"],
+      ["twitter:site", twitterSite || "Missing"],
+      ["twitter:title", twitterTitle || "Missing"],
+      ["twitter:description", twitterDescription || "Missing"],
+      ["twitter:image", twitterImage || "Missing"],
+    ]);
+  }
+
+  function fillDemo() {
+    inputEl.value =
+`<head>
+  <title>Meta Tag Generator for Developers</title>
+  <meta name="description" content="Generate SEO and social meta tags for titles, descriptions, Open Graph, and Twitter cards." />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://example.com/meta-tag-generator/" />
+  <meta property="og:title" content="Meta Tag Generator for Developers" />
+  <meta property="og:description" content="Generate SEO and social meta tags for your pages." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com/meta-tag-generator/" />
+  <meta property="og:image" content="https://example.com/preview.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@example" />
+</head>`;
+    resetOutput();
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  analyzeBtn.addEventListener("click", analyzeMarkup);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") analyzeMarkup();
+  });
+});
+</script>

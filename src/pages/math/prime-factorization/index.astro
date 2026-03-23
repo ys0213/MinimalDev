@@ -1,0 +1,284 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Prime Factorization",
+  description:
+    "Factor an integer into prime factors with validation, exponent form, result cards, and FAQ support.",
+  href: "/math/prime-factorization/",
+  order: 355,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/prime-factorization/";
+
+const faqs = [
+  {
+    q: "What is prime factorization?",
+    a: "Prime factorization expresses an integer greater than 1 as a product of prime numbers.",
+  },
+  {
+    q: "Can 0 or 1 be factorized into primes?",
+    a: "No. Prime factorization is defined for integers greater than 1.",
+  },
+  {
+    q: "Why do exponents appear in the result?",
+    a: "Repeated prime factors are grouped with exponents. For example, 72 = 2^3 × 3^2.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Prime Factorization — ${SITE_NAME}`}
+  description="Prime factorization calculator with validation, exponent form, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Prime Factorization"
+  intro="Factor a positive integer into its prime factors and view the result in both expanded and exponent form."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="prime-factorization">
+    <style is:inline>
+      .pf-wrap, .pf-wrap * { box-sizing: border-box; }
+      .pf-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form pf-wrap" role="form" aria-describedby="pf_help pf_privacy">
+      <div class="field">
+        <label for="pf_n">Integer n</label>
+        <input id="pf_n" type="number" step="1" inputmode="numeric" placeholder="e.g., 360" />
+      </div>
+
+      <p class="note" id="pf_help" style="margin-top:6px;">
+        Enter an integer greater than 1. This tool returns the prime factorization of <strong>n</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pf_calc">Factorize</button>
+        <button class="btn secondary" type="button" id="pf_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pf_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pf_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pf_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pf_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pf_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool repeatedly divides the input by the smallest possible prime factor until the remaining value is 1.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>72</strong> = <strong>2 × 2 × 2 × 3 × 3</strong> = <strong>2³ × 3²</strong></li>
+      <li><strong>97</strong> is prime, so its factorization is just <strong>97</strong></li>
+      <li><strong>360</strong> = <strong>2³ × 3² × 5</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/prime-number-checker/">Prime Number Checker</a></li>
+      <li><a href="/math/random-prime-generator/">Random Prime Generator</a></li>
+      <li><a href="/math/gcd-lcm-calculator/">GCD LCM Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const nEl = document.getElementById("pf_n");
+  const calcBtn = document.getElementById("pf_calc");
+  const demoBtn = document.getElementById("pf_fill_demo");
+  const clearBtn = document.getElementById("pf_clear");
+  const errorEl = document.getElementById("pf_error");
+  const resultEl = document.getElementById("pf_result");
+  const cardsEl = document.getElementById("pf_cards");
+  const tbodyEl = document.getElementById("pf_tbody");
+
+  if (!nEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getInt() {
+    const raw = String(nEl.value || "").trim();
+    if (!raw) throw new Error("Please enter an integer.");
+    const n = Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      throw new Error("Please enter a valid integer.");
+    }
+    return n;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  function superscript(num) {
+    const map = {
+      "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+      "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻"
+    };
+    return String(num).split("").map(ch => map[ch] || ch).join("");
+  }
+
+  function factorize(n) {
+    const factors = [];
+    let x = n;
+
+    while (x % 2 === 0) {
+      factors.push(2);
+      x /= 2;
+    }
+
+    let d = 3;
+    while (d * d <= x) {
+      while (x % d === 0) {
+        factors.push(d);
+        x /= d;
+      }
+      d += 2;
+    }
+
+    if (x > 1) factors.push(x);
+    return factors;
+  }
+
+  function groupedFactors(factors) {
+    const groups = [];
+    for (let i = 0; i < factors.length; i++) {
+      const p = factors[i];
+      const last = groups[groups.length - 1];
+      if (last && last.prime === p) last.exp += 1;
+      else groups.push({ prime: p, exp: 1 });
+    }
+    return groups;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const n = getInt();
+
+      if (n <= 1) {
+        showError("Please enter an integer greater than 1.");
+        return;
+      }
+
+      const factors = factorize(n);
+      const groups = groupedFactors(factors);
+
+      const expanded = factors.map(fmt).join(" × ");
+      const exponentForm = groups.map(function (g) {
+        return g.exp === 1 ? fmt(g.prime) : fmt(g.prime) + superscript(g.exp);
+      }).join(" × ");
+
+      const isPrime = factors.length === 1 && factors[0] === n;
+
+      resultEl.innerHTML =
+        "<strong>Prime factorization</strong><br/>" +
+        "<span class='pf-code'>" + fmt(n) + " = " + exponentForm + "</span>" +
+        "<br/><span class='note pf-code'>" + expanded + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(isPrime ? "Prime input" : "Composite input") +
+        badge("Prime factors: " + groups.length) +
+        badge("Total factors used: " + factors.length) +
+        "</div>";
+
+      fillTable([
+        ["Input", fmt(n)],
+        ["Expanded form", expanded],
+        ["Exponent form", exponentForm],
+        ["Classification", isPrime ? "Prime" : "Composite"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not factorize the number.");
+    }
+  }
+
+  function fillDemo() {
+    nEl.value = "360";
+    clearOutput();
+  }
+
+  function reset() {
+    nEl.value = "";
+    clearOutput();
+    nEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  nEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

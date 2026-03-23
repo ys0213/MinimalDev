@@ -1,0 +1,369 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Password Entropy Calculator",
+  description:
+    "Estimate password entropy from character set assumptions and length. Runs locally with result cards, accessibility, and FAQ schema.",
+  href: "/utility/password-entropy-calculator/",
+  order: 161,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/password-entropy-calculator/";
+
+const faqs = [
+  {
+    q: "What is password entropy?",
+    a: "Password entropy is a rough measure of unpredictability, often expressed in bits. Higher entropy generally means more guessing effort for an attacker.",
+  },
+  {
+    q: "How does this calculator estimate entropy?",
+    a: "It estimates entropy using length and the assumed character pool size, then reports total combinations and rough guess-time estimates under simplified attack assumptions.",
+  },
+  {
+    q: "Is entropy the same as strength?",
+    a: "Not exactly. Entropy is a mathematical estimate. Real password strength also depends on reuse, common patterns, leaks, hashing, and attacker constraints.",
+  },
+  {
+    q: "Does this tool store my password?",
+    a: "No. Everything runs locally in your browser. Your password is not stored or transmitted.",
+  },
+  {
+    q: "Why does actual entropy differ from theoretical entropy?",
+    a: "Real users often choose predictable structures, words, dates, or substitutions. That reduces effective entropy compared with the theoretical maximum.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Password Entropy Calculator — ${SITE_NAME}`}
+  description="Estimate password entropy, combinations, and rough crack time locally with result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Password Entropy Calculator"
+  intro="Estimate password entropy from actual password content or from manual assumptions about length and character pool."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="password-entropy-calculator">
+    <style is:inline>
+      #pec_password {
+        width: 100%;
+        min-width: 0;
+      }
+      .pec-mono {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="pec_help pec_privacy">
+      <div class="field">
+        <label for="pec_mode">Mode</label>
+        <select id="pec_mode">
+          <option value="password" selected>Infer pool from password contents</option>
+          <option value="manual">Manual length + pool size</option>
+        </select>
+      </div>
+
+      <div class="field" id="pec_password_wrap">
+        <label for="pec_password">Password</label>
+        <input id="pec_password" type="password" autocomplete="off" spellcheck="false" placeholder="Type a password..." />
+      </div>
+
+      <div id="pec_manual_wrap" style="display:none;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div class="field" style="flex:1 1 220px;">
+            <label for="pec_length">Length</label>
+            <input id="pec_length" type="number" min="1" max="512" step="1" value="16" inputmode="numeric" />
+          </div>
+          <div class="field" style="flex:1 1 220px;">
+            <label for="pec_pool">Character pool size</label>
+            <input id="pec_pool" type="number" min="1" max="10000" step="1" value="94" inputmode="numeric" />
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="pec_guesses">Guess rate assumption</label>
+        <select id="pec_guesses">
+          <option value="1e3">1,000 guesses/sec</option>
+          <option value="1e6" selected>1,000,000 guesses/sec</option>
+          <option value="1e9">1,000,000,000 guesses/sec</option>
+        </select>
+      </div>
+
+      <p class="note" id="pec_help" style="margin-top:6px;">
+        The result is a theoretical estimate. Human-chosen passwords often have lower effective entropy than the math suggests.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pec_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pec_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="pec_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pec_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pec_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pec_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pec_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pec_privacy" style="margin-top:10px;">
+        Privacy: all calculations run locally in your browser. Passwords are not stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Entropy is estimated as <strong>length × log2(pool size)</strong>. The tool also reports the implied search space and a rough time-to-guess estimate using your chosen guess rate.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>16 chars from 94 printable characters</strong> → much higher entropy than an 8-character lowercase-only password</li>
+      <li><strong>Random generated strings</strong> → typically closer to theoretical entropy</li>
+      <li><strong>Human-chosen passwords</strong> → often lower effective entropy than the formula implies</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-strength-checker/">Password Strength Checker</a></li>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("pec_mode");
+  const passwordWrap = document.getElementById("pec_password_wrap");
+  const manualWrap = document.getElementById("pec_manual_wrap");
+  const passwordEl = document.getElementById("pec_password");
+  const lengthEl = document.getElementById("pec_length");
+  const poolEl = document.getElementById("pec_pool");
+  const guessesEl = document.getElementById("pec_guesses");
+  const calcBtn = document.getElementById("pec_calc");
+  const copyBtn = document.getElementById("pec_copy");
+  const clearBtn = document.getElementById("pec_clear");
+  const errEl = document.getElementById("pec_error");
+  const resultEl = document.getElementById("pec_result");
+  const cardsEl = document.getElementById("pec_cards");
+  const tbodyEl = document.getElementById("pec_tbody");
+
+  if (!modeEl || !passwordWrap || !manualWrap || !passwordEl || !lengthEl || !poolEl || !guessesEl || !calcBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function badge(text, type) {
+    const border =
+      type === "good" ? "rgba(34,197,94,.55)" :
+      type === "warn" ? "rgba(245,158,11,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function hasLower(s) { return /[a-z]/.test(s); }
+  function hasUpper(s) { return /[A-Z]/.test(s); }
+  function hasDigit(s) { return /[0-9]/.test(s); }
+  function hasSymbol(s) { return /[^A-Za-z0-9]/.test(s); }
+  function inferPool(s) {
+    let n = 0;
+    if (hasLower(s)) n += 26;
+    if (hasUpper(s)) n += 26;
+    if (hasDigit(s)) n += 10;
+    if (hasSymbol(s)) n += 33;
+    return Math.max(n, 1);
+  }
+  function duration(seconds) {
+    if (!Number.isFinite(seconds) || seconds <= 0) return "instant";
+    const minute = 60, hour = 3600, day = 86400, year = 31557600;
+    if (seconds < 1) return "< 1 second";
+    if (seconds < minute) return Math.round(seconds) + " seconds";
+    if (seconds < hour) return (seconds / minute).toFixed(1) + " minutes";
+    if (seconds < day) return (seconds / hour).toFixed(1) + " hours";
+    if (seconds < year) return (seconds / day).toFixed(1) + " days";
+    if (seconds < year * 1000) return (seconds / year).toFixed(1) + " years";
+    return "> 1,000 years";
+  }
+  function classify(bits) {
+    if (bits < 28) return { label: "Low entropy", type: "warn" };
+    if (bits < 50) return { label: "Moderate entropy", type: "warn" };
+    if (bits < 80) return { label: "High entropy", type: "good" };
+    return { label: "Very high entropy", type: "good" };
+  }
+
+  function syncMode() {
+    const m = String(modeEl.value || "password");
+    passwordWrap.style.display = m === "password" ? "" : "none";
+    manualWrap.style.display = m === "manual" ? "" : "none";
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const mode = String(modeEl.value || "password");
+    const guessesPerSecond = Number(guessesEl.value || "1000000");
+
+    let length = 0;
+    let pool = 0;
+    let notes = "";
+
+    if (mode === "password") {
+      const pw = String(passwordEl.value || "");
+      if (!pw) {
+        showError("Please enter a password.");
+        return null;
+      }
+      length = pw.length;
+      pool = inferPool(pw);
+      notes = "Pool inferred from detected character categories in the password.";
+    } else {
+      length = parseInt(String(lengthEl.value || ""), 10);
+      pool = parseInt(String(poolEl.value || ""), 10);
+      if (!Number.isFinite(length) || length < 1 || length > 512) {
+        showError("Length must be between 1 and 512.");
+        return null;
+      }
+      if (!Number.isFinite(pool) || pool < 1 || pool > 10000) {
+        showError("Character pool size must be between 1 and 10,000.");
+        return null;
+      }
+      notes = "Entropy estimated from manual assumptions.";
+    }
+
+    const bits = length * Math.log2(pool);
+    const combinations = Math.pow(pool, length);
+    const expectedGuesses = combinations / 2;
+    const seconds = expectedGuesses / guessesPerSecond;
+    const cls = classify(bits);
+
+    resultEl.innerHTML =
+      "<strong>Entropy estimate:</strong> " + bits.toFixed(2) + " bits" +
+      "<br/><span class='note'>" + cls.label + " · Rough guess-time: " + duration(seconds) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(cls.label, cls.type) +
+      badge("Length: " + length, length >= 12 ? "good" : "warn") +
+      badge("Pool: " + pool, "neutral") +
+      badge("Rate: " + guessesPerSecond.toLocaleString() + "/sec", "neutral") +
+      "</div>";
+
+    fillTable([
+      ["Mode", mode === "password" ? "Infer from password" : "Manual"],
+      ["Length", String(length)],
+      ["Character pool size", pool.toLocaleString()],
+      ["Entropy estimate", bits.toFixed(2) + " bits"],
+      ["Combinations", Number.isFinite(combinations) ? combinations.toExponential(4) : "very large"],
+      ["Expected guesses", Number.isFinite(expectedGuesses) ? expectedGuesses.toExponential(4) : "very large"],
+      ["Guess rate assumption", guessesPerSecond.toLocaleString() + " / sec"],
+      ["Rough guess-time estimate", duration(seconds)],
+      ["Notes", notes],
+    ]);
+
+    return {
+      bits: bits,
+      length: length,
+      pool: pool,
+      time: duration(seconds),
+      mode: mode
+    };
+  }
+
+  async function copySummary() {
+    clearError();
+    const res = calculate();
+    if (!res) return;
+    const text =
+      "Password entropy estimate: " + res.bits.toFixed(2) + " bits\n" +
+      "Mode: " + (res.mode === "password" ? "Infer from password" : "Manual") + "\n" +
+      "Length: " + res.length + "\n" +
+      "Pool size: " + res.pool + "\n" +
+      "Guess-time estimate: " + res.time;
+    try {
+      await navigator.clipboard.writeText(text);
+      resultEl.innerHTML = "<strong>Copied summary.</strong><br/><span class='note'>Entropy summary copied to clipboard.</span>";
+    } catch (e) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    modeEl.value = "password";
+    passwordEl.value = "";
+    lengthEl.value = "16";
+    poolEl.value = "94";
+    guessesEl.value = "1e6";
+    syncMode();
+    resetOutput();
+    passwordEl.focus();
+  }
+
+  modeEl.addEventListener("change", syncMode);
+  calcBtn.addEventListener("click", calculate);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+  passwordEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") calculate();
+  });
+
+  syncMode();
+  clearAll();
+});
+</script>

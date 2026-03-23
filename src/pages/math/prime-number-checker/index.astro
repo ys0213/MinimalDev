@@ -1,0 +1,289 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Prime Number Checker",
+  description:
+    "Check whether an integer is prime with validation, factor insight, and FAQ support.",
+  href: "/math/prime-number-checker/",
+  order: 354,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/prime-number-checker/";
+
+const faqs = [
+  {
+    q: "What is a prime number?",
+    a: "A prime number is an integer greater than 1 that has exactly two positive divisors: 1 and itself.",
+  },
+  {
+    q: "Are 0 and 1 prime?",
+    a: "No. Prime numbers must be greater than 1.",
+  },
+  {
+    q: "Can negative numbers be prime?",
+    a: "No. In standard school and number theory usage, prime numbers are positive integers greater than 1.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Prime Number Checker — ${SITE_NAME}`}
+  description="Prime number checker with integer validation, factor insight, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Prime Number Checker"
+  intro="Check whether an integer is prime and, if not, see a small factor explanation."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="prime-number-checker">
+    <div class="form" role="form" aria-describedby="pnc_help pnc_privacy">
+      <div class="field">
+        <label for="pnc_n">Integer n</label>
+        <input id="pnc_n" type="number" step="1" inputmode="numeric" placeholder="e.g., 29" />
+      </div>
+
+      <p class="note" id="pnc_help" style="margin-top:6px;">
+        This tool checks whether <strong>n</strong> is a prime integer greater than 1.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pnc_calc">Check</button>
+        <button class="btn secondary" type="button" id="pnc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pnc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pnc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pnc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pnc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pnc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pnc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      A number is prime if it has no positive divisors other than <strong>1</strong> and <strong>itself</strong>.
+      This checker tests divisibility up to the square root of the input.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>29</strong> is prime</li>
+      <li><strong>21</strong> is not prime because <strong>21 = 3 × 7</strong></li>
+      <li><strong>1</strong> is not prime</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/prime-factorization/">Prime Factorization</a></li>
+      <li><a href="/math/random-prime-generator/">Random Prime Generator</a></li>
+      <li><a href="/math/modulo-calculator/">Modulo Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const nEl = document.getElementById("pnc_n");
+  const calcBtn = document.getElementById("pnc_calc");
+  const demoBtn = document.getElementById("pnc_fill_demo");
+  const clearBtn = document.getElementById("pnc_clear");
+  const errorEl = document.getElementById("pnc_error");
+  const resultEl = document.getElementById("pnc_result");
+  const cardsEl = document.getElementById("pnc_cards");
+  const tbodyEl = document.getElementById("pnc_tbody");
+
+  if (!nEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getInt(el) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter an integer.");
+    const n = Number(raw);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      throw new Error("Please enter a valid integer.");
+    }
+    return n;
+  }
+
+  function fmt(n) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+
+  function firstFactor(n) {
+    if (n % 2 === 0) return 2;
+    const limit = Math.floor(Math.sqrt(n));
+    for (let i = 3; i <= limit; i += 2) {
+      if (n % i === 0) return i;
+    }
+    return null;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const n = getInt(nEl);
+
+      if (n <= 1) {
+        resultEl.innerHTML =
+          "<strong>Not prime</strong><br/><span class='note'>Prime numbers must be integers greater than 1.</span>";
+
+        cardsEl.style.display = "block";
+        cardsEl.innerHTML =
+          "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+          badge("n ≤ 1") +
+          badge("Not prime") +
+          "</div>";
+
+        fillTable([
+          ["Input", fmt(n)],
+          ["Classification", "Not prime"],
+          ["Reason", "Prime numbers must be greater than 1"],
+        ]);
+        return;
+      }
+
+      if (n === 2) {
+        resultEl.innerHTML =
+          "<strong>Prime</strong><br/><span class='note'>2 is the smallest prime number.</span>";
+
+        cardsEl.style.display = "block";
+        cardsEl.innerHTML =
+          "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+          badge("Prime") +
+          badge("Even prime") +
+          "</div>";
+
+        fillTable([
+          ["Input", "2"],
+          ["Classification", "Prime"],
+          ["Special note", "2 is the only even prime"],
+        ]);
+        return;
+      }
+
+      const factor = firstFactor(n);
+
+      if (factor === null) {
+        resultEl.innerHTML =
+          "<strong>Prime</strong><br/><span class='note'>" + fmt(n) + " has no divisors other than 1 and itself.</span>";
+
+        cardsEl.style.display = "block";
+        cardsEl.innerHTML =
+          "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+          badge("Prime") +
+          badge("Checked up to √n") +
+          badge("√n ≈ " + Math.sqrt(n).toFixed(3)) +
+          "</div>";
+
+        fillTable([
+          ["Input", fmt(n)],
+          ["Classification", "Prime"],
+          ["Checked divisors up to", Math.floor(Math.sqrt(n)).toString()],
+        ]);
+      } else {
+        const other = n / factor;
+        resultEl.innerHTML =
+          "<strong>Not prime</strong><br/><span class='note'>" +
+          fmt(n) + " = " + fmt(factor) + " × " + fmt(other) + "</span>";
+
+        cardsEl.style.display = "block";
+        cardsEl.innerHTML =
+          "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+          badge("Composite") +
+          badge("Factor found: " + fmt(factor)) +
+          badge(fmt(factor) + " × " + fmt(other)) +
+          "</div>";
+
+        fillTable([
+          ["Input", fmt(n)],
+          ["Classification", "Composite / not prime"],
+          ["Small factor", fmt(factor)],
+          ["Factor pair", fmt(factor) + " × " + fmt(other)],
+        ]);
+      }
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not check primality.");
+    }
+  }
+
+  function fillDemo() {
+    nEl.value = "29";
+    clearOutput();
+  }
+
+  function reset() {
+    nEl.value = "";
+    clearOutput();
+    nEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  nEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

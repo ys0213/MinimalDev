@@ -1,0 +1,338 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Bayes Theorem Calculator",
+  description:
+    "Calculate posterior probability using Bayes' theorem from prior probability, sensitivity, and false positive rate.",
+  href: "/math/bayes-theorem-calculator/",
+  order: 385,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/bayes-theorem-calculator/";
+
+const faqs = [
+  {
+    q: "What does this Bayes theorem calculator compute?",
+    a: "It computes the posterior probability P(A|B) using a prior probability, true positive probability P(B|A), and false positive probability P(B|not A).",
+  },
+  {
+    q: "What is the formula used?",
+    a: "This page uses P(A|B) = P(B|A) × P(A) / (P(B|A) × P(A) + P(B|not A) × (1 − P(A))).",
+  },
+  {
+    q: "Can I enter percentages instead of decimals?",
+    a: "Yes. You can enter values as percentages or decimals and switch the input mode.",
+  },
+  {
+    q: "What is posterior probability?",
+    a: "Posterior probability is the updated probability of event A after observing evidence B.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Bayes Theorem Calculator — ${SITE_NAME}`}
+  description="Calculate posterior probability with Bayes' theorem from prior probability, true positive rate, and false positive rate."
+  canonicalPath={CANONICAL_PATH}
+  h1="Bayes Theorem Calculator"
+  intro="Calculate posterior probability using Bayes' theorem. Enter a prior probability, P(B|A), and P(B|not A) to get the updated probability after observing evidence."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="bayes-theorem-calculator">
+    <style is:inline>
+      .bayes-wrap, .bayes-wrap * { box-sizing: border-box; }
+      .bayes-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .bayes-grid input,
+      .bayes-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .bayes-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .bayes-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form bayes-wrap" role="form" aria-describedby="bayes_help bayes_privacy">
+      <div class="bayes-grid">
+        <div class="field">
+          <label for="bayes_mode">Input mode</label>
+          <select id="bayes_mode">
+            <option value="percent" selected>Percent (0–100)</option>
+            <option value="decimal">Decimal (0–1)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="bayes_prior">Prior P(A)</label>
+          <input id="bayes_prior" type="number" inputmode="decimal" step="any" placeholder="e.g., 1" />
+        </div>
+
+        <div class="field">
+          <label for="bayes_pbgivena">Likelihood P(B|A)</label>
+          <input id="bayes_pbgivena" type="number" inputmode="decimal" step="any" placeholder="e.g., 95" />
+        </div>
+
+        <div class="field">
+          <label for="bayes_pbgivennota">False positive P(B|not A)</label>
+          <input id="bayes_pbgivennota" type="number" inputmode="decimal" step="any" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <p class="note" id="bayes_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="bayes-code">
+          P(A|B) = P(B|A) × P(A) / (P(B|A) × P(A) + P(B|not A) × (1 − P(A)))
+        </span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bayes_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="bayes_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="bayes_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bayes_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="bayes_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="bayes_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="bayes_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bayes_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Bayes' theorem updates an initial probability after new evidence is observed.
+      This is often used for medical tests, spam filters, diagnostics, and risk analysis.
+    </p>
+    <p class="note">
+      A low prior probability can still produce a modest posterior even if the test sensitivity is high,
+      especially when the false positive rate is not very small.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Prior:</strong> 1%</li>
+      <li><strong>P(B|A):</strong> 95%</li>
+      <li><strong>P(B|not A):</strong> 5%</li>
+      <li>Posterior P(A|B) is much higher than 1%, but still far below 95%.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/odds-calculator/">Odds Calculator</a></li>
+      <li><a href="/math/cumulative-distribution-calculator/">Cumulative Distribution Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("bayes_mode");
+  const priorEl = document.getElementById("bayes_prior");
+  const likeEl = document.getElementById("bayes_pbgivena");
+  const fpEl = document.getElementById("bayes_pbgivennota");
+  const calcBtn = document.getElementById("bayes_calc");
+  const fillBtn = document.getElementById("bayes_fill_demo");
+  const clearBtn = document.getElementById("bayes_clear");
+  const errorEl = document.getElementById("bayes_error");
+  const resultEl = document.getElementById("bayes_result");
+  const cardsEl = document.getElementById("bayes_cards");
+  const tbodyEl = document.getElementById("bayes_tbody");
+
+  if (!modeEl || !priorEl || !likeEl || !fpEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function fmtPct(n, digits) {
+    return fmt(n * 100, Number.isFinite(digits) ? digits : 6) + "%";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function setPlaceholders() {
+    if (modeEl.value === "percent") {
+      priorEl.placeholder = "e.g., 1";
+      likeEl.placeholder = "e.g., 95";
+      fpEl.placeholder = "e.g., 5";
+    } else {
+      priorEl.placeholder = "e.g., 0.01";
+      likeEl.placeholder = "e.g., 0.95";
+      fpEl.placeholder = "e.g., 0.05";
+    }
+  }
+
+  function toProbability(raw) {
+    const x = Number(raw);
+    if (!Number.isFinite(x)) return NaN;
+    return modeEl.value === "percent" ? x / 100 : x;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const priorRaw = String(priorEl.value || "").trim();
+    const likeRaw = String(likeEl.value || "").trim();
+    const fpRaw = String(fpEl.value || "").trim();
+
+    if (!priorRaw || !likeRaw || !fpRaw) {
+      showError("Please enter all three probabilities.");
+      return;
+    }
+
+    const pA = toProbability(priorRaw);
+    const pBgivenA = toProbability(likeRaw);
+    const pBgivenNotA = toProbability(fpRaw);
+
+    if (![pA, pBgivenA, pBgivenNotA].every(Number.isFinite)) {
+      showError("Please enter valid numeric probabilities.");
+      return;
+    }
+
+    if (pA < 0 || pA > 1 || pBgivenA < 0 || pBgivenA > 1 || pBgivenNotA < 0 || pBgivenNotA > 1) {
+      showError("All probabilities must be between 0 and 1, or between 0 and 100 in percent mode.");
+      return;
+    }
+
+    const numerator = pBgivenA * pA;
+    const evidence = numerator + pBgivenNotA * (1 - pA);
+
+    if (evidence === 0) {
+      showError("The evidence probability P(B) is 0, so the posterior is undefined.");
+      return;
+    }
+
+    const posterior = numerator / evidence;
+    const pNotA = 1 - pA;
+
+    let label = "Moderate posterior";
+    if (posterior < 0.1) label = "Low posterior";
+    else if (posterior > 0.9) label = "High posterior";
+
+    resultEl.innerHTML =
+      "<strong>Bayes theorem result</strong><br/>" +
+      "<span class='bayes-code'>P(A|B) = " + fmtPct(posterior, 8) + "</span>" +
+      "<br/><span class='note'>Evidence probability P(B) = " + fmtPct(evidence, 8) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(label) +
+      badge("Prior = " + fmtPct(pA, 4)) +
+      badge("Posterior = " + fmtPct(posterior, 4)) +
+      "</div>";
+
+    fillTable([
+      ["Prior P(A)", fmtPct(pA, 8)],
+      ["Complement P(not A)", fmtPct(pNotA, 8)],
+      ["Likelihood P(B|A)", fmtPct(pBgivenA, 8)],
+      ["False positive P(B|not A)", fmtPct(pBgivenNotA, 8)],
+      ["Numerator P(B|A)×P(A)", fmt(numerator, 10)],
+      ["Evidence P(B)", fmt(evidence, 10)],
+      ["Posterior P(A|B)", fmtPct(posterior, 8)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "percent";
+    setPlaceholders();
+    priorEl.value = "1";
+    likeEl.value = "95";
+    fpEl.value = "5";
+    clearOutput();
+  }
+
+  function reset() {
+    modeEl.value = "percent";
+    priorEl.value = "";
+    likeEl.value = "";
+    fpEl.value = "";
+    setPlaceholders();
+    clearOutput();
+    priorEl.focus();
+  }
+
+  modeEl.addEventListener("change", setPlaceholders);
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [priorEl, likeEl, fpEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  setPlaceholders();
+  clearOutput();
+});
+</script>

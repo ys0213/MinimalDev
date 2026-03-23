@@ -1,0 +1,283 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base85 Encoder",
+  description:
+    "Encode UTF-8 text to Ascii85/Base85 with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base85-encoder/",
+  order: 334,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base85-encoder/";
+
+const faqs = [
+  {
+    q: "What Base85 format does this page use?",
+    a: "This tool uses Ascii85-style Base85 encoding.",
+  },
+  {
+    q: "Does it use the z shortcut?",
+    a: "Yes. Fully zero 4-byte blocks are compressed to z in the output.",
+  },
+  {
+    q: "Can I encode non-English text?",
+    a: "Yes. The input is first converted to UTF-8 bytes and then encoded.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Encoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base85 Encoder — ${SITE_NAME}`}
+  description="Encode UTF-8 text to Ascii85/Base85 with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base85 Encoder"
+  intro="Encode text to Ascii85/Base85. Useful for compact ASCII-safe encoding in developer workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base85-encoder">
+    <style is:inline>
+      #b85e_input,
+      #b85e_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b85e-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b85e_help b85e_privacy">
+      <div class="field">
+        <label for="b85e_input">Text input</label>
+        <textarea id="b85e_input" rows="10" spellcheck="false" placeholder="Enter text to encode as Ascii85/Base85"></textarea>
+      </div>
+
+      <p class="note" id="b85e_help" style="margin-top:6px;">
+        Uses Ascii85-style Base85 encoding. This tool outputs raw Ascii85 text without wrapping markers.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b85e_encode">Encode</button>
+        <button class="btn secondary" type="button" id="b85e_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b85e_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b85e_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b85e_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b85e_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b85e_output">Base85 output</label>
+        <textarea id="b85e_output" rows="10" readonly spellcheck="false" placeholder="Encoded Base85 output will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b85e_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b85e_privacy" style="margin-top:10px;">
+        Privacy: encoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool converts text to UTF-8 bytes, then encodes those bytes into Ascii85/Base85 text.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Hello</strong> → Base85 text</li>
+      <li><strong>developer-tools</strong> → compact ASCII-safe output</li>
+      <li><strong>Zero blocks</strong> → may use the <strong>z</strong> shorthand</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base85-decoder/">Base85 Decoder</a></li>
+      <li><a href="/developer-tools/base32-encoder/">Base32 Encoder</a></li>
+      <li><a href="/developer-tools/base58-encoder/">Base58 Encoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b85e_input");
+  const outputEl = document.getElementById("b85e_output");
+  const encodeBtn = document.getElementById("b85e_encode");
+  const copyBtn = document.getElementById("b85e_copy");
+  const clearBtn = document.getElementById("b85e_clear");
+  const errEl = document.getElementById("b85e_error");
+  const resultEl = document.getElementById("b85e_result");
+  const cardsEl = document.getElementById("b85e_cards");
+  const tbodyEl = document.getElementById("b85e_tbody");
+
+  if (!inputEl || !outputEl || !encodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function ascii85Encode(bytes) {
+    let out = "";
+    for (let i = 0; i < bytes.length; i += 4) {
+      const remain = Math.min(4, bytes.length - i);
+      let value = 0;
+      for (let j = 0; j < 4; j++) {
+        value = (value << 8) | (j < remain ? bytes[i + j] : 0);
+      }
+
+      if (remain === 4 && value === 0) {
+        out += "z";
+        continue;
+      }
+
+      const chars = new Array(5);
+      for (let k = 4; k >= 0; k--) {
+        chars[k] = String.fromCharCode((value % 85) + 33);
+        value = Math.floor(value / 85);
+      }
+
+      out += chars.slice(0, remain + 1).join("");
+    }
+    return out;
+  }
+
+  function encode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.length) {
+      showError("Please enter text to encode.");
+      return;
+    }
+
+    const bytes = new TextEncoder().encode(raw);
+    const encoded = ascii85Encode(bytes);
+
+    lastOutput = encoded;
+    outputEl.value = encoded;
+
+    resultEl.innerHTML = "<strong>Text encoded to Base85.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Ascii85") +
+      badge("UTF-8 input") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      (encoded.includes("z") ? badge("z shortcut used") : "") +
+      "</div>";
+
+    fillTable([
+      ["Input characters", String(raw.length)],
+      ["UTF-8 byte length", String(bytes.length)],
+      ["Output length", String(encoded.length)],
+      ["Zero-block shortcut", encoded.includes("z") ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No encoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied Base85 output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  encodeBtn.addEventListener("click", encode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") encode();
+  });
+});
+</script>

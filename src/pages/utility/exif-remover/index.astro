@@ -1,0 +1,623 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "EXIF Remover",
+  description:
+    "Remove EXIF and common embedded metadata from images locally in your browser with preview, download, validation, accessibility, and FAQ schema.",
+  href: "/utility/exif-remover/",
+  order: 184,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/exif-remover/";
+
+const faqs = [
+  {
+    q: "What does this EXIF remover do?",
+    a: "It removes common embedded image metadata by re-encoding the selected image locally in your browser.",
+  },
+  {
+    q: "Does it upload my image?",
+    a: "No. Processing happens locally in the browser and the selected file is not uploaded or transmitted by this page.",
+  },
+  {
+    q: "Which formats are supported?",
+    a: "This tool accepts JPEG, PNG, and WebP images that can be decoded by the browser and re-exports them as JPEG, PNG, or WebP.",
+  },
+  {
+    q: "Will the image quality change?",
+    a: "PNG output is lossless. JPEG and WebP are re-encoded and may change in size or quality depending on the selected quality setting.",
+  },
+  {
+    q: "Does this remove metadata from the output file?",
+    a: "Yes. The standard browser-side approach is to decode the image pixels and export a fresh file from canvas, which removes the original embedded metadata blocks.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`EXIF Remover — ${SITE_NAME}`}
+  description="Remove EXIF and common image metadata locally in your browser with preview, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="EXIF Remover"
+  intro="Select a JPEG, PNG, or WebP image, remove its embedded metadata by re-exporting it locally, compare the result, and download the cleaned file."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="exif-remover">
+    <style is:inline>
+      #exif_file,
+      #exif_output_type,
+      #exif_quality,
+      #exif_filename {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .exif-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .exif-panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .exif-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .exif-preview-box {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 180px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .exif-preview-box img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .exif-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .exif-info-list {
+        display: grid;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .exif-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .exif-card-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+
+      .exif-mini-card {
+        flex: 1 1 180px;
+        min-width: 0;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .exif-mini-card .big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 760px) {
+        .exif-grid,
+        .exif-panel-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="exif_help exif_privacy">
+      <div class="field">
+        <label for="exif_file">Image file</label>
+        <input
+          id="exif_file"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+          aria-describedby="exif_help"
+        />
+        <p class="note" id="exif_help" style="margin-top:6px;">
+          Select a JPEG, PNG, or WebP image. The tool decodes the image and exports a new file locally, which removes the original metadata in the output.
+        </p>
+      </div>
+
+      <div class="exif-grid" style="margin-top:8px;">
+        <div class="field">
+          <label for="exif_output_type">Output format</label>
+          <select id="exif_output_type">
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/png">PNG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+          <p class="note" style="margin-top:6px;">
+            PNG is lossless. JPEG and WebP use the selected quality level.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="exif_quality">Quality (JPEG / WebP)</label>
+          <input id="exif_quality" type="range" min="0.1" max="1" step="0.05" value="0.92" />
+          <p class="note" id="exif_quality_text" style="margin-top:6px;">
+            Current quality: <strong>0.92</strong>
+          </p>
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="exif_filename">Download filename</label>
+          <input
+            id="exif_filename"
+            type="text"
+            value="metadata-removed-image"
+            placeholder="e.g. cleaned-photo"
+          />
+        </div>
+      </div>
+
+      <div class="exif-toolbar" style="margin-top:8px;">
+        <button class="btn" type="button" id="exif_process">Remove Metadata</button>
+        <button class="btn secondary" type="button" id="exif_download" disabled>Download Clean Image</button>
+        <button class="btn secondary" type="button" id="exif_clear">Clear</button>
+      </div>
+
+      <div class="result" id="exif_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="exif_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="exif_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="exif_comparison" style="display:none; margin-top:16px;">
+        <div class="exif-panel-grid">
+          <div class="exif-panel">
+            <strong>Original image</strong>
+            <div class="exif-preview-box">
+              <img id="exif_original_preview" alt="Original image preview" />
+            </div>
+            <div class="exif-info-list note" id="exif_original_info"></div>
+          </div>
+
+          <div class="exif-panel">
+            <strong>Clean output</strong>
+            <div class="exif-preview-box">
+              <img id="exif_clean_preview" alt="Cleaned image preview" />
+            </div>
+            <div class="exif-info-list note" id="exif_clean_info"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="exif_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="exif_privacy" style="margin-top:10px;">
+        Privacy: EXIF removal runs locally in your browser. No image data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses a browser-side re-encoding workflow:
+    </p>
+    <ul>
+      <li><strong>Step 1:</strong> load the selected image locally</li>
+      <li><strong>Step 2:</strong> draw the decoded pixels onto a canvas</li>
+      <li><strong>Step 3:</strong> export a fresh image file from the canvas</li>
+      <li><strong>Result:</strong> the new file does not contain the original embedded EXIF/metadata blocks</li>
+    </ul>
+    <p class="note">
+      This is the standard browser-only method for creating a metadata-cleaned image without uploading the source file.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Remove camera and location metadata before sharing a photo</li>
+      <li>Create a privacy-clean version of a JPEG for the web</li>
+      <li>Re-export a PNG or WebP without original metadata baggage</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/image-metadata-viewer/">Image Metadata Viewer</a></li>
+      <li><a href="/utility/gif-maker/">GIF Maker</a></li>
+      <li><a href="/utility/gif-splitter/">GIF Splitter</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("exif_file");
+  const outputTypeEl = document.getElementById("exif_output_type");
+  const qualityEl = document.getElementById("exif_quality");
+  const qualityTextEl = document.getElementById("exif_quality_text");
+  const filenameEl = document.getElementById("exif_filename");
+  const processBtn = document.getElementById("exif_process");
+  const downloadBtn = document.getElementById("exif_download");
+  const clearBtn = document.getElementById("exif_clear");
+  const errEl = document.getElementById("exif_error");
+  const resultEl = document.getElementById("exif_result");
+  const cardsEl = document.getElementById("exif_cards");
+  const comparisonEl = document.getElementById("exif_comparison");
+  const originalPreviewEl = document.getElementById("exif_original_preview");
+  const cleanPreviewEl = document.getElementById("exif_clean_preview");
+  const originalInfoEl = document.getElementById("exif_original_info");
+  const cleanInfoEl = document.getElementById("exif_clean_info");
+  const tbodyEl = document.getElementById("exif_tbody");
+
+  if (
+    !fileEl || !outputTypeEl || !qualityEl || !qualityTextEl || !filenameEl ||
+    !processBtn || !downloadBtn || !clearBtn || !errEl || !resultEl || !cardsEl ||
+    !comparisonEl || !originalPreviewEl || !cleanPreviewEl || !originalInfoEl ||
+    !cleanInfoEl || !tbodyEl
+  ) return;
+
+  let originalUrl = "";
+  let outputUrl = "";
+  let outputBlob = null;
+  let lastOutputType = "";
+  let lastImageWidth = 0;
+  let lastImageHeight = 0;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function bytesToHuman(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function extFromMime(mime) {
+    if (mime === "image/jpeg") return "jpg";
+    if (mime === "image/png") return "png";
+    if (mime === "image/webp") return "webp";
+    return "img";
+  }
+
+  function sanitizeFilename(name) {
+    const cleaned = String(name || "")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^\w\- ]+/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+    return cleaned || "metadata-removed-image";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' +
+      border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, big, sub) {
+    return (
+      '<div class="exif-mini-card">' +
+        "<strong>" + escapeHtml(title) + "</strong>" +
+        '<div class="big">' + escapeHtml(big) + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function updateQualityText() {
+    qualityTextEl.innerHTML = 'Current quality: <strong>' + escapeHtml(qualityEl.value) + "</strong>";
+  }
+
+  function revokeUrls() {
+    if (originalUrl) {
+      URL.revokeObjectURL(originalUrl);
+      originalUrl = "";
+    }
+    if (outputUrl) {
+      URL.revokeObjectURL(outputUrl);
+      outputUrl = "";
+    }
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    comparisonEl.style.display = "none";
+    originalPreviewEl.removeAttribute("src");
+    cleanPreviewEl.removeAttribute("src");
+    originalInfoEl.innerHTML = "";
+    cleanInfoEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    downloadBtn.disabled = true;
+    outputBlob = null;
+    lastOutputType = "";
+    lastImageWidth = 0;
+    lastImageHeight = 0;
+    revokeUrls();
+  }
+
+  function buildInfoList(fileName, fileType, fileSize, width, height) {
+    return [
+      '<span><strong>Name:</strong> ' + escapeHtml(fileName) + "</span>",
+      '<span><strong>Type:</strong> ' + escapeHtml(fileType || "image/*") + "</span>",
+      '<span><strong>Size:</strong> ' + escapeHtml(bytesToHuman(fileSize)) + "</span>",
+      '<span><strong>Dimensions:</strong> ' + escapeHtml(width + " × " + height) + "</span>",
+    ].join("");
+  }
+
+  function renderCards(originalSize, cleanedSize, outputType, width, height) {
+    const diff = cleanedSize - originalSize;
+    const pct = originalSize > 0 ? (diff / originalSize) * 100 : 0;
+    const sizeState = diff <= 0 ? "Smaller or equal" : "Larger output";
+    const sizeStateKind = diff <= 0 ? "good" : "warn";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">' +
+        "<strong>Result highlights</strong>" +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          badge("Metadata removed", "good") +
+          badge("Output: " + outputType.replace("image/", "").toUpperCase(), "neutral") +
+          badge(sizeState, sizeStateKind) +
+        "</div>" +
+      "</div>" +
+      '<div class="exif-card-grid">' +
+        card("Original size", bytesToHuman(originalSize), "Selected source file") +
+        card("Clean output", bytesToHuman(cleanedSize), "Fresh export from canvas") +
+        card("Dimensions", width + " × " + height, "Pixel dimensions preserved") +
+        card("Size change", (diff >= 0 ? "+" : "-") + bytesToHuman(Math.abs(diff)), pct.toFixed(2) + "% vs source") +
+      "</div>";
+  }
+
+  function processImage() {
+    resetOutput();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    const validInput =
+      /^image\/(jpeg|png|webp)$/i.test(file.type) ||
+      /\.(jpg|jpeg|png|webp)$/i.test(file.name);
+
+    if (!validInput) {
+      showError("Please select a valid JPEG, PNG, or WebP image.");
+      return;
+    }
+
+    const outputType = String(outputTypeEl.value || "image/jpeg");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(outputType)) {
+      showError("Please choose a valid output format.");
+      return;
+    }
+
+    const quality = parseFloat(qualityEl.value);
+    if (!Number.isFinite(quality) || quality < 0.1 || quality > 1) {
+      showError("Quality must be between 0.1 and 1.");
+      return;
+    }
+
+    originalUrl = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = function () {
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+
+      if (!width || !height) {
+        showError("The selected image has invalid dimensions.");
+        return;
+      }
+
+      lastImageWidth = width;
+      lastImageHeight = height;
+
+      let canvas;
+      let ctx;
+
+      try {
+        canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        ctx = canvas.getContext("2d");
+      } catch (e) {
+        showError("Canvas processing is not available in this browser.");
+        return;
+      }
+
+      if (!ctx) {
+        showError("Canvas processing is not available in this browser.");
+        return;
+      }
+
+      try {
+        ctx.drawImage(img, 0, 0, width, height);
+      } catch (e) {
+        showError("The selected image could not be drawn to canvas.");
+        return;
+      }
+
+      canvas.toBlob(function (blob) {
+        if (!blob) {
+          showError("The cleaned image could not be created.");
+          return;
+        }
+
+        outputBlob = blob;
+        lastOutputType = outputType;
+        outputUrl = URL.createObjectURL(blob);
+
+        originalPreviewEl.src = originalUrl;
+        cleanPreviewEl.src = outputUrl;
+        comparisonEl.style.display = "block";
+
+        originalInfoEl.innerHTML = buildInfoList(file.name, file.type || "image/*", file.size, width, height);
+        cleanInfoEl.innerHTML = buildInfoList(
+          sanitizeFilename(filenameEl.value) + "." + extFromMime(outputType),
+          blob.type || outputType,
+          blob.size,
+          width,
+          height
+        );
+
+        renderCards(file.size, blob.size, outputType, width, height);
+
+        fillTable([
+          ["Original filename", file.name],
+          ["Original type", file.type || "image/*"],
+          ["Original size", bytesToHuman(file.size)],
+          ["Output filename", sanitizeFilename(filenameEl.value) + "." + extFromMime(outputType)],
+          ["Output type", blob.type || outputType],
+          ["Output size", bytesToHuman(blob.size)],
+          ["Dimensions", width + " × " + height],
+          ["Quality", outputType === "image/png" ? "Lossless PNG export" : quality.toFixed(2)],
+          ["Method", "Canvas re-encode from pixel data"],
+          ["Metadata state", "Original metadata removed in output export"],
+        ]);
+
+        resultEl.innerHTML =
+          "<strong>Metadata removed successfully.</strong><br/>" +
+          '<span class="note">A fresh image file was created locally in your browser and is ready for download.</span>';
+
+        downloadBtn.disabled = false;
+      }, outputType, outputType === "image/png" ? undefined : quality);
+    };
+
+    img.onerror = function () {
+      showError("The selected image could not be loaded.");
+    };
+
+    img.src = originalUrl;
+  }
+
+  function downloadCleanImage() {
+    clearError();
+
+    if (!outputBlob || !outputUrl || !lastOutputType) {
+      showError("No cleaned image is ready for download yet.");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = outputUrl;
+    a.download = sanitizeFilename(filenameEl.value) + "." + extFromMime(lastOutputType);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    outputTypeEl.value = "image/jpeg";
+    qualityEl.value = "0.92";
+    filenameEl.value = "metadata-removed-image";
+    updateQualityText();
+    resetOutput();
+    fileEl.focus();
+  }
+
+  qualityEl.addEventListener("input", updateQualityText);
+  processBtn.addEventListener("click", processImage);
+  downloadBtn.addEventListener("click", downloadCleanImage);
+  clearBtn.addEventListener("click", clearAll);
+
+  updateQualityText();
+  resetOutput();
+});
+</script>

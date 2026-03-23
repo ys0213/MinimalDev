@@ -1,0 +1,751 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "GIF Maker",
+  description:
+    "Create animated GIFs from multiple images locally in the browser with frame ordering, timing control, size options, result cards, accessibility, and FAQ schema.",
+  href: "/utility/gif-maker/",
+  order: 185,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/gif-maker/";
+
+const faqs = [
+  {
+    q: "What does this GIF maker do?",
+    a: "It turns multiple selected images into a single animated GIF directly in the browser.",
+  },
+  {
+    q: "Does it upload my images?",
+    a: "No. The selected images are processed locally in your browser and are not uploaded by this page.",
+  },
+  {
+    q: "Can I control the frame delay?",
+    a: "Yes. You can set the delay per frame in milliseconds before generating the GIF.",
+  },
+  {
+    q: "Can I reorder frames?",
+    a: "Yes. The tool includes move up, move down, and remove actions for each selected frame.",
+  },
+  {
+    q: "Why does this page use a library?",
+    a: "True GIF encoding in the browser requires a client-side encoder. This page uses gif.js from CDN for actual animated GIF generation.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`GIF Maker — ${SITE_NAME}`}
+  description="Create animated GIFs from multiple images locally in the browser with ordering, delay controls, width selection, preview, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="GIF Maker"
+  intro="Choose multiple images, arrange their order, set delay and output width, then generate and download an animated GIF in your browser."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+
+  <div slot="tool" data-tool="gif-maker">
+    <style is:inline>
+      #gifm_files,
+      #gifm_delay,
+      #gifm_width,
+      #gifm_filename {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .gifm-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .gifm-frames {
+        display: grid;
+        gap: 12px;
+      }
+
+      .gifm-frame {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+
+      .gifm-frame-grid {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .gifm-frame img {
+        display: block;
+        width: 100%;
+        max-width: 120px;
+        height: auto;
+        border-radius: 10px;
+      }
+
+      .gifm-preview-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        overflow: hidden;
+      }
+
+      .gifm-preview-box {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 180px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .gifm-preview-box img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .gifm-actions,
+      .gifm-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .gifm-card-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+
+      .gifm-mini-card {
+        flex: 1 1 180px;
+        min-width: 0;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .gifm-mini-card .big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 840px) {
+        .gifm-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .gifm-frame-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="gifm_help gifm_privacy">
+      <div class="field">
+        <label for="gifm_files">Source images</label>
+        <input id="gifm_files" type="file" accept="image/*" multiple />
+        <p class="note" id="gifm_help" style="margin-top:6px;">
+          Select two or more images. This page uses the client-side <code>gif.js</code> encoder from CDN to generate a real animated GIF in the browser.
+        </p>
+      </div>
+
+      <div class="gifm-grid" style="margin-top:8px;">
+        <div class="field">
+          <label for="gifm_delay">Frame delay (ms)</label>
+          <input id="gifm_delay" type="number" min="50" step="10" value="400" />
+          <p class="note" style="margin-top:6px;">
+            Lower delay values create faster animation.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="gifm_width">Output width (px)</label>
+          <input id="gifm_width" type="number" min="32" step="1" value="480" />
+          <p class="note" style="margin-top:6px;">
+            Frames are scaled to this width. Height is adjusted proportionally.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="gifm_filename">Download filename</label>
+          <input id="gifm_filename" type="text" value="animated-gif" placeholder="e.g. product-demo" />
+        </div>
+      </div>
+
+      <div class="gifm-actions" style="margin-top:8px;">
+        <button class="btn" type="button" id="gifm_generate">Generate GIF</button>
+        <button class="btn secondary" type="button" id="gifm_download" disabled>Download GIF</button>
+        <button class="btn secondary" type="button" id="gifm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="gifm_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="gifm_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="gifm_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="gifm_frames_wrap" style="display:none; margin-top:16px;">
+        <strong>Frame order</strong>
+        <div class="gifm-frames" id="gifm_frames_list" style="margin-top:12px;"></div>
+      </div>
+
+      <div id="gifm_preview_wrap" style="display:none; margin-top:16px;">
+        <div class="gifm-preview-panel">
+          <strong>Generated GIF preview</strong>
+          <div class="gifm-preview-box">
+            <img id="gifm_preview" alt="Generated GIF preview" />
+          </div>
+          <div class="note" id="gifm_preview_info" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="gifm_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="gifm_privacy" style="margin-top:10px;">
+        Privacy: GIF generation runs locally in your browser. Selected images are not uploaded by this page.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The GIF maker follows this flow:
+    </p>
+    <ul>
+      <li><strong>Select frames:</strong> choose multiple images from your device</li>
+      <li><strong>Arrange order:</strong> move frames up or down before export</li>
+      <li><strong>Set timing:</strong> choose the frame delay in milliseconds</li>
+      <li><strong>Set output width:</strong> scale the GIF to a target width</li>
+      <li><strong>Generate:</strong> encode the animation locally with a browser-side GIF encoder</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Create a product showcase GIF from multiple screenshots</li>
+      <li>Build a step-by-step tutorial animation</li>
+      <li>Make a simple before/after or frame-sequence preview</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/gif-splitter/">GIF Splitter</a></li>
+      <li><a href="/utility/exif-remover/">EXIF Remover</a></li>
+      <li><a href="/utility/image-metadata-viewer/">Image Metadata Viewer</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const filesEl = document.getElementById("gifm_files");
+  const delayEl = document.getElementById("gifm_delay");
+  const widthEl = document.getElementById("gifm_width");
+  const filenameEl = document.getElementById("gifm_filename");
+  const generateBtn = document.getElementById("gifm_generate");
+  const downloadBtn = document.getElementById("gifm_download");
+  const clearBtn = document.getElementById("gifm_clear");
+  const errEl = document.getElementById("gifm_error");
+  const resultEl = document.getElementById("gifm_result");
+  const cardsEl = document.getElementById("gifm_cards");
+  const framesWrap = document.getElementById("gifm_frames_wrap");
+  const framesListEl = document.getElementById("gifm_frames_list");
+  const previewWrap = document.getElementById("gifm_preview_wrap");
+  const previewEl = document.getElementById("gifm_preview");
+  const previewInfoEl = document.getElementById("gifm_preview_info");
+  const tbodyEl = document.getElementById("gifm_tbody");
+
+  if (
+    !filesEl || !delayEl || !widthEl || !filenameEl || !generateBtn || !downloadBtn || !clearBtn ||
+    !errEl || !resultEl || !cardsEl || !framesWrap || !framesListEl ||
+    !previewWrap || !previewEl || !previewInfoEl || !tbodyEl
+  ) return;
+
+  let frames = [];
+  let outputBlob = null;
+  let outputUrl = "";
+  let lastGeneratedWidth = 0;
+  let lastGeneratedHeight = 0;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function bytesToHuman(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function sanitizeFilename(name) {
+    const cleaned = String(name || "")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^\w\- ]+/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+    return cleaned || "animated-gif";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' +
+      border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, big, sub) {
+    return (
+      '<div class="gifm-mini-card">' +
+        "<strong>" + escapeHtml(title) + "</strong>" +
+        '<div class="big">' + escapeHtml(big) + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function revokeOutputUrl() {
+    if (outputUrl) {
+      URL.revokeObjectURL(outputUrl);
+      outputUrl = "";
+    }
+  }
+
+  function revokeFrameUrls() {
+    frames.forEach(function (f) {
+      if (f && f.url) {
+        try {
+          URL.revokeObjectURL(f.url);
+        } catch (e) {}
+      }
+    });
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    previewWrap.style.display = "none";
+    previewEl.removeAttribute("src");
+    previewInfoEl.textContent = "";
+    tbodyEl.innerHTML = "";
+    downloadBtn.disabled = true;
+    outputBlob = null;
+    lastGeneratedWidth = 0;
+    lastGeneratedHeight = 0;
+    revokeOutputUrl();
+  }
+
+  function renderFrames() {
+    framesListEl.innerHTML = "";
+
+    if (!frames.length) {
+      framesWrap.style.display = "none";
+      return;
+    }
+
+    framesWrap.style.display = "block";
+
+    frames.forEach(function (frame, index) {
+      const item = document.createElement("div");
+      item.className = "gifm-frame";
+
+      item.innerHTML =
+        '<div class="gifm-frame-grid">' +
+          "<div>" +
+            '<img src="' + frame.url + '" alt="Frame preview ' + (index + 1) + '" />' +
+          "</div>" +
+          "<div>" +
+            "<strong>Frame " + (index + 1) + "</strong><br/>" +
+            '<span class="note">' + escapeHtml(frame.name) + "</span><br/>" +
+            '<span class="note">' + escapeHtml(frame.width + " × " + frame.height) + " · " + escapeHtml(bytesToHuman(frame.size)) + "</span>" +
+            '<div class="gifm-actions" style="margin-top:10px;">' +
+              '<button class="btn secondary" type="button" data-move="up" data-index="' + index + '"' + (index === 0 ? " disabled" : "") + ">Move Up</button>" +
+              '<button class="btn secondary" type="button" data-move="down" data-index="' + index + '"' + (index === frames.length - 1 ? " disabled" : "") + ">Move Down</button>" +
+              '<button class="btn secondary" type="button" data-remove="' + index + '">Remove</button>' +
+            "</div>" +
+          "</div>" +
+        "</div>";
+
+      framesListEl.appendChild(item);
+    });
+  }
+
+  function loadFiles() {
+    resetOutput();
+    revokeFrameUrls();
+    frames = [];
+    framesListEl.innerHTML = "";
+    framesWrap.style.display = "none";
+
+    const files = Array.from(filesEl.files || []);
+    if (!files.length) {
+      return;
+    }
+
+    const imageFiles = files.filter(function (f) {
+      return /^image\//i.test(f.type);
+    });
+
+    if (imageFiles.length !== files.length) {
+      showError("Only image files are allowed.");
+      return;
+    }
+
+    let loadedCount = 0;
+
+    imageFiles.forEach(function (file) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = function () {
+        frames.push({
+          name: file.name,
+          size: file.size,
+          file: file,
+          url: url,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        });
+
+        loadedCount++;
+        if (loadedCount === imageFiles.length) {
+          renderFrames();
+
+          resultEl.innerHTML =
+            "<strong>Frames loaded successfully.</strong><br/>" +
+            '<span class="note">Review the order below, then generate the animated GIF.</span>';
+
+          cardsEl.style.display = "block";
+          cardsEl.innerHTML =
+            '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">' +
+              "<strong>Frame summary</strong>" +
+              '<div class="gifm-badges">' +
+                badge(frames.length + " frame(s)", frames.length >= 2 ? "good" : "warn") +
+                badge(bytesToHuman(frames.reduce(function (sum, f) { return sum + f.size; }, 0)), "neutral") +
+              "</div>" +
+            "</div>" +
+            '<div class="gifm-card-grid">' +
+              card("Frame count", String(frames.length), "At least 2 frames required") +
+              card("Total source size", bytesToHuman(frames.reduce(function (sum, f) { return sum + f.size; }, 0)), "Combined selected files") +
+              card("First frame", frames[0] ? frames[0].width + " × " + frames[0].height : "—", "Used as a reference preview") +
+            "</div>";
+
+          fillTable([
+            ["Loaded frames", String(frames.length)],
+            ["Combined source size", bytesToHuman(frames.reduce(function (sum, f) { return sum + f.size; }, 0))],
+            ["Delay setting", String(delayEl.value) + " ms"],
+            ["Output width setting", String(widthEl.value) + " px"],
+          ]);
+        }
+      };
+
+      img.onerror = function () {
+        loadedCount++;
+        showError("One or more selected images could not be loaded.");
+      };
+
+      img.src = url;
+    });
+  }
+
+  function moveFrame(direction, indexStr) {
+    const index = Number(indexStr);
+    if (!Number.isInteger(index) || index < 0 || index >= frames.length) return;
+
+    if (direction === "up" && index > 0) {
+      const temp = frames[index - 1];
+      frames[index - 1] = frames[index];
+      frames[index] = temp;
+    } else if (direction === "down" && index < frames.length - 1) {
+      const temp = frames[index + 1];
+      frames[index + 1] = frames[index];
+      frames[index] = temp;
+    }
+
+    renderFrames();
+  }
+
+  function removeFrame(indexStr) {
+    const index = Number(indexStr);
+    if (!Number.isInteger(index) || index < 0 || index >= frames.length) return;
+
+    const removed = frames.splice(index, 1)[0];
+    if (removed && removed.url) {
+      try {
+        URL.revokeObjectURL(removed.url);
+      } catch (e) {}
+    }
+
+    renderFrames();
+
+    if (!frames.length) {
+      resetOutput();
+    }
+  }
+
+  function generateGif() {
+    resetOutput();
+
+    if (typeof GIF === "undefined") {
+      showError("The GIF encoder library did not load. Check network access to the CDN script.");
+      return;
+    }
+
+    if (frames.length < 2) {
+      showError("Please select at least two images to create an animated GIF.");
+      return;
+    }
+
+    const delay = parseInt(delayEl.value, 10);
+    const targetWidth = parseInt(widthEl.value, 10);
+
+    if (!Number.isFinite(delay) || delay < 50) {
+      showError("Frame delay must be a number of at least 50 ms.");
+      return;
+    }
+
+    if (!Number.isFinite(targetWidth) || targetWidth < 32) {
+      showError("Output width must be at least 32 pixels.");
+      return;
+    }
+
+    resultEl.innerHTML =
+      "<strong>Preparing GIF encoding...</strong><br/>" +
+      '<span class="note">Frames are being scaled and added to the encoder.</span>';
+
+    let addedFrames = 0;
+    let pending = frames.length;
+    let maxHeight = 0;
+
+    const gif = new GIF({
+      workers: 2,
+      quality: 10,
+      workerScript: "https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js"
+    });
+
+    frames.forEach(function (frame) {
+      const img = new Image();
+
+      img.onload = function () {
+        const scale = targetWidth / img.naturalWidth;
+        const targetHeight = Math.max(1, Math.round(img.naturalHeight * scale));
+        if (targetHeight > maxHeight) maxHeight = targetHeight;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          gif.addFrame(canvas, { delay: delay, copy: true });
+          addedFrames++;
+        }
+
+        pending--;
+
+        if (pending === 0) {
+          if (addedFrames < 2) {
+            showError("Not enough valid frames were added to create an animated GIF.");
+            return;
+          }
+
+          resultEl.innerHTML =
+            "<strong>Encoding GIF...</strong><br/>" +
+            '<span class="note">Please wait while the browser generates the animation.</span>';
+
+          gif.on("progress", function (p) {
+            resultEl.innerHTML =
+              "<strong>Encoding GIF...</strong><br/>" +
+              '<span class="note">Progress: ' + Math.round(p * 100) + "%</span>";
+          });
+
+          gif.on("finished", function (blob) {
+            outputBlob = blob;
+            outputUrl = URL.createObjectURL(blob);
+            previewEl.src = outputUrl;
+            previewWrap.style.display = "block";
+
+            lastGeneratedWidth = targetWidth;
+            lastGeneratedHeight = maxHeight;
+
+            previewInfoEl.innerHTML =
+              "Output size: <strong>" + escapeHtml(bytesToHuman(blob.size)) + "</strong> · " +
+              "Frames: <strong>" + escapeHtml(String(frames.length)) + "</strong> · " +
+              "Delay: <strong>" + escapeHtml(String(delay) + " ms") + "</strong>";
+
+            resultEl.innerHTML =
+              "<strong>GIF generated successfully.</strong><br/>" +
+              '<span class="note">Preview the animation below and download it when ready.</span>';
+
+            cardsEl.style.display = "block";
+            cardsEl.innerHTML =
+              '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">' +
+                "<strong>Output highlights</strong>" +
+                '<div class="gifm-badges">' +
+                  badge("Animated GIF ready", "good") +
+                  badge(frames.length + " frames", "neutral") +
+                  badge(delay + " ms/frame", "neutral") +
+                "</div>" +
+              "</div>" +
+              '<div class="gifm-card-grid">' +
+                card("GIF size", bytesToHuman(blob.size), "Final encoded file") +
+                card("Output width", String(targetWidth) + " px", "Configured target width") +
+                card("Approx. height", String(maxHeight) + " px", "Maximum scaled frame height") +
+                card("Frame count", String(frames.length), "Ordered frame list used") +
+              "</div>";
+
+            fillTable([
+              ["Frame count", String(frames.length)],
+              ["Frame delay", delay + " ms"],
+              ["Output width", targetWidth + " px"],
+              ["Approx. output height", maxHeight + " px"],
+              ["Encoded GIF size", bytesToHuman(blob.size)],
+              ["Source total size", bytesToHuman(frames.reduce(function (sum, f) { return sum + f.size; }, 0))],
+              ["Method", "gif.js browser-side animation encoding"],
+            ]);
+
+            downloadBtn.disabled = false;
+          });
+
+          gif.render();
+        }
+      };
+
+      img.onerror = function () {
+        pending--;
+        if (pending === 0 && addedFrames < 2) {
+          showError("The selected images could not be processed into a GIF.");
+        }
+      };
+
+      img.src = frame.url;
+    });
+  }
+
+  function downloadGif() {
+    clearError();
+
+    if (!outputBlob || !outputUrl) {
+      showError("No generated GIF is ready for download yet.");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = outputUrl;
+    a.download = sanitizeFilename(filenameEl.value) + ".gif";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function clearAll() {
+    revokeFrameUrls();
+    frames = [];
+    filesEl.value = "";
+    delayEl.value = "400";
+    widthEl.value = "480";
+    filenameEl.value = "animated-gif";
+    framesListEl.innerHTML = "";
+    framesWrap.style.display = "none";
+    resetOutput();
+    filesEl.focus();
+  }
+
+  framesListEl.addEventListener("click", function (e) {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    if (btn.hasAttribute("data-move")) {
+      moveFrame(btn.getAttribute("data-move"), btn.getAttribute("data-index"));
+    } else if (btn.hasAttribute("data-remove")) {
+      removeFrame(btn.getAttribute("data-remove"));
+    }
+  });
+
+  filesEl.addEventListener("change", loadFiles);
+  generateBtn.addEventListener("click", generateGif);
+  downloadBtn.addEventListener("click", downloadGif);
+  clearBtn.addEventListener("click", clearAll);
+
+  clearAll();
+});
+</script>

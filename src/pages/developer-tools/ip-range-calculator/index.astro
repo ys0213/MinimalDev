@@ -1,0 +1,297 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "IP Range Calculator",
+  description:
+    "Calculate the number of IPv4 addresses between two endpoints, validate order, and inspect range details with FAQ schema.",
+  href: "/developer-tools/ip-range-calculator/",
+  order: 415,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/ip-range-calculator/";
+
+const faqs = [
+  {
+    q: "What does this IP range calculator do?",
+    a: "It calculates how many IPv4 addresses exist between a start IP and an end IP, inclusive.",
+  },
+  {
+    q: "Does the tool require the start IP to be smaller than the end IP?",
+    a: "Yes. The start IP must be less than or equal to the end IP.",
+  },
+  {
+    q: "Is the range inclusive?",
+    a: "Yes. Both the start and end addresses are included in the count.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. The calculation runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`IP Range Calculator — ${SITE_NAME}`}
+  description="Calculate inclusive IPv4 range size between two addresses."
+  canonicalPath={CANONICAL_PATH}
+  h1="IP Range Calculator"
+  intro="Enter a start IPv4 address and an end IPv4 address to calculate the inclusive size of the range."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ip-range-calculator">
+    <style is:inline>
+      #ipr_start,
+      #ipr_end {
+        width: 100%;
+        min-width: 0;
+      }
+      .ipr-grid {
+        display: grid;
+        gap: 10px;
+      }
+      @media (min-width: 720px) {
+        .ipr-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ipr_help ipr_privacy">
+      <div class="ipr-grid">
+        <div class="field">
+          <label for="ipr_start">Start IPv4</label>
+          <input id="ipr_start" type="text" inputmode="decimal" spellcheck="false" placeholder="e.g. 192.168.1.1" />
+        </div>
+
+        <div class="field">
+          <label for="ipr_end">End IPv4</label>
+          <input id="ipr_end" type="text" inputmode="decimal" spellcheck="false" placeholder="e.g. 192.168.1.255" />
+        </div>
+      </div>
+
+      <p class="note" id="ipr_help" style="margin-top:6px;">
+        Both endpoints are included in the count.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ipr_calculate">Calculate</button>
+        <button class="btn secondary" type="button" id="ipr_fill">Example /24 Range</button>
+        <button class="btn secondary" type="button" id="ipr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ipr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ipr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ipr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ipr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ipr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No IP addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool converts both IPv4 addresses to unsigned 32-bit integers and computes:
+      <br />
+      <strong>end - start + 1</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>192.168.1.1 → 192.168.1.255</strong> → 255 addresses</li>
+      <li><strong>10.0.0.0 → 10.0.0.255</strong> → 256 addresses</li>
+      <li><strong>8.8.8.8 → 8.8.8.8</strong> → 1 address</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/cidr-calculator/">CIDR Calculator</a></li>
+      <li><a href="/developer-tools/subnet-calculator/">Subnet Calculator</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/ipv4-to-decimal/">IPv4 to Decimal</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const startEl = document.getElementById("ipr_start");
+  const endEl = document.getElementById("ipr_end");
+  const calcBtn = document.getElementById("ipr_calculate");
+  const fillBtn = document.getElementById("ipr_fill");
+  const clearBtn = document.getElementById("ipr_clear");
+  const errEl = document.getElementById("ipr_error");
+  const resultEl = document.getElementById("ipr_result");
+  const cardsEl = document.getElementById("ipr_cards");
+  const tbodyEl = document.getElementById("ipr_tbody");
+
+  if (!startEl || !endEl || !calcBtn || !fillBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseIPv4(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter an IPv4 address." };
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) return { ok: false, msg: "IPv4 format must be four numeric octets." };
+
+    const parts = trimmed.split(".");
+    const nums = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].length > 1 && parts[i].startsWith("0")) {
+        return { ok: false, msg: "Leading zeros are not allowed in octet " + (i + 1) + "." };
+      }
+      const n = Number(parts[i]);
+      if (!Number.isInteger(n) || n < 0 || n > 255) {
+        return { ok: false, msg: "Octet " + (i + 1) + " must be between 0 and 255." };
+      }
+      nums.push(n);
+    }
+    return { ok: true, parts: nums, normalized: nums.join(".") };
+  }
+
+  function ipToInt(parts) {
+    return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const startParsed = parseIPv4(startEl.value);
+    if (!startParsed.ok) {
+      showError("Start IP: " + startParsed.msg);
+      return;
+    }
+
+    const endParsed = parseIPv4(endEl.value);
+    if (!endParsed.ok) {
+      showError("End IP: " + endParsed.msg);
+      return;
+    }
+
+    const startInt = ipToInt(startParsed.parts);
+    const endInt = ipToInt(endParsed.parts);
+
+    if (startInt > endInt) {
+      showError("Start IP must be less than or equal to End IP.");
+      return;
+    }
+
+    const count = (endInt - startInt + 1) >>> 0;
+    const sameSubnet24 = startParsed.parts[0] === endParsed.parts[0]
+      && startParsed.parts[1] === endParsed.parts[1]
+      && startParsed.parts[2] === endParsed.parts[2];
+
+    resultEl.innerHTML =
+      "<strong>Range calculated successfully.</strong><br/><span class='note'>" +
+      startParsed.normalized +
+      " → " +
+      endParsed.normalized +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Inclusive range") +
+      badge("Count: " + count.toLocaleString()) +
+      badge(sameSubnet24 ? "Same /24 base" : "Crosses /24 boundary") +
+      "</div>";
+
+    fillTable([
+      ["Start IP", startParsed.normalized],
+      ["End IP", endParsed.normalized],
+      ["Start decimal", String(startInt)],
+      ["End decimal", String(endInt)],
+      ["Inclusive count", count.toLocaleString()],
+      ["Difference", (endInt - startInt).toLocaleString()],
+    ]);
+  }
+
+  function clearAll() {
+    startEl.value = "";
+    endEl.value = "";
+    resetOutput();
+    startEl.focus();
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  fillBtn.addEventListener("click", function () {
+    startEl.value = "192.168.1.1";
+    endEl.value = "192.168.1.255";
+    calculate();
+  });
+  clearBtn.addEventListener("click", clearAll);
+
+  [startEl, endEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") calculate();
+    });
+  });
+});
+</script>

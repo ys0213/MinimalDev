@@ -1,0 +1,305 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Fahrenheit to Kelvin",
+  description:
+    "Convert Fahrenheit to Kelvin instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/fahrenheit-to-kelvin/",
+  order: 316,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/fahrenheit-to-kelvin/";
+
+const faqs = [
+  {
+    q: "How do you convert Fahrenheit to Kelvin?",
+    a: "Use the formula K = (°F − 32) × 5/9 + 273.15.",
+  },
+  {
+    q: "Can Kelvin ever be negative?",
+    a: "No. Kelvin cannot go below 0 K, which is absolute zero.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between Fahrenheit to Kelvin and Kelvin to Fahrenheit.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Fahrenheit to Kelvin Converter — ${SITE_NAME}`}
+  description="Convert Fahrenheit to Kelvin instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Fahrenheit to Kelvin Converter"
+  intro="Convert temperature from Fahrenheit to Kelvin instantly. Useful for science, engineering, weather references, and absolute temperature comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="fahrenheit-to-kelvin">
+    <div class="form" role="form" aria-describedby="f2k_hint f2k_privacy">
+      <div class="field">
+        <label for="f2k_input">Fahrenheit (°F)</label>
+        <input id="f2k_input" type="number" inputmode="decimal" placeholder="e.g., 32" />
+        <p class="note" id="f2k_hint" style="margin-top:6px;">
+          Negative Fahrenheit values are allowed. Kelvin output cannot go below 0 K.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="f2k_round">Rounding</label>
+        <select id="f2k_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="f2k_convert">Convert</button>
+        <button class="btn secondary" type="button" id="f2k_swap">Reverse (K → °F)</button>
+        <button class="btn secondary" type="button" id="f2k_clear">Clear</button>
+      </div>
+
+      <div class="result" id="f2k_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="f2k_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="f2k_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="f2k_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="f2k_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>K = (°F − 32) × 5/9 + 273.15</strong>.<br />
+      Reverse formula: <strong>°F = (K − 273.15) × 9/5 + 32</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>32°F</strong> = <strong>273.15 K</strong></li>
+      <li><strong>68°F</strong> = <strong>293.15 K</strong></li>
+      <li><strong>212°F</strong> = <strong>373.15 K</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
+      <li><a href="/converter/kelvin-to-fahrenheit/">Kelvin to Fahrenheit</a></li>
+      <li><a href="/converter/c-to-f/">C to F</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("f2k_input");
+  const roundEl = document.getElementById("f2k_round");
+  const convertBtn = document.getElementById("f2k_convert");
+  const swapBtn = document.getElementById("f2k_swap");
+  const clearBtn = document.getElementById("f2k_clear");
+  const errEl = document.getElementById("f2k_error");
+  const outEl = document.getElementById("f2k_result");
+  const cardsEl = document.getElementById("f2k_cards");
+  const tbodyEl = document.getElementById("f2k_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  let mode = "f-to-k";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function fToK(f) {
+    return (f - 32) * 5 / 9 + 273.15;
+  }
+
+  function kToF(k) {
+    return (k - 273.15) * 9 / 5 + 32;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) {
+      return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    }
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    const d = parseInt(r, 10);
+    return x.toFixed(d);
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="f2k_input"]');
+    if (!label) return;
+
+    if (mode === "f-to-k") {
+      label.textContent = "Fahrenheit (°F)";
+      inEl.placeholder = "e.g., 32";
+      swapBtn.textContent = "Reverse (K → °F)";
+    } else {
+      label.textContent = "Kelvin (K)";
+      inEl.placeholder = "e.g., 273.15";
+      swapBtn.textContent = "Reverse (°F → K)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+
+    const rows = mode === "f-to-k"
+      ? [
+          ["Formula", "K = (°F − 32) × 5/9 + 273.15"],
+          ["Input", fmt(input) + " °F"],
+          ["Output", fmt(output) + " K"],
+          ["Absolute zero", "0 K = −459.67 °F"],
+        ]
+      : [
+          ["Formula", "°F = (K − 273.15) × 9/5 + 32"],
+          ["Input", fmt(input) + " K"],
+          ["Output", fmt(output) + " °F"],
+          ["Absolute zero", "0 K = −459.67 °F"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function classifyKelvin(k) {
+    if (k === 0) return "Absolute zero";
+    if (k < 273.15) return "Below freezing";
+    if (k < 373.15) return "Liquid-water range";
+    return "High temperature";
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+
+    if (mode === "k-to-f" && raw < 0) {
+      outEl.textContent = "Kelvin cannot be below 0.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "f-to-k" ? fToK(input) : kToF(input);
+
+    if (mode === "f-to-k" && output < 0) {
+      outEl.textContent = "Result would be below 0 K, which is not physically valid.";
+      return;
+    }
+
+    if (mode === "f-to-k") {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} K<br/>` +
+        `<span class="note">${fmt(input)} °F = ${fmt(output)} K</span>`;
+    } else {
+      outEl.innerHTML =
+        `<strong>Result:</strong> ${fmt(output)} °F<br/>` +
+        `<span class="note">${fmt(input)} K = ${fmt(output)} °F</span>`;
+    }
+
+    const kelvin = mode === "f-to-k" ? output : input;
+    const state = classifyKelvin(kelvin);
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "f-to-k" ? "°F → K" : "K → °F")}
+        ${badge("Base ≈ " + fmtSmart(kelvin) + " K")}
+        ${badge(state)}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "f-to-k" ? "k-to-f" : "f-to-k";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

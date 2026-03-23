@@ -1,0 +1,301 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "XML Minifier",
+  description:
+    "Minify and validate XML by removing unnecessary whitespace with result cards, metrics, and FAQ schema.",
+  href: "/developer-tools/xml-minifier/",
+  order: 397,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/xml-minifier/";
+
+const faqs = [
+  {
+    q: "What does this XML minifier do?",
+    a: "It validates XML and removes unnecessary formatting whitespace to produce a more compact XML string.",
+  },
+  {
+    q: "Will it change text content?",
+    a: "It preserves meaningful text content. Only formatting whitespace between elements is normalized away.",
+  },
+  {
+    q: "What happens if the XML is invalid?",
+    a: "The tool shows a parse error and does not generate minified output until the XML is valid.",
+  },
+  {
+    q: "Is my XML stored?",
+    a: "No. Minification runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`XML Minifier — ${SITE_NAME}`}
+  description="Minify and validate XML with result cards, metrics, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="XML Minifier"
+  intro="Validate XML and minify it by removing extra formatting whitespace."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="xml-minifier">
+    <style is:inline>
+      #xm_input,
+      #xm_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .xm-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="xm_help xm_privacy">
+      <div class="field">
+        <label for="xm_input">XML input</label>
+        <textarea
+          id="xm_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={`e.g. <?xml version="1.0"?>\n<root>\n  <item id="1">Hello</item>\n  <item id="2">\n    <name>Alex</name>\n  </item>\n</root>`}
+        ></textarea>
+      </div>
+
+      <p class="note" id="xm_help" style="margin-top:6px;">
+        This removes unnecessary formatting whitespace between nodes while preserving valid XML structure.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="xm_minify">Minify XML</button>
+        <button class="btn secondary" type="button" id="xm_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="xm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="xm_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result xm-mono" id="xm_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="xm_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="xm_output">Minified XML</label>
+        <textarea id="xm_output" rows="12" spellcheck="false" readonly placeholder="Minified XML will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="xm_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="xm_privacy" style="margin-top:10px;">
+        Privacy: minification runs locally in your browser. No XML is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The minifier parses the XML, removes layout-only whitespace text nodes, and serializes the XML into a compact form.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Indented XML</strong> → compact one-line or near one-line XML</li>
+      <li><strong>Extra spaces between elements</strong> → removed when not part of meaningful text</li>
+      <li><strong>Invalid closing tags</strong> → validation error shown</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/xml-formatter/">XML Formatter</a></li>
+      <li><a href="/developer-tools/json-minifier/">JSON Minifier</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("xm_input");
+  const minifyBtn = document.getElementById("xm_minify");
+  const copyBtn = document.getElementById("xm_copy");
+  const clearBtn = document.getElementById("xm_clear");
+  const errEl = document.getElementById("xm_error");
+  const resultEl = document.getElementById("xm_result");
+  const cardsEl = document.getElementById("xm_cards");
+  const outputEl = document.getElementById("xm_output");
+  const tbodyEl = document.getElementById("xm_tbody");
+
+  if (!inputEl || !minifyBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseXml(raw) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(raw, "application/xml");
+    const parseErr = doc.getElementsByTagName("parsererror")[0];
+    if (parseErr) {
+      throw new Error(parseErr.textContent ? parseErr.textContent.replace(/\s+/g, " ").trim() : "Invalid XML.");
+    }
+    return doc;
+  }
+
+  function removeFormattingWhitespace(node) {
+    const children = Array.from(node.childNodes || []);
+    children.forEach(function (child) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        if ((child.nodeValue || "").trim() === "") {
+          node.removeChild(child);
+          return;
+        }
+      }
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        removeFormattingWhitespace(child);
+      }
+    });
+  }
+
+  function minifyXml(raw) {
+    const declMatch = raw.match(/^\s*(<\?xml[\s\S]*?\?>)\s*/i);
+    const declaration = declMatch ? declMatch[1] : "";
+    const doc = parseXml(raw);
+    removeFormattingWhitespace(doc);
+    const xmlBody = new XMLSerializer().serializeToString(doc.documentElement);
+    return {
+      output: (declaration ? declaration : "") + xmlBody,
+      rootName: doc.documentElement.nodeName,
+      childCount: doc.documentElement.childElementCount,
+    };
+  }
+
+  function minifyNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste XML input.");
+      return;
+    }
+
+    try {
+      const data = minifyXml(raw);
+      lastOutput = data.output;
+      outputEl.value = data.output;
+
+      const saved = raw.length - data.output.length;
+
+      resultEl.innerHTML = "<strong>Valid XML.</strong><br/><span class='note'>Minified output is ready.</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Valid XML") +
+        badge("Root: " + data.rootName) +
+        badge(saved >= 0 ? "Saved " + saved + " chars" : "Output longer") +
+        "</div>";
+
+      fillTable([
+        ["Root element", data.rootName],
+        ["Root child elements", String(data.childCount)],
+        ["Input length", String(raw.length)],
+        ["Output length", String(data.output.length)],
+      ]);
+    } catch (e) {
+      showError("Invalid XML: " + (e && e.message ? e.message : "parse error"));
+    }
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No minified XML output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied minified XML.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  minifyBtn.addEventListener("click", minifyNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") minifyNow();
+  });
+});
+</script>

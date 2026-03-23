@@ -22,6 +22,9 @@ const TOOL_MODULES = {
   // Health
   "bmi-calculator": "/assets/js/tools/bmi-calculator.js",
   "water-intake-calculator": "/assets/js/tools/water-intake-calculator.js",
+
+  "yaml-to-json": "/assets/js/tools/yaml-to-json.js",
+  "json-to-yaml": "/assets/js/tools/json-to-yaml.js",
 };
 
 function setYearIfExists() {

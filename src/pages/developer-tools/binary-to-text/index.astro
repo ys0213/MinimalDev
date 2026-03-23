@@ -1,0 +1,291 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Binary to Text",
+  description:
+    "Convert binary to UTF-8 text with validation, grouping cleanup, result cards, and FAQ schema.",
+  href: "/developer-tools/binary-to-text/",
+  order: 360,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/binary-to-text/";
+
+const faqs = [
+  {
+    q: "What input format does this tool accept?",
+    a: "It accepts binary digits grouped as 8-bit bytes. Spaces and line breaks are ignored.",
+  },
+  {
+    q: "Does it support UTF-8 text?",
+    a: "Yes. The decoded bytes are interpreted as UTF-8 text.",
+  },
+  {
+    q: "Why do I get an invalid input error?",
+    a: "That usually means the input contains characters other than 0 or 1, or the total number of bits is not a multiple of 8.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Binary to Text — ${SITE_NAME}`}
+  description="Convert binary bytes to UTF-8 text with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Binary to Text"
+  intro="Convert binary data to readable UTF-8 text. Useful for debugging, learning encodings, and developer workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="binary-to-text">
+    <style is:inline>
+      #btt_input,
+      #btt_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .btt-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="btt_help btt_privacy">
+      <div class="field">
+        <label for="btt_input">Binary input</label>
+        <textarea
+          id="btt_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="e.g. 01001000 01100101 01101100 01101100 01101111"
+        ></textarea>
+      </div>
+
+      <p class="note" id="btt_help" style="margin-top:6px;">
+        Enter bytes as binary digits. Spaces and new lines are allowed. Total bits must be a multiple of 8.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="btt_convert">Convert</button>
+        <button class="btn secondary" type="button" id="btt_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="btt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="btt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="btt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="btt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="btt_output">Decoded text</label>
+        <textarea
+          id="btt_output"
+          rows="8"
+          readonly
+          spellcheck="false"
+          placeholder="Decoded text will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="btt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="btt_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No input data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool removes whitespace, validates the remaining binary digits, converts each 8-bit chunk into a byte,
+      and decodes the resulting byte array as UTF-8 text.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>01001000 01101001</strong> → <strong>Hi</strong></li>
+      <li><strong>01000001</strong> → <strong>A</strong></li>
+      <li><strong>UTF-8 bytes</strong> → decoded as text if valid UTF-8</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/text-to-binary/">Text to Binary</a></li>
+      <li><a href="/developer-tools/base32-decoder/">Base32 Decoder</a></li>
+      <li><a href="/developer-tools/data-uri-decoder/">Data URI Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("btt_input");
+  const outputEl = document.getElementById("btt_output");
+  const convertBtn = document.getElementById("btt_convert");
+  const copyBtn = document.getElementById("btt_copy");
+  const clearBtn = document.getElementById("btt_clear");
+  const errEl = document.getElementById("btt_error");
+  const resultEl = document.getElementById("btt_result");
+  const cardsEl = document.getElementById("btt_cards");
+  const tbodyEl = document.getElementById("btt_tbody");
+
+  if (!inputEl || !outputEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function convert() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.trim()) {
+      showError("Please enter binary input.");
+      return;
+    }
+
+    const cleaned = raw.replace(/\s+/g, "");
+    if (!/^[01]+$/.test(cleaned)) {
+      showError("Binary input can contain only 0, 1, spaces, and line breaks.");
+      return;
+    }
+
+    if (cleaned.length % 8 !== 0) {
+      showError("Total number of bits must be a multiple of 8.");
+      return;
+    }
+
+    const bytes = [];
+    for (let i = 0; i < cleaned.length; i += 8) {
+      bytes.push(parseInt(cleaned.slice(i, i + 8), 2));
+    }
+
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
+    } catch (_) {
+      showError("The bytes are not valid UTF-8 text.");
+      return;
+    }
+
+    lastOutput = text;
+    outputEl.value = text;
+
+    resultEl.innerHTML = "<strong>Binary converted to text.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid binary") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      badge("UTF-8 decoded") +
+      "</div>";
+
+    fillTable([
+      ["Bit length", String(cleaned.length)],
+      ["Byte length", String(bytes.length)],
+      ["Output characters", String(text.length)],
+      ["Whitespace ignored", /\s/.test(raw) ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded text to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded text.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") convert();
+  });
+});
+</script>

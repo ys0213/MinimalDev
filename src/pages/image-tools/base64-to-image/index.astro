@@ -1,0 +1,137 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base64 to Image",
+  description: "Convert Base64 string into image with preview and download.",
+  href: "/image-tools/base64-to-image/",
+  order: 11,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/base64-to-image/";
+
+const faqs=[
+ {q:"What input is supported?",a:"Base64 or full Data URL."},
+ {q:"Does it validate input?",a:"Yes, invalid Base64 is rejected."},
+ {q:"Upload required?",a:"No."}
+];
+
+const faqJsonLd={
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity:faqs.map(f=>({
+   "@type":"Question",
+   name:f.q,
+   acceptedAnswer:{ "@type":"Answer", text:f.a }
+ }))
+};
+---
+
+<ToolLayout
+title={`Base64 to Image — ${SITE_NAME}`}
+description="Convert Base64 string into image."
+canonicalPath={CANONICAL_PATH}
+h1="Base64 to Image"
+intro="Decode Base64 into image instantly."
+faq={faqs}
+categoryName="Image Tools"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+
+<style is:inline>
+textarea { width:100%; min-height:140px; }
+img { max-width:100%; border-radius:10px; }
+</style>
+
+<div class="form">
+
+<textarea id="input" placeholder="Paste Base64 or Data URL"></textarea>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+<button class="btn" id="convert">Convert</button>
+<button class="btn secondary" id="download">Download</button>
+<button class="btn secondary" id="clear">Clear</button>
+</div>
+
+<div id="error" class="result" style="display:none;"></div>
+
+<div id="preview" style="margin-top:10px;"></div>
+
+<div id="result" class="result"></div>
+
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const input=document.getElementById("input");
+const preview=document.getElementById("preview");
+const result=document.getElementById("result");
+const error=document.getElementById("error");
+
+let currentSrc=null;
+
+function showError(msg){
+ error.style.display="block";
+ error.textContent=msg;
+}
+
+function clearError(){
+ error.style.display="none";
+}
+
+function isValidBase64(str){
+ try{
+   return btoa(atob(str))===str;
+ }catch{
+   return false;
+ }
+}
+
+document.getElementById("convert").onclick=()=>{
+ clearError();
+
+ let val=input.value.trim();
+
+ if(!val){
+   showError("Enter Base64");
+   return;
+ }
+
+ if(!val.startsWith("data:")){
+   if(!isValidBase64(val)){
+     showError("Invalid Base64");
+     return;
+   }
+   val="data:image/png;base64,"+val;
+ }
+
+ currentSrc=val;
+
+ preview.innerHTML=`<img src="${val}" alt="decoded"/>`;
+
+ result.innerHTML=`Decoded successfully`;
+};
+
+document.getElementById("download").onclick=()=>{
+ if(!currentSrc) return;
+
+ const a=document.createElement("a");
+ a.href=currentSrc;
+ a.download="image.png";
+ a.click();
+};
+
+document.getElementById("clear").onclick=()=>{
+ input.value="";
+ preview.innerHTML="";
+ result.textContent="";
+};
+
+});
+</script>

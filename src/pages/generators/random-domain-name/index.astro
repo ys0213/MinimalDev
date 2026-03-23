@@ -1,0 +1,451 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Domain Name Generator",
+  description:
+    "Generate random domain name ideas with configurable TLDs, word counts, separators, and formatting. Includes validation, result cards, accessibility, and FAQ schema.",
+  href: "/generators/random-domain-name/",
+  order: 186,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-domain-name/";
+
+const faqs = [
+  {
+    q: "What does this domain name generator do?",
+    a: "It creates random domain name ideas by combining words and appending a selected top-level domain such as .com, .io, or .dev.",
+  },
+  {
+    q: "Does this tool check real domain availability?",
+    a: "No. It generates ideas only. You must check availability with a registrar or DNS lookup service separately.",
+  },
+  {
+    q: "Can I choose different TLDs?",
+    a: "Yes. You can select individual TLDs or use a mixed option from the built-in list.",
+  },
+  {
+    q: "Can I generate short or multi-word domains?",
+    a: "Yes. You can choose the number of words and whether to use separators such as hyphens.",
+  },
+  {
+    q: "Does this tool store generated domain ideas?",
+    a: "No. Everything runs locally in your browser and generated results are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Domain Name Generator — ${SITE_NAME}`}
+  description="Generate random domain name ideas with word-count, separator, and TLD options, plus validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Domain Name Generator"
+  intro="Generate random domain name ideas for startups, projects, products, landing pages, mock data, and naming inspiration."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-domain-name">
+    <style is:inline>
+      .rdg-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rdg-grid > * {
+        min-width: 0;
+      }
+      .rdg-output {
+        width: 100%;
+        min-width: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rdg-cards-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .rdg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+      .rdg-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rdg-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      @media (min-width: 780px) {
+        .rdg-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rdg_help rdg_privacy">
+      <div class="rdg-grid">
+        <div class="field">
+          <label for="rdg_count">How many domains</label>
+          <input id="rdg_count" type="number" inputmode="numeric" min="1" max="100" value="15" />
+        </div>
+
+        <div class="field">
+          <label for="rdg_words">Words per domain</label>
+          <select id="rdg_words">
+            <option value="1">1 word</option>
+            <option value="2" selected>2 words</option>
+            <option value="3">3 words</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rdg_tld">TLD</label>
+          <select id="rdg_tld">
+            <option value=".com" selected>.com</option>
+            <option value=".io">.io</option>
+            <option value=".dev">.dev</option>
+            <option value=".net">.net</option>
+            <option value=".co">.co</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rdg_separator">Word separator</label>
+          <select id="rdg_separator">
+            <option value="none" selected>None</option>
+            <option value="-">Hyphen (-)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rdg-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rdg_unique">
+            <input id="rdg_unique" type="checkbox" checked />
+            Avoid duplicates when possible
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rdg_include_number">
+            <input id="rdg_include_number" type="checkbox" />
+            Optionally append a number
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rdg_help" style="margin-top:6px;">
+        This tool creates domain ideas only. It does not perform registrar availability checks, DNS lookups, or trademark screening.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rdg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rdg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rdg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rdg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rdg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rdg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rdg_output">Generated domain names</label>
+        <textarea id="rdg_output" class="rdg-output" rows="12" readonly spellcheck="false" placeholder="Generated domain ideas will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rdg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rdg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated domain ideas are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many domains you want, select a word count and TLD, optionally use hyphens or appended numbers, and then copy the generated ideas for naming review.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>novaforge.com</strong> for a startup brand</li>
+      <li><strong>signal-bridge.dev</strong> for a developer project</li>
+      <li><strong>harborcloud42.io</strong> for a modern tech-style name</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-company-name/">Random Company Name Generator</a></li>
+      <li><a href="/generators/random-product-name/">Random Product Name Generator</a></li>
+      <li><a href="/developer-tools/slug-generator/">Slug Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rdg_count");
+  const wordsEl = document.getElementById("rdg_words");
+  const tldEl = document.getElementById("rdg_tld");
+  const separatorEl = document.getElementById("rdg_separator");
+  const uniqueEl = document.getElementById("rdg_unique");
+  const includeNumberEl = document.getElementById("rdg_include_number");
+  const generateBtn = document.getElementById("rdg_generate");
+  const copyBtn = document.getElementById("rdg_copy");
+  const clearBtn = document.getElementById("rdg_clear");
+  const errorEl = document.getElementById("rdg_error");
+  const resultEl = document.getElementById("rdg_result");
+  const cardsEl = document.getElementById("rdg_cards");
+  const outputEl = document.getElementById("rdg_output");
+  const tbodyEl = document.getElementById("rdg_tbody");
+
+  if (!countEl || !wordsEl || !tldEl || !separatorEl || !uniqueEl || !includeNumberEl || !generateBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const words = [
+    "nova","forge","signal","harbor","cloud","mint","bridge","pixel","orbit","lunar",
+    "stone","pulse","canyon","ember","field","grove","drift","vector","logic","spark",
+    "beacon","stream","summit","anchor","ocean","timber","quant","coded","scale","shift",
+    "bright","cobalt","meadow","trail","marble","echo","fable","rocket","zen","peak",
+    "prism","alpha","vivid","circuit","leaf","breeze","crest","maple","clover","focus"
+  ];
+
+  const tlds = [".com", ".io", ".dev", ".net", ".co"];
+
+  let lastList = [];
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastList = [];
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, sub) {
+    return (
+      '<div class="rdg-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function chooseTld(selected) {
+    return selected === "mixed" ? randItem(tlds) : selected;
+  }
+
+  function maybeNumber() {
+    return String(Math.floor(10 + Math.random() * 90));
+  }
+
+  function makeDomain(wordCount, tldChoice, separatorMode, includeNumber) {
+    const parts = [];
+    for (let i = 0; i < wordCount; i++) parts.push(randItem(words));
+
+    const separator = separatorMode === "-" ? "-" : "";
+    let label = parts.join(separator).toLowerCase();
+
+    if (includeNumber && Math.random() < 0.45) {
+      label += maybeNumber();
+    }
+
+    return label + chooseTld(tldChoice);
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const wordCount = toInt(wordsEl.value);
+    const tldChoice = String(tldEl.value || ".com");
+    const separatorMode = String(separatorEl.value || "none");
+    const unique = !!uniqueEl.checked;
+    const includeNumber = !!includeNumberEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    if (![1,2,3].includes(wordCount)) {
+      showError("Invalid word-count option selected.");
+      return;
+    }
+
+    const list = [];
+    const seen = new Set();
+    let attempts = 0;
+    const maxAttempts = count * 30;
+
+    while (list.length < count && attempts < maxAttempts) {
+      attempts++;
+      const domain = makeDomain(wordCount, tldChoice, separatorMode, includeNumber);
+
+      if (unique) {
+        if (seen.has(domain)) continue;
+        seen.add(domain);
+      }
+
+      list.push(domain);
+    }
+
+    lastList = list.slice();
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>Domain ideas generated.</strong><br/><span class='note'>Availability and trademark checks must be done separately.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rdg-cards-wrap">' +
+      card("Requested", String(count), "Requested domain ideas") +
+      card("Generated", String(list.length), "Returned in this batch") +
+      card("Words", String(wordCount), "Per domain label") +
+      card("TLD", tldChoice === "mixed" ? "Mixed" : tldChoice, "Selected top-level domain rule") +
+      "</div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+      badge("Separator: " + (separatorMode === "-" ? "Hyphen" : "None")) +
+      badge(includeNumber ? "Optional number enabled" : "No number suffix") +
+      badge(unique ? "Duplicate avoidance enabled" : "Duplicates allowed") +
+      "</div>";
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(list.length)],
+      ["Words per domain", String(wordCount)],
+      ["TLD selection", tldChoice],
+      ["Separator", separatorMode === "-" ? "Hyphen" : "None"],
+      ["Optional numeric suffix", includeNumber ? "Enabled" : "Disabled"],
+      ["Duplicate avoidance", unique ? "Enabled" : "Disabled"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated domain names to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated domain ideas.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "15";
+    wordsEl.value = "2";
+    tldEl.value = ".com";
+    separatorEl.value = "none";
+    uniqueEl.checked = true;
+    includeNumberEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, wordsEl, tldEl, separatorEl, uniqueEl, includeNumberEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

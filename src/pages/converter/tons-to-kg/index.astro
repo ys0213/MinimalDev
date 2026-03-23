@@ -1,0 +1,277 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Tons to kg",
+  description:
+    "Convert metric tons to kilograms instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/tons-to-kg/",
+  order: 310,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/tons-to-kg/";
+
+const faqs = [
+  {
+    q: "How do you convert tons to kilograms?",
+    a: "Multiply metric tons by 1,000 to get kilograms.",
+  },
+  {
+    q: "Does this use metric tons?",
+    a: "Yes. This tool uses metric tons, where 1 ton equals 1,000 kilograms.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between tons to kilograms and kilograms to tons.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Tons to kg Converter — ${SITE_NAME}`}
+  description="Convert metric tons to kilograms instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Tons to kg Converter"
+  intro="Convert weight from metric tons to kilograms instantly. Useful for cargo, industrial materials, shipping, and large weight comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="tons-to-kg">
+    <div class="form" role="form" aria-describedby="t2k_hint t2k_privacy">
+      <div class="field">
+        <label for="t2k_input">Metric tons</label>
+        <input id="t2k_input" type="number" inputmode="decimal" placeholder="e.g., 2.5" />
+        <p class="note" id="t2k_hint" style="margin-top:6px;">
+          Enter a non-negative value. This tool uses metric tons, not US short tons or UK long tons.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="t2k_round">Rounding</label>
+        <select id="t2k_round">
+          <option value="0">0 decimals</option>
+          <option value="2" selected>2 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="t2k_convert">Convert</button>
+        <button class="btn secondary" type="button" id="t2k_swap">Reverse (kg → t)</button>
+        <button class="btn secondary" type="button" id="t2k_clear">Clear</button>
+      </div>
+
+      <div class="result" id="t2k_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="t2k_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="t2k_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="t2k_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="t2k_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard metric conversion: <strong>1 metric ton = 1,000 kg</strong>.<br />
+      Formula: <strong>kg = t × 1,000</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 t</strong> = <strong>1,000 kg</strong></li>
+      <li><strong>2.5 t</strong> = <strong>2,500 kg</strong></li>
+      <li><strong>10 t</strong> = <strong>10,000 kg</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/kg-to-tons/">kg to Tons</a></li>
+      <li><a href="/converter/kg-to-pounds/">kg to Pounds</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("t2k_input");
+  const roundEl = document.getElementById("t2k_round");
+  const convertBtn = document.getElementById("t2k_convert");
+  const swapBtn = document.getElementById("t2k_swap");
+  const clearBtn = document.getElementById("t2k_clear");
+  const errEl = document.getElementById("t2k_error");
+  const outEl = document.getElementById("t2k_result");
+  const cardsEl = document.getElementById("t2k_cards");
+  const tbodyEl = document.getElementById("t2k_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const TON_TO_KG = 1000;
+  const KG_TO_TON = 1 / TON_TO_KG;
+  let mode = "t-to-kg";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="t2k_input"]');
+    if (!label) return;
+    if (mode === "t-to-kg") {
+      label.textContent = "Metric tons";
+      inEl.placeholder = "e.g., 2.5";
+      swapBtn.textContent = "Reverse (kg → t)";
+    } else {
+      label.textContent = "Kilograms";
+      inEl.placeholder = "e.g., 2500";
+      swapBtn.textContent = "Reverse (t → kg)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "t-to-kg"
+      ? [
+          ["Conversion factor", "1 t = 1,000 kg"],
+          ["Reverse factor", "1 kg = " + fmtSmart(KG_TO_TON) + " t"],
+          ["Input", fmt(input) + " t"],
+          ["Output", fmt(output) + " kg"],
+        ]
+      : [
+          ["Conversion factor", "1 kg = " + fmtSmart(KG_TO_TON) + " t"],
+          ["Reverse factor", "1 t = 1,000 kg"],
+          ["Input", fmt(input) + " kg"],
+          ["Output", fmt(output) + " t"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "t-to-kg" ? input * TON_TO_KG : input * KG_TO_TON;
+
+    if (mode === "t-to-kg") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} kg<br/><span class="note">${fmt(input)} t = ${fmt(output)} kg</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} t<br/><span class="note">${fmt(input)} kg = ${fmt(output)} t</span>`;
+    }
+
+    const kg = mode === "t-to-kg" ? output : input;
+    let scale = "Typical";
+    if (kg < 1000) scale = "Sub-ton weight";
+    else if (kg >= 10000) scale = "Heavy load";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "t-to-kg" ? "t → kg" : "kg → t")}
+      ${badge("Base ≈ " + fmtSmart(kg) + " kg")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "2";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "t-to-kg" ? "kg-to-t" : "t-to-kg";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

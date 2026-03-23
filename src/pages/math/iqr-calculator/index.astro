@@ -1,0 +1,250 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "IQR Calculator",
+  description:
+    "Calculate the interquartile range (IQR) with quartiles, validation, sorted values, and FAQ support.",
+  href: "/math/iqr-calculator/",
+  order: 361,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/iqr-calculator/";
+
+const faqs = [
+  {
+    q: "What is interquartile range (IQR)?",
+    a: "IQR is the difference between the third quartile (Q3) and the first quartile (Q1). It measures the spread of the middle 50% of the data.",
+  },
+  {
+    q: "How is IQR calculated?",
+    a: "Sort the data, find Q1 and Q3, then compute IQR = Q3 − Q1.",
+  },
+  {
+    q: "Why is IQR useful?",
+    a: "IQR is less sensitive to extreme outliers than the full range, so it is often used to describe typical spread.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`IQR Calculator — ${SITE_NAME}`}
+  description="IQR calculator with quartiles, validation, sorted values, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="IQR Calculator"
+  intro="Calculate the interquartile range (IQR) of a dataset by finding Q1, Q3, and the spread of the middle 50%."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="iqr-calculator">
+    <style is:inline>
+      .iqr-wrap, .iqr-wrap * { box-sizing: border-box; }
+      .iqr-textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+    </style>
+
+    <div class="form iqr-wrap" role="form" aria-describedby="iqr_help iqr_privacy">
+      <div class="field">
+        <label for="iqr_values">Values</label>
+        <textarea
+          id="iqr_values"
+          class="iqr-textarea"
+          rows="6"
+          placeholder="e.g., 4, 8, 15, 16, 23, 42"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="iqr_help" style="margin-top:6px;">
+        Enter numbers separated by commas, spaces, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="iqr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="iqr_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="iqr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="iqr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="iqr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="iqr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="iqr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="iqr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool sorts the dataset, finds the lower quartile <strong>Q1</strong> and upper quartile <strong>Q3</strong>,
+      then computes:
+      <br />
+      <strong>IQR = Q3 − Q1</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>If <strong>Q1 = 10</strong> and <strong>Q3 = 18</strong>, then <strong>IQR = 8</strong></li>
+      <li>IQR describes the spread of the middle half of the data</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/range-calculator/">Range Calculator</a></li>
+      <li><a href="/math/quartile-calculator/">Quartile Calculator</a></li>
+      <li><a href="/math/median-absolute-deviation/">Median Absolute Deviation</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("iqr_values");
+  const calcBtn = document.getElementById("iqr_calc");
+  const demoBtn = document.getElementById("iqr_fill_demo");
+  const clearBtn = document.getElementById("iqr_clear");
+  const errorEl = document.getElementById("iqr_error");
+  const resultEl = document.getElementById("iqr_result");
+  const cardsEl = document.getElementById("iqr_cards");
+  const tbodyEl = document.getElementById("iqr_tbody");
+
+  if (!valuesEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function parseValues() {
+    const raw = String(valuesEl.value || "").trim();
+    if (!raw) throw new Error("Please enter one or more numbers.");
+    const tokens = raw.split(/[\s,]+/).filter(Boolean);
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+    if (!nums.length) throw new Error("Please enter one or more numbers.");
+    return nums;
+  }
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+  function median(arr) {
+    const n = arr.length;
+    const mid = Math.floor(n / 2);
+    if (n % 2 === 0) return (arr[mid - 1] + arr[mid]) / 2;
+    return arr[mid];
+  }
+  function quartiles(sorted) {
+    const n = sorted.length;
+    const mid = Math.floor(n / 2);
+    const lower = sorted.slice(0, mid);
+    const upper = n % 2 === 0 ? sorted.slice(mid) : sorted.slice(mid + 1);
+    return { q1: median(lower), q3: median(upper) };
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const nums = parseValues();
+      if (nums.length < 4) {
+        showError("Please enter at least 4 values to calculate quartiles and IQR reliably.");
+        return;
+      }
+      const sorted = nums.slice().sort(function (a, b) { return a - b; });
+      const q = quartiles(sorted);
+      const iqr = q.q3 - q.q1;
+
+      resultEl.innerHTML =
+        "<strong>IQR result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(iqr) + "</span>" +
+        "<br/><span class='note'>Q3 − Q1 = " + fmt(q.q3) + " − " + fmt(q.q1) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Q1: " + fmt(q.q1)) +
+        badge("Q3: " + fmt(q.q3)) +
+        badge("Middle 50% spread") +
+        "</div>";
+
+      fillTable([
+        ["Input count", String(nums.length)],
+        ["Q1", fmt(q.q1)],
+        ["Q3", fmt(q.q3)],
+        ["IQR", fmt(iqr)],
+        ["Sorted values", sorted.map(fmt).join(", ")],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate IQR.");
+    }
+  }
+  function fillDemo() {
+    valuesEl.value = "4, 8, 15, 16, 23, 42";
+    clearOutput();
+  }
+  function reset() {
+    valuesEl.value = "";
+    clearOutput();
+    valuesEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+  clearOutput();
+});
+</script>

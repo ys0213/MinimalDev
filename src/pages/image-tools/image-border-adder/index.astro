@@ -1,0 +1,559 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Border Adder",
+  description:
+    "Add a border around an image with adjustable thickness, color, padding, export options, result cards, and FAQ schema.",
+  href: "/image-tools/image-border-adder/",
+  order: 141,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-border-adder/";
+
+const faqs = [
+  {
+    q: "What does this border tool do?",
+    a: "It adds a configurable outer border around your uploaded image. You can control border size, inner padding, color, and output format.",
+  },
+  {
+    q: "Can I add white space around the image too?",
+    a: "Yes. The padding option adds inner space between the image and the border edge.",
+  },
+  {
+    q: "Does it upload my image?",
+    a: "No. The image is processed locally in your browser and is not uploaded or stored.",
+  },
+  {
+    q: "Can I make a simple frame for marketplace or catalog images?",
+    a: "Yes. This is useful for product images, profile images, thumbnails, screenshots, and social sharing assets.",
+  },
+  {
+    q: "What export formats are available?",
+    a: "PNG, JPEG, and WebP export are available depending on your browser support.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Border Adder — ${SITE_NAME}`}
+  description="Add a border to an image with thickness, padding, and color controls. Preview, export, and process locally in your browser."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Border Adder"
+  intro="Upload an image and add a clean border or simple frame around it. Choose border thickness, padding, and color, then preview and download the result."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-border-adder">
+    <style is:inline>
+      #iba2_file,
+      #iba2_border_size,
+      #iba2_padding,
+      #iba2_quality,
+      #iba2_format,
+      #iba2_border_color,
+      #iba2_bg_color {
+        width: 100%;
+        min-width: 0;
+      }
+      .iba2-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .iba2-grid > * {
+        min-width: 0;
+      }
+      .iba2-preview-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .iba2-preview-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        padding: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .iba2-preview-card canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.03);
+      }
+      .iba2-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .iba2-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .iba2-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+      }
+      .iba2-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 920px) {
+        .iba2-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .iba2-preview-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="iba2_help iba2_privacy">
+      <div class="field">
+        <label for="iba2_file">Image file</label>
+        <input id="iba2_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="iba2-grid">
+        <div class="field">
+          <label for="iba2_border_size">Border thickness</label>
+          <input id="iba2_border_size" type="range" min="0" max="100" step="1" value="20" />
+          <p class="note" id="iba2_border_size_note" style="margin-top:6px;">Current border: 20 px</p>
+        </div>
+
+        <div class="field">
+          <label for="iba2_padding">Inner padding</label>
+          <input id="iba2_padding" type="range" min="0" max="120" step="1" value="0" />
+          <p class="note" id="iba2_padding_note" style="margin-top:6px;">Current padding: 0 px</p>
+        </div>
+
+        <div class="field">
+          <label for="iba2_format">Output format</label>
+          <select id="iba2_format">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="iba2-grid">
+        <div class="field">
+          <label for="iba2_border_color">Border color</label>
+          <input id="iba2_border_color" type="color" value="#FFFFFF" />
+        </div>
+
+        <div class="field">
+          <label for="iba2_bg_color">Padding background color</label>
+          <input id="iba2_bg_color" type="color" value="#FFFFFF" />
+        </div>
+
+        <div class="field">
+          <label for="iba2_quality">Export quality (JPEG/WebP)</label>
+          <input id="iba2_quality" type="range" min="0.1" max="1" step="0.05" value="0.9" />
+          <p class="note" id="iba2_quality_note" style="margin-top:6px;">Current quality: 0.90</p>
+        </div>
+      </div>
+
+      <div class="iba2-row">
+        <label>
+          <input id="iba2_live" type="checkbox" checked />
+          Update preview automatically
+        </label>
+      </div>
+
+      <p class="note" id="iba2_help" style="margin-top:6px;">
+        Border thickness adds an outer frame. Padding adds space between the image and the border edge.
+      </p>
+
+      <div class="iba2-row">
+        <button class="btn" type="button" id="iba2_apply">Add Border</button>
+        <button class="btn secondary" type="button" id="iba2_download">Download Result</button>
+        <button class="btn secondary" type="button" id="iba2_reset">Reset Controls</button>
+        <button class="btn secondary" type="button" id="iba2_clear">Clear</button>
+      </div>
+
+      <div class="result" id="iba2_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="iba2_result" role="status" style="margin-top:12px;">Bordered image details will appear here.</div>
+      <div class="result" id="iba2_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="iba2-preview-grid">
+        <div class="iba2-preview-card">
+          <strong>Original preview</strong>
+          <canvas id="iba2_original_canvas" aria-label="Original image preview"></canvas>
+        </div>
+        <div class="iba2-preview-card">
+          <strong>Bordered preview</strong>
+          <canvas id="iba2_output_canvas" aria-label="Image preview with added border"></canvas>
+        </div>
+      </div>
+
+      <p class="note" id="iba2_privacy" style="margin-top:10px;">
+        Privacy: border rendering runs locally in your browser. No image file is uploaded, transmitted, or stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool redraws your uploaded image onto a larger canvas. It first paints the border background, then optional padding,
+      and finally centers the original image inside the new frame.
+    </p>
+    <ul>
+      <li><strong>Border thickness:</strong> controls the outer frame width</li>
+      <li><strong>Padding:</strong> adds space inside the border</li>
+      <li><strong>Border color:</strong> controls the outer visible frame color</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Add a white frame around product thumbnails</li>
+      <li>Create a clean avatar image with even spacing</li>
+      <li>Prepare consistent image cards for a gallery or catalog</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-watermark-generator/">Image Watermark Generator</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+      <li><a href="/image-tools/png-to-jpg/">PNG to JPG</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("iba2_file");
+  const borderSizeEl = document.getElementById("iba2_border_size");
+  const borderSizeNoteEl = document.getElementById("iba2_border_size_note");
+  const paddingEl = document.getElementById("iba2_padding");
+  const paddingNoteEl = document.getElementById("iba2_padding_note");
+  const borderColorEl = document.getElementById("iba2_border_color");
+  const bgColorEl = document.getElementById("iba2_bg_color");
+  const formatEl = document.getElementById("iba2_format");
+  const qualityEl = document.getElementById("iba2_quality");
+  const qualityNoteEl = document.getElementById("iba2_quality_note");
+  const liveEl = document.getElementById("iba2_live");
+
+  const applyBtn = document.getElementById("iba2_apply");
+  const downloadBtn = document.getElementById("iba2_download");
+  const resetBtn = document.getElementById("iba2_reset");
+  const clearBtn = document.getElementById("iba2_clear");
+
+  const errorEl = document.getElementById("iba2_error");
+  const resultEl = document.getElementById("iba2_result");
+  const cardsEl = document.getElementById("iba2_cards");
+
+  const originalCanvas = document.getElementById("iba2_original_canvas");
+  const outputCanvas = document.getElementById("iba2_output_canvas");
+  const originalCtx = originalCanvas.getContext("2d");
+  const outputCtx = outputCanvas.getContext("2d");
+
+  if (
+    !fileEl || !borderSizeEl || !borderSizeNoteEl || !paddingEl || !paddingNoteEl ||
+    !borderColorEl || !bgColorEl || !formatEl || !qualityEl || !qualityNoteEl || !liveEl ||
+    !applyBtn || !downloadBtn || !resetBtn || !clearBtn || !errorEl || !resultEl || !cardsEl ||
+    !originalCanvas || !outputCanvas || !originalCtx || !outputCtx
+  ) return;
+
+  const sourceCanvas = document.createElement("canvas");
+  const sourceCtx = sourceCanvas.getContext("2d");
+
+  let currentImage = null;
+  let currentFileName = "";
+  let originalFileSize = 0;
+  let lastBlob = null;
+  let debounceTimer = null;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetMessages() {
+    clearError();
+    resultEl.textContent = "Bordered image details will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function metricCard(label, value, sub) {
+    return (
+      '<div class="iba2-card">' +
+        "<strong>" + label + "</strong>" +
+        '<div class="iba2-big">' + value + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function updateControlLabels() {
+    borderSizeNoteEl.textContent = "Current border: " + String(borderSizeEl.value) + " px";
+    paddingNoteEl.textContent = "Current padding: " + String(paddingEl.value) + " px";
+    qualityNoteEl.textContent = "Current quality: " + Number(qualityEl.value || 0.9).toFixed(2);
+  }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = function () { reject(new Error("Could not decode the selected image.")); };
+        img.src = String(ev.target.result || "");
+      };
+      reader.onerror = function () {
+        reject(new Error("Could not read the selected file."));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function drawOriginal() {
+    if (!currentImage || !sourceCtx) return;
+    const w = currentImage.naturalWidth || currentImage.width;
+    const h = currentImage.naturalHeight || currentImage.height;
+
+    sourceCanvas.width = w;
+    sourceCanvas.height = h;
+    originalCanvas.width = w;
+    originalCanvas.height = h;
+
+    sourceCtx.clearRect(0, 0, w, h);
+    sourceCtx.drawImage(currentImage, 0, 0);
+
+    originalCtx.clearRect(0, 0, w, h);
+    originalCtx.drawImage(currentImage, 0, 0);
+  }
+
+  async function renderBorder() {
+    clearError();
+
+    if (!currentImage || !sourceCtx) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    const srcW = sourceCanvas.width;
+    const srcH = sourceCanvas.height;
+    if (!srcW || !srcH) {
+      showError("Source image is not ready yet.");
+      return;
+    }
+
+    const border = Number(borderSizeEl.value || 0);
+    const padding = Number(paddingEl.value || 0);
+    const borderColor = String(borderColorEl.value || "#FFFFFF");
+    const bgColor = String(bgColorEl.value || "#FFFFFF");
+    const mime = String(formatEl.value || "image/jpeg");
+    const quality = Number(qualityEl.value || 0.9);
+
+    const outW = srcW + (border * 2) + (padding * 2);
+    const outH = srcH + (border * 2) + (padding * 2);
+
+    outputCanvas.width = outW;
+    outputCanvas.height = outH;
+
+    outputCtx.clearRect(0, 0, outW, outH);
+    outputCtx.fillStyle = borderColor;
+    outputCtx.fillRect(0, 0, outW, outH);
+
+    outputCtx.fillStyle = bgColor;
+    outputCtx.fillRect(border, border, outW - border * 2, outH - border * 2);
+
+    outputCtx.drawImage(sourceCanvas, border + padding, border + padding);
+
+    resultEl.innerHTML =
+      "<strong>Border added successfully.</strong>" +
+      '<div class="note" style="margin-top:6px;">Review the framed preview and download the bordered image when ready.</div>';
+
+    try {
+      const blob = await new Promise(function (resolve, reject) {
+        outputCanvas.toBlob(function (b) {
+          if (!b) {
+            reject(new Error("Could not encode the bordered image."));
+            return;
+          }
+          resolve(b);
+        }, mime, quality);
+      });
+
+      lastBlob = blob;
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div class="iba2-cards">' +
+          metricCard("Border", border + " px", "Outer frame thickness") +
+          metricCard("Padding", padding + " px", "Inner spacing around image") +
+          metricCard("Output size", outW + " × " + outH, "Final canvas dimensions") +
+          metricCard("Export file", formatBytes(blob.size), "Current rendered output size") +
+        "</div>" +
+        '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+          badge(border > 0 ? "Border visible" : "No visible border", border > 0 ? "good" : "warn") +
+          badge(padding > 0 ? "Padding included" : "No padding", padding > 0 ? "good" : "neutral") +
+          badge(mime === "image/png" ? "Lossless container" : "Quality " + quality.toFixed(2), mime === "image/png" ? "neutral" : "good") +
+        "</div>";
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not create the export file.");
+    }
+  }
+
+  async function downloadResult() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please upload an image first.");
+      return;
+    }
+
+    if (!lastBlob) {
+      await renderBorder();
+      if (!lastBlob) return;
+    }
+
+    const ext = String(formatEl.value || "image/jpeg").replace("image/", "").replace("jpeg", "jpg");
+    const base = (currentFileName || "image").replace(/\.[^.]+$/, "");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(lastBlob);
+    a.download = base + "-bordered." + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function scheduleRender() {
+    updateControlLabels();
+    if (!liveEl.checked || !currentImage) return;
+    if (debounceTimer) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(function () {
+      renderBorder();
+    }, 120);
+  }
+
+  function resetControls() {
+    borderSizeEl.value = "20";
+    paddingEl.value = "0";
+    borderColorEl.value = "#FFFFFF";
+    bgColorEl.value = "#FFFFFF";
+    formatEl.value = "image/jpeg";
+    qualityEl.value = "0.9";
+    liveEl.checked = true;
+    updateControlLabels();
+    if (currentImage) renderBorder();
+    else resetMessages();
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    currentImage = null;
+    currentFileName = "";
+    originalFileSize = 0;
+    lastBlob = null;
+    sourceCanvas.width = 0;
+    sourceCanvas.height = 0;
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    outputCanvas.width = 0;
+    outputCanvas.height = 0;
+
+    borderSizeEl.value = "20";
+    paddingEl.value = "0";
+    borderColorEl.value = "#FFFFFF";
+    bgColorEl.value = "#FFFFFF";
+    formatEl.value = "image/jpeg";
+    qualityEl.value = "0.9";
+    liveEl.checked = true;
+    updateControlLabels();
+    resetMessages();
+    fileEl.focus();
+  }
+
+  fileEl.addEventListener("change", async function () {
+    resetMessages();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please select a valid image file.");
+      return;
+    }
+
+    try {
+      currentImage = await loadImage(file);
+      currentFileName = file.name || "image";
+      originalFileSize = Number(file.size || 0);
+      drawOriginal();
+
+      if (liveEl.checked) {
+        renderBorder();
+      } else {
+        resultEl.innerHTML =
+          "<strong>Image loaded.</strong>" +
+          '<div class="note" style="margin-top:6px;">Adjust the frame settings, then click “Add Border”.</div>';
+      }
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not load the image.");
+    }
+  });
+
+  borderSizeEl.addEventListener("input", scheduleRender);
+  paddingEl.addEventListener("input", scheduleRender);
+  borderColorEl.addEventListener("input", scheduleRender);
+  bgColorEl.addEventListener("input", scheduleRender);
+  formatEl.addEventListener("change", scheduleRender);
+  qualityEl.addEventListener("input", scheduleRender);
+  liveEl.addEventListener("change", scheduleRender);
+
+  applyBtn.addEventListener("click", renderBorder);
+  downloadBtn.addEventListener("click", downloadResult);
+  resetBtn.addEventListener("click", resetControls);
+  clearBtn.addEventListener("click", clearAll);
+
+  updateControlLabels();
+});
+</script>

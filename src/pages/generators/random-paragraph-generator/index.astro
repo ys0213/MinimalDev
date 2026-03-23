@@ -1,0 +1,146 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Paragraph Generator",
+  description: "Generate random paragraphs with configurable length, structure, and formatting.",
+  href: "/generators/random-paragraph-generator/",
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-paragraph-generator/";
+
+const faqs = [
+  { q: "What does this tool generate?", a: "Random readable paragraphs for testing, UI content, and writing prompts." },
+  { q: "Is it real content?", a: "No. It is placeholder text." },
+  { q: "Can I control size?", a: "Yes. Paragraph count and sentence length are configurable." },
+  { q: "Is data stored?", a: "No. Everything runs locally." },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(f => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Random Paragraph Generator — ${SITE_NAME}`}
+  description="Generate paragraphs with validation, UX cards, and accessibility."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Paragraph Generator"
+  intro="Generate paragraphs for testing, placeholders, and writing prompts."
+  faq={faqs}
+  categoryName="Generators"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<style is:inline>
+.grid{display:grid;gap:12px}
+.grid>*{min-width:0}
+@media(min-width:760px){.grid{grid-template-columns:1fr 1fr}}
+.out{white-space:pre-wrap;word-break:break-word}
+</style>
+
+<div class="form">
+<div class="grid">
+<div class="field">
+<label>Paragraphs</label>
+<input id="p_count" type="number" min="1" max="20" value="3"/>
+</div>
+
+<div class="field">
+<label>Sentence length</label>
+<select id="p_len">
+<option value="short">Short</option>
+<option value="medium" selected>Medium</option>
+<option value="long">Long</option>
+</select>
+</div>
+</div>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button id="gen" class="btn">Generate</button>
+<button id="copy" class="btn secondary">Copy</button>
+<button id="clear" class="btn secondary">Clear</button>
+</div>
+
+<div id="err" class="result" style="display:none"></div>
+<div id="res" class="result">Result will appear here.</div>
+<div id="cards" class="result" style="display:none"></div>
+
+<textarea id="out" class="out" rows="16" readonly></textarea>
+
+<table style="width:100%;margin-top:12px">
+<tbody id="tb"></tbody>
+</table>
+
+</div>
+</div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const words=["system","design","process","data","user","flow","model","result","logic","pattern"];
+
+function sentence(len){
+let count=len==="short"?6:len==="long"?16:10;
+let arr=[];
+for(let i=0;i<count;i++){
+arr.push(words[Math.random()*words.length|0]);
+}
+return arr.join(" ")+".";
+}
+
+function paragraph(len){
+let n=3+Math.random()*3|0;
+let s=[];
+for(let i=0;i<n;i++) s.push(sentence(len));
+return s.join(" ");
+}
+
+function gen(){
+let c=Number(p_count.value);
+if(!c||c<1||c>20){err.style.display="block";err.textContent="1~20";return;}
+err.style.display="none";
+
+let arr=[];
+for(let i=0;i<c;i++) arr.push(paragraph(p_len.value));
+
+out.value=arr.join("\n\n");
+
+res.innerHTML="<strong>Generated</strong>";
+
+cards.style.display="block";
+cards.innerHTML=`Paragraphs: ${c}`;
+
+tb.innerHTML=`
+<tr><td>Count</td><td>${c}</td></tr>
+<tr><td>Length</td><td>${p_len.value}</td></tr>
+<tr><td>Chars</td><td>${out.value.length}</td></tr>
+`;
+}
+
+gen.onclick=gen;
+
+copy.onclick=async()=>{
+if(!out.value)return;
+await navigator.clipboard.writeText(out.value);
+res.innerHTML="<strong>Copied</strong>";
+};
+
+clear.onclick=()=>{
+out.value="";
+cards.style.display="none";
+res.textContent="Result will appear here.";
+};
+
+});
+</script>

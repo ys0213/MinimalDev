@@ -1,0 +1,409 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sitemap Generator",
+  description:
+    "Generate XML sitemap entries from a base URL and path list, with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/sitemap-generator/",
+  order: 183,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/sitemap-generator/";
+
+const faqs = [
+  {
+    q: "What does this sitemap generator create?",
+    a: "It creates a standard XML sitemap with urlset and url entries from a base URL and a list of paths or full URLs.",
+  },
+  {
+    q: "Can I enter relative paths instead of full URLs?",
+    a: "Yes. Relative paths are joined with the base URL you provide.",
+  },
+  {
+    q: "Can I include lastmod, changefreq, and priority?",
+    a: "Yes. You can apply one set of values to all generated URLs.",
+  },
+  {
+    q: "Does this validate the base URL?",
+    a: "Yes. The base URL must be a valid http or https URL.",
+  },
+  {
+    q: "Are the sitemap entries stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Sitemap Generator — ${SITE_NAME}`}
+  description="Generate XML sitemap files from a base URL and path list."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sitemap Generator"
+  intro="Generate a simple XML sitemap from a base URL and a list of page paths or full URLs. Optional fields include last modified date, change frequency, and priority."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <div slot="tool" data-tool="sitemap-generator">
+    <style is:inline>
+      .smg-wrap, .smg-wrap * { box-sizing: border-box; }
+      .smg-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .smg-grid input,
+      .smg-grid select,
+      .smg-grid textarea,
+      #smg_output {
+        width:100%;
+        min-width:0;
+      }
+      .smg-output {
+        white-space:pre-wrap;
+        word-break:break-word;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:14px;
+      }
+      @media (max-width: 760px) {
+        .smg-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form smg-wrap" role="form" aria-describedby="smg_help smg_privacy">
+      <div class="field">
+        <label for="smg_base_url">Base URL</label>
+        <input id="smg_base_url" type="url" placeholder="https://example.com/" />
+      </div>
+
+      <div class="field">
+        <label for="smg_paths">Paths or full URLs (one per line)</label>
+        <textarea id="smg_paths" rows="10" spellcheck="false" placeholder="/&#10;/about/&#10;/tools/meta-tag-generator/"></textarea>
+      </div>
+
+      <div class="smg-grid">
+        <div class="field">
+          <label for="smg_lastmod">lastmod (optional)</label>
+          <input id="smg_lastmod" type="date" />
+        </div>
+
+        <div class="field">
+          <label for="smg_changefreq">changefreq (optional)</label>
+          <select id="smg_changefreq">
+            <option value="" selected>Not set</option>
+            <option value="always">always</option>
+            <option value="hourly">hourly</option>
+            <option value="daily">daily</option>
+            <option value="weekly">weekly</option>
+            <option value="monthly">monthly</option>
+            <option value="yearly">yearly</option>
+            <option value="never">never</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="smg_priority">priority (optional)</label>
+          <input id="smg_priority" type="number" min="0" max="1" step="0.1" placeholder="e.g. 0.8" />
+        </div>
+      </div>
+
+      <p class="note" id="smg_help" style="margin-top:6px;">
+        Use one path or URL per line. Relative paths are joined to the base URL.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="smg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="smg_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="smg_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="smg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="smg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result smg-output" id="smg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="smg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="smg_output">Generated XML sitemap</label>
+        <textarea id="smg_output" rows="18" readonly spellcheck="false" placeholder="Generated sitemap XML will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="smg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="smg_privacy" style="margin-top:10px;">
+        Privacy: sitemap generation runs locally in your browser. No URLs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter a base URL and list each page path or full URL on a separate line. The generator creates a standard XML sitemap document.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Relative paths:</strong> <code>/</code>, <code>/about/</code>, <code>/contact/</code></li>
+      <li><strong>Mixed input:</strong> combine base URL + relative paths or full URLs</li>
+      <li><strong>Optional metadata:</strong> set a shared lastmod, changefreq, and priority</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/robots-txt-generator/">robots.txt Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/canonical-tag-generator/">Canonical Tag Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const baseUrlEl = document.getElementById("smg_base_url");
+  const pathsEl = document.getElementById("smg_paths");
+  const lastmodEl = document.getElementById("smg_lastmod");
+  const changefreqEl = document.getElementById("smg_changefreq");
+  const priorityEl = document.getElementById("smg_priority");
+  const generateBtn = document.getElementById("smg_generate");
+  const copyBtn = document.getElementById("smg_copy");
+  const fillBtn = document.getElementById("smg_fill_demo");
+  const clearBtn = document.getElementById("smg_clear");
+  const errorEl = document.getElementById("smg_error");
+  const resultEl = document.getElementById("smg_result");
+  const cardsEl = document.getElementById("smg_cards");
+  const outputEl = document.getElementById("smg_output");
+  const tbodyEl = document.getElementById("smg_tbody");
+
+  if (
+    !baseUrlEl || !pathsEl || !lastmodEl || !changefreqEl || !priorityEl ||
+    !generateBtn || !copyBtn || !fillBtn || !clearBtn || !errorEl ||
+    !resultEl || !cardsEl || !outputEl || !tbodyEl
+  ) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function isValidHttpUrl(v) {
+    try {
+      const u = new URL(v);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function xmlEscape(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  }
+
+  function normalizeBaseUrl(v) {
+    const u = new URL(v);
+    return u.href;
+  }
+
+  function listFromTextarea(raw) {
+    return String(raw || "")
+      .split(/\r?\n/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  function generateSitemap() {
+    resetOutput();
+
+    const baseUrlRaw = String(baseUrlEl.value || "").trim();
+    const pathList = listFromTextarea(pathsEl.value);
+    const lastmod = String(lastmodEl.value || "").trim();
+    const changefreq = String(changefreqEl.value || "").trim();
+    const priorityRaw = String(priorityEl.value || "").trim();
+
+    if (!baseUrlRaw) {
+      showError("Please enter a base URL.");
+      return;
+    }
+
+    if (!isValidHttpUrl(baseUrlRaw)) {
+      showError("Please enter a valid base URL (http or https).");
+      return;
+    }
+
+    if (pathList.length === 0) {
+      showError("Please enter at least one path or full URL.");
+      return;
+    }
+
+    let priority = "";
+    if (priorityRaw) {
+      const n = parseFloat(priorityRaw);
+      if (!Number.isFinite(n) || n < 0 || n > 1) {
+        showError("Priority must be a number between 0.0 and 1.0.");
+        return;
+      }
+      priority = n.toFixed(1);
+    }
+
+    const baseUrl = normalizeBaseUrl(baseUrlRaw);
+    const urls = [];
+
+    for (let i = 0; i < pathList.length; i++) {
+      const item = pathList[i];
+      let finalUrl = "";
+
+      if (/^https?:\/\//i.test(item)) {
+        if (!isValidHttpUrl(item)) {
+          showError("Invalid full URL found: " + item);
+          return;
+        }
+        finalUrl = new URL(item).href;
+      } else {
+        try {
+          finalUrl = new URL(item, baseUrl).href;
+        } catch (_) {
+          showError("Invalid path found: " + item);
+          return;
+        }
+      }
+
+      urls.push(finalUrl);
+    }
+
+    const lines = [];
+    lines.push('<?xml version="1.0" encoding="UTF-8"?>');
+    lines.push('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+
+    urls.forEach(function (url) {
+      lines.push("  <url>");
+      lines.push("    <loc>" + xmlEscape(url) + "</loc>");
+      if (lastmod) lines.push("    <lastmod>" + xmlEscape(lastmod) + "</lastmod>");
+      if (changefreq) lines.push("    <changefreq>" + xmlEscape(changefreq) + "</changefreq>");
+      if (priority) lines.push("    <priority>" + xmlEscape(priority) + "</priority>");
+      lines.push("  </url>");
+    });
+
+    lines.push("</urlset>");
+
+    const output = lines.join("\n");
+    lastOutput = output;
+    outputEl.value = output;
+
+    resultEl.innerHTML = "<strong>Sitemap XML generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("URL count: " + urls.length) +
+      badge(lastmod ? "lastmod included" : "No lastmod") +
+      badge(changefreq ? "changefreq included" : "No changefreq") +
+      badge(priority ? "priority included" : "No priority") +
+      "</div>";
+
+    fillTable([
+      ["Base URL", baseUrl],
+      ["URL entry count", String(urls.length)],
+      ["lastmod", lastmod || "Not set"],
+      ["changefreq", changefreq || "Not set"],
+      ["priority", priority || "Not set"],
+      ["Output lines", String(lines.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated sitemap output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied sitemap XML output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function fillDemo() {
+    baseUrlEl.value = "https://example.com/";
+    pathsEl.value = "/\n/about/\n/tools/meta-tag-generator/\n/tools/sitemap-generator/";
+    lastmodEl.value = "2026-03-18";
+    changefreqEl.value = "weekly";
+    priorityEl.value = "0.8";
+    resetOutput();
+  }
+
+  function clearAll() {
+    baseUrlEl.value = "";
+    pathsEl.value = "";
+    lastmodEl.value = "";
+    changefreqEl.value = "";
+    priorityEl.value = "";
+    resetOutput();
+    baseUrlEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateSitemap);
+  copyBtn.addEventListener("click", copyOutput);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  [baseUrlEl, priorityEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateSitemap();
+    });
+  });
+});
+</script>

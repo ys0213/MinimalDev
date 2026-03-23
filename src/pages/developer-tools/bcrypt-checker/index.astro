@@ -1,0 +1,243 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Bcrypt Checker",
+  description:
+    "Check bcrypt hash format, version, cost factor, and structure with result cards and FAQ schema.",
+  href: "/developer-tools/bcrypt-checker/",
+  order: 310,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/bcrypt-checker/";
+
+const faqs = [
+  {
+    q: "What does this bcrypt checker validate?",
+    a: "It checks whether the provided string matches the expected bcrypt hash format and extracts the version and cost factor when possible.",
+  },
+  {
+    q: "Does it verify a password against the hash?",
+    a: "No. This page checks bcrypt hash structure only. It does not perform password verification.",
+  },
+  {
+    q: "What bcrypt prefixes are common?",
+    a: "Common bcrypt prefixes include $2a$, $2b$, and $2y$.",
+  },
+  {
+    q: "Are hashes stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Bcrypt Checker — ${SITE_NAME}`}
+  description="Check bcrypt hash format, version, and cost factor with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Bcrypt Checker"
+  intro="Validate bcrypt hash structure and inspect version and cost information."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="bcrypt-checker">
+    <style is:inline>
+      #bc_input {
+        width: 100%;
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .bc-break {
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="bc_help bc_privacy">
+      <div class="field">
+        <label for="bc_input">Bcrypt hash</label>
+        <textarea
+          id="bc_input"
+          rows="5"
+          spellcheck="false"
+          placeholder="$2b$10$abcdefghijklmnopqrstuu0123456789012345678901234567890"
+        ></textarea>
+      </div>
+
+      <p class="note" id="bc_help" style="margin-top:6px;">
+        This tool checks bcrypt format only. It does not verify a plaintext password against the hash.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="bc_check">Check</button>
+        <button class="btn secondary" type="button" id="bc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="bc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="bc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="bc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="bc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="bc_privacy" style="margin-top:10px;">
+        Privacy: checking runs locally in your browser. No hash values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a bcrypt hash and run the checker. The tool validates the general pattern and extracts version and cost if the string is well-formed.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>$2a$...</strong> → older/common bcrypt prefix</li>
+      <li><strong>$2b$...</strong> → common modern bcrypt prefix</li>
+      <li><strong>Cost 10</strong> → work factor of 10 rounds</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/bcrypt-generator/">Bcrypt Generator</a></li>
+      <li><a href="/developer-tools/hash-comparator/">Hash Comparator</a></li>
+      <li><a href="/developer-tools/jwt-validator/">JWT Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("bc_input");
+  const checkBtn = document.getElementById("bc_check");
+  const clearBtn = document.getElementById("bc_clear");
+  const errEl = document.getElementById("bc_error");
+  const resultEl = document.getElementById("bc_result");
+  const cardsEl = document.getElementById("bc_cards");
+  const tbodyEl = document.getElementById("bc_tbody");
+
+  if (!inputEl || !checkBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function check() {
+    clearOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste a bcrypt hash.");
+      return;
+    }
+
+    const re = /^\$(2[aby])\$(\d{2})\$([./A-Za-z0-9]{53})$/;
+    const match = raw.match(re);
+
+    if (!match) {
+      showError("Invalid bcrypt format. Expected something like $2b$10$ followed by 53 bcrypt characters.");
+      return;
+    }
+
+    const version = match[1];
+    const cost = parseInt(match[2], 10);
+    const body = match[3];
+    const salt = body.slice(0, 22);
+    const hashPart = body.slice(22);
+
+    let costLabel = "Moderate";
+    if (cost < 10) costLabel = "Low cost";
+    else if (cost >= 12) costLabel = "High cost";
+
+    resultEl.innerHTML = "<strong>Valid bcrypt format.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid format") +
+      badge("Version: " + version) +
+      badge("Cost: " + cost) +
+      badge(costLabel) +
+      "</div>";
+
+    fillTable([
+      ["Version", version],
+      ["Cost factor", String(cost)],
+      ["Salt length", String(salt.length)],
+      ["Hash body length", String(hashPart.length)],
+      ["Full length", String(raw.length)],
+      ["Salt sample", salt],
+      ["Hash part sample", hashPart.slice(0, 12) + "..."],
+    ]);
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    clearOutput();
+    inputEl.focus();
+  }
+
+  checkBtn.addEventListener("click", check);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

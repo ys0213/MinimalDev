@@ -1,0 +1,282 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Minutes to Seconds",
+  description:
+    "Convert minutes to seconds instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/minutes-to-seconds/",
+  order: 325,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/minutes-to-seconds/";
+
+const faqs = [
+  {
+    q: "How do you convert minutes to seconds?",
+    a: "Multiply minutes by 60, because 1 minute equals 60 seconds.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between minutes to seconds and seconds to minutes.",
+  },
+  {
+    q: "Can I enter fractional minutes?",
+    a: "Yes. This tool accepts decimal values, so 1.5 minutes converts to 90 seconds.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Minutes to Seconds Converter — ${SITE_NAME}`}
+  description="Convert minutes to seconds instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Minutes to Seconds Converter"
+  intro="Convert time from minutes to seconds instantly. Useful for timers, workouts, videos, and quick time conversions."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="minutes-to-seconds">
+    <div class="form" role="form" aria-describedby="m2s_hint m2s_privacy">
+      <div class="field">
+        <label for="m2s_input">Minutes</label>
+        <input id="m2s_input" type="number" inputmode="decimal" placeholder="e.g., 1.5" />
+        <p class="note" id="m2s_hint" style="margin-top:6px;">
+          Enter a non-negative value. 1 minute equals 60 seconds.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="m2s_round">Rounding</label>
+        <select id="m2s_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="m2s_convert">Convert</button>
+        <button class="btn secondary" type="button" id="m2s_swap">Reverse (sec → min)</button>
+        <button class="btn secondary" type="button" id="m2s_clear">Clear</button>
+      </div>
+
+      <div class="result" id="m2s_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="m2s_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="m2s_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="m2s_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="m2s_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard time conversion: <strong>1 minute = 60 seconds</strong>.<br />
+      Formula: <strong>seconds = minutes × 60</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 minute</strong> = <strong>60 seconds</strong></li>
+      <li><strong>1.5 minutes</strong> = <strong>90 seconds</strong></li>
+      <li><strong>5 minutes</strong> = <strong>300 seconds</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/time-converter/">Time Converter</a></li>
+      <li><a href="/converter/seconds-to-minutes/">Seconds to Minutes</a></li>
+      <li><a href="/converter/minutes-to-hours/">Minutes to Hours</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("m2s_input");
+  const roundEl = document.getElementById("m2s_round");
+  const convertBtn = document.getElementById("m2s_convert");
+  const swapBtn = document.getElementById("m2s_swap");
+  const clearBtn = document.getElementById("m2s_clear");
+  const errEl = document.getElementById("m2s_error");
+  const outEl = document.getElementById("m2s_result");
+  const cardsEl = document.getElementById("m2s_cards");
+  const tbodyEl = document.getElementById("m2s_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const MIN_TO_SEC = 60;
+  const SEC_TO_MIN = 1 / 60;
+  let mode = "min-to-sec";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="m2s_input"]');
+    if (!label) return;
+    if (mode === "min-to-sec") {
+      label.textContent = "Minutes";
+      inEl.placeholder = "e.g., 1.5";
+      swapBtn.textContent = "Reverse (sec → min)";
+    } else {
+      label.textContent = "Seconds";
+      inEl.placeholder = "e.g., 90";
+      swapBtn.textContent = "Reverse (min → sec)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "min-to-sec"
+      ? [
+          ["Conversion factor", "1 min = 60 sec"],
+          ["Formula", "sec = min × 60"],
+          ["Input", fmt(input) + " min"],
+          ["Output", fmt(output) + " sec"],
+        ]
+      : [
+          ["Conversion factor", "60 sec = 1 min"],
+          ["Formula", "min = sec ÷ 60"],
+          ["Input", fmt(input) + " sec"],
+          ["Output", fmt(output) + " min"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function classifyMinutes(mins) {
+    if (mins < 1) return "Less than one minute";
+    if (mins < 60) return "Typical duration";
+    return "Longer duration";
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "min-to-sec" ? input * MIN_TO_SEC : input * SEC_TO_MIN;
+
+    if (mode === "min-to-sec") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} sec<br/><span class="note">${fmt(input)} min = ${fmt(output)} sec</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} min<br/><span class="note">${fmt(input)} sec = ${fmt(output)} min</span>`;
+    }
+
+    const minutes = mode === "min-to-sec" ? input : output;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "min-to-sec" ? "min → sec" : "sec → min")}
+        ${badge("Base ≈ " + fmtSmart(minutes) + " min")}
+        ${badge(classifyMinutes(minutes))}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "min-to-sec" ? "sec-to-min" : "min-to-sec";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

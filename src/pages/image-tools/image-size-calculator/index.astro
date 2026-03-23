@@ -1,0 +1,430 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Size Calculator",
+  description:
+    "Estimate image file size from dimensions, bit depth, channels, and compression assumptions, with result cards, validation, and FAQ schema.",
+  href: "/image-tools/image-size-calculator/",
+  order: 152,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-size-calculator/";
+
+const faqs = [
+  {
+    q: "What does this image size calculator estimate?",
+    a: "It estimates raw uncompressed image size and approximate compressed sizes using width, height, color channels, bit depth, and a compression ratio assumption.",
+  },
+  {
+    q: "Is this exact for JPEG, PNG, or WebP files?",
+    a: "No. Actual file size depends on image content, metadata, format internals, and encoder settings. This tool provides practical estimates, not exact final file sizes.",
+  },
+  {
+    q: "What is raw image size?",
+    a: "Raw size is the uncompressed number of bytes needed to store pixel data based only on dimensions, channel count, and bit depth.",
+  },
+  {
+    q: "Why do two images with the same dimensions have different file sizes?",
+    a: "Because compression efficiency depends heavily on image content such as noise, detail, gradients, transparency, and metadata.",
+  },
+  {
+    q: "Can I use this for print or export planning?",
+    a: "Yes. It is useful for rough planning of storage, bandwidth, upload limits, and export expectations.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Size Calculator — ${SITE_NAME}`}
+  description="Estimate raw and approximate compressed image sizes using dimensions, channels, bit depth, and compression assumptions."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Size Calculator"
+  intro="Estimate how large an image may be based on pixel dimensions, bit depth, color channels, and approximate compression ratio. Useful for planning storage, uploads, export settings, and delivery sizes."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-size-calculator">
+    <style is:inline>
+      #isc_width,
+      #isc_height,
+      #isc_channels,
+      #isc_bit_depth,
+      #isc_compression_ratio,
+      #isc_unit_base {
+        width: 100%;
+        min-width: 0;
+      }
+      .isc-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .isc-grid > * {
+        min-width: 0;
+      }
+      .isc-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .isc-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .isc-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .isc-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .isc-list-item {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      @media (min-width: 900px) {
+        .isc-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="isc_help isc_privacy">
+      <div class="isc-grid">
+        <div class="field">
+          <label for="isc_width">Width (px)</label>
+          <input id="isc_width" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 4000" />
+        </div>
+        <div class="field">
+          <label for="isc_height">Height (px)</label>
+          <input id="isc_height" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 3000" />
+        </div>
+      </div>
+
+      <div class="isc-grid">
+        <div class="field">
+          <label for="isc_channels">Color channels</label>
+          <select id="isc_channels">
+            <option value="1">1 channel (grayscale)</option>
+            <option value="3" selected>3 channels (RGB)</option>
+            <option value="4">4 channels (RGBA)</option>
+            <option value="5">5 channels (CMYKA approximation)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="isc_bit_depth">Bit depth per channel</label>
+          <select id="isc_bit_depth">
+            <option value="1">1-bit</option>
+            <option value="8" selected>8-bit</option>
+            <option value="10">10-bit</option>
+            <option value="12">12-bit</option>
+            <option value="16">16-bit</option>
+            <option value="32">32-bit</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="isc-grid">
+        <div class="field">
+          <label for="isc_compression_ratio">Estimated compression ratio</label>
+          <input id="isc_compression_ratio" type="number" inputmode="decimal" min="1" step="0.1" value="4" />
+          <p class="note" style="margin-top:6px;">Example: 4 means the compressed file is estimated at one quarter of the raw size.</p>
+        </div>
+        <div class="field">
+          <label for="isc_unit_base">Display unit base</label>
+          <select id="isc_unit_base">
+            <option value="1024" selected>Binary units (KiB, MiB, GiB)</option>
+            <option value="1000">Decimal units (KB, MB, GB)</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="isc_help" style="margin-top:6px;">
+        This tool estimates pixel-data size only. Real file sizes vary by format, metadata, transparency, image complexity, and encoder settings.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="isc_calculate">Calculate Size</button>
+        <button class="btn secondary" type="button" id="isc_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="isc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="isc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="isc_result" role="status" style="margin-top:12px;">Image size estimates will appear here.</div>
+      <div class="result" id="isc_cards" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="isc_breakdown" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="isc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="isc_privacy" style="margin-top:10px;">
+        Privacy: this calculator uses only the values you enter and runs locally in your browser. No data is uploaded or stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Raw image size is estimated from this formula:
+      <strong> width × height × channels × bit depth ÷ 8 </strong>.
+      The compression estimate then divides that raw size by your assumed compression ratio.
+    </p>
+    <ul>
+      <li><strong>More pixels:</strong> larger file size</li>
+      <li><strong>More channels:</strong> larger file size</li>
+      <li><strong>Higher bit depth:</strong> larger file size</li>
+      <li><strong>Higher compression ratio:</strong> smaller estimated compressed file</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>4000 × 3000 RGB 8-bit → estimate raw pixel data before compression</li>
+      <li>RGBA 16-bit images → much larger memory footprint than RGB 8-bit</li>
+      <li>Compare approximate compressed size for the same image under different ratios</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-dpi-converter/">Image DPI Converter</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-aspect-ratio-calculator/">Image Aspect Ratio Calculator</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const widthEl = document.getElementById("isc_width");
+  const heightEl = document.getElementById("isc_height");
+  const channelsEl = document.getElementById("isc_channels");
+  const bitDepthEl = document.getElementById("isc_bit_depth");
+  const compressionEl = document.getElementById("isc_compression_ratio");
+  const unitBaseEl = document.getElementById("isc_unit_base");
+  const calcBtn = document.getElementById("isc_calculate");
+  const copyBtn = document.getElementById("isc_copy");
+  const clearBtn = document.getElementById("isc_clear");
+  const errorEl = document.getElementById("isc_error");
+  const resultEl = document.getElementById("isc_result");
+  const cardsEl = document.getElementById("isc_cards");
+  const breakdownEl = document.getElementById("isc_breakdown");
+  const tbodyEl = document.getElementById("isc_tbody");
+
+  if (!widthEl || !heightEl || !channelsEl || !bitDepthEl || !compressionEl || !unitBaseEl || !calcBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !breakdownEl || !tbodyEl) return;
+
+  let lastSummary = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Image size estimates will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    breakdownEl.style.display = "none";
+    breakdownEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastSummary = "";
+  }
+
+  function parsePositiveNumber(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return n;
+  }
+
+  function formatBytes(bytes, base) {
+    const b = Number(bytes || 0);
+    const units = base === 1000
+      ? ["B", "KB", "MB", "GB", "TB"]
+      : ["B", "KiB", "MiB", "GiB", "TiB"];
+
+    if (b < base) return b.toFixed(0) + " " + units[0];
+
+    let value = b;
+    let index = 0;
+    while (value >= base && index < units.length - 1) {
+      value /= base;
+      index++;
+    }
+    return value.toFixed(2) + " " + units[index];
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function card(label, value, sub) {
+    return (
+      '<div class="isc-card">' +
+        '<strong>' + label + '</strong>' +
+        '<div class="isc-big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + sub + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const width = parsePositiveNumber(widthEl.value);
+    const height = parsePositiveNumber(heightEl.value);
+    const channels = parsePositiveNumber(channelsEl.value);
+    const bitDepth = parsePositiveNumber(bitDepthEl.value);
+    const compressionRatio = parsePositiveNumber(compressionEl.value);
+    const base = Number(unitBaseEl.value || 1024);
+
+    if (!width || !height || !channels || !bitDepth || !compressionRatio) {
+      showError("Please enter valid positive values for width, height, channels, bit depth, and compression ratio.");
+      return;
+    }
+
+    const pixels = width * height;
+    const bitsPerPixel = channels * bitDepth;
+    const bytesPerPixel = bitsPerPixel / 8;
+    const rawBytes = pixels * bytesPerPixel;
+    const estimatedCompressedBytes = rawBytes / compressionRatio;
+
+    const rgb8Reference = pixels * 3;
+    const rgba8Reference = pixels * 4;
+
+    resultEl.innerHTML =
+      "<strong>Image size estimated.</strong>" +
+      '<div class="note" style="margin-top:6px;">Use the raw size for memory planning and the compressed estimate for rough file-size expectations.</div>';
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="isc-cards">' +
+        card("Raw size", formatBytes(rawBytes, base), "Uncompressed pixel data estimate") +
+        card("Compressed estimate", formatBytes(estimatedCompressedBytes, base), "Based on your compression ratio") +
+        card("Pixels", pixels.toLocaleString(), "Width × height") +
+        card("Bytes per pixel", bytesPerPixel.toFixed(2), "Channels × bit depth ÷ 8") +
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        badge(channels + " channels", channels >= 4 ? "warn" : "good") +
+        badge(bitDepth + "-bit", bitDepth > 8 ? "warn" : "good") +
+        badge("Compression " + compressionRatio + ":1", compressionRatio >= 8 ? "good" : compressionRatio >= 4 ? "neutral" : "warn") +
+      '</div>';
+
+    breakdownEl.style.display = "block";
+    breakdownEl.innerHTML =
+      "<strong>Reference comparisons</strong>" +
+      '<div class="isc-list" style="margin-top:10px;">' +
+        '<div class="isc-list-item"><strong>RGB 8-bit reference</strong><div class="note" style="margin-top:6px;">' + formatBytes(rgb8Reference, base) + ' raw pixel data for the same dimensions</div></div>' +
+        '<div class="isc-list-item"><strong>RGBA 8-bit reference</strong><div class="note" style="margin-top:6px;">' + formatBytes(rgba8Reference, base) + ' raw pixel data for the same dimensions</div></div>' +
+        '<div class="isc-list-item"><strong>Estimated compressed file</strong><div class="note" style="margin-top:6px;">' + formatBytes(estimatedCompressedBytes, base) + ' using your chosen compression assumption</div></div>' +
+      '</div>';
+
+    fillTable([
+      ["Width", String(width)],
+      ["Height", String(height)],
+      ["Pixel count", pixels.toLocaleString()],
+      ["Channels", String(channels)],
+      ["Bit depth per channel", String(bitDepth)],
+      ["Bits per pixel", String(bitsPerPixel)],
+      ["Bytes per pixel", bytesPerPixel.toFixed(4)],
+      ["Raw bytes", rawBytes.toFixed(0)],
+      ["Compressed estimate bytes", estimatedCompressedBytes.toFixed(0)],
+      ["Display base", base === 1000 ? "1000 (decimal)" : "1024 (binary)"],
+    ]);
+
+    lastSummary =
+      "Dimensions: " + width + " × " + height + "\n" +
+      "Pixels: " + pixels + "\n" +
+      "Channels: " + channels + "\n" +
+      "Bit depth: " + bitDepth + "-bit\n" +
+      "Bytes per pixel: " + bytesPerPixel.toFixed(4) + "\n" +
+      "Raw size: " + formatBytes(rawBytes, base) + "\n" +
+      "Compressed estimate: " + formatBytes(estimatedCompressedBytes, base) + "\n" +
+      "Compression ratio: " + compressionRatio + ":1";
+  }
+
+  async function copySummary() {
+    clearError();
+    if (!lastSummary) {
+      showError("No image size summary to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastSummary);
+      resultEl.innerHTML = "<strong>Copied image size summary.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    widthEl.value = "";
+    heightEl.value = "";
+    channelsEl.value = "3";
+    bitDepthEl.value = "8";
+    compressionEl.value = "4";
+    unitBaseEl.value = "1024";
+    resetOutput();
+    widthEl.focus();
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

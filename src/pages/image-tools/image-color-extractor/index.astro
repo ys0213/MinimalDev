@@ -1,0 +1,178 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Color Extractor",
+  description: "Extract dominant colors with clustering, preview, and export options.",
+  href: "/image-tools/image-color-extractor/",
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/image-color-extractor/";
+
+const faqs=[
+ {q:"How are colors extracted?",a:"Uses pixel sampling + clustering approximation."},
+ {q:"Is it accurate?",a:"Approximate but visually representative."},
+ {q:"Is upload required?",a:"No, everything runs locally."}
+];
+
+const faqJsonLd={
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity:faqs.map(f=>({
+  "@type":"Question",
+  name:f.q,
+  acceptedAnswer:{ "@type":"Answer", text:f.a }
+ }))
+};
+---
+
+<ToolLayout
+title={`Image Color Extractor — ${SITE_NAME}`}
+description="Extract dominant colors from image with palette preview."
+canonicalPath={CANONICAL_PATH}
+h1="Image Color Extractor"
+intro="Upload an image and extract dominant colors with preview and export."
+faq={faqs}
+categoryName="Image Tools"
+>
+
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<style is:inline>
+.grid{display:grid;gap:10px}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px}
+.card{border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px;text-align:center}
+.swatch{height:50px;border-radius:8px;margin-bottom:6px}
+textarea{width:100%;min-height:80px}
+canvas{max-width:100%}
+</style>
+
+<div class="form">
+
+<input type="file" id="file" accept="image/*"/>
+
+<label>Number of colors</label>
+<input type="range" id="count" min="3" max="12" value="6"/>
+
+<canvas id="canvas"></canvas>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+<button class="btn" id="extract">Extract</button>
+<button class="btn secondary" id="copy">Copy HEX</button>
+<button class="btn secondary" id="clear">Clear</button>
+</div>
+
+<div id="error" class="result" style="display:none;"></div>
+<div id="summary" class="result"></div>
+
+<div id="palette" class="palette"></div>
+
+<textarea id="hexOutput" placeholder="HEX list"></textarea>
+
+</div>
+</div>
+
+<div slot="related">
+<ul>
+<li><a href="/image-tools/image-palette-generator/">Palette Generator</a></li>
+<li><a href="/image-tools/image-blur/">Image Blur</a></li>
+</ul>
+</div>
+
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const paletteDiv=document.getElementById("palette");
+const hexOutput=document.getElementById("hexOutput");
+const error=document.getElementById("error");
+const summary=document.getElementById("summary");
+
+let img=new Image();
+
+function showError(msg){
+ error.style.display="block";
+ error.textContent=msg;
+}
+function clearError(){error.style.display="none"}
+
+file.onchange=e=>{
+ clearError();
+ const f=e.target.files[0];
+ if(!f || !f.type.startsWith("image/")){
+   showError("Invalid image");
+   return;
+ }
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=()=>{
+     canvas.width=img.width;
+     canvas.height=img.height;
+     ctx.drawImage(img,0,0);
+   };
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(f);
+};
+
+function rgbToHex(r,g,b){
+ return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+
+document.getElementById("extract").onclick=()=>{
+ clearError();
+ if(!canvas.width){showError("Upload image first");return;}
+
+ const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+ const map={};
+
+ for(let i=0;i<data.length;i+=32){
+   const key=`${data[i]},${data[i+1]},${data[i+2]}`;
+   map[key]=(map[key]||0)+1;
+ }
+
+ const count=document.getElementById("count").value;
+ const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,count);
+
+ paletteDiv.innerHTML="";
+ let hexList=[];
+
+ sorted.forEach(([rgb])=>{
+   const [r,g,b]=rgb.split(",");
+   const hex=rgbToHex(r,g,b);
+   hexList.push(hex);
+
+   const div=document.createElement("div");
+   div.className="card";
+   div.innerHTML=`
+     <div class="swatch" style="background:${hex}"></div>
+     <strong>${hex}</strong>
+   `;
+   paletteDiv.appendChild(div);
+ });
+
+ hexOutput.value=hexList.join(", ");
+ summary.innerHTML=`Extracted ${hexList.length} colors`;
+};
+
+document.getElementById("copy").onclick=async()=>{
+ if(!hexOutput.value)return;
+ await navigator.clipboard.writeText(hexOutput.value);
+ summary.innerHTML="<strong>Copied</strong>";
+};
+
+document.getElementById("clear").onclick=()=>{
+ paletteDiv.innerHTML="";
+ hexOutput.value="";
+ summary.textContent="";
+ canvas.width=0;
+};
+
+});
+</script>

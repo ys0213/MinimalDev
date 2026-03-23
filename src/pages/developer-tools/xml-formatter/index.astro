@@ -1,0 +1,354 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "XML Formatter",
+  description:
+    "Format and validate XML with indentation, result cards, metrics, and FAQ schema.",
+  href: "/developer-tools/xml-formatter/",
+  order: 396,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/xml-formatter/";
+
+const faqs = [
+  {
+    q: "What does this XML formatter do?",
+    a: "It validates XML input and reformats it with readable indentation.",
+  },
+  {
+    q: "Does it preserve XML declarations?",
+    a: "Yes. If the input contains an XML declaration such as <?xml version='1.0'?>, it is preserved in the formatted output.",
+  },
+  {
+    q: "What happens if the XML is invalid?",
+    a: "The tool shows a parse error and does not generate formatted output until the XML is valid.",
+  },
+  {
+    q: "Is my XML stored?",
+    a: "No. Formatting runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`XML Formatter — ${SITE_NAME}`}
+  description="Format and validate XML with indentation, result cards, metrics, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="XML Formatter"
+  intro="Validate XML and format it into clean, readable, indented markup."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="xml-formatter">
+    <style is:inline>
+      #xf_input,
+      #xf_output,
+      #xf_indent {
+        width: 100%;
+        min-width: 0;
+      }
+      .xf-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="xf_help xf_privacy">
+      <div class="field">
+        <label for="xf_input">XML input</label>
+        <textarea
+          id="xf_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={`e.g. <?xml version="1.0"?><root><item id="1">Hello</item><item id="2"><name>Alex</name></item></root>`}
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="xf_indent">Indentation</label>
+        <select id="xf_indent">
+          <option value="2" selected>2 spaces</option>
+          <option value="4">4 spaces</option>
+          <option value="tab">Tab</option>
+        </select>
+      </div>
+
+      <p class="note" id="xf_help" style="margin-top:6px;">
+        Paste valid XML and press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to format it.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="xf_format">Format XML</button>
+        <button class="btn secondary" type="button" id="xf_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="xf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="xf_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result xf-mono" id="xf_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="xf_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="xf_output">Formatted XML</label>
+        <textarea id="xf_output" rows="12" spellcheck="false" readonly placeholder="Formatted XML will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="xf_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="xf_privacy" style="margin-top:10px;">
+        Privacy: formatting runs locally in your browser. No XML is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool parses your XML with the browser XML parser, validates it, and then outputs a readable indented version.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>&lt;root&gt;&lt;a&gt;1&lt;/a&gt;&lt;/root&gt;</strong> → formatted with line breaks and indentation</li>
+      <li><strong>Nested elements</strong> → each level indented consistently</li>
+      <li><strong>Invalid tag nesting</strong> → parse error shown instead of output</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/xml-minifier/">XML Minifier</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/json-minifier/">JSON Minifier</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("xf_input");
+  const indentEl = document.getElementById("xf_indent");
+  const formatBtn = document.getElementById("xf_format");
+  const copyBtn = document.getElementById("xf_copy");
+  const clearBtn = document.getElementById("xf_clear");
+  const errEl = document.getElementById("xf_error");
+  const resultEl = document.getElementById("xf_result");
+  const cardsEl = document.getElementById("xf_cards");
+  const outputEl = document.getElementById("xf_output");
+  const tbodyEl = document.getElementById("xf_tbody");
+
+  if (!inputEl || !indentEl || !formatBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getIndentUnit() {
+    const v = String(indentEl.value || "2");
+    if (v === "tab") return "\t";
+    const n = parseInt(v, 10);
+    return " ".repeat(Number.isFinite(n) ? n : 2);
+  }
+
+  function parseXml(raw) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(raw, "application/xml");
+    const parseErr = doc.getElementsByTagName("parsererror")[0];
+    if (parseErr) {
+      throw new Error(parseErr.textContent ? parseErr.textContent.replace(/\s+/g, " ").trim() : "Invalid XML.");
+    }
+    return doc;
+  }
+
+  function serializeNode(node, level, indentUnit) {
+    const indent = indentUnit.repeat(level);
+    const nextIndent = indentUnit.repeat(level + 1);
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.nodeValue == null ? "" : node.nodeValue.trim();
+      return text ? indent + text + "\n" : "";
+    }
+
+    if (node.nodeType === Node.CDATA_SECTION_NODE) {
+      return indent + "<![CDATA[" + (node.nodeValue || "") + "]]>\n";
+    }
+
+    if (node.nodeType === Node.COMMENT_NODE) {
+      return indent + "<!--" + (node.nodeValue || "") + "-->\n";
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+    const tagName = node.nodeName;
+    const attrs = Array.from(node.attributes || []).map(function (a) {
+      return a.name + '="' + a.value.replace(/"/g, "&quot;") + '"';
+    }).join(" ");
+    const openTag = attrs ? "<" + tagName + " " + attrs + ">" : "<" + tagName + ">";
+
+    const childNodes = Array.from(node.childNodes || []);
+    const meaningfulChildren = childNodes.filter(function (c) {
+      if (c.nodeType === Node.TEXT_NODE) return (c.nodeValue || "").trim().length > 0;
+      return true;
+    });
+
+    if (meaningfulChildren.length === 0) {
+      return indent + (attrs ? "<" + tagName + " " + attrs + "/>" : "<" + tagName + "/>") + "\n";
+    }
+
+    if (
+      meaningfulChildren.length === 1 &&
+      meaningfulChildren[0].nodeType === Node.TEXT_NODE &&
+      ((meaningfulChildren[0].nodeValue || "").trim().length > 0)
+    ) {
+      const text = (meaningfulChildren[0].nodeValue || "").trim();
+      return indent + openTag + text + "</" + tagName + ">\n";
+    }
+
+    let out = indent + openTag + "\n";
+    meaningfulChildren.forEach(function (child) {
+      out += serializeNode(child, level + 1, indentUnit);
+    });
+    out += indent + "</" + tagName + ">\n";
+    return out;
+  }
+
+  function formatXml(raw, indentUnit) {
+    const declMatch = raw.match(/^\s*(<\?xml[\s\S]*?\?>)\s*/i);
+    const declaration = declMatch ? declMatch[1] : "";
+    const doc = parseXml(raw);
+    const root = doc.documentElement;
+    let formatted = "";
+    if (declaration) formatted += declaration + "\n";
+    formatted += serializeNode(root, 0, indentUnit).trimEnd();
+    return { formatted, rootName: root.nodeName, childCount: root.childElementCount };
+  }
+
+  function formatNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste XML input.");
+      return;
+    }
+
+    try {
+      const indentUnit = getIndentUnit();
+      const data = formatXml(raw, indentUnit);
+      lastOutput = data.formatted;
+      outputEl.value = data.formatted;
+
+      resultEl.innerHTML = "<strong>Valid XML.</strong><br/><span class='note'>Formatted output is ready.</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Valid XML") +
+        badge("Root: " + data.rootName) +
+        badge(indentUnit === "\t" ? "Indent: tab" : "Indent: " + indentUnit.length + " spaces") +
+        "</div>";
+
+      fillTable([
+        ["Root element", data.rootName],
+        ["Root child elements", String(data.childCount)],
+        ["Input length", String(raw.length)],
+        ["Output length", String(data.formatted.length)],
+      ]);
+    } catch (e) {
+      showError("Invalid XML: " + (e && e.message ? e.message : "parse error"));
+    }
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No formatted XML output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied formatted XML.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    indentEl.value = "2";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  formatBtn.addEventListener("click", formatNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") formatNow();
+  });
+});
+</script>

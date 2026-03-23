@@ -1,0 +1,300 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Confidence Interval Calculator",
+  description:
+    "Calculate a confidence interval for a mean using sample mean, standard deviation, size, and confidence level.",
+  href: "/math/confidence-interval-calculator/",
+  order: 368,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/confidence-interval-calculator/";
+
+const faqs = [
+  {
+    q: "What does this confidence interval calculator compute?",
+    a: "It computes a z-based confidence interval for a mean using sample mean, sample standard deviation, sample size, and selected confidence level.",
+  },
+  {
+    q: "What confidence levels are supported?",
+    a: "This page supports common z-based levels such as 90%, 95%, and 99%.",
+  },
+  {
+    q: "Why must sample size be greater than 0?",
+    a: "Because the standard error uses the square root of sample size in the denominator.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Confidence Interval Calculator — ${SITE_NAME}`}
+  description="Calculate a z-based confidence interval for a mean."
+  canonicalPath={CANONICAL_PATH}
+  h1="Confidence Interval Calculator"
+  intro="Calculate a z-based confidence interval for a mean using sample mean, sample standard deviation, sample size, and confidence level."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="confidence-interval-calculator">
+    <style is:inline>
+      .ci-wrap, .ci-wrap * { box-sizing: border-box; }
+      .ci-grid {
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+      }
+      .ci-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 900px) {
+        .ci-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form ci-wrap" role="form" aria-describedby="ci_help ci_privacy">
+      <div class="ci-grid">
+        <div class="field">
+          <label for="ci_mean">Sample mean</label>
+          <input id="ci_mean" type="number" inputmode="decimal" step="any" placeholder="e.g., 70" />
+        </div>
+        <div class="field">
+          <label for="ci_sd">Sample SD</label>
+          <input id="ci_sd" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 12" />
+        </div>
+        <div class="field">
+          <label for="ci_n">Sample size (n)</label>
+          <input id="ci_n" type="number" inputmode="numeric" step="1" min="1" placeholder="e.g., 100" />
+        </div>
+        <div class="field">
+          <label for="ci_level">Confidence level</label>
+          <select id="ci_level">
+            <option value="0.90">90%</option>
+            <option value="0.95" selected>95%</option>
+            <option value="0.99">99%</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="ci_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="ci-code">CI = mean ± z* · (sd / √n)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ci_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ci_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="ci_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ci_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ci_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+      <div class="result" id="ci_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ci_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ci_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses common z critical values:
+      <strong>1.645</strong> for 90%,
+      <strong>1.96</strong> for 95%,
+      <strong>2.576</strong> for 99%.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>mean = 70</strong>, <strong>sd = 12</strong>, <strong>n = 100</strong>, <strong>95%</strong></li>
+      <li>Standard error = <strong>sd / √n</strong></li>
+      <li>Margin of error = <strong>z* × standard error</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sample-size-calculator/">Sample Size Calculator</a></li>
+      <li><a href="/math/confidence-level-calculator/">Confidence Level Calculator</a></li>
+      <li><a href="/math/standard-error-calculator/">Standard Error Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const meanEl = document.getElementById("ci_mean");
+  const sdEl = document.getElementById("ci_sd");
+  const nEl = document.getElementById("ci_n");
+  const levelEl = document.getElementById("ci_level");
+  const calcBtn = document.getElementById("ci_calc");
+  const fillBtn = document.getElementById("ci_fill_demo");
+  const clearBtn = document.getElementById("ci_clear");
+  const errorEl = document.getElementById("ci_error");
+  const resultEl = document.getElementById("ci_result");
+  const cardsEl = document.getElementById("ci_cards");
+  const tbodyEl = document.getElementById("ci_tbody");
+
+  if (!meanEl || !sdEl || !nEl || !levelEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  const zMap = {
+    "0.90": 1.645,
+    "0.95": 1.96,
+    "0.99": 2.576
+  };
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const mean = toNum(meanEl, "sample mean");
+      const sd = toNum(sdEl, "sample SD");
+      const n = toInt(nEl, "sample size (n)");
+      const level = String(levelEl.value || "0.95");
+      const z = zMap[level];
+
+      if (sd < 0) {
+        showError("Sample SD must be 0 or greater.");
+        return;
+      }
+      if (n <= 0) {
+        showError("Sample size must be greater than 0.");
+        return;
+      }
+      if (!Number.isFinite(z)) {
+        showError("Unsupported confidence level.");
+        return;
+      }
+
+      const se = sd / Math.sqrt(n);
+      const margin = z * se;
+      const lower = mean - margin;
+      const upper = mean + margin;
+
+      let width = "Narrow interval";
+      if (margin > Math.abs(mean) * 0.25 && Math.abs(mean) > 0) width = "Wide interval";
+
+      resultEl.innerHTML =
+        "<strong>Confidence interval result</strong><br/>" +
+        "<span class='ci-code'>[" + fmt(lower, 8) + ", " + fmt(upper, 8) + "]</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge((Number(level) * 100).toFixed(0) + "% confidence") +
+        badge("Margin ± " + fmt(margin, 8)) +
+        badge(width) +
+        "</div>";
+
+      fillTable([
+        ["Sample mean", fmt(mean, 8)],
+        ["Sample SD", fmt(sd, 8)],
+        ["Sample size (n)", String(n)],
+        ["Confidence level", (Number(level) * 100).toFixed(0) + "%"],
+        ["Critical z*", fmt(z, 6)],
+        ["Standard error", fmt(se, 8)],
+        ["Margin of error", fmt(margin, 8)],
+        ["Lower bound", fmt(lower, 8)],
+        ["Upper bound", fmt(upper, 8)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    meanEl.value = "70";
+    sdEl.value = "12";
+    nEl.value = "100";
+    levelEl.value = "0.95";
+    clearOutput();
+  }
+  function reset() {
+    meanEl.value = "";
+    sdEl.value = "";
+    nEl.value = "";
+    levelEl.value = "0.95";
+    clearOutput();
+    meanEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [meanEl, sdEl, nEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

@@ -1,0 +1,147 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Cropper",
+  description: "Crop images visually with drag selection, preview, validation, and download.",
+  href: "/image-tools/image-cropper/",
+  order: 3,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-cropper/";
+
+const faqs = [
+  { q: "How do I crop?", a: "Drag on the image to select an area, then click crop." },
+  { q: "Is my image uploaded?", a: "No. Everything runs locally." },
+  { q: "Does it reduce quality?", a: "No. Cropping preserves original quality." },
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity: faqs.map(f=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
+---
+
+<ToolLayout
+  title={`Image Cropper — ${SITE_NAME}`}
+  description="Crop images visually using drag selection."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Cropper"
+  intro="Select an area by dragging and crop your image instantly."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<style is:inline>
+.wrapper { position:relative; max-width:100%; }
+canvas { max-width:100%; border-radius:10px; }
+#overlay {
+  position:absolute;
+  border:2px dashed #4ade80;
+  pointer-events:none;
+}
+</style>
+
+<div class="form">
+<input type="file" id="file" accept="image/*" />
+
+<div class="wrapper">
+  <canvas id="canvas"></canvas>
+  <div id="overlay"></div>
+</div>
+
+<button class="btn" id="crop">Crop</button>
+<button class="btn secondary" id="download">Download</button>
+
+<div id="info" class="result">Upload image to start.</div>
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file = document.getElementById("file");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const overlay = document.getElementById("overlay");
+const info = document.getElementById("info");
+
+let img = new Image();
+let startX=0,startY=0,endX=0,endY=0,drag=false;
+
+file.onchange=e=>{
+ const f=e.target.files[0];
+ if(!f) return;
+
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=()=>{
+     canvas.width=img.width;
+     canvas.height=img.height;
+     ctx.drawImage(img,0,0);
+   };
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(f);
+};
+
+canvas.onmousedown=e=>{
+ drag=true;
+ startX=e.offsetX;
+ startY=e.offsetY;
+};
+
+canvas.onmousemove=e=>{
+ if(!drag) return;
+ endX=e.offsetX;
+ endY=e.offsetY;
+
+ overlay.style.left=Math.min(startX,endX)+"px";
+ overlay.style.top=Math.min(startY,endY)+"px";
+ overlay.style.width=Math.abs(endX-startX)+"px";
+ overlay.style.height=Math.abs(endY-startY)+"px";
+};
+
+canvas.onmouseup=()=>drag=false;
+
+document.getElementById("crop").onclick=()=>{
+ const w=Math.abs(endX-startX);
+ const h=Math.abs(endY-startY);
+ if(w<5||h<5){
+   info.textContent="Invalid selection";
+   return;
+ }
+
+ const x=Math.min(startX,endX);
+ const y=Math.min(startY,endY);
+
+ const temp=document.createElement("canvas");
+ temp.width=w;
+ temp.height=h;
+ temp.getContext("2d").drawImage(canvas,x,y,w,h,0,0,w,h);
+
+ canvas.width=w;
+ canvas.height=h;
+ ctx.drawImage(temp,0,0);
+
+ info.textContent=`Cropped: ${w} x ${h}`;
+};
+
+document.getElementById("download").onclick=()=>{
+ const a=document.createElement("a");
+ a.href=canvas.toDataURL();
+ a.download="cropped.png";
+ a.click();
+};
+
+});
+</script>

@@ -1,0 +1,324 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JWT Validator",
+  description:
+    "Validate JWT structure, decode header and payload, inspect standard claims, and review result cards with FAQ schema.",
+  href: "/developer-tools/jwt-validator/",
+  order: 320,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/jwt-validator/";
+
+const faqs = [
+  {
+    q: "What does this JWT validator check?",
+    a: "It checks JWT structure, decodes the header and payload, and inspects common claims such as exp, nbf, and iat.",
+  },
+  {
+    q: "Does it verify the signature cryptographically?",
+    a: "No. This page validates structure and decodes the token but does not verify the JWT signature against a secret or public key.",
+  },
+  {
+    q: "What if the token is expired?",
+    a: "The tool will flag the exp claim as expired based on your current browser time.",
+  },
+  {
+    q: "Is my token stored?",
+    a: "No. Decoding and validation run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JWT Validator — ${SITE_NAME}`}
+  description="Validate JWT structure, decode header and payload, inspect claims, and review result cards with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JWT Validator"
+  intro="Validate JWT format, decode its header and payload, and inspect common claims such as exp, nbf, and iat."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="jwt-validator">
+    <style is:inline>
+      #jv_token,
+      #jv_header,
+      #jv_payload {
+        width: 100%;
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .jwt-break {
+        word-break: break-all;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="jwt_help jwt_privacy">
+      <div class="field">
+        <label for="jv_token">JWT token</label>
+        <textarea
+          id="jv_token"
+          rows="7"
+          spellcheck="false"
+          placeholder="Paste JWT token here"
+        ></textarea>
+      </div>
+
+      <p class="note" id="jwt_help" style="margin-top:6px;">
+        This tool validates structure and decodes the token locally. It does <strong>not</strong> verify the signature cryptographically.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="jv_validate">Validate</button>
+        <button class="btn secondary" type="button" id="jv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="jv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="jv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="jv_header">Decoded header</label>
+        <textarea id="jv_header" rows="8" readonly spellcheck="false" placeholder="Decoded header will appear here."></textarea>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="jv_payload">Decoded payload</label>
+        <textarea id="jv_payload" rows="12" readonly spellcheck="false" placeholder="Decoded payload will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="jv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="jwt_privacy" style="margin-top:10px;">
+        Privacy: JWT decoding runs locally in your browser. No token data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a JWT token and validate it. The tool checks the three-part structure, base64url-decodes the header and payload, and inspects standard claims.
+    </p>
+    <p class="note">
+      This is useful for local inspection, but real signature verification requires the correct secret or public key.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Header</strong> → often includes <code>alg</code> and <code>typ</code></li>
+      <li><strong>Payload</strong> → may include <code>sub</code>, <code>iss</code>, <code>aud</code>, <code>exp</code>, <code>iat</code></li>
+      <li><strong>Signature</strong> → present as the third segment, but not cryptographically verified here</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/jwt-decoder/">JWT Decoder</a></li>
+      <li><a href="/developer-tools/jwt-encoder/">JWT Encoder</a></li>
+      <li><a href="/developer-tools/schema-validator/">Schema Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const tokenEl = document.getElementById("jv_token");
+  const validateBtn = document.getElementById("jv_validate");
+  const clearBtn = document.getElementById("jv_clear");
+  const errEl = document.getElementById("jv_error");
+  const resultEl = document.getElementById("jv_result");
+  const cardsEl = document.getElementById("jv_cards");
+  const headerEl = document.getElementById("jv_header");
+  const payloadEl = document.getElementById("jv_payload");
+  const tbodyEl = document.getElementById("jv_tbody");
+
+  if (!tokenEl || !validateBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !headerEl || !payloadEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    headerEl.value = "";
+    payloadEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base64UrlDecode(str) {
+    let s = String(str || "").replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    try {
+      const decoded = atob(s);
+      const bytes = Uint8Array.from(decoded, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function fmtUnix(ts) {
+    if (!Number.isFinite(ts)) return "—";
+    return new Date(ts * 1000).toLocaleString();
+  }
+
+  function validateJwt() {
+    clearOutput();
+
+    const raw = String(tokenEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste a JWT token.");
+      return;
+    }
+
+    const parts = raw.split(".");
+    if (parts.length !== 3) {
+      showError("Invalid JWT format. A JWT must have exactly 3 dot-separated parts.");
+      return;
+    }
+
+    const headerText = base64UrlDecode(parts[0]);
+    const payloadText = base64UrlDecode(parts[1]);
+
+    if (!headerText) {
+      showError("Could not decode JWT header.");
+      return;
+    }
+    if (!payloadText) {
+      showError("Could not decode JWT payload.");
+      return;
+    }
+
+    let headerObj, payloadObj;
+    try {
+      headerObj = JSON.parse(headerText);
+    } catch (_) {
+      showError("Decoded header is not valid JSON.");
+      return;
+    }
+
+    try {
+      payloadObj = JSON.parse(payloadText);
+    } catch (_) {
+      showError("Decoded payload is not valid JSON.");
+      return;
+    }
+
+    headerEl.value = JSON.stringify(headerObj, null, 2);
+    payloadEl.value = JSON.stringify(payloadObj, null, 2);
+
+    const now = Math.floor(Date.now() / 1000);
+
+    let expStatus = "Not present";
+    let nbfStatus = "Not present";
+    let iatStatus = "Not present";
+
+    if (typeof payloadObj.exp === "number") {
+      expStatus = payloadObj.exp < now ? "Expired" : "Not expired";
+    }
+    if (typeof payloadObj.nbf === "number") {
+      nbfStatus = payloadObj.nbf > now ? "Not yet valid" : "Active or past nbf";
+    }
+    if (typeof payloadObj.iat === "number") {
+      iatStatus = payloadObj.iat <= now ? "Issued in past" : "Issued in future";
+    }
+
+    const alg = headerObj.alg || "Missing";
+    const typ = headerObj.typ || "Missing";
+    const hasNoneAlg = alg === "none";
+
+    resultEl.innerHTML = "<strong>Valid JWT structure and decodable JSON.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("3-part token") +
+      badge("alg: " + alg) +
+      badge("typ: " + typ) +
+      badge(expStatus) +
+      (hasNoneAlg ? badge("Warning: alg none") : "") +
+      "</div>";
+
+    fillTable([
+      ["Header keys", String(Object.keys(headerObj).length)],
+      ["Payload keys", String(Object.keys(payloadObj).length)],
+      ["alg", String(alg)],
+      ["typ", String(typ)],
+      ["exp", typeof payloadObj.exp === "number" ? fmtUnix(payloadObj.exp) + " (" + expStatus + ")" : "Missing"],
+      ["nbf", typeof payloadObj.nbf === "number" ? fmtUnix(payloadObj.nbf) + " (" + nbfStatus + ")" : "Missing"],
+      ["iat", typeof payloadObj.iat === "number" ? fmtUnix(payloadObj.iat) + " (" + iatStatus + ")" : "Missing"],
+      ["Signature part present", parts[2] ? "Yes" : "No"],
+      ["Cryptographic verification", "Not performed"],
+    ]);
+  }
+
+  function clearAll() {
+    tokenEl.value = "";
+    clearOutput();
+    tokenEl.focus();
+  }
+
+  validateBtn.addEventListener("click", validateJwt);
+  clearBtn.addEventListener("click", clearAll);
+
+  tokenEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") validateJwt();
+  });
+});
+</script>

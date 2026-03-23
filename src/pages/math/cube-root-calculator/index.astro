@@ -1,0 +1,226 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cube Root Calculator",
+  description:
+    "Calculate cube roots for positive or negative values with validation, result cards, and FAQ support.",
+  href: "/math/cube-root-calculator/",
+  order: 351,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/cube-root-calculator/";
+
+const faqs = [
+  {
+    q: "What is a cube root?",
+    a: "The cube root of x is the number y such that y³ = x.",
+  },
+  {
+    q: "Can cube roots be negative?",
+    a: "Yes. The cube root of a negative number is negative, because a negative times itself three times stays negative.",
+  },
+  {
+    q: "Is this different from square root?",
+    a: "Yes. Cube roots are defined for all real numbers, while square roots are only real for non-negative numbers.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Cube Root Calculator — ${SITE_NAME}`}
+  description="Cube root calculator with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cube Root Calculator"
+  intro="Calculate the cube root of any real number and view the equivalent cubic relationship."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="cube-root-calculator">
+    <div class="form" role="form" aria-describedby="crc_help crc_privacy">
+      <div class="field">
+        <label for="crc_x">Value x</label>
+        <input id="crc_x" type="number" step="any" inputmode="decimal" placeholder="e.g., 27" />
+      </div>
+
+      <p class="note" id="crc_help" style="margin-top:6px;">
+        This computes the real cube root: <strong>∛x</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="crc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="crc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="crc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="crc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="crc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="crc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="crc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="crc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The cube root finds the number <strong>y</strong> such that:
+      <br />
+      <strong>y³ = x</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>∛27</strong> = <strong>3</strong></li>
+      <li><strong>∛8</strong> = <strong>2</strong></li>
+      <li><strong>∛(-125)</strong> = <strong>-5</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/nth-root-calculator/">Nth Root Calculator</a></li>
+      <li><a href="/math/square-root-calculator/">Square Root Calculator</a></li>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("crc_x");
+  const calcBtn = document.getElementById("crc_calc");
+  const demoBtn = document.getElementById("crc_fill_demo");
+  const clearBtn = document.getElementById("crc_clear");
+  const errorEl = document.getElementById("crc_error");
+  const resultEl = document.getElementById("crc_result");
+  const cardsEl = document.getElementById("crc_cards");
+  const tbodyEl = document.getElementById("crc_tbody");
+
+  if (!xEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter a value.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number.");
+    return n;
+  }
+
+  function cbrt(x) {
+    if (Math.cbrt) return Math.cbrt(x);
+    return x < 0 ? -Math.pow(-x, 1 / 3) : Math.pow(x, 1 / 3);
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const x = getNum(xEl);
+      const y = cbrt(x);
+      const check = y * y * y;
+
+      resultEl.innerHTML =
+        "<strong>Cube root result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>∛" + fmt(x) + " = " + fmt(y) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(x < 0 ? "Negative input allowed" : "Non-negative input") +
+        badge("Real cube root") +
+        badge(fmt(y) + "^3 ≈ " + fmt(check)) +
+        "</div>";
+
+      fillTable([
+        ["Input x", fmt(x)],
+        ["Cube root ∛x", fmt(y)],
+        ["Verification", fmt(y) + "^3 ≈ " + fmt(check)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the cube root.");
+    }
+  }
+
+  function fillDemo() {
+    xEl.value = "27";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  xEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

@@ -1,0 +1,259 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Harmonic Mean Calculator",
+  description:
+    "Calculate the harmonic mean of positive numbers with validation, reciprocal steps, and FAQ support.",
+  href: "/math/harmonic-mean-calculator/",
+  order: 359,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/harmonic-mean-calculator/";
+
+const faqs = [
+  {
+    q: "What is the harmonic mean?",
+    a: "The harmonic mean is the number of values divided by the sum of their reciprocals.",
+  },
+  {
+    q: "When is the harmonic mean useful?",
+    a: "It is useful for averaging rates, ratios, speeds, and quantities measured per unit when the denominator matters.",
+  },
+  {
+    q: "Why can’t the input contain 0?",
+    a: "Because the formula uses reciprocals, and division by zero is undefined.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Harmonic Mean Calculator — ${SITE_NAME}`}
+  description="Harmonic mean calculator with validation, reciprocal steps, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Harmonic Mean Calculator"
+  intro="Calculate the harmonic mean of a list of positive numbers entered as comma-, space-, or line-separated values."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="harmonic-mean-calculator">
+    <style is:inline>
+      .hmc-wrap, .hmc-wrap * { box-sizing: border-box; }
+      .hmc-textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      .hmc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form hmc-wrap" role="form" aria-describedby="hmc_help hmc_privacy">
+      <div class="field">
+        <label for="hmc_values">Values</label>
+        <textarea
+          id="hmc_values"
+          class="hmc-textarea"
+          rows="6"
+          placeholder="e.g., 2, 3, 6"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="hmc_help" style="margin-top:6px;">
+        Enter positive numbers separated by commas, spaces, or line breaks. Zero is not allowed.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hmc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="hmc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="hmc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hmc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="hmc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hmc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hmc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hmc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      For positive values <strong>x₁, x₂, ..., xₙ</strong>, the harmonic mean is:
+      <br />
+      <strong>n / (1/x₁ + 1/x₂ + ... + 1/xₙ)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2, 3, 6</strong> → harmonic mean = <strong>3</strong></li>
+      <li>Useful for averaging rates such as speed or price-per-unit style data</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/geometric-mean-calculator/">Geometric Mean Calculator</a></li>
+      <li><a href="/math/mean-median-mode-calculator/">Mean Median Mode Calculator</a></li>
+      <li><a href="/math/average-calculator/">Average Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("hmc_values");
+  const calcBtn = document.getElementById("hmc_calc");
+  const demoBtn = document.getElementById("hmc_fill_demo");
+  const clearBtn = document.getElementById("hmc_clear");
+  const errorEl = document.getElementById("hmc_error");
+  const resultEl = document.getElementById("hmc_result");
+  const cardsEl = document.getElementById("hmc_cards");
+  const tbodyEl = document.getElementById("hmc_tbody");
+
+  if (!valuesEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseValues() {
+    const raw = String(valuesEl.value || "").trim();
+    if (!raw) throw new Error("Please enter one or more positive numbers.");
+    const tokens = raw.split(/[\s,]+/).filter(Boolean);
+    if (!tokens.length) throw new Error("Please enter one or more positive numbers.");
+
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      if (!(n > 0)) throw new Error("Harmonic mean requires all values to be greater than 0.");
+      return n;
+    });
+
+    return nums;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const nums = parseValues();
+      const n = nums.length;
+
+      let reciprocalSum = 0;
+      for (let i = 0; i < nums.length; i++) {
+        reciprocalSum += 1 / nums[i];
+      }
+
+      const hm = n / reciprocalSum;
+      const reciprocalLabel = nums.map(function (x) {
+        return "1/" + fmt(x);
+      }).join(" + ");
+
+      resultEl.innerHTML =
+        "<strong>Harmonic mean</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(hm) + "</span>" +
+        "<br/><span class='note hmc-code'>" + n + " / (" + reciprocalLabel + ")</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Count: " + n) +
+        badge("Positive inputs only") +
+        badge("HM = " + fmt(hm)) +
+        "</div>";
+
+      fillTable([
+        ["Input count", String(n)],
+        ["Values", nums.map(fmt).join(", ")],
+        ["Reciprocal sum", fmt(reciprocalSum)],
+        ["Formula", n + " / (" + reciprocalLabel + ")"],
+        ["Harmonic mean", fmt(hm)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the harmonic mean.");
+    }
+  }
+
+  function fillDemo() {
+    valuesEl.value = "2, 3, 6";
+    clearOutput();
+  }
+
+  function reset() {
+    valuesEl.value = "";
+    clearOutput();
+    valuesEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

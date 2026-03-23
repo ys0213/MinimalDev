@@ -1,0 +1,257 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Geometric Mean Calculator",
+  description:
+    "Calculate the geometric mean of positive numbers with validation, step details, and FAQ support.",
+  href: "/math/geometric-mean-calculator/",
+  order: 358,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/geometric-mean-calculator/";
+
+const faqs = [
+  {
+    q: "What is the geometric mean?",
+    a: "The geometric mean of positive numbers is the nth root of their product, where n is the number of values.",
+  },
+  {
+    q: "Why do inputs need to be positive?",
+    a: "This real-number geometric mean tool requires positive values so the nth root of the product is well-defined in the standard way.",
+  },
+  {
+    q: "When is geometric mean useful?",
+    a: "It is useful for growth rates, ratios, percentages, finance-like compounding contexts, and multiplicative data.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Geometric Mean Calculator — ${SITE_NAME}`}
+  description="Geometric mean calculator with positive-input validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Geometric Mean Calculator"
+  intro="Calculate the geometric mean of a list of positive numbers entered as comma-, space-, or line-separated values."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="geometric-mean-calculator">
+    <style is:inline>
+      .gmc-wrap, .gmc-wrap * { box-sizing: border-box; }
+      .gmc-textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      .gmc-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form gmc-wrap" role="form" aria-describedby="gmc_help gmc_privacy">
+      <div class="field">
+        <label for="gmc_values">Values</label>
+        <textarea
+          id="gmc_values"
+          class="gmc-textarea"
+          rows="6"
+          placeholder="e.g., 2, 8, 4"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <p class="note" id="gmc_help" style="margin-top:6px;">
+        Enter positive numbers separated by commas, spaces, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="gmc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="gmc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="gmc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="gmc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="gmc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="gmc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="gmc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="gmc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      For positive values <strong>x₁, x₂, ..., xₙ</strong>, the geometric mean is:
+      <br />
+      <strong>(x₁ × x₂ × ... × xₙ)^(1/n)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2, 8</strong> → geometric mean = <strong>4</strong></li>
+      <li><strong>2, 8, 4</strong> → geometric mean = <strong>4</strong></li>
+      <li><strong>1.5, 3, 6</strong> → useful for multiplicative scaling comparisons</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/harmonic-mean-calculator/">Harmonic Mean Calculator</a></li>
+      <li><a href="/math/mean-median-mode-calculator/">Mean Median Mode Calculator</a></li>
+      <li><a href="/math/average-calculator/">Average Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valuesEl = document.getElementById("gmc_values");
+  const calcBtn = document.getElementById("gmc_calc");
+  const demoBtn = document.getElementById("gmc_fill_demo");
+  const clearBtn = document.getElementById("gmc_clear");
+  const errorEl = document.getElementById("gmc_error");
+  const resultEl = document.getElementById("gmc_result");
+  const cardsEl = document.getElementById("gmc_cards");
+  const tbodyEl = document.getElementById("gmc_tbody");
+
+  if (!valuesEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseValues() {
+    const raw = String(valuesEl.value || "").trim();
+    if (!raw) throw new Error("Please enter one or more positive numbers.");
+    const tokens = raw.split(/[\s,]+/).filter(Boolean);
+    if (!tokens.length) throw new Error("Please enter one or more positive numbers.");
+
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      if (!(n > 0)) throw new Error("Geometric mean requires all values to be greater than 0.");
+      return n;
+    });
+
+    return nums;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const nums = parseValues();
+      const n = nums.length;
+
+      let logSum = 0;
+      for (let i = 0; i < nums.length; i++) {
+        logSum += Math.log(nums[i]);
+      }
+      const gm = Math.exp(logSum / n);
+
+      const productLabel = nums.map(fmt).join(" × ");
+
+      resultEl.innerHTML =
+        "<strong>Geometric mean</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(gm) + "</span>" +
+        "<br/><span class='note gmc-code'>(" + productLabel + ")^(1/" + n + ")</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Count: " + n) +
+        badge("Positive inputs only") +
+        badge("GM = " + fmt(gm)) +
+        "</div>";
+
+      fillTable([
+        ["Input count", String(n)],
+        ["Values", nums.map(fmt).join(", ")],
+        ["Formula", "(" + productLabel + ")^(1/" + n + ")"],
+        ["Geometric mean", fmt(gm)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the geometric mean.");
+    }
+  }
+
+  function fillDemo() {
+    valuesEl.value = "2, 8, 4";
+    clearOutput();
+  }
+
+  function reset() {
+    valuesEl.value = "";
+    clearOutput();
+    valuesEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  valuesEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

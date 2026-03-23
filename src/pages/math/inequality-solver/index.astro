@@ -1,0 +1,315 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Inequality Solver",
+  description:
+    "Solve one-variable linear inequalities of the form ax + b ? c with validation, sign-flip handling, and FAQ support.",
+  href: "/math/inequality-solver/",
+  order: 347,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/inequality-solver/";
+
+const faqs = [
+  {
+    q: "What kind of inequalities does this tool solve?",
+    a: "This tool solves one-variable linear inequalities in the form ax + b ? c, where ? can be <, ≤, >, or ≥.",
+  },
+  {
+    q: "Why does the inequality sign sometimes flip?",
+    a: "When you divide or multiply both sides by a negative number, the inequality direction must reverse.",
+  },
+  {
+    q: "What happens if a = 0?",
+    a: "Then the inequality no longer depends on x. It becomes either always true or never true depending on b and c.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Inequality Solver — ${SITE_NAME}`}
+  description="Solve ax + b ? c inequalities with validation, sign-flip handling, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Inequality Solver"
+  intro="Solve one-variable linear inequalities in the form ax + b ? c and see when the inequality sign flips."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="inequality-solver">
+    <style is:inline>
+      .is-wrap, .is-wrap * { box-sizing: border-box; }
+      .is-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 800px) {
+        .is-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 520px) {
+        .is-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form is-wrap" role="form" aria-describedby="is_help is_privacy">
+      <div class="is-grid">
+        <div class="field">
+          <label for="is_a">a</label>
+          <input id="is_a" type="number" step="any" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+        <div class="field">
+          <label for="is_b">b</label>
+          <input id="is_b" type="number" step="any" inputmode="decimal" placeholder="e.g., 3" />
+        </div>
+        <div class="field">
+          <label for="is_op">Inequality</label>
+          <select id="is_op">
+            <option value="<">&lt;</option>
+            <option value="<=">&le;</option>
+            <option value=">">&gt;</option>
+            <option value=">=">&ge;</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="is_c">c</label>
+          <input id="is_c" type="number" step="any" inputmode="decimal" placeholder="e.g., 11" />
+        </div>
+      </div>
+
+      <p class="note" id="is_help" style="margin-top:8px;">
+        This solves inequalities in the form <strong>ax + b ? c</strong>, where ? is one of <strong>&lt;, ≤, &gt;, ≥</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="is_calc">Solve</button>
+        <button class="btn secondary" type="button" id="is_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="is_clear">Clear</button>
+      </div>
+
+      <div class="result" id="is_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="is_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="is_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Step</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="is_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="is_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inequality values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Rearrangement:
+      <br />
+      <strong>ax + b ? c</strong>
+      <br />
+      <strong>ax ? c − b</strong>
+      <br />
+      Divide by <strong>a</strong>. If <strong>a &lt; 0</strong>, reverse the inequality.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2x + 3 &lt; 11</strong> → <strong>x &lt; 4</strong></li>
+      <li><strong>-2x + 3 &lt; 11</strong> → <strong>x &gt; -4</strong> (sign flips)</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/linear-equation-solver/">Linear Equation Solver</a></li>
+      <li><a href="/math/equation-solver/">Equation Solver</a></li>
+      <li><a href="/math/quadratic-equation-calculator/">Quadratic Equation Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("is_a");
+  const bEl = document.getElementById("is_b");
+  const opEl = document.getElementById("is_op");
+  const cEl = document.getElementById("is_c");
+  const calcBtn = document.getElementById("is_calc");
+  const demoBtn = document.getElementById("is_fill_demo");
+  const clearBtn = document.getElementById("is_clear");
+  const errorEl = document.getElementById("is_error");
+  const resultEl = document.getElementById("is_result");
+  const cardsEl = document.getElementById("is_cards");
+  const tbodyEl = document.getElementById("is_tbody");
+
+  if (!aEl || !bEl || !opEl || !cEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el, name) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please fill all coefficients.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number for " + name + ".");
+    return n;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function flip(op) {
+    if (op === "<") return ">";
+    if (op === "<=") return ">=";
+    if (op === ">") return "<";
+    return "<=";
+  }
+
+  function compare(left, op, right) {
+    if (op === "<") return left < right;
+    if (op === "<=") return left <= right;
+    if (op === ">") return left > right;
+    return left >= right;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const a = getNum(aEl, "a");
+      const b = getNum(bEl, "b");
+      const c = getNum(cEl, "c");
+      const op = String(opEl.value || "<");
+
+      if (Math.abs(a) < 1e-12) {
+        const truth = compare(b, op, c);
+        resultEl.innerHTML =
+          "<strong>" + (truth ? "Always true" : "No solution") + "</strong><br/>" +
+          "<span class='note'>Because the inequality becomes " + fmt(b) + " " + op + " " + fmt(c) + ".</span>";
+
+        cardsEl.style.display = "block";
+        cardsEl.innerHTML =
+          "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+          badge("a = 0") +
+          badge(truth ? "All real x" : "No real x") +
+          "</div>";
+
+        fillTable([
+          ["Reduced inequality", fmt(b) + " " + op + " " + fmt(c)],
+          ["Conclusion", truth ? "True for all real x" : "No solution"],
+        ]);
+        return;
+      }
+
+      const rhs = c - b;
+      const flipped = a < 0;
+      const finalOp = flipped ? flip(op) : op;
+      const boundary = rhs / a;
+
+      resultEl.innerHTML =
+        "<strong>Solution</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>x " + finalOp + " " + fmt(boundary) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(flipped ? "Sign flipped" : "Sign unchanged") +
+        badge("Boundary = " + fmt(boundary)) +
+        badge("a " + (a < 0 ? "< 0" : "> 0")) +
+        "</div>";
+
+      fillTable([
+        ["Original form", fmt(a) + "x + " + fmt(b) + " " + op + " " + fmt(c)],
+        ["Move b to the right", fmt(a) + "x " + op + " " + fmt(rhs)],
+        ["Divide by a", flipped ? "Inequality flips because a is negative" : "Inequality stays the same"],
+        ["Final answer", "x " + finalOp + " " + fmt(boundary)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not solve the inequality.");
+    }
+  }
+
+  function fillDemo() {
+    aEl.value = "-2";
+    bEl.value = "3";
+    opEl.value = "<";
+    cEl.value = "11";
+    clearOutput();
+  }
+
+  function reset() {
+    aEl.value = "";
+    bEl.value = "";
+    opEl.value = "<";
+    cEl.value = "";
+    clearOutput();
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl, cEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

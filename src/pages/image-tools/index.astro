@@ -1,0 +1,83 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+type ToolMeta = {
+  title: string;
+  description: string;
+  href: string;
+  order?: number;
+};
+
+const CATEGORY = "/image-tools/";
+
+const modules = await Astro.glob("../**/*.astro");
+
+const tools: ToolMeta[] = modules
+  .map((m) => (m as any).tool as ToolMeta | undefined)
+  .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
+  .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+---
+
+<BaseLayout
+  title="Image Tools — MinimalDev"
+  description="Free online image tools including resizer, compressor, cropper, converter, and metadata utilities. Works locally in your browser."
+  canonicalPath="/image-tools/"
+>
+  <div class="container">
+    <h1 class="page-title">Image Tools</h1>
+
+    <p class="lead">
+      Resize, compress, crop, and convert images directly in your browser.
+      No uploads required. Fast, private, and mobile-friendly tools.
+    </p>
+
+    <div class="tool-search" style="margin-bottom:16px;">
+      <input
+        id="toolSearch"
+        type="search"
+        placeholder="Search image tools..."
+        style="
+          width:100%;
+          padding:10px 12px;
+          border-radius:10px;
+          border:1px solid rgba(0,0,0,0.15);
+          font-size:14px;
+        "
+      />
+    </div>
+
+    {tools.length ? (
+      <div class="grid">
+        {tools.map((t) => (
+          <section class="card">
+            <span class="badge">Tool</span>
+            <h2>{t.title}</h2>
+            <p>{t.description}</p>
+            <a class="btn" href={t.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="note">No image tools available yet.</p>
+    )}
+
+    <section class="section">
+      <h2>What you can do</h2>
+      <ul>
+        <li>Resize images to exact dimensions</li>
+        <li>Compress images to reduce file size</li>
+        <li>Crop and adjust images visually</li>
+        <li>Convert between formats (PNG, JPG, WebP)</li>
+        <li>Remove metadata (EXIF)</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Privacy</h2>
+      <p class="note">
+        All tools run locally in your browser. No images are uploaded or stored.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

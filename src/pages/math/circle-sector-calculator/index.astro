@@ -1,0 +1,301 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Circle Sector Calculator",
+  description:
+    "Calculate circle sector area, arc length, and related values from radius and angle. Includes validation, result cards, and FAQ schema.",
+  href: "/math/circle-sector-calculator/",
+  order: 397,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/circle-sector-calculator/";
+
+const faqs = [
+  {
+    q: "What does this circle sector calculator compute?",
+    a: "It computes sector area, arc length, full-circle area, and circumference from a radius and a central angle.",
+  },
+  {
+    q: "Can I enter the angle in degrees or radians?",
+    a: "Yes. The calculator supports both degrees and radians.",
+  },
+  {
+    q: "What is the formula for sector area?",
+    a: "In radians, sector area = 1/2 × r² × θ. In degrees, sector area = (θ / 360) × πr².",
+  },
+  {
+    q: "What is the formula for arc length?",
+    a: "In radians, arc length = r × θ. In degrees, arc length = (θ / 360) × 2πr.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Circle Sector Calculator — ${SITE_NAME}`}
+  description="Calculate sector area and arc length from radius and angle."
+  canonicalPath={CANONICAL_PATH}
+  h1="Circle Sector Calculator"
+  intro="Calculate circle sector area, arc length, and related values from a radius and central angle in degrees or radians."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="circle-sector-calculator">
+    <style is:inline>
+      .sec-wrap, .sec-wrap * { box-sizing: border-box; }
+      .sec-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .sec-grid input,
+      .sec-grid select {
+        width:100%;
+        min-width:0;
+      }
+      .sec-code {
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break:break-word;
+      }
+      @media (max-width: 760px) {
+        .sec-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form sec-wrap" role="form" aria-describedby="sec_help sec_privacy">
+      <div class="sec-grid">
+        <div class="field">
+          <label for="sec_radius">Radius (r)</label>
+          <input id="sec_radius" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 5" />
+        </div>
+
+        <div class="field">
+          <label for="sec_angle">Central angle</label>
+          <input id="sec_angle" type="number" inputmode="decimal" step="any" placeholder="e.g., 60" />
+        </div>
+
+        <div class="field" style="grid-column:1 / -1;">
+          <label for="sec_mode">Angle unit</label>
+          <select id="sec_mode">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="sec_help" style="margin-top:6px;">
+        Formulas:
+        <br />
+        <span class="sec-code">Area = 1/2 × r² × θ (radians)</span>
+        <br />
+        <span class="sec-code">Arc length = r × θ (radians)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sec_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sec_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="sec_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sec_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sec_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sec_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sec_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sec_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      A sector is the slice of a circle bounded by two radii and the connecting arc.
+    </p>
+    <ul>
+      <li><strong>Sector area:</strong> 1/2 × r² × θ (radians)</li>
+      <li><strong>Arc length:</strong> r × θ (radians)</li>
+      <li><strong>Full circle area:</strong> πr²</li>
+      <li><strong>Circumference:</strong> 2πr</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>r = 5, θ = 60°</strong> → sector area and arc length</li>
+      <li><strong>r = 10, θ = π/2</strong> rad → quarter-circle sector</li>
+      <li><strong>r = 3, θ = 180°</strong> → semicircle sector</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/circle-area-calculator/">Circle Area Calculator</a></li>
+      <li><a href="/math/circle-circumference-calculator/">Circle Circumference Calculator</a></li>
+      <li><a href="/math/trigonometry-calculator/">Trigonometry Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rEl = document.getElementById("sec_radius");
+  const aEl = document.getElementById("sec_angle");
+  const modeEl = document.getElementById("sec_mode");
+  const calcBtn = document.getElementById("sec_calc");
+  const fillBtn = document.getElementById("sec_fill_demo");
+  const clearBtn = document.getElementById("sec_clear");
+  const errorEl = document.getElementById("sec_error");
+  const resultEl = document.getElementById("sec_result");
+  const cardsEl = document.getElementById("sec_cards");
+  const tbodyEl = document.getElementById("sec_tbody");
+
+  if (!rEl || !aEl || !modeEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function num(v) {
+    const n = parseFloat(String(v).trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n, d) {
+    return Number.isFinite(n)
+      ? n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 12 })
+      : "—";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function toRadians(angle, mode) {
+    return mode === "deg" ? angle * Math.PI / 180 : angle;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const a = document.createElement("td");
+      const b = document.createElement("td");
+      a.textContent = row[0];
+      b.textContent = row[1];
+      tr.appendChild(a);
+      tr.appendChild(b);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const r = num(rEl.value);
+    const angle = num(aEl.value);
+    const mode = String(modeEl.value || "deg");
+
+    if (!Number.isFinite(r) || !Number.isFinite(angle)) {
+      showError("Please enter valid values for radius and angle.");
+      return;
+    }
+    if (r <= 0) {
+      showError("Radius must be greater than 0.");
+      return;
+    }
+    if (angle < 0) {
+      showError("Angle cannot be negative.");
+      return;
+    }
+
+    const theta = toRadians(angle, mode);
+    const fullArea = Math.PI * r * r;
+    const circumference = 2 * Math.PI * r;
+    const sectorArea = 0.5 * r * r * theta;
+    const arcLength = r * theta;
+    const fraction = mode === "deg" ? angle / 360 : theta / (2 * Math.PI);
+
+    resultEl.innerHTML =
+      "<strong>Circle sector result</strong><br/>" +
+      "<span class='sec-code'>Sector area = " + fmt(sectorArea, 12) + ", arc length = " + fmt(arcLength, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "deg" ? "Degree mode" : "Radian mode") +
+      badge("Fraction of full circle = " + fmt(fraction, 8)) +
+      badge(theta > 2 * Math.PI ? "Angle exceeds full circle" : "Within one turn") +
+      "</div>";
+
+    fillTable([
+      ["Radius", fmt(r, 12)],
+      ["Angle", fmt(angle, 12) + (mode === "deg" ? "°" : " rad")],
+      ["Angle in radians", fmt(theta, 12)],
+      ["Sector area", fmt(sectorArea, 12)],
+      ["Arc length", fmt(arcLength, 12)],
+      ["Full circle area", fmt(fullArea, 12)],
+      ["Circumference", fmt(circumference, 12)],
+      ["Fraction of full circle", fmt(fraction, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    rEl.value = "5";
+    aEl.value = "60";
+    modeEl.value = "deg";
+    clearOutput();
+  }
+
+  function reset() {
+    rEl.value = "";
+    aEl.value = "";
+    modeEl.value = "deg";
+    clearOutput();
+    rEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [rEl, aEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

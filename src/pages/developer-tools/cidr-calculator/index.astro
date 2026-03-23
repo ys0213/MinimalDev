@@ -1,0 +1,341 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CIDR Calculator",
+  description:
+    "Calculate subnet mask, network address, broadcast address, and usable host range from IPv4 CIDR notation.",
+  href: "/developer-tools/cidr-calculator/",
+  order: 413,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/cidr-calculator/";
+
+const faqs = [
+  {
+    q: "What does this CIDR calculator do?",
+    a: "It calculates subnet mask, wildcard mask, network address, broadcast address, and usable host range from an IPv4 address and prefix length.",
+  },
+  {
+    q: "What CIDR range is allowed?",
+    a: "This tool accepts IPv4 prefix lengths from /0 to /32.",
+  },
+  {
+    q: "Does it show usable hosts?",
+    a: "Yes. It shows the first and last usable host when that concept applies.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CIDR Calculator — ${SITE_NAME}`}
+  description="Calculate IPv4 subnet details from CIDR notation."
+  canonicalPath={CANONICAL_PATH}
+  h1="CIDR Calculator"
+  intro="Enter an IPv4 address and prefix length to calculate network details such as subnet mask, network address, broadcast address, and usable range."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="cidr-calculator">
+    <style is:inline>
+      #cidr_ip,
+      #cidr_prefix {
+        width: 100%;
+        min-width: 0;
+      }
+      .cidr-grid {
+        display: grid;
+        gap: 10px;
+      }
+      @media (min-width: 720px) {
+        .cidr-grid {
+          grid-template-columns: 1fr 220px;
+        }
+      }
+      .cidr-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cidr_help cidr_privacy">
+      <div class="cidr-grid">
+        <div class="field">
+          <label for="cidr_ip">IPv4 address</label>
+          <input id="cidr_ip" type="text" inputmode="decimal" spellcheck="false" placeholder="e.g. 192.168.1.10" />
+        </div>
+
+        <div class="field">
+          <label for="cidr_prefix">Prefix length</label>
+          <input id="cidr_prefix" type="number" inputmode="numeric" min="0" max="32" step="1" placeholder="e.g. 24" />
+        </div>
+      </div>
+
+      <p class="note" id="cidr_help" style="margin-top:6px;">
+        Example: <span class="cidr-mono">192.168.1.10 / 24</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cidr_calculate">Calculate</button>
+        <button class="btn secondary" type="button" id="cidr_fill">Example /24</button>
+        <button class="btn secondary" type="button" id="cidr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cidr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cidr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cidr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cidr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cidr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No network data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      CIDR notation combines an IPv4 address with a prefix length such as <strong>/24</strong>.
+      The prefix length determines how many leading bits belong to the network.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>192.168.1.10 / 24</strong> → network <strong>192.168.1.0</strong>, broadcast <strong>192.168.1.255</strong></li>
+      <li><strong>10.0.5.10 / 16</strong> → network <strong>10.0.0.0</strong></li>
+      <li><strong>172.16.8.1 / 20</strong> → mask <strong>255.255.240.0</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/subnet-calculator/">Subnet Calculator</a></li>
+      <li><a href="/developer-tools/ip-range-calculator/">IP Range Calculator</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/ipv4-to-decimal/">IPv4 to Decimal</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ipEl = document.getElementById("cidr_ip");
+  const prefixEl = document.getElementById("cidr_prefix");
+  const calcBtn = document.getElementById("cidr_calculate");
+  const fillBtn = document.getElementById("cidr_fill");
+  const clearBtn = document.getElementById("cidr_clear");
+  const errEl = document.getElementById("cidr_error");
+  const resultEl = document.getElementById("cidr_result");
+  const cardsEl = document.getElementById("cidr_cards");
+  const tbodyEl = document.getElementById("cidr_tbody");
+
+  if (!ipEl || !prefixEl || !calcBtn || !fillBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseIPv4(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter an IPv4 address." };
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) return { ok: false, msg: "IPv4 format must be four numeric octets." };
+
+    const parts = trimmed.split(".");
+    const nums = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].length > 1 && parts[i].startsWith("0")) {
+        return { ok: false, msg: "Leading zeros are not allowed in octet " + (i + 1) + "." };
+      }
+      const n = Number(parts[i]);
+      if (!Number.isInteger(n) || n < 0 || n > 255) {
+        return { ok: false, msg: "Octet " + (i + 1) + " must be between 0 and 255." };
+      }
+      nums.push(n);
+    }
+    return { ok: true, parts: nums, normalized: nums.join(".") };
+  }
+
+  function ipPartsToInt(parts) {
+    return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+  }
+
+  function intToIp(n) {
+    return [
+      (n >>> 24) & 255,
+      (n >>> 16) & 255,
+      (n >>> 8) & 255,
+      n & 255,
+    ].join(".");
+  }
+
+  function prefixToMask(prefix) {
+    if (prefix === 0) return 0;
+    return ((0xFFFFFFFF << (32 - prefix)) >>> 0);
+  }
+
+  function validatePrefix(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter a prefix length." };
+    const n = Number(trimmed);
+    if (!Number.isInteger(n) || n < 0 || n > 32) {
+      return { ok: false, msg: "Prefix length must be an integer from 0 to 32." };
+    }
+    return { ok: true, value: n };
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const ipParsed = parseIPv4(ipEl.value);
+    if (!ipParsed.ok) {
+      showError(ipParsed.msg);
+      return;
+    }
+
+    const prefixParsed = validatePrefix(prefixEl.value);
+    if (!prefixParsed.ok) {
+      showError(prefixParsed.msg);
+      return;
+    }
+
+    const prefix = prefixParsed.value;
+    const ipInt = ipPartsToInt(ipParsed.parts);
+    const maskInt = prefixToMask(prefix);
+    const wildcardInt = (~maskInt) >>> 0;
+    const networkInt = (ipInt & maskInt) >>> 0;
+    const broadcastInt = (networkInt | wildcardInt) >>> 0;
+
+    let usableCount;
+    let firstHost = "N/A";
+    let lastHost = "N/A";
+
+    if (prefix === 32) {
+      usableCount = 1;
+      firstHost = intToIp(networkInt);
+      lastHost = intToIp(networkInt);
+    } else if (prefix === 31) {
+      usableCount = 2;
+      firstHost = intToIp(networkInt);
+      lastHost = intToIp(broadcastInt);
+    } else {
+      usableCount = Math.max(0, Math.pow(2, 32 - prefix) - 2);
+      firstHost = intToIp((networkInt + 1) >>> 0);
+      lastHost = intToIp((broadcastInt - 1) >>> 0);
+    }
+
+    resultEl.innerHTML =
+      "<strong>CIDR calculated successfully.</strong><br/><span class='note'>" +
+      ipParsed.normalized +
+      "/" +
+      prefix +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("/" + prefix) +
+      badge("Hosts: " + usableCount.toLocaleString()) +
+      badge(prefix <= 30 ? "Usable host range shown" : "Point-to-point / single-host edge case") +
+      "</div>";
+
+    fillTable([
+      ["Input IP", ipParsed.normalized],
+      ["CIDR prefix", "/" + prefix],
+      ["Subnet mask", intToIp(maskInt)],
+      ["Wildcard mask", intToIp(wildcardInt)],
+      ["Network address", intToIp(networkInt)],
+      ["Broadcast address", intToIp(broadcastInt)],
+      ["First usable host", firstHost],
+      ["Last usable host", lastHost],
+      ["Usable hosts", usableCount.toLocaleString()],
+      ["Address count", Math.pow(2, 32 - prefix).toLocaleString()],
+    ]);
+  }
+
+  function clearAll() {
+    ipEl.value = "";
+    prefixEl.value = "";
+    resetOutput();
+    ipEl.focus();
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  fillBtn.addEventListener("click", function () {
+    ipEl.value = "192.168.1.10";
+    prefixEl.value = "24";
+    calculate();
+  });
+  clearBtn.addEventListener("click", clearAll);
+
+  [ipEl, prefixEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") calculate();
+    });
+  });
+});
+</script>

@@ -1,0 +1,337 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Token Generator",
+  description:
+    "Generate secure random tokens in hex, base64url, or alphanumeric format with configurable length and count.",
+  href: "/developer-tools/random-token-generator/",
+  order: 432,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/random-token-generator/";
+
+const faqs = [
+  {
+    q: "What is a random token?",
+    a: "A random token is a generated string commonly used for sessions, verification links, reset flows, and temporary authentication data.",
+  },
+  {
+    q: "Is this token generator secure?",
+    a: "Yes. It uses the browser’s cryptographically secure randomness API and runs locally in your browser.",
+  },
+  {
+    q: "What formats are supported?",
+    a: "This page can generate tokens in hex, base64url, or alphanumeric format.",
+  },
+  {
+    q: "Are generated tokens stored?",
+    a: "No. Nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Token Generator — ${SITE_NAME}`}
+  description="Generate secure random tokens in multiple formats with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Token Generator"
+  intro="Generate secure random tokens for sessions, verification flows, and other developer workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-token-generator">
+    <style is:inline>
+      #rt_bytes,
+      #rt_count,
+      #rt_format,
+      #rt_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .rt-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      .rt-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:10px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rt_help rt_privacy">
+      <div class="rt-grid">
+        <div class="field">
+          <label for="rt_format">Output format</label>
+          <select id="rt_format">
+            <option value="hex" selected>Hex</option>
+            <option value="base64url">Base64 URL-safe</option>
+            <option value="alnum">Alphanumeric</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rt_bytes">Random bytes per token</label>
+          <input id="rt_bytes" type="number" inputmode="numeric" min="8" max="256" value="32" />
+        </div>
+
+        <div class="field">
+          <label for="rt_count">How many tokens</label>
+          <input id="rt_count" type="number" inputmode="numeric" min="1" max="20" value="1" />
+        </div>
+      </div>
+
+      <p class="note" id="rt_help" style="margin-top:6px;">
+        Larger byte sizes produce longer and stronger tokens. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to generate.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rt_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rt_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="rt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result rt-mono" id="rt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rt_output">Generated token(s)</label>
+        <textarea id="rt_output" rows="10" spellcheck="false" readonly placeholder="Generated token(s) will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rt_privacy" style="margin-top:10px;">
+        Privacy: token generation runs locally in your browser. No data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a format and byte size. The tool uses secure random bytes and converts them into the selected output format.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Hex</strong> → readable token output for logs and config files</li>
+      <li><strong>Base64 URL-safe</strong> → compact token for URLs and web flows</li>
+      <li><strong>Alphanumeric</strong> → simpler token for systems that restrict symbols</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/api-key-generator/">API Key Generator</a></li>
+      <li><a href="/developer-tools/salt-generator/">Salt Generator</a></li>
+      <li><a href="/developer-tools/nonce-generator/">Nonce Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const formatEl = document.getElementById("rt_format");
+  const bytesEl = document.getElementById("rt_bytes");
+  const countEl = document.getElementById("rt_count");
+  const generateBtn = document.getElementById("rt_generate");
+  const copyBtn = document.getElementById("rt_copy");
+  const clearBtn = document.getElementById("rt_clear");
+  const errEl = document.getElementById("rt_error");
+  const resultEl = document.getElementById("rt_result");
+  const cardsEl = document.getElementById("rt_cards");
+  const outputEl = document.getElementById("rt_output");
+  const tbodyEl = document.getElementById("rt_tbody");
+
+  if (!formatEl || !bytesEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function bytesToHex(arr) {
+    return Array.from(arr).map(function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  function bytesToBase64Url(arr) {
+    let binary = "";
+    for (let i = 0; i < arr.length; i++) binary += String.fromCharCode(arr[i]);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function randInt(maxExclusive) {
+    const buf = new Uint32Array(1);
+    const max = maxExclusive >>> 0;
+    const limit = Math.floor(0x100000000 / max) * max;
+    while (true) {
+      crypto.getRandomValues(buf);
+      if (buf[0] < limit) return buf[0] % max;
+    }
+  }
+
+  function bytesToAlnum(arr) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let out = "";
+    for (let i = 0; i < arr.length; i++) {
+      out += chars.charAt(randInt(chars.length));
+    }
+    return out;
+  }
+
+  function generateTokens() {
+    resetOutput();
+
+    const format = String(formatEl.value || "hex");
+    const byteCount = parseInt(String(bytesEl.value || ""), 10);
+    const count = parseInt(String(countEl.value || ""), 10);
+
+    if (!Number.isFinite(byteCount) || byteCount < 8 || byteCount > 256) {
+      showError("Random bytes per token must be between 8 and 256.");
+      return;
+    }
+
+    if (!Number.isFinite(count) || count < 1 || count > 20) {
+      showError("How many tokens must be between 1 and 20.");
+      return;
+    }
+
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const bytes = new Uint8Array(byteCount);
+      crypto.getRandomValues(bytes);
+
+      let token = "";
+      if (format === "hex") token = bytesToHex(bytes);
+      else if (format === "base64url") token = bytesToBase64Url(bytes);
+      else token = bytesToAlnum(bytes);
+
+      list.push(token);
+    }
+
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Generated token" + (count === 1 ? "" : "s") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Format: " + format) +
+      badge("Count: " + count) +
+      badge("Random bytes: " + byteCount) +
+      badge("Entropy per token: " + (byteCount * 8) + " bits") +
+      "</div>";
+
+    fillTable([
+      ["Format", format],
+      ["Random bytes per token", String(byteCount)],
+      ["Generated count", String(count)],
+      ["Entropy per token", String(byteCount * 8) + " bits"],
+      ["Approx output length", list[0] ? String(list[0].length) : "0"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated token output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied token output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    formatEl.value = "hex";
+    bytesEl.value = "32";
+    countEl.value = "1";
+    resetOutput();
+    bytesEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateTokens);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [bytesEl, countEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateTokens();
+    });
+  });
+});
+</script>

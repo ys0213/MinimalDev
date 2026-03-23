@@ -1,0 +1,323 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Unicode Escape",
+  description:
+    "Convert text into Unicode escape sequences with validation, options, result cards, and FAQ schema.",
+  href: "/developer-tools/unicode-escape/",
+  order: 392,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/unicode-escape/";
+
+const faqs = [
+  {
+    q: "What does Unicode escape mean?",
+    a: "It converts characters into escape sequences such as \\u0041 or \\u{1F600}, which are often used in source code and serialized text formats.",
+  },
+  {
+    q: "What is the difference between \\uXXXX and \\u{...}?",
+    a: "\\uXXXX uses four hexadecimal digits and may require surrogate pairs for characters above U+FFFF. \\u{...} uses a code point form and can represent the full Unicode range directly.",
+  },
+  {
+    q: "Can I escape only non-ASCII characters?",
+    a: "Yes. This tool lets you choose whether to escape only non-ASCII characters or all characters.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Escaping runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Unicode Escape — ${SITE_NAME}`}
+  description="Convert text into Unicode escape sequences with validation, mode options, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Unicode Escape"
+  intro="Convert plain text into Unicode escape sequences for source code, debugging, serialization, and inspection."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="unicode-escape">
+    <style is:inline>
+      #ue_input,
+      #ue_output,
+      #ue_mode,
+      #ue_scope {
+        width: 100%;
+        min-width: 0;
+      }
+      .ue-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ue_help ue_privacy">
+      <div class="field">
+        <label for="ue_input">Text input</label>
+        <textarea id="ue_input" rows="10" spellcheck="false" placeholder="e.g. Hello — 안녕하세요 😀"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="ue_mode">Escape format</label>
+        <select id="ue_mode">
+          <option value="u4" selected>JavaScript style (\uXXXX / surrogate pairs)</option>
+          <option value="codepoint">Code point style (\u&#123;...&#125;)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="ue_scope">Escape scope</label>
+        <select id="ue_scope">
+          <option value="non-ascii" selected>Escape non-ASCII only</option>
+          <option value="all">Escape all characters</option>
+        </select>
+      </div>
+
+      <p class="note" id="ue_help" style="margin-top:6px;">
+        Choose whether to escape every character or only non-ASCII characters. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to convert.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ue_escape">Escape</button>
+        <button class="btn secondary" type="button" id="ue_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="ue_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ue_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result ue-mono" id="ue_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ue_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ue_output">Escaped output</label>
+        <textarea id="ue_output" rows="10" spellcheck="false" readonly placeholder="Escaped text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ue_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ue_privacy" style="margin-top:10px;">
+        Privacy: escaping runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts characters into Unicode escape sequences. For code points above U+FFFF, JavaScript-style output uses surrogate pairs,
+      while code point mode uses a single <code>\u{"{...}"}</code> form.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>A</strong> → <strong>\u0041</strong></li>
+      <li><strong>안</strong> → <strong>\uC548</strong></li>
+      <li><strong>😀</strong> → <strong>\uD83D\uDE00</strong> or <strong>\u{"{1F600}"}</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/unicode-unescape/">Unicode Unescape</a></li>
+      <li><a href="/developer-tools/string-escape/">String Escape</a></li>
+      <li><a href="/developer-tools/html-entity-encoder/">HTML Entity Encoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("ue_input");
+  const modeEl = document.getElementById("ue_mode");
+  const scopeEl = document.getElementById("ue_scope");
+  const escapeBtn = document.getElementById("ue_escape");
+  const copyBtn = document.getElementById("ue_copy");
+  const clearBtn = document.getElementById("ue_clear");
+  const errEl = document.getElementById("ue_error");
+  const resultEl = document.getElementById("ue_result");
+  const cardsEl = document.getElementById("ue_cards");
+  const outputEl = document.getElementById("ue_output");
+  const tbodyEl = document.getElementById("ue_tbody");
+
+  if (!inputEl || !modeEl || !scopeEl || !escapeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function toU4(codeUnit) {
+    return "\\u" + codeUnit.toString(16).toUpperCase().padStart(4, "0");
+  }
+
+  function escapeChar(ch, mode, scope) {
+    const cp = ch.codePointAt(0);
+    const shouldEscape = scope === "all" || cp > 127;
+    if (!shouldEscape) return ch;
+
+    if (mode === "codepoint") {
+      return "\\u{" + cp.toString(16).toUpperCase() + "}";
+    }
+
+    if (cp <= 0xFFFF) {
+      return toU4(cp);
+    }
+
+    const adjusted = cp - 0x10000;
+    const high = 0xD800 + (adjusted >> 10);
+    const low = 0xDC00 + (adjusted & 0x3FF);
+    return toU4(high) + toU4(low);
+  }
+
+  function escapeText(raw, mode, scope) {
+    return Array.from(raw).map(function (ch) {
+      return escapeChar(ch, mode, scope);
+    }).join("");
+  }
+
+  function countEscaped(raw, scope) {
+    let count = 0;
+    Array.from(raw).forEach(function (ch) {
+      const cp = ch.codePointAt(0);
+      if (scope === "all" || cp > 127) count++;
+    });
+    return count;
+  }
+
+  function escapeNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    const mode = String(modeEl.value || "u4");
+    const scope = String(scopeEl.value || "non-ascii");
+
+    if (!trimmed) {
+      showError("Please enter text to escape.");
+      return;
+    }
+
+    const escaped = escapeText(raw, mode, scope);
+    const escapedCount = countEscaped(raw, scope);
+
+    outputEl.value = escaped;
+    lastOutput = escaped;
+
+    resultEl.innerHTML =
+      "<strong>Escaped successfully.</strong><br/><span class='note'>Unicode escape output has been generated.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(mode === "u4" ? "Format: \\uXXXX" : "Format: \\u{...}") +
+      badge(scope === "all" ? "Scope: all chars" : "Scope: non-ASCII") +
+      badge("Escaped chars: " + escapedCount) +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Output length", String(escaped.length)],
+      ["Length delta", String(escaped.length - raw.length)],
+      ["Escaped characters", String(escapedCount)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No escaped output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied escaped output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    modeEl.value = "u4";
+    scopeEl.value = "non-ascii";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  escapeBtn.addEventListener("click", escapeNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") escapeNow();
+  });
+});
+</script>

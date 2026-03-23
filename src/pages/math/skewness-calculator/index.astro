@@ -1,0 +1,294 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Skewness Calculator",
+  description:
+    "Calculate sample skewness, mean, standard deviation, and asymmetry summary from numeric data.",
+  href: "/math/skewness-calculator/",
+  order: 383,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/skewness-calculator/";
+
+const faqs = [
+  {
+    q: "What is skewness?",
+    a: "Skewness measures asymmetry in a dataset. Positive skew means a longer right tail, and negative skew means a longer left tail.",
+  },
+  {
+    q: "What formula does this calculator use?",
+    a: "It uses a sample skewness formula based on standardized third moments with a small-sample adjustment.",
+  },
+  {
+    q: "How many values are required?",
+    a: "At least 3 values are required, and the standard deviation must be greater than 0.",
+  },
+  {
+    q: "What does skewness near 0 mean?",
+    a: "It suggests the data is roughly symmetric, though not perfectly.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Skewness Calculator — ${SITE_NAME}`}
+  description="Calculate sample skewness, mean, standard deviation, and distribution asymmetry summary."
+  canonicalPath={CANONICAL_PATH}
+  h1="Skewness Calculator"
+  intro="Calculate sample skewness from a dataset to estimate whether the distribution is left-skewed, right-skewed, or roughly symmetric."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="skewness-calculator">
+    <style is:inline>
+      .sk-wrap, .sk-wrap * { box-sizing: border-box; }
+      .sk-grid {
+        display:grid;
+        grid-template-columns:minmax(0, 1fr);
+        gap:10px;
+      }
+      .sk-grid textarea {
+        width:100%;
+        min-width:0;
+        resize:vertical;
+      }
+      .sk-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      .sk-list {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+    </style>
+
+    <div class="form sk-wrap" role="form" aria-describedby="sk_help sk_privacy">
+      <div class="sk-grid">
+        <div class="field">
+          <label for="sk_data">Data values</label>
+          <textarea
+            id="sk_data"
+            rows="7"
+            placeholder="e.g.
+2, 3, 3, 4, 5, 9"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="sk_help" style="margin-top:6px;">
+        Enter values separated by commas, spaces, or line breaks.
+        <br />
+        This page returns sample skewness based on the dataset mean and sample standard deviation.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sk_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sk_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="sk_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sk_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sk_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sk_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sk_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sk_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Skewness is based on the third standardized moment of the sample. It indicates whether a dataset leans left, leans right, or appears roughly symmetric.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2, 3, 3, 4, 5, 9</strong> is often right-skewed because of the larger upper tail.</li>
+      <li>Skewness near <strong>0</strong> suggests approximate symmetry.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/kurtosis-calculator/">Kurtosis Calculator</a></li>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/standard-deviation-calculator/">Standard Deviation Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("sk_data");
+  const calcBtn = document.getElementById("sk_calc");
+  const fillBtn = document.getElementById("sk_fill_demo");
+  const clearBtn = document.getElementById("sk_clear");
+  const errorEl = document.getElementById("sk_error");
+  const resultEl = document.getElementById("sk_result");
+  const cardsEl = document.getElementById("sk_cards");
+  const tbodyEl = document.getElementById("sk_tbody");
+
+  if (!dataEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseData(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 3 numeric values.");
+
+    const nums = text.split(/[\s,]+/).filter(Boolean).map(function (part) {
+      const n = Number(part);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    if (nums.length < 3) throw new Error("Please enter at least 3 numeric values.");
+    return nums;
+  }
+
+  function mean(arr) {
+    return arr.reduce(function (a, b) { return a + b; }, 0) / arr.length;
+  }
+
+  function sampleStdDev(arr, avg) {
+    const n = arr.length;
+    const sumSq = arr.reduce(function (sum, x) {
+      return sum + Math.pow(x - avg, 2);
+    }, 0);
+    return Math.sqrt(sumSq / (n - 1));
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.innerHTML = row[2] === "html" ? row[1] : row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const arr = parseData(dataEl.value);
+      const n = arr.length;
+      const avg = mean(arr);
+      const s = sampleStdDev(arr, avg);
+
+      if (s === 0) {
+        showError("Skewness is undefined when all values are identical (sample standard deviation is 0).");
+        return;
+      }
+
+      const sumCubed = arr.reduce(function (sum, x) {
+        return sum + Math.pow((x - avg) / s, 3);
+      }, 0);
+
+      const skew = (n / ((n - 1) * (n - 2))) * sumCubed;
+
+      let label = "Approximately symmetric";
+      if (skew > 1) label = "Strong right skew";
+      else if (skew > 0.5) label = "Right skew";
+      else if (skew < -1) label = "Strong left skew";
+      else if (skew < -0.5) label = "Left skew";
+
+      resultEl.innerHTML =
+        "<strong>Skewness result</strong><br/>" +
+        "<span class='sk-code'>Skewness = " + fmt(skew, 8) + "</span>" +
+        "<br/><span class='note'>Mean = " + fmt(avg, 8) + ", Sample SD = " + fmt(s, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("Count = " + n) +
+        badge("SD = " + fmt(s, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Count", String(n)],
+        ["Mean", fmt(avg, 8)],
+        ["Sample standard deviation", fmt(s, 8)],
+        ["Sample skewness", fmt(skew, 8)],
+        ["Data", "<span class='sk-list'>" + arr.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    dataEl.value = "2, 3, 3, 4, 5, 9";
+    clearOutput();
+  }
+
+  function reset() {
+    dataEl.value = "";
+    clearOutput();
+    dataEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  dataEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

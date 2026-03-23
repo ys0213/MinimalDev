@@ -1,0 +1,282 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Bytes to Bits",
+  description:
+    "Convert bytes to bits instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/bytes-to-bits/",
+  order: 323,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/bytes-to-bits/";
+
+const faqs = [
+  {
+    q: "How do you convert bytes to bits?",
+    a: "Multiply bytes by 8, because 1 byte equals 8 bits.",
+  },
+  {
+    q: "Why are bytes bigger than bits?",
+    a: "A byte is made of 8 bits, so one byte holds more data than one bit.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between bytes to bits and bits to bytes.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Bytes to Bits Converter — ${SITE_NAME}`}
+  description="Convert bytes to bits instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Bytes to Bits Converter"
+  intro="Convert data from bytes to bits instantly. Useful for networking, storage, transmission rates, and digital data basics."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="bytes-to-bits">
+    <div class="form" role="form" aria-describedby="byte2bit_hint byte2bit_privacy">
+      <div class="field">
+        <label for="byte2bit_input">Bytes</label>
+        <input id="byte2bit_input" type="number" inputmode="decimal" placeholder="e.g., 8" />
+        <p class="note" id="byte2bit_hint" style="margin-top:6px;">
+          Enter a non-negative value. 1 byte equals 8 bits.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="byte2bit_round">Rounding</label>
+        <select id="byte2bit_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="byte2bit_convert">Convert</button>
+        <button class="btn secondary" type="button" id="byte2bit_swap">Reverse (bits → bytes)</button>
+        <button class="btn secondary" type="button" id="byte2bit_clear">Clear</button>
+      </div>
+
+      <div class="result" id="byte2bit_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="byte2bit_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="byte2bit_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="byte2bit_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="byte2bit_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard bit/byte relationship: <strong>1 byte = 8 bits</strong>.<br />
+      Formula: <strong>bits = bytes × 8</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 byte</strong> = <strong>8 bits</strong></li>
+      <li><strong>8 bytes</strong> = <strong>64 bits</strong></li>
+      <li><strong>100 bytes</strong> = <strong>800 bits</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/digital-storage-converter/">Digital Storage Converter</a></li>
+      <li><a href="/converter/bits-to-bytes/">Bits to Bytes</a></li>
+      <li><a href="/converter/megabytes-to-megabits/">Megabytes to Megabits</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("byte2bit_input");
+  const roundEl = document.getElementById("byte2bit_round");
+  const convertBtn = document.getElementById("byte2bit_convert");
+  const swapBtn = document.getElementById("byte2bit_swap");
+  const clearBtn = document.getElementById("byte2bit_clear");
+  const errEl = document.getElementById("byte2bit_error");
+  const outEl = document.getElementById("byte2bit_result");
+  const cardsEl = document.getElementById("byte2bit_cards");
+  const tbodyEl = document.getElementById("byte2bit_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const BYTE_TO_BIT = 8;
+  const BIT_TO_BYTE = 1 / 8;
+  let mode = "byte-to-bit";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="byte2bit_input"]');
+    if (!label) return;
+    if (mode === "byte-to-bit") {
+      label.textContent = "Bytes";
+      inEl.placeholder = "e.g., 8";
+      swapBtn.textContent = "Reverse (bits → bytes)";
+    } else {
+      label.textContent = "Bits";
+      inEl.placeholder = "e.g., 64";
+      swapBtn.textContent = "Reverse (bytes → bits)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "byte-to-bit"
+      ? [
+          ["Conversion factor", "1 byte = 8 bits"],
+          ["Formula", "bits = bytes × 8"],
+          ["Input", fmt(input) + " bytes"],
+          ["Output", fmt(output) + " bits"],
+        ]
+      : [
+          ["Conversion factor", "8 bits = 1 byte"],
+          ["Formula", "bytes = bits ÷ 8"],
+          ["Input", fmt(input) + " bits"],
+          ["Output", fmt(output) + " bytes"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function classifyBytes(bytes) {
+    if (bytes < 1) return "Sub-byte value";
+    if (bytes < 1024) return "Small data size";
+    return "Larger data size";
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "byte-to-bit" ? input * BYTE_TO_BIT : input * BIT_TO_BYTE;
+
+    if (mode === "byte-to-bit") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} bits<br/><span class="note">${fmt(input)} bytes = ${fmt(output)} bits</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} bytes<br/><span class="note">${fmt(input)} bits = ${fmt(output)} bytes</span>`;
+    }
+
+    const bytes = mode === "byte-to-bit" ? input : output;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "byte-to-bit" ? "bytes → bits" : "bits → bytes")}
+        ${badge("Base ≈ " + fmtSmart(bytes) + " bytes")}
+        ${badge(classifyBytes(bytes))}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "byte-to-bit" ? "bit-to-byte" : "byte-to-bit";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

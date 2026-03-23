@@ -1,0 +1,275 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Poisson Distribution Calculator",
+  description:
+    "Calculate exact and cumulative Poisson probabilities with validation, result cards, and FAQ schema.",
+  href: "/math/poisson-distribution-calculator/",
+  order: 367,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/poisson-distribution-calculator/";
+
+const faqs = [
+  {
+    q: "What does this Poisson calculator compute?",
+    a: "It computes exact probability P(X = k) and cumulative probability P(X ≤ k) for a Poisson distribution.",
+  },
+  {
+    q: "What is lambda (λ)?",
+    a: "Lambda is the average rate or expected number of events in the interval.",
+  },
+  {
+    q: "Can lambda be negative?",
+    a: "No. Lambda must be 0 or greater.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Poisson Distribution Calculator — ${SITE_NAME}`}
+  description="Calculate exact and cumulative Poisson probabilities."
+  canonicalPath={CANONICAL_PATH}
+  h1="Poisson Distribution Calculator"
+  intro="Calculate exact and cumulative Poisson probabilities using event rate λ and number of events k."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="poisson-distribution-calculator">
+    <style is:inline>
+      .pd-wrap, .pd-wrap * { box-sizing: border-box; }
+      .pd-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .pd-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .pd-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form pd-wrap" role="form" aria-describedby="pd_help pd_privacy">
+      <div class="pd-grid">
+        <div class="field">
+          <label for="pd_lambda">Rate / Mean (λ)</label>
+          <input id="pd_lambda" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 4" />
+        </div>
+        <div class="field">
+          <label for="pd_k">Events (k)</label>
+          <input id="pd_k" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 2" />
+        </div>
+      </div>
+
+      <p class="note" id="pd_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="pd-code">P(X = k) = (e^-λ · λ^k) / k!</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pd_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pd_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+      <div class="result" id="pd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pd_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The Poisson distribution models how many events occur in a fixed interval when events happen independently at an average rate λ.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>λ = 4</strong>, <strong>k = 2</strong> → exact probability of exactly 2 events</li>
+      <li><strong>P(X ≤ k)</strong> adds all exact probabilities from 0 through k</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/binomial-distribution-calculator/">Binomial Distribution Calculator</a></li>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/cumulative-distribution-calculator/">Cumulative Distribution Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const lambdaEl = document.getElementById("pd_lambda");
+  const kEl = document.getElementById("pd_k");
+  const calcBtn = document.getElementById("pd_calc");
+  const fillBtn = document.getElementById("pd_fill_demo");
+  const clearBtn = document.getElementById("pd_clear");
+  const errorEl = document.getElementById("pd_error");
+  const resultEl = document.getElementById("pd_result");
+  const cardsEl = document.getElementById("pd_cards");
+  const tbodyEl = document.getElementById("pd_tbody");
+
+  if (!lambdaEl || !kEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 10 });
+  }
+  function factorial(n) {
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+  function poissonExact(lambda, k) {
+    return Math.exp(-lambda) * Math.pow(lambda, k) / factorial(k);
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const lambda = toNum(lambdaEl, "rate / mean (λ)");
+      const k = toInt(kEl, "events (k)");
+
+      if (lambda < 0) {
+        showError("Lambda (λ) must be 0 or greater.");
+        return;
+      }
+      if (k < 0) {
+        showError("Events (k) must be 0 or greater.");
+        return;
+      }
+      if (k > 170) {
+        showError("k is too large for this browser-side factorial implementation. Please use 170 or less.");
+        return;
+      }
+
+      const exact = poissonExact(lambda, k);
+      let cdf = 0;
+      for (let i = 0; i <= k; i++) cdf += poissonExact(lambda, i);
+      const upper = 1 - (k > 0 ? (cdf - exact) : 0);
+
+      let rarity = "Typical";
+      if (exact < 0.01) rarity = "Rare exact outcome";
+      else if (exact < 0.05) rarity = "Uncommon exact outcome";
+
+      resultEl.innerHTML =
+        "<strong>Poisson distribution result</strong><br/>" +
+        "<span class='pd-code'>P(X = " + k + ") ≈ " + fmt(exact, 10) + "</span>" +
+        "<br/><span class='note'>P(X ≤ " + k + ") ≈ " + fmt(cdf, 10) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("λ = " + fmt(lambda, 6)) +
+        badge("k = " + k) +
+        badge(rarity) +
+        "</div>";
+
+      fillTable([
+        ["Lambda (λ)", fmt(lambda, 8)],
+        ["Events (k)", String(k)],
+        ["P(X = k)", fmt(exact, 10)],
+        ["P(X ≤ k)", fmt(cdf, 10)],
+        ["P(X ≥ k)", fmt(upper, 10)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    lambdaEl.value = "4";
+    kEl.value = "2";
+    clearOutput();
+  }
+  function reset() {
+    lambdaEl.value = "";
+    kEl.value = "";
+    clearOutput();
+    lambdaEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [lambdaEl, kEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

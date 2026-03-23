@@ -1,0 +1,460 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Password Strength Checker",
+  description:
+    "Check password strength locally with score, crack-time estimate, pattern warnings, accessibility, and FAQ schema.",
+  href: "/utility/password-strength-checker/",
+  order: 160,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/password-strength-checker/";
+
+const faqs = [
+  {
+    q: "What does this password strength checker measure?",
+    a: "It evaluates length, character variety, repeated characters, common patterns, and rough entropy indicators to estimate practical password strength.",
+  },
+  {
+    q: "Does this tool send my password anywhere?",
+    a: "No. Everything runs locally in your browser. The password is not stored or transmitted.",
+  },
+  {
+    q: "Is the crack time exact?",
+    a: "No. Crack time is only a rough estimate based on simplified assumptions. Real-world risk depends on reuse, data breaches, hashing, rate limits, and attacker capability.",
+  },
+  {
+    q: "Why can a long password still be weak?",
+    a: "A long password can still be weak if it contains common words, predictable sequences, repeated patterns, or reused personal information.",
+  },
+  {
+    q: "Are passphrases better than short complex passwords?",
+    a: "Often yes. A longer unique passphrase made of unrelated words can be easier to remember and stronger than a short predictable password with simple substitutions.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Password Strength Checker — ${SITE_NAME}`}
+  description="Check password strength locally with score, warnings, crack-time estimate, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Password Strength Checker"
+  intro="Check password strength locally. Review score, character coverage, common-pattern warnings, and a rough crack-time estimate."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="password-strength-checker">
+    <style is:inline>
+      #psc_password,
+      #psc_feedback {
+        width: 100%;
+        min-width: 0;
+      }
+      .psc-wrap {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .psc-meter {
+        width: 100%;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        overflow: hidden;
+      }
+      .psc-meter > div {
+        height: 100%;
+        width: 0%;
+        transition: width 140ms ease;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="psc_help psc_privacy">
+      <div class="field">
+        <label for="psc_password">Password</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <input
+            id="psc_password"
+            type="password"
+            placeholder="Type or paste a password..."
+            autocomplete="off"
+            spellcheck="false"
+            style="flex:1 1 320px;"
+            aria-describedby="psc_help"
+          />
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input id="psc_show" type="checkbox" />
+            <span>Show</span>
+          </label>
+        </div>
+        <p class="note" id="psc_help" style="margin-top:6px;">
+          Strength is evaluated locally. This is a practical estimate, not a guarantee of real-world safety.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="psc_assumption">Attack scenario</label>
+        <select id="psc_assumption">
+          <option value="1e3">Online throttled attack (1,000 guesses/sec)</option>
+          <option value="1e6" selected>Fast online/offline estimate (1,000,000 guesses/sec)</option>
+          <option value="1e9">Aggressive offline estimate (1,000,000,000 guesses/sec)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="psc_check">Check Strength</button>
+        <button class="btn secondary" type="button" id="psc_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="psc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="psc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="psc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="psc-meter" aria-hidden="true"><div id="psc_bar"></div></div>
+      </div>
+
+      <div class="result" id="psc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="psc_feedback">Feedback</label>
+        <textarea id="psc_feedback" rows="8" readonly placeholder="Strength feedback will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="psc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="psc_privacy" style="margin-top:10px;">
+        Privacy: this checker runs entirely in your browser. Your password is not stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This checker scores a password using length, character diversity, repeated characters, sequences, keyboard-style runs,
+      and common weak-password patterns. It also estimates search space and rough guessing time under simplified assumptions.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>12345678</strong> → very weak due to common numeric pattern</li>
+      <li><strong>P@ssw0rd!</strong> → still weak/moderate because it resembles a common password pattern</li>
+      <li><strong>violet-lantern-river-42</strong> → usually much stronger due to higher length and unpredictability</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/password-entropy-calculator/">Password Entropy Calculator</a></li>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const passwordEl = document.getElementById("psc_password");
+  const showEl = document.getElementById("psc_show");
+  const assumptionEl = document.getElementById("psc_assumption");
+  const checkBtn = document.getElementById("psc_check");
+  const copyBtn = document.getElementById("psc_copy");
+  const clearBtn = document.getElementById("psc_clear");
+  const errEl = document.getElementById("psc_error");
+  const resultEl = document.getElementById("psc_result");
+  const cardsEl = document.getElementById("psc_cards");
+  const feedbackEl = document.getElementById("psc_feedback");
+  const tbodyEl = document.getElementById("psc_tbody");
+  const barEl = document.getElementById("psc_bar");
+
+  if (!passwordEl || !showEl || !assumptionEl || !checkBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !feedbackEl || !tbodyEl || !barEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    feedbackEl.value = "";
+    tbodyEl.innerHTML = "";
+    barEl.style.width = "0%";
+    barEl.style.background = "transparent";
+  }
+  function badge(text, type) {
+    const border =
+      type === "good" ? "rgba(34,197,94,.55)" :
+      type === "warn" ? "rgba(245,158,11,.55)" :
+      type === "bad" ? "rgba(239,68,68,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function hasLower(s) { return /[a-z]/.test(s); }
+  function hasUpper(s) { return /[A-Z]/.test(s); }
+  function hasDigit(s) { return /[0-9]/.test(s); }
+  function hasSymbol(s) { return /[^A-Za-z0-9]/.test(s); }
+
+  function getPoolSize(s) {
+    let n = 0;
+    if (hasLower(s)) n += 26;
+    if (hasUpper(s)) n += 26;
+    if (hasDigit(s)) n += 10;
+    if (hasSymbol(s)) n += 33;
+    return n;
+  }
+
+  function repeatedPenalty(s) {
+    const counts = {};
+    for (const ch of s) counts[ch] = (counts[ch] || 0) + 1;
+    let penalty = 0;
+    Object.keys(counts).forEach(function (k) {
+      if (counts[k] >= 3) penalty += counts[k] - 2;
+    });
+    return penalty;
+  }
+
+  function sequencePenalty(s) {
+    const lower = s.toLowerCase();
+    const seqs = [
+      "0123456789", "abcdefghijklmnopqrstuvwxyz",
+      "qwertyuiop", "asdfghjkl", "zxcvbnm"
+    ];
+    let penalty = 0;
+    seqs.forEach(function (seq) {
+      for (let i = 0; i <= seq.length - 3; i++) {
+        const chunk = seq.slice(i, i + 3);
+        const rev = chunk.split("").reverse().join("");
+        if (lower.indexOf(chunk) !== -1) penalty += 2;
+        if (lower.indexOf(rev) !== -1) penalty += 2;
+      }
+    });
+    return penalty;
+  }
+
+  function commonPatternPenalty(s) {
+    const lower = s.toLowerCase();
+    const weak = [
+      "password", "passw0rd", "admin", "qwerty", "letmein",
+      "welcome", "iloveyou", "monkey", "dragon", "abc123", "123456"
+    ];
+    let penalty = 0;
+    weak.forEach(function (w) {
+      if (lower.indexOf(w) !== -1) penalty += 12;
+    });
+    return penalty;
+  }
+
+  function estimateEntropyBits(s) {
+    if (!s) return 0;
+    const pool = Math.max(getPoolSize(s), 1);
+    const base = s.length * Math.log2(pool);
+
+    let bits = base;
+    bits -= repeatedPenalty(s) * 1.5;
+    bits -= sequencePenalty(s) * 1.2;
+    bits -= commonPatternPenalty(s);
+
+    if (s.length < 8) bits -= 10;
+    else if (s.length < 12) bits -= 4;
+
+    return Math.max(0, bits);
+  }
+
+  function formatDuration(seconds) {
+    if (!Number.isFinite(seconds) || seconds <= 0) return "instant";
+    const minute = 60, hour = 3600, day = 86400, year = 31557600;
+    if (seconds < 1) return "< 1 second";
+    if (seconds < minute) return Math.round(seconds) + " seconds";
+    if (seconds < hour) return (seconds / minute).toFixed(1) + " minutes";
+    if (seconds < day) return (seconds / hour).toFixed(1) + " hours";
+    if (seconds < year) return (seconds / day).toFixed(1) + " days";
+    if (seconds < year * 1000) return (seconds / year).toFixed(1) + " years";
+    return "> 1,000 years";
+  }
+
+  function classify(score) {
+    if (score < 25) return { label: "Very weak", type: "bad", color: "linear-gradient(90deg,#ef4444,#dc2626)" };
+    if (score < 45) return { label: "Weak", type: "bad", color: "linear-gradient(90deg,#f97316,#ea580c)" };
+    if (score < 65) return { label: "Moderate", type: "warn", color: "linear-gradient(90deg,#f59e0b,#d97706)" };
+    if (score < 85) return { label: "Strong", type: "good", color: "linear-gradient(90deg,#22c55e,#16a34a)" };
+    return { label: "Very strong", type: "good", color: "linear-gradient(90deg,#10b981,#059669)" };
+  }
+
+  function analyze() {
+    resetOutput();
+
+    const pw = String(passwordEl.value || "");
+    const guessesPerSecond = Number(assumptionEl.value || "1000000");
+
+    if (!pw) {
+      showError("Please enter a password.");
+      return null;
+    }
+
+    const lower = hasLower(pw);
+    const upper = hasUpper(pw);
+    const digit = hasDigit(pw);
+    const symbol = hasSymbol(pw);
+    const pool = getPoolSize(pw);
+    const bits = estimateEntropyBits(pw);
+
+    let score = 0;
+    score += Math.min(pw.length * 4, 48);
+    score += lower ? 8 : 0;
+    score += upper ? 8 : 0;
+    score += digit ? 8 : 0;
+    score += symbol ? 10 : 0;
+    score += pw.length >= 12 ? 10 : 0;
+    score += pw.length >= 16 ? 8 : 0;
+    score -= repeatedPenalty(pw) * 4;
+    score -= sequencePenalty(pw) * 2;
+    score -= commonPatternPenalty(pw);
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    const cls = classify(score);
+    const searchSpace = Math.pow(Math.max(pool, 1), pw.length);
+    const halfSearch = searchSpace / 2;
+    const crackSeconds = halfSearch / guessesPerSecond;
+
+    const warnings = [];
+    if (pw.length < 8) warnings.push("Use at least 8 characters.");
+    if (pw.length < 12) warnings.push("12+ characters is usually a better minimum.");
+    if (!lower) warnings.push("Add lowercase letters.");
+    if (!upper) warnings.push("Add uppercase letters.");
+    if (!digit) warnings.push("Add digits.");
+    if (!symbol) warnings.push("Add symbols or separators.");
+    if (repeatedPenalty(pw) > 0) warnings.push("Avoid repeated characters or repeated chunks.");
+    if (sequencePenalty(pw) > 0) warnings.push("Avoid sequences such as abc, 123, qwerty.");
+    if (commonPatternPenalty(pw) > 0) warnings.push("Avoid common password words or predictable substitutions.");
+
+    if (!warnings.length) {
+      warnings.push("No major common-pattern warning detected. Keep it unique and do not reuse it elsewhere.");
+    }
+
+    resultEl.innerHTML =
+      "<strong>Strength:</strong> " + cls.label +
+      "<br/><span class='note'>Rough crack-time estimate: " + formatDuration(crackSeconds) + "</span>";
+
+    barEl.style.width = score + "%";
+    barEl.style.background = cls.color;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(cls.label, cls.type) +
+      badge("Score: " + score + "/100", cls.type) +
+      badge("Entropy ≈ " + bits.toFixed(1) + " bits", "neutral") +
+      badge("Length: " + pw.length, pw.length >= 12 ? "good" : "warn") +
+      "</div>";
+
+    feedbackEl.value = warnings.map(function (w, i) { return (i + 1) + ". " + w; }).join("\n");
+
+    fillTable([
+      ["Length", String(pw.length)],
+      ["Lowercase", lower ? "yes" : "no"],
+      ["Uppercase", upper ? "yes" : "no"],
+      ["Digits", digit ? "yes" : "no"],
+      ["Symbols", symbol ? "yes" : "no"],
+      ["Character pool size (estimate)", pool.toLocaleString()],
+      ["Entropy estimate", bits.toFixed(1) + " bits"],
+      ["Search space estimate", Number.isFinite(searchSpace) ? searchSpace.toExponential(3) : "very large"],
+      ["Guess rate assumption", guessesPerSecond.toLocaleString() + " / sec"],
+      ["Rough crack-time estimate", formatDuration(crackSeconds)],
+    ]);
+
+    return {
+      label: cls.label,
+      score: score,
+      bits: bits,
+      crack: formatDuration(crackSeconds),
+      length: pw.length
+    };
+  }
+
+  async function copySummary() {
+    clearError();
+    const res = analyze();
+    if (!res) return;
+    const text =
+      "Password strength: " + res.label + "\n" +
+      "Score: " + res.score + "/100\n" +
+      "Entropy estimate: " + res.bits.toFixed(1) + " bits\n" +
+      "Length: " + res.length + "\n" +
+      "Crack-time estimate: " + res.crack;
+    try {
+      await navigator.clipboard.writeText(text);
+      resultEl.innerHTML = "<strong>Copied summary.</strong><br/><span class='note'>Strength summary copied to clipboard.</span>";
+    } catch (e) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    passwordEl.value = "";
+    showEl.checked = false;
+    passwordEl.type = "password";
+    assumptionEl.value = "1e6";
+    resetOutput();
+    passwordEl.focus();
+  }
+
+  checkBtn.addEventListener("click", analyze);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+  showEl.addEventListener("change", function () {
+    passwordEl.type = showEl.checked ? "text" : "password";
+  });
+  passwordEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") analyze();
+  });
+
+  clearAll();
+});
+</script>

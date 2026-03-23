@@ -1,0 +1,435 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Schema Markup Generator",
+  description:
+    "Generate JSON-LD schema markup for common page types with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/schema-markup-generator/",
+  order: 200,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/schema-markup-generator/";
+
+const faqs = [
+  {
+    q: "What does this schema generator create?",
+    a: "It generates JSON-LD structured data for common schema types such as WebPage, Article, FAQPage, BreadcrumbList, and SoftwareApplication.",
+  },
+  {
+    q: "Is this a full schema validator?",
+    a: "No. It helps generate structured data based on your inputs, but it does not guarantee eligibility for all rich results.",
+  },
+  {
+    q: "Can I edit the output after generation?",
+    a: "Yes. The generated JSON-LD appears in a text area so you can copy and further customize it.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All generation runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Schema Markup Generator — ${SITE_NAME}`}
+  description="Generate JSON-LD schema markup for common structured data types with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Schema Markup Generator"
+  intro="Generate JSON-LD markup for common schema types such as WebPage, Article, FAQPage, BreadcrumbList, and SoftwareApplication."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="schema-markup-generator">
+    <style is:inline>
+      #smg_name,
+      #smg_url,
+      #smg_desc,
+      #smg_type,
+      #smg_extra,
+      #smg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .smg-code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="smg_help smg_privacy">
+      <div class="field">
+        <label for="smg_type">Schema type</label>
+        <select id="smg_type">
+          <option value="WebPage" selected>WebPage</option>
+          <option value="Article">Article</option>
+          <option value="FAQPage">FAQPage</option>
+          <option value="BreadcrumbList">BreadcrumbList</option>
+          <option value="SoftwareApplication">SoftwareApplication</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="smg_name">Name / title</label>
+        <input id="smg_name" type="text" placeholder="e.g. JSON Validator" />
+      </div>
+
+      <div class="field">
+        <label for="smg_url">Main URL</label>
+        <input id="smg_url" type="url" inputmode="url" placeholder="https://example.com/page/" />
+      </div>
+
+      <div class="field">
+        <label for="smg_desc">Description (optional)</label>
+        <textarea id="smg_desc" rows="4" placeholder="Describe the page or application."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="smg_extra">Extra items (depends on type)</label>
+        <textarea
+          id="smg_extra"
+          rows="8"
+          spellcheck="false"
+          placeholder={`FAQPage:\nQuestion?|Answer text\n\nBreadcrumbList:\nHome|https://example.com/\nTools|https://example.com/tools/\nJSON Validator|https://example.com/tools/json-validator/\n\nArticle:\nauthor=Alex\ndatePublished=2025-03-01\n\nSoftwareApplication:\napplicationCategory=DeveloperApplication\noperatingSystem=Web\nprice=0\npriceCurrency=USD`}
+        ></textarea>
+      </div>
+
+      <p class="note" id="smg_help" style="margin-top:6px;">
+        This generator supports several common schema patterns. Use the extra input area according to the selected type.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="smg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="smg_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="smg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="smg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="smg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="smg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="smg_output">Generated JSON-LD</label>
+        <textarea
+          id="smg_output"
+          rows="16"
+          readonly
+          spellcheck="false"
+          placeholder="Generated schema markup will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="smg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="smg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No schema data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a schema type, enter the main fields, then optionally add type-specific items in the extra area.
+      The tool generates JSON-LD you can place inside a
+      <code>&lt;script type="application/ld+json"&gt;</code> tag.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>WebPage</strong> → basic page schema with name, url, and description</li>
+      <li><strong>FAQPage</strong> → one question/answer per line using <strong>Question?|Answer</strong></li>
+      <li><strong>BreadcrumbList</strong> → one item per line using <strong>Name|URL</strong></li>
+      <li><strong>SoftwareApplication</strong> → app schema with category, operating system, and price</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/schema-validator/">Schema Validator</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const typeEl = document.getElementById("smg_type");
+  const nameEl = document.getElementById("smg_name");
+  const urlEl = document.getElementById("smg_url");
+  const descEl = document.getElementById("smg_desc");
+  const extraEl = document.getElementById("smg_extra");
+  const generateBtn = document.getElementById("smg_generate");
+  const copyBtn = document.getElementById("smg_copy");
+  const clearBtn = document.getElementById("smg_clear");
+  const errEl = document.getElementById("smg_error");
+  const resultEl = document.getElementById("smg_result");
+  const cardsEl = document.getElementById("smg_cards");
+  const outputEl = document.getElementById("smg_output");
+  const tbodyEl = document.getElementById("smg_tbody");
+
+  if (!typeEl || !nameEl || !urlEl || !descEl || !extraEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function isValidUrl(str) {
+    try {
+      const u = new URL(str);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function parseKeyValueLines(text) {
+    const obj = {};
+    const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    for (const line of lines) {
+      const idx = line.indexOf("=");
+      if (idx === -1) continue;
+      const key = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      if (key) obj[key] = value;
+    }
+    return obj;
+  }
+
+  function generate() {
+    clearOutput();
+
+    const type = String(typeEl.value || "WebPage");
+    const name = String(nameEl.value || "").trim();
+    const url = String(urlEl.value || "").trim();
+    const desc = String(descEl.value || "").trim();
+    const extra = String(extraEl.value || "").trim();
+
+    if (!name) {
+      showError("Please enter a name/title.");
+      return;
+    }
+
+    if (!url || !isValidUrl(url)) {
+      showError("Please enter a valid http/https URL.");
+      return;
+    }
+
+    let schema = { "@context": "https://schema.org", "@type": type };
+
+    if (type === "WebPage") {
+      schema.name = name;
+      schema.url = url;
+      if (desc) schema.description = desc;
+    }
+
+    else if (type === "Article") {
+      schema.headline = name;
+      schema.url = url;
+      if (desc) schema.description = desc;
+      const kv = parseKeyValueLines(extra);
+      if (kv.author) schema.author = { "@type": "Person", name: kv.author };
+      if (kv.datePublished) schema.datePublished = kv.datePublished;
+      if (kv.dateModified) schema.dateModified = kv.dateModified;
+    }
+
+    else if (type === "FAQPage") {
+      const lines = extra.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      if (!lines.length) {
+        showError('FAQPage requires extra lines in the format "Question?|Answer text".');
+        return;
+      }
+      const items = [];
+      for (let i = 0; i < lines.length; i++) {
+        const parts = lines[i].split("|");
+        if (parts.length !== 2) {
+          showError("FAQ line " + (i + 1) + ' must use "Question?|Answer text".');
+          return;
+        }
+        const q = parts[0].trim();
+        const a = parts[1].trim();
+        if (!q || !a) {
+          showError("FAQ line " + (i + 1) + " is incomplete.");
+          return;
+        }
+        items.push({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        });
+      }
+      schema.mainEntity = items;
+    }
+
+    else if (type === "BreadcrumbList") {
+      const lines = extra.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      if (!lines.length) {
+        showError('BreadcrumbList requires extra lines in the format "Name|URL".');
+        return;
+      }
+      const items = [];
+      for (let i = 0; i < lines.length; i++) {
+        const parts = lines[i].split("|");
+        if (parts.length !== 2) {
+          showError("Breadcrumb line " + (i + 1) + ' must use "Name|URL".');
+          return;
+        }
+        const itemName = parts[0].trim();
+        const itemUrl = parts[1].trim();
+        if (!itemName || !isValidUrl(itemUrl)) {
+          showError("Breadcrumb line " + (i + 1) + " has an invalid name or URL.");
+          return;
+        }
+        items.push({
+          "@type": "ListItem",
+          position: i + 1,
+          name: itemName,
+          item: itemUrl,
+        });
+      }
+      schema.itemListElement = items;
+    }
+
+    else if (type === "SoftwareApplication") {
+      schema.name = name;
+      schema.url = url;
+      if (desc) schema.description = desc;
+      const kv = parseKeyValueLines(extra);
+      schema.applicationCategory = kv.applicationCategory || "UtilitiesApplication";
+      schema.operatingSystem = kv.operatingSystem || "Web";
+      schema.offers = {
+        "@type": "Offer",
+        price: kv.price || "0",
+        priceCurrency: kv.priceCurrency || "USD",
+      };
+    }
+
+    const output = JSON.stringify(schema, null, 2);
+    lastOutput = output;
+    outputEl.value = output;
+
+    const countMainEntity = Array.isArray(schema.mainEntity) ? schema.mainEntity.length : 0;
+    const countBreadcrumbs = Array.isArray(schema.itemListElement) ? schema.itemListElement.length : 0;
+
+    resultEl.innerHTML = "<strong>Generated " + type + " schema.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(type) +
+      badge("Valid base input") +
+      badge("Output ready") +
+      (countMainEntity ? badge(countMainEntity + " FAQ item" + (countMainEntity === 1 ? "" : "s")) : "") +
+      (countBreadcrumbs ? badge(countBreadcrumbs + " breadcrumb" + (countBreadcrumbs === 1 ? "" : "s")) : "") +
+      "</div>";
+
+    fillTable([
+      ["Schema type", type],
+      ["Name/title length", String(name.length)],
+      ["URL valid", "Yes"],
+      ["Description length", String(desc.length)],
+      ["Output length", String(output.length)],
+      ["FAQ items", String(countMainEntity)],
+      ["Breadcrumb items", String(countBreadcrumbs)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated schema to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated schema markup.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    typeEl.value = "WebPage";
+    nameEl.value = "";
+    urlEl.value = "";
+    descEl.value = "";
+    extraEl.value = "";
+    clearOutput();
+    nameEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  extraEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  });
+});
+</script>

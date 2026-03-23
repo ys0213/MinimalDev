@@ -1,0 +1,223 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Absolute Value Calculator",
+  description:
+    "Calculate the absolute value of a number with validation, sign classification, and FAQ support.",
+  href: "/math/absolute-value-calculator/",
+  order: 353,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/absolute-value-calculator/";
+
+const faqs = [
+  {
+    q: "What is absolute value?",
+    a: "Absolute value is the distance of a number from 0 on the number line, ignoring sign.",
+  },
+  {
+    q: "Why is absolute value never negative?",
+    a: "Because distance cannot be negative. Absolute value returns 0 or a positive number.",
+  },
+  {
+    q: "What is the absolute value of a negative number?",
+    a: "It is the positive version of that number. For example, |-5| = 5.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Absolute Value Calculator — ${SITE_NAME}`}
+  description="Absolute value calculator with validation, sign classification, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Absolute Value Calculator"
+  intro="Calculate the absolute value of any real number and see its sign classification."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="absolute-value-calculator">
+    <div class="form" role="form" aria-describedby="avc_help avc_privacy">
+      <div class="field">
+        <label for="avc_x">Value x</label>
+        <input id="avc_x" type="number" step="any" inputmode="decimal" placeholder="e.g., -12.5" />
+      </div>
+
+      <p class="note" id="avc_help" style="margin-top:6px;">
+        Absolute value is written as <strong>|x|</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="avc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="avc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="avc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="avc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="avc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="avc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="avc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="avc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Absolute value:
+      <br />
+      <strong>|x| = x</strong> if <strong>x ≥ 0</strong>
+      <br />
+      <strong>|x| = -x</strong> if <strong>x &lt; 0</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>|-5|</strong> = <strong>5</strong></li>
+      <li><strong>|7.2|</strong> = <strong>7.2</strong></li>
+      <li><strong>|0|</strong> = <strong>0</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/modulo-calculator/">Modulo Calculator</a></li>
+      <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
+      <li><a href="/math/scientific-calculator/">Scientific Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("avc_x");
+  const calcBtn = document.getElementById("avc_calc");
+  const demoBtn = document.getElementById("avc_fill_demo");
+  const clearBtn = document.getElementById("avc_clear");
+  const errorEl = document.getElementById("avc_error");
+  const resultEl = document.getElementById("avc_result");
+  const cardsEl = document.getElementById("avc_cards");
+  const tbodyEl = document.getElementById("avc_tbody");
+
+  if (!xEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter a value.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number.");
+    return n;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const x = getNum(xEl);
+      const abs = Math.abs(x);
+      const sign = x > 0 ? "Positive" : (x < 0 ? "Negative" : "Zero");
+
+      resultEl.innerHTML =
+        "<strong>Absolute value result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>|" + fmt(x) + "| = " + fmt(abs) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(sign + " input") +
+        badge("Distance from 0") +
+        badge("|x| = " + fmt(abs)) +
+        "</div>";
+
+      fillTable([
+        ["Input x", fmt(x)],
+        ["Sign of x", sign],
+        ["Absolute value |x|", fmt(abs)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate absolute value.");
+    }
+  }
+
+  function fillDemo() {
+    xEl.value = "-12.5";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  xEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

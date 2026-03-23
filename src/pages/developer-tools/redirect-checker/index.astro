@@ -1,0 +1,323 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Redirect Checker",
+  description:
+    "Inspect redirect chains from pasted URL sequences, compare hops, and review redirect status manually with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/redirect-checker/",
+  order: 189,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/redirect-checker/";
+
+const faqs = [
+  {
+    q: "What does this redirect checker do?",
+    a: "This tool analyzes a pasted sequence of URLs as a redirect chain and helps you review hop count, duplicates, protocol changes, and whether the chain ends on a final destination URL.",
+  },
+  {
+    q: "Does it fetch a live website automatically?",
+    a: "No. This page does not make network requests. You paste the redirect chain or list of hops you want to inspect.",
+  },
+  {
+    q: "What is a redirect chain?",
+    a: "A redirect chain happens when one URL redirects to another, which then redirects again before reaching the final destination.",
+  },
+  {
+    q: "Why is a shorter chain usually better?",
+    a: "Shorter chains are generally easier for crawlers and users because they reduce unnecessary hops.",
+  },
+  {
+    q: "Is my pasted URL list stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Redirect Checker — ${SITE_NAME}`}
+  description="Analyze pasted redirect chains, URL hops, and final destinations."
+  canonicalPath={CANONICAL_PATH}
+  h1="Redirect Checker"
+  intro="Paste a redirect chain or URL hop list to review chain length, repeated URLs, protocol changes, and final destination structure."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="redirect-checker">
+    <style is:inline>
+      .rc-wrap, .rc-wrap * { box-sizing: border-box; }
+      #rc_input,
+      #rc_output {
+        width:100%;
+        min-width:0;
+      }
+      .rc-output {
+        white-space:pre-wrap;
+        word-break:break-word;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:14px;
+      }
+    </style>
+
+    <div class="form rc-wrap" role="form" aria-describedby="rc_help rc_privacy">
+      <div class="field">
+        <label for="rc_input">Redirect chain or URL hop list</label>
+        <textarea id="rc_input" rows="12" spellcheck="false" placeholder="https://example.com&#10;https://www.example.com&#10;https://www.example.com/final-page/"></textarea>
+      </div>
+
+      <p class="note" id="rc_help" style="margin-top:6px;">
+        Paste one URL per line in the order the redirect chain happens. This tool analyzes the sequence you provide and does not fetch URLs from the web.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rc_check">Check Chain</button>
+        <button class="btn secondary" type="button" id="rc_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="rc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rc_output">Chain summary</label>
+        <textarea id="rc_output" rows="12" readonly spellcheck="false" placeholder="Redirect chain summary will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rc_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No URLs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a list of redirect hops in order, then review the chain length and whether the sequence looks efficient or repetitive.
+    </p>
+    <ul>
+      <li><strong>Hop count:</strong> how many redirects happen before the final destination</li>
+      <li><strong>Duplicates:</strong> repeated URLs in the chain</li>
+      <li><strong>Protocol changes:</strong> HTTP to HTTPS or similar changes between hops</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Single redirect:</strong> URL A → URL B</li>
+      <li><strong>Chain:</strong> URL A → URL B → URL C</li>
+      <li><strong>Possible issue:</strong> repeated or looping URLs in the sequence</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/canonical-tag-generator/">Canonical Tag Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/url-parser/">URL Parser</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("rc_input");
+  const checkBtn = document.getElementById("rc_check");
+  const fillBtn = document.getElementById("rc_fill_demo");
+  const clearBtn = document.getElementById("rc_clear");
+  const errorEl = document.getElementById("rc_error");
+  const resultEl = document.getElementById("rc_result");
+  const cardsEl = document.getElementById("rc_cards");
+  const outputEl = document.getElementById("rc_output");
+  const tbodyEl = document.getElementById("rc_tbody");
+
+  if (!inputEl || !checkBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function listFromTextarea(raw) {
+    return String(raw || "")
+      .split(/\r?\n/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  function isValidHttpUrl(v) {
+    try {
+      const u = new URL(v);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function checkChain() {
+    resetOutput();
+
+    const urls = listFromTextarea(inputEl.value);
+    if (urls.length === 0) {
+      showError("Please paste at least one URL.");
+      return;
+    }
+
+    for (let i = 0; i < urls.length; i++) {
+      if (!isValidHttpUrl(urls[i])) {
+        showError("Invalid URL found: " + urls[i]);
+        return;
+      }
+    }
+
+    const normalized = urls.map(function (u) { return new URL(u).href; });
+    const uniqueCount = new Set(normalized).size;
+    const duplicateCount = normalized.length - uniqueCount;
+    const hopCount = Math.max(0, normalized.length - 1);
+
+    let protocolChanges = 0;
+    let sameHostTransitions = 0;
+    let differentHostTransitions = 0;
+    const notes = [];
+
+    for (let i = 1; i < normalized.length; i++) {
+      const prev = new URL(normalized[i - 1]);
+      const curr = new URL(normalized[i]);
+
+      if (prev.protocol !== curr.protocol) protocolChanges += 1;
+      if (prev.hostname === curr.hostname) sameHostTransitions += 1;
+      else differentHostTransitions += 1;
+    }
+
+    if (duplicateCount > 0) notes.push("Repeated URLs found in chain.");
+    if (hopCount > 2) notes.push("Chain is longer than a simple one-hop redirect.");
+    if (normalized[0] === normalized[normalized.length - 1] && hopCount > 0) {
+      notes.push("First and last URL match. Review whether the sequence may loop.");
+    }
+
+    const lines = [];
+    lines.push("Redirect Chain Analysis");
+    lines.push("----------------------");
+    normalized.forEach(function (u, idx) {
+      if (idx === 0) lines.push("Start: " + u);
+      else if (idx === normalized.length - 1) lines.push("Final: " + u);
+      else lines.push("Hop " + idx + ": " + u);
+    });
+    lines.push("");
+    lines.push("Hop count: " + hopCount);
+    lines.push("Duplicate URLs: " + duplicateCount);
+    lines.push("Protocol changes: " + protocolChanges);
+    lines.push("Same-host transitions: " + sameHostTransitions);
+    lines.push("Different-host transitions: " + differentHostTransitions);
+    lines.push("Notes: " + (notes.length ? notes.join(" | ") : "No obvious issues detected"));
+
+    outputEl.value = lines.join("\n");
+
+    resultEl.innerHTML =
+      "<strong>Redirect chain analyzed.</strong><br/>" +
+      '<span class="note">' + (notes.length ? notes.join(" ") : "No obvious chain issues detected.") + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Hops: " + hopCount) +
+      badge("Duplicates: " + duplicateCount) +
+      badge("Protocol changes: " + protocolChanges) +
+      badge(hopCount <= 1 ? "Short chain" : "Multi-hop chain") +
+      "</div>";
+
+    fillTable([
+      ["URL count", String(normalized.length)],
+      ["Hop count", String(hopCount)],
+      ["Unique URLs", String(uniqueCount)],
+      ["Duplicate URLs", String(duplicateCount)],
+      ["Protocol changes", String(protocolChanges)],
+      ["Same-host transitions", String(sameHostTransitions)],
+      ["Different-host transitions", String(differentHostTransitions)],
+      ["First URL", normalized[0]],
+      ["Final URL", normalized[normalized.length - 1]],
+      ["Notes", notes.length ? notes.join(" | ") : "None detected"],
+    ]);
+  }
+
+  function fillDemo() {
+    inputEl.value =
+`http://example.com
+https://example.com
+https://www.example.com/tools/slug-generator/`;
+    resetOutput();
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  checkBtn.addEventListener("click", checkChain);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") checkChain();
+  });
+});
+</script>

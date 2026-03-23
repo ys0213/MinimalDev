@@ -1,0 +1,336 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base85 Decoder",
+  description:
+    "Decode Ascii85/Base85 back to UTF-8 text with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base85-decoder/",
+  order: 335,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base85-decoder/";
+
+const faqs = [
+  {
+    q: "What Base85 format does this decoder support?",
+    a: "It supports Ascii85-style Base85 input, including optional <~ ~> wrappers and the z shortcut.",
+  },
+  {
+    q: "Does it support the z shorthand?",
+    a: "Yes. A z is interpreted as a 4-byte zero block in valid positions.",
+  },
+  {
+    q: "What if the decoded bytes are not valid UTF-8?",
+    a: "This page expects the decoded bytes to represent UTF-8 text. Invalid UTF-8 content will cause an error.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base85 Decoder — ${SITE_NAME}`}
+  description="Decode Ascii85/Base85 back to UTF-8 text with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base85 Decoder"
+  intro="Decode Ascii85/Base85 text back to UTF-8 text. Supports optional wrappers and the z shortcut."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base85-decoder">
+    <style is:inline>
+      #b85d_input,
+      #b85d_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b85d-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b85d_help b85d_privacy">
+      <div class="field">
+        <label for="b85d_input">Base85 input</label>
+        <textarea id="b85d_input" rows="10" spellcheck="false" placeholder="Enter Ascii85/Base85 text to decode"></textarea>
+      </div>
+
+      <p class="note" id="b85d_help" style="margin-top:6px;">
+        Supports Ascii85 input, optional <strong>&lt;~ ~&gt;</strong> wrappers, and the <strong>z</strong> zero-block shortcut.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b85d_decode">Decode</button>
+        <button class="btn secondary" type="button" id="b85d_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b85d_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b85d_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b85d_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b85d_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b85d_output">Decoded text output</label>
+        <textarea id="b85d_output" rows="10" readonly spellcheck="false" placeholder="Decoded text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b85d_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b85d_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool decodes Ascii85/Base85 input into bytes and then interprets those bytes as UTF-8 text.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>z</strong> → represents four zero bytes</li>
+      <li><strong>&lt;~ ... ~&gt;</strong> → optional Ascii85 wrapper markers</li>
+      <li><strong>UTF-8 required</strong> → decoded bytes must represent valid UTF-8 text for display here</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base85-encoder/">Base85 Encoder</a></li>
+      <li><a href="/developer-tools/base32-decoder/">Base32 Decoder</a></li>
+      <li><a href="/developer-tools/base58-decoder/">Base58 Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b85d_input");
+  const outputEl = document.getElementById("b85d_output");
+  const decodeBtn = document.getElementById("b85d_decode");
+  const copyBtn = document.getElementById("b85d_copy");
+  const clearBtn = document.getElementById("b85d_clear");
+  const errEl = document.getElementById("b85d_error");
+  const resultEl = document.getElementById("b85d_result");
+  const cardsEl = document.getElementById("b85d_cards");
+  const tbodyEl = document.getElementById("b85d_tbody");
+
+  if (!inputEl || !outputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function ascii85Decode(input) {
+    let s = String(input || "").trim();
+
+    if (s.startsWith("<~") && s.endsWith("~>")) {
+      s = s.slice(2, -2);
+    }
+
+    s = s.replace(/\s+/g, "");
+
+    const bytes = [];
+    let group = [];
+
+    function pushTuple(tuple, count) {
+      bytes.push((tuple >>> 24) & 255);
+      bytes.push((tuple >>> 16) & 255);
+      bytes.push((tuple >>> 8) & 255);
+      bytes.push(tuple & 255);
+      if (count < 5) {
+        bytes.length -= (5 - count);
+      }
+    }
+
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+
+      if (ch === "z") {
+        if (group.length !== 0) {
+          throw new Error("Invalid z shortcut placement.");
+        }
+        bytes.push(0, 0, 0, 0);
+        continue;
+      }
+
+      const code = ch.charCodeAt(0);
+      if (code < 33 || code > 117) {
+        throw new Error('Invalid Base85 character: "' + ch + '"');
+      }
+
+      group.push(code - 33);
+
+      if (group.length === 5) {
+        let tuple = 0;
+        for (let j = 0; j < 5; j++) {
+          tuple = tuple * 85 + group[j];
+        }
+        pushTuple(tuple, 5);
+        group = [];
+      }
+    }
+
+    if (group.length > 0) {
+      const origLen = group.length;
+      while (group.length < 5) group.push(84);
+      let tuple = 0;
+      for (let j = 0; j < 5; j++) {
+        tuple = tuple * 85 + group[j];
+      }
+      pushTuple(tuple, origLen);
+    }
+
+    return new Uint8Array(bytes);
+  }
+
+  function decode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw.length) {
+      showError("Please enter Base85 text to decode.");
+      return;
+    }
+
+    let bytes;
+    try {
+      bytes = ascii85Decode(raw);
+    } catch (e) {
+      showError(e && e.message ? e.message : "Invalid Base85 input.");
+      return;
+    }
+
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (_) {
+      showError("Decoded bytes are not valid UTF-8 text.");
+      return;
+    }
+
+    lastOutput = text;
+    outputEl.value = text;
+
+    resultEl.innerHTML = "<strong>Base85 decoded to UTF-8 text.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Ascii85") +
+      badge("Valid Base85") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      badge("UTF-8 decoded") +
+      (raw.includes("z") ? badge("z shortcut present") : "") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Decoded byte length", String(bytes.length)],
+      ["Output characters", String(text.length)],
+      ["Wrapper markers", raw.startsWith("<~") && raw.endsWith("~>") ? "Yes" : "No"],
+      ["z shortcut present", raw.includes("z") ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded text.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decode();
+  });
+});
+</script>

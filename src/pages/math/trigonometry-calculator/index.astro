@@ -1,0 +1,287 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Trigonometry Calculator",
+  description:
+    "Calculate sin, cos, and tan from an angle in degrees or radians. Includes validation, result cards, and FAQ schema.",
+  href: "/math/trigonometry-calculator/",
+  order: 391,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/trigonometry-calculator/";
+
+const faqs = [
+  {
+    q: "What does this trigonometry calculator compute?",
+    a: "It computes sine, cosine, and tangent for a given angle in degrees or radians.",
+  },
+  {
+    q: "Can I use degrees or radians?",
+    a: "Yes. You can switch between degree mode and radian mode.",
+  },
+  {
+    q: "Why can tangent be undefined?",
+    a: "Tangent is undefined where cosine equals 0, such as 90° + 180°k in degree mode.",
+  },
+  {
+    q: "What formulas are used?",
+    a: "This page uses the standard trigonometric functions sin(θ), cos(θ), and tan(θ) = sin(θ) / cos(θ).",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Trigonometry Calculator — ${SITE_NAME}`}
+  description="Calculate sin, cos, and tan from an angle in degrees or radians."
+  canonicalPath={CANONICAL_PATH}
+  h1="Trigonometry Calculator"
+  intro="Calculate sine, cosine, and tangent from an angle in degrees or radians. This page also shows cotangent, secant, and cosecant when defined."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="trigonometry-calculator">
+    <style is:inline>
+      .trig-wrap, .trig-wrap * { box-sizing: border-box; }
+      .trig-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .trig-grid input,
+      .trig-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .trig-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .trig-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form trig-wrap" role="form" aria-describedby="trig_help trig_privacy">
+      <div class="trig-grid">
+        <div class="field">
+          <label for="trig_angle">Angle</label>
+          <input id="trig_angle" type="number" inputmode="decimal" step="any" placeholder="e.g., 30" />
+        </div>
+
+        <div class="field">
+          <label for="trig_mode">Angle unit</label>
+          <select id="trig_mode">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="trig_help" style="margin-top:6px;">
+        Computes:
+        <br />
+        <span class="trig-code">sin(θ), cos(θ), tan(θ)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="trig_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="trig_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="trig_clear">Clear</button>
+      </div>
+
+      <div class="result" id="trig_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="trig_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="trig_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Function</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="trig_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="trig_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts the input angle to radians internally when needed, then evaluates
+      the standard trigonometric functions.
+    </p>
+    <p class="note">
+      It also reports reciprocal functions when defined:
+      <br />
+      <strong>sec(θ) = 1 / cos(θ)</strong>,
+      <strong>csc(θ) = 1 / sin(θ)</strong>,
+      <strong>cot(θ) = cos(θ) / sin(θ)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>30°</strong> → sin = 0.5, cos ≈ 0.866, tan ≈ 0.577</li>
+      <li><strong>π/2</strong> radians ≈ 1.5707963268 → sin = 1, cos ≈ 0</li>
+      <li><strong>45°</strong> → sin = cos ≈ 0.7071, tan = 1</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sin-calculator/">Sin Calculator</a></li>
+      <li><a href="/math/cos-calculator/">Cos Calculator</a></li>
+      <li><a href="/math/tan-calculator/">Tan Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const angleEl = document.getElementById("trig_angle");
+  const modeEl = document.getElementById("trig_mode");
+  const calcBtn = document.getElementById("trig_calc");
+  const fillBtn = document.getElementById("trig_fill_demo");
+  const clearBtn = document.getElementById("trig_clear");
+  const errorEl = document.getElementById("trig_error");
+  const resultEl = document.getElementById("trig_result");
+  const cardsEl = document.getElementById("trig_cards");
+  const tbodyEl = document.getElementById("trig_tbody");
+
+  if (!angleEl || !modeEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    if (!Number.isFinite(n)) return "Undefined";
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 12 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function toRadians(angle, mode) {
+    return mode === "deg" ? angle * Math.PI / 180 : angle;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function safeValue(x) {
+    return Math.abs(x) < 1e-12 ? 0 : x;
+  }
+
+  function compute() {
+    clearOutput();
+
+    const angle = Number(String(angleEl.value || "").trim());
+    const mode = String(modeEl.value || "deg");
+
+    if (!Number.isFinite(angle)) {
+      showError("Please enter a valid angle.");
+      return;
+    }
+
+    const radians = toRadians(angle, mode);
+    const s = safeValue(Math.sin(radians));
+    const c = safeValue(Math.cos(radians));
+    const t = Math.abs(c) < 1e-12 ? NaN : safeValue(s / c);
+    const cot = Math.abs(s) < 1e-12 ? NaN : safeValue(c / s);
+    const sec = Math.abs(c) < 1e-12 ? NaN : safeValue(1 / c);
+    const csc = Math.abs(s) < 1e-12 ? NaN : safeValue(1 / s);
+
+    let label = "General angle";
+    if (Math.abs(t) < 1e-12) label = "Tangent near zero";
+    if (!Number.isFinite(t)) label = "Tangent undefined";
+
+    resultEl.innerHTML =
+      "<strong>Trigonometry result</strong><br/>" +
+      "<span class='trig-code'>sin = " + fmt(s, 12) + ", cos = " + fmt(c, 12) + ", tan = " + fmt(t, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "deg" ? "Degree mode" : "Radian mode") +
+      badge(label) +
+      badge("Angle = " + fmt(angle, 8)) +
+      "</div>";
+
+    fillTable([
+      ["Angle", fmt(angle, 10) + (mode === "deg" ? "°" : " rad")],
+      ["Radians", fmt(radians, 12)],
+      ["sin(θ)", fmt(s, 12)],
+      ["cos(θ)", fmt(c, 12)],
+      ["tan(θ)", fmt(t, 12)],
+      ["cot(θ)", fmt(cot, 12)],
+      ["sec(θ)", fmt(sec, 12)],
+      ["csc(θ)", fmt(csc, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "deg";
+    angleEl.value = "30";
+    clearOutput();
+  }
+
+  function reset() {
+    angleEl.value = "";
+    modeEl.value = "deg";
+    clearOutput();
+    angleEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [angleEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

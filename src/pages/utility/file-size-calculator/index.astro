@@ -1,0 +1,699 @@
+---
+// /src/pages/utility/file-size-calculator/index.astro
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "File Size Calculator",
+  description:
+    "Calculate total file sizes across multiple files, quantities, and unit types. Includes decimal/binary systems, validation, result cards, accessibility, and FAQ schema.",
+  href: "/utility/file-size-calculator/",
+  order: 242,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/file-size-calculator/";
+
+const faqs = [
+  {
+    q: "What does the file size calculator do?",
+    a: "It adds multiple file sizes together, optionally multiplying each row by a quantity. This helps estimate storage, upload size, backup size, and transfer totals.",
+  },
+  {
+    q: "Can I mix units like MB and GiB?",
+    a: "Yes. Each row can use a different unit. The calculator converts each row to bytes first, then computes the total.",
+  },
+  {
+    q: "What is the difference between decimal and binary totals?",
+    a: "Decimal units are based on powers of 1000, while binary units are based on powers of 1024. The same byte total can be displayed differently in each system.",
+  },
+  {
+    q: "Can I calculate repeated files?",
+    a: "Yes. Each row includes a quantity field, so you can calculate totals such as 50 photos at 6 MB each or 12 videos at 1.4 GiB each.",
+  },
+  {
+    q: "Is my data stored anywhere?",
+    a: "No. The calculator runs locally in your browser and does not store or transmit your entries.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`File Size Calculator — ${SITE_NAME}`}
+  description="Calculate total file size from multiple entries with quantities, decimal/binary output, result cards, validation, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="File Size Calculator"
+  intro="Add up multiple file sizes, mix units, apply quantities, and estimate total storage or transfer size. Useful for uploads, cloud backups, media libraries, and project packaging."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="file-size-calculator">
+    <style is:inline>
+      .fscalc-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      .fscalc-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 720px;
+      }
+
+      .fscalc-table th,
+      .fscalc-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        vertical-align: top;
+        text-align: left;
+        word-break: break-word;
+      }
+
+      .fscalc-table input,
+      .fscalc-table select {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .fscalc-cards,
+      .fscalc-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .fscalc-card {
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 14px;
+        padding: 14px;
+        flex: 1 1 190px;
+        min-width: 0;
+      }
+
+      .fscalc-big {
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.2;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        margin-top: 6px;
+      }
+
+      .fscalc-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 720px) {
+        .fscalc-big {
+          font-size: 22px;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fscalc_help fscalc_privacy">
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="min-width:220px; flex:1 1 220px;">
+          <label for="fscalc_display_mode">Preferred display mode</label>
+          <select id="fscalc_display_mode">
+            <option value="both" selected>Show decimal and binary totals</option>
+            <option value="decimal">Prefer decimal totals</option>
+            <option value="binary">Prefer binary totals</option>
+          </select>
+        </div>
+
+        <div class="field" style="min-width:180px; flex:1 1 180px;">
+          <label for="fscalc_precision">Displayed decimals</label>
+          <select id="fscalc_precision">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+
+        <div class="field" style="min-width:220px; flex:1 1 220px;">
+          <label>
+            <input id="fscalc_auto_best" type="checkbox" checked />
+            Show automatic best-fit unit
+          </label>
+          <p class="note" style="margin-top:6px;">
+            Automatically chooses a readable unit such as MB, GB, MiB, or GiB for the final total.
+          </p>
+        </div>
+      </div>
+
+      <p class="note" id="fscalc_help" style="margin-top:8px;">
+        Add rows for each file type or batch. Example: 250 images at 6 MB each, 12 videos at 1.4 GiB each, and 1 archive at 850 MB.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="btn" type="button" id="fscalc_add_row">Add Row</button>
+        <button class="btn" type="button" id="fscalc_calculate">Calculate Total</button>
+        <button class="btn secondary" type="button" id="fscalc_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="fscalc_clear">Clear All</button>
+      </div>
+
+      <div class="result" id="fscalc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" style="margin-top:12px;">
+        <strong>Entries</strong>
+        <div class="fscalc-scroll" style="margin-top:10px;">
+          <table class="fscalc-table" aria-label="File size entry table">
+            <thead>
+              <tr>
+                <th scope="col" style="width:22%;">Label</th>
+                <th scope="col" style="width:16%;">Size value</th>
+                <th scope="col" style="width:16%;">Unit</th>
+                <th scope="col" style="width:16%;">Quantity</th>
+                <th scope="col" style="width:20%;">Row total</th>
+                <th scope="col" style="width:10%;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="fscalc_rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="result" id="fscalc_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="fscalc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" style="margin-top:12px;">
+        <strong>Detailed row breakdown</strong>
+        <div class="fscalc-scroll" style="margin-top:10px;">
+          <table class="fscalc-table" aria-label="Detailed row calculation table">
+            <thead>
+              <tr>
+                <th scope="col" style="width:20%;">Label</th>
+                <th scope="col" style="width:18%;">Input</th>
+                <th scope="col" style="width:12%;">Qty</th>
+                <th scope="col" style="width:20%;">Row bytes</th>
+                <th scope="col" style="width:30%;">Readable row total</th>
+              </tr>
+            </thead>
+            <tbody id="fscalc_breakdown"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="result" style="margin-top:12px;">
+        <strong>Total conversion table</strong>
+        <div class="fscalc-scroll" style="margin-top:10px;">
+          <table class="fscalc-table" aria-label="Total conversion table">
+            <thead>
+              <tr>
+                <th scope="col" style="width:26%;">Unit</th>
+                <th scope="col" style="width:20%;">System</th>
+                <th scope="col" style="width:54%;">Total value</th>
+              </tr>
+            </thead>
+            <tbody id="fscalc_totals"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="note" id="fscalc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No file-size data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts every row to bytes, multiplies by quantity, sums all rows, and then expresses the final total in multiple unit systems.
+    </p>
+    <ul>
+      <li><strong>Mixed units supported:</strong> MB, GB, TB, KiB, MiB, GiB, TiB, and bytes</li>
+      <li><strong>Quantity support:</strong> repeat the same file size across many files</li>
+      <li><strong>Detailed total:</strong> includes exact bytes plus decimal and binary interpretations</li>
+      <li><strong>Readable output:</strong> automatically highlights a best-fit unit for the total</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>250 × 6 MB</strong> → estimate a photo library total</li>
+      <li><strong>12 × 1.4 GiB</strong> → estimate a video backup batch</li>
+      <li><strong>3 × 850 MB + 1 × 12 GiB</strong> → compare project packaging totals</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/file-size-converter/">File Size Converter</a></li>
+      <li><a href="/utility/image-metadata-viewer/">Image Metadata Viewer</a></li>
+      <li><a href="/utility/base64/">Base64</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rowsEl = document.getElementById("fscalc_rows");
+  const displayModeEl = document.getElementById("fscalc_display_mode");
+  const precisionEl = document.getElementById("fscalc_precision");
+  const autoBestEl = document.getElementById("fscalc_auto_best");
+  const addRowBtn = document.getElementById("fscalc_add_row");
+  const calcBtn = document.getElementById("fscalc_calculate");
+  const copyBtn = document.getElementById("fscalc_copy");
+  const clearBtn = document.getElementById("fscalc_clear");
+  const errEl = document.getElementById("fscalc_error");
+  const summaryEl = document.getElementById("fscalc_summary");
+  const cardsEl = document.getElementById("fscalc_cards");
+  const breakdownEl = document.getElementById("fscalc_breakdown");
+  const totalsEl = document.getElementById("fscalc_totals");
+
+  if (
+    !rowsEl || !displayModeEl || !precisionEl || !autoBestEl ||
+    !addRowBtn || !calcBtn || !copyBtn || !clearBtn ||
+    !errEl || !summaryEl || !cardsEl || !breakdownEl || !totalsEl
+  ) return;
+
+  const UNITS = {
+    B:   { label: "Bytes (B)", system: "Decimal", factor: 1, type: "decimal" },
+    KB:  { label: "Kilobytes (KB)", system: "Decimal", factor: 1000, type: "decimal" },
+    MB:  { label: "Megabytes (MB)", system: "Decimal", factor: 1000 ** 2, type: "decimal" },
+    GB:  { label: "Gigabytes (GB)", system: "Decimal", factor: 1000 ** 3, type: "decimal" },
+    TB:  { label: "Terabytes (TB)", system: "Decimal", factor: 1000 ** 4, type: "decimal" },
+    KiB: { label: "Kibibytes (KiB)", system: "Binary", factor: 1024, type: "binary" },
+    MiB: { label: "Mebibytes (MiB)", system: "Binary", factor: 1024 ** 2, type: "binary" },
+    GiB: { label: "Gibibytes (GiB)", system: "Binary", factor: 1024 ** 3, type: "binary" },
+    TiB: { label: "Tebibytes (TiB)", system: "Binary", factor: 1024 ** 4, type: "binary" },
+  };
+
+  const ORDERED_UNITS = ["B", "KB", "MB", "GB", "TB", "KiB", "MiB", "GiB", "TiB"];
+  let rowCounter = 0;
+  let lastCopyPayload = "";
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    breakdownEl.innerHTML = "";
+    totalsEl.innerHTML = "";
+    lastCopyPayload = "";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      kind === "accent" ? "rgba(96,165,250,0.55)" :
+      "rgba(255,255,255,0.18)";
+    return '<span style="display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, note) {
+    return (
+      '<div class="fscalc-card">' +
+        "<strong>" + escapeHtml(title) + "</strong>" +
+        '<div class="fscalc-big">' + escapeHtml(value) + "</div>" +
+        '<div class="note" style="margin-top:6px;">' + note + "</div>" +
+      "</div>"
+    );
+  }
+
+  function formatNumber(value, decimals) {
+    if (!Number.isFinite(value)) return "—";
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    });
+  }
+
+  function bestUnit(bytes, preferredType) {
+    let candidates = ORDERED_UNITS;
+    if (preferredType === "decimal") {
+      candidates = ORDERED_UNITS.filter(function (u) { return u === "B" || UNITS[u].type === "decimal"; });
+    } else if (preferredType === "binary") {
+      candidates = ORDERED_UNITS.filter(function (u) { return u === "B" || UNITS[u].type === "binary"; });
+    }
+
+    let best = "B";
+    candidates.forEach(function (u) {
+      const v = bytes / UNITS[u].factor;
+      if (Math.abs(v) >= 1 && Math.abs(v) < 1000) best = u;
+    });
+    return best;
+  }
+
+  function parseNumber(value) {
+    const n = Number(String(value || "").trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function rowTemplate(id, label, size, unit, qty) {
+    return (
+      '<tr data-row-id="' + id + '">' +
+        '<td><input type="text" data-role="label" aria-label="Label for row ' + id + '" value="' + escapeHtml(label) + '" placeholder="e.g. Photos" /></td>' +
+        '<td><input type="number" inputmode="decimal" data-role="size" aria-label="Size value for row ' + id + '" value="' + escapeHtml(size) + '" placeholder="e.g. 6" /></td>' +
+        '<td>' +
+          '<select data-role="unit" aria-label="Unit for row ' + id + '">' +
+            ORDERED_UNITS.map(function (u) {
+              return '<option value="' + u + '"' + (u === unit ? " selected" : "") + ">" + u + "</option>";
+            }).join("") +
+          "</select>" +
+        "</td>" +
+        '<td><input type="number" inputmode="numeric" min="1" step="1" data-role="qty" aria-label="Quantity for row ' + id + '" value="' + escapeHtml(qty) + '" placeholder="e.g. 10" /></td>' +
+        '<td data-role="row-total" class="fscalc-mono">—</td>' +
+        '<td><button class="btn secondary" type="button" data-role="remove">Remove</button></td>' +
+      "</tr>"
+    );
+  }
+
+  function addRow(data) {
+    rowCounter += 1;
+    const id = rowCounter;
+    const defaults = data || {};
+    rowsEl.insertAdjacentHTML(
+      "beforeend",
+      rowTemplate(
+        id,
+        defaults.label || "",
+        defaults.size || "",
+        defaults.unit || "MB",
+        defaults.qty || "1"
+      )
+    );
+    bindRow(rowsEl.querySelector('tr[data-row-id="' + id + '"]'));
+  }
+
+  function bindRow(tr) {
+    if (!tr) return;
+    const removeBtn = tr.querySelector('[data-role="remove"]');
+    const inputs = tr.querySelectorAll("input, select");
+
+    if (removeBtn) {
+      removeBtn.addEventListener("click", function () {
+        tr.remove();
+        if (!rowsEl.querySelector("tr")) addStarterRows();
+        calculate();
+      });
+    }
+
+    inputs.forEach(function (input) {
+      input.addEventListener("input", function () {
+        updateSingleRowPreview(tr);
+      });
+      input.addEventListener("change", function () {
+        calculate();
+      });
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") calculate();
+      });
+    });
+
+    updateSingleRowPreview(tr);
+  }
+
+  function getRowData(tr) {
+    const labelEl = tr.querySelector('[data-role="label"]');
+    const sizeEl = tr.querySelector('[data-role="size"]');
+    const unitEl = tr.querySelector('[data-role="unit"]');
+    const qtyEl = tr.querySelector('[data-role="qty"]');
+
+    const label = String(labelEl && labelEl.value ? labelEl.value : "").trim() || "Untitled";
+    const size = parseNumber(sizeEl && sizeEl.value);
+    const unit = String(unitEl && unitEl.value ? unitEl.value : "MB");
+    const qty = parseNumber(qtyEl && qtyEl.value);
+
+    return { label, size, unit, qty };
+  }
+
+  function updateSingleRowPreview(tr) {
+    const totalCell = tr.querySelector('[data-role="row-total"]');
+    if (!totalCell) return;
+
+    const row = getRowData(tr);
+
+    if (!Number.isFinite(row.size) || row.size < 0 || !Number.isFinite(row.qty) || row.qty < 0 || !UNITS[row.unit]) {
+      totalCell.textContent = "—";
+      return;
+    }
+
+    const rowBytes = row.size * UNITS[row.unit].factor * row.qty;
+    const decimals = parseInt(String(precisionEl.value || "2"), 10);
+    const best = bestUnit(rowBytes, UNITS[row.unit].type);
+    totalCell.textContent = formatNumber(rowBytes / UNITS[best].factor, decimals) + " " + best;
+  }
+
+  function addStarterRows() {
+    rowsEl.innerHTML = "";
+    addRow({ label: "Photos", size: "6", unit: "MB", qty: "250" });
+    addRow({ label: "Videos", size: "1.4", unit: "GiB", qty: "12" });
+    addRow({ label: "Archive", size: "850", unit: "MB", qty: "1" });
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const rows = Array.from(rowsEl.querySelectorAll("tr"));
+    if (!rows.length) {
+      showError("Add at least one row before calculating.");
+      return;
+    }
+
+    const decimals = parseInt(String(precisionEl.value || "2"), 10);
+    const displayMode = String(displayModeEl.value || "both");
+    const autoBest = !!autoBestEl.checked;
+
+    let totalBytes = 0;
+    let validRows = 0;
+    const breakdownRows = [];
+    const errors = [];
+
+    rows.forEach(function (tr, index) {
+      const data = getRowData(tr);
+
+      if (!UNITS[data.unit]) {
+        errors.push("Row " + (index + 1) + ": invalid unit.");
+        return;
+      }
+      if (!Number.isFinite(data.size)) {
+        errors.push("Row " + (index + 1) + ": size is missing or invalid.");
+        return;
+      }
+      if (data.size < 0) {
+        errors.push("Row " + (index + 1) + ": size cannot be negative.");
+        return;
+      }
+      if (!Number.isFinite(data.qty)) {
+        errors.push("Row " + (index + 1) + ": quantity is missing or invalid.");
+        return;
+      }
+      if (data.qty < 0) {
+        errors.push("Row " + (index + 1) + ": quantity cannot be negative.");
+        return;
+      }
+
+      const integerQty = Math.floor(data.qty);
+      const rowBytes = data.size * UNITS[data.unit].factor * integerQty;
+
+      if (!Number.isFinite(rowBytes)) {
+        errors.push("Row " + (index + 1) + ": value is too large for safe browser calculation.");
+        return;
+      }
+
+      validRows += 1;
+      totalBytes += rowBytes;
+
+      const bestDecimal = bestUnit(rowBytes, "decimal");
+      const bestBinary = bestUnit(rowBytes, "binary");
+
+      breakdownRows.push({
+        label: data.label,
+        input: formatNumber(data.size, decimals) + " " + data.unit,
+        qty: integerQty,
+        bytes: rowBytes,
+        display:
+          formatNumber(rowBytes / UNITS[bestDecimal].factor, decimals) + " " + bestDecimal +
+          " / " +
+          formatNumber(rowBytes / UNITS[bestBinary].factor, decimals) + " " + bestBinary
+      });
+    });
+
+    if (errors.length) {
+      showError(errors[0]);
+      return;
+    }
+
+    if (validRows === 0) {
+      showError("Enter at least one valid row.");
+      return;
+    }
+
+    const bestDecimalTotal = bestUnit(totalBytes, "decimal");
+    const bestBinaryTotal = bestUnit(totalBytes, "binary");
+    const bestAutoTotal = bestUnit(totalBytes, displayMode === "binary" ? "binary" : "decimal");
+
+    const decimalDisplay = formatNumber(totalBytes / UNITS[bestDecimalTotal].factor, decimals) + " " + bestDecimalTotal;
+    const binaryDisplay = formatNumber(totalBytes / UNITS[bestBinaryTotal].factor, decimals) + " " + bestBinaryTotal;
+    const exactBytesDisplay = formatNumber(totalBytes, 0) + " B";
+
+    summaryEl.innerHTML =
+      "<div style='display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;'>" +
+        "<strong>Total calculated successfully</strong>" +
+        "<div class='fscalc-badges'>" +
+          badge(validRows + " valid rows", "good") +
+          badge("Exact bytes ready", "accent") +
+          badge(displayMode === "both" ? "Showing both systems" : "Preferring " + displayMode, "neutral") +
+        "</div>" +
+      "</div>" +
+      "<div class='note' style='margin-top:8px;'>Each row was converted to bytes, multiplied by quantity, then added into a single grand total.</div>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div class='fscalc-badges' style='margin-bottom:10px;'>" +
+        badge("Total rows used: " + validRows, "good") +
+        badge("Exact total: " + exactBytesDisplay, "accent") +
+        (autoBest ? badge("Best-fit unit enabled", "neutral") : "") +
+      "</div>" +
+      "<div class='fscalc-cards'>" +
+        (displayMode !== "binary" ? card("Decimal total", decimalDisplay, "1000-based readable total") : "") +
+        (displayMode !== "decimal" ? card("Binary total", binaryDisplay, "1024-based readable total") : "") +
+        card("Exact bytes", exactBytesDisplay, "Base total for all conversions") +
+        (autoBest ? card("Best-fit total", formatNumber(totalBytes / UNITS[bestAutoTotal].factor, decimals) + " " + bestAutoTotal, "Automatic readable highlight") : "") +
+      "</div>";
+
+    breakdownEl.innerHTML = "";
+    breakdownRows.forEach(function (row) {
+      const tr = document.createElement("tr");
+
+      const tdLabel = document.createElement("td");
+      const tdInput = document.createElement("td");
+      const tdQty = document.createElement("td");
+      const tdBytes = document.createElement("td");
+      const tdReadable = document.createElement("td");
+
+      tdLabel.textContent = row.label;
+      tdInput.innerHTML = "<span class='fscalc-mono'>" + escapeHtml(row.input) + "</span>";
+      tdQty.textContent = String(row.qty);
+      tdBytes.innerHTML = "<span class='fscalc-mono'>" + escapeHtml(formatNumber(row.bytes, 0) + " B") + "</span>";
+      tdReadable.textContent = row.display;
+
+      tr.appendChild(tdLabel);
+      tr.appendChild(tdInput);
+      tr.appendChild(tdQty);
+      tr.appendChild(tdBytes);
+      tr.appendChild(tdReadable);
+      breakdownEl.appendChild(tr);
+    });
+
+    totalsEl.innerHTML = "";
+    ORDERED_UNITS.forEach(function (u) {
+      if (displayMode === "decimal" && u !== "B" && UNITS[u].type !== "decimal") return;
+      if (displayMode === "binary" && u !== "B" && UNITS[u].type !== "binary") return;
+
+      const tr = document.createElement("tr");
+      const tdUnit = document.createElement("td");
+      const tdSystem = document.createElement("td");
+      const tdValue = document.createElement("td");
+
+      const value = totalBytes / UNITS[u].factor;
+      tdUnit.innerHTML = "<strong>" + escapeHtml(u) + "</strong><br><span class='note'>" + escapeHtml(UNITS[u].label) + "</span>";
+      tdSystem.textContent = UNITS[u].system;
+      tdValue.textContent = formatNumber(value, decimals) + " " + u;
+
+      tr.appendChild(tdUnit);
+      tr.appendChild(tdSystem);
+      tr.appendChild(tdValue);
+      totalsEl.appendChild(tr);
+    });
+
+    lastCopyPayload =
+      "File Size Calculator Summary\n" +
+      "----------------------------\n" +
+      "Rows used: " + validRows + "\n" +
+      "Exact total: " + exactBytesDisplay + "\n" +
+      "Decimal total: " + decimalDisplay + "\n" +
+      "Binary total: " + binaryDisplay + "\n\n" +
+      breakdownRows.map(function (row, idx) {
+        return (
+          (idx + 1) + ". " + row.label + "\n" +
+          "   Input: " + row.input + "\n" +
+          "   Qty: " + row.qty + "\n" +
+          "   Row bytes: " + formatNumber(row.bytes, 0) + " B\n" +
+          "   Readable: " + row.display
+        );
+      }).join("\n\n");
+  }
+
+  async function copySummary() {
+    clearError();
+    if (!lastCopyPayload) {
+      showError("Calculate the total first, then copy the summary.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastCopyPayload);
+      summaryEl.innerHTML =
+        "<strong>Copied.</strong><div class='note' style='margin-top:6px;'>The total summary and row breakdown were copied to your clipboard.</div>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    displayModeEl.value = "both";
+    precisionEl.value = "2";
+    autoBestEl.checked = true;
+    addStarterRows();
+    resetOutput();
+  }
+
+  addRowBtn.addEventListener("click", function () {
+    addRow({ label: "", size: "", unit: "MB", qty: "1" });
+  });
+
+  calcBtn.addEventListener("click", calculate);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+
+  [displayModeEl, precisionEl, autoBestEl].forEach(function (el) {
+    el.addEventListener("change", function () {
+      Array.from(rowsEl.querySelectorAll("tr")).forEach(updateSingleRowPreview);
+      if (breakdownEl.children.length || totalsEl.children.length) calculate();
+    });
+  });
+
+  clearAll();
+});
+</script>

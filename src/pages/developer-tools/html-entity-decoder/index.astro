@@ -1,0 +1,280 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "HTML Entity Decoder",
+  description:
+    "Decode HTML entities into readable text with validation, result cards, output metrics, and FAQ schema.",
+  href: "/developer-tools/html-entity-decoder/",
+  order: 391,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/html-entity-decoder/";
+
+const faqs = [
+  {
+    q: "What does an HTML entity decoder do?",
+    a: "It converts HTML entities such as &amp;amp;, &amp;lt;, and numeric entities back into their normal text characters.",
+  },
+  {
+    q: "Does it support numeric entities?",
+    a: "Yes. It supports common named entities and numeric entity forms such as decimal and hexadecimal references.",
+  },
+  {
+    q: "What if the input has plain text and entities mixed together?",
+    a: "The decoder preserves plain text and only decodes recognized entities.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Decoding runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`HTML Entity Decoder — ${SITE_NAME}`}
+  description="Decode HTML entities into readable text with result cards, output metrics, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="HTML Entity Decoder"
+  intro="Convert HTML entities back into normal text. Useful for copied markup, encoded snippets, and escaped content."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="html-entity-decoder">
+    <style is:inline>
+      #hed_input,
+      #hed_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .hed-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hed_help hed_privacy">
+      <div class="field">
+        <label for="hed_input">Encoded input</label>
+        <textarea
+          id="hed_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="e.g. &lt;div class=&quot;notice&quot;&gt;Tom &amp; Jerry&lt;/div&gt;"
+        ></textarea>
+      </div>
+
+      <p class="note" id="hed_help" style="margin-top:6px;">
+        Supports common named entities and numeric entities such as <code>&amp;#169;</code> and <code>&amp;#xA9;</code>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hed_decode">Decode</button>
+        <button class="btn secondary" type="button" id="hed_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="hed_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hed_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result hed-mono" id="hed_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hed_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hed_output">Decoded output</label>
+        <textarea id="hed_output" rows="10" spellcheck="false" readonly placeholder="Decoded text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hed_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hed_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The decoder converts encoded entities like <code>&amp;amp;</code>, <code>&amp;lt;</code>, and numeric references
+      back into their readable character forms.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>&amp;lt;div&amp;gt;</strong> → <strong>&lt;div&gt;</strong></li>
+      <li><strong>&amp;amp;</strong> → <strong>&amp;</strong></li>
+      <li><strong>&amp;#169;</strong> → <strong>©</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/html-entity-encoder/">HTML Entity Encoder</a></li>
+      <li><a href="/developer-tools/unicode-unescape/">Unicode Unescape</a></li>
+      <li><a href="/developer-tools/string-unescape/">String Unescape</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("hed_input");
+  const decodeBtn = document.getElementById("hed_decode");
+  const copyBtn = document.getElementById("hed_copy");
+  const clearBtn = document.getElementById("hed_clear");
+  const errEl = document.getElementById("hed_error");
+  const resultEl = document.getElementById("hed_result");
+  const cardsEl = document.getElementById("hed_cards");
+  const outputEl = document.getElementById("hed_output");
+  const tbodyEl = document.getElementById("hed_tbody");
+
+  if (!inputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function decodeEntities(raw) {
+    const textarea = document.createElement("textarea");
+    textarea.innerHTML = raw;
+    return textarea.value;
+  }
+
+  function countEntityLike(raw) {
+    const matches = raw.match(/&(?:#\d+|#x[0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]+);/g);
+    return matches ? matches.length : 0;
+  }
+
+  function decode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      showError("Please enter encoded text to decode.");
+      return;
+    }
+
+    const decoded = decodeEntities(raw);
+    const entityCount = countEntityLike(raw);
+    const changed = raw !== decoded;
+
+    outputEl.value = decoded;
+    lastOutput = decoded;
+
+    resultEl.innerHTML =
+      "<strong>Decoded successfully.</strong><br/><span class='note'>" +
+      (changed ? "Recognized entities were converted back to text." : "No decodable entities were found, or the text was already plain.") +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(changed ? "Output changed" : "No changes") +
+      badge("Entity-like patterns: " + entityCount) +
+      badge("Decoded text ready") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Output length", String(decoded.length)],
+      ["Length delta", String(decoded.length - raw.length)],
+      ["Entity-like patterns found", String(entityCount)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decode();
+  });
+});
+</script>

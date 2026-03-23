@@ -1,0 +1,275 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JSON Minifier",
+  description:
+    "Minify valid JSON into compact output with validation, result cards, metrics, and FAQ schema.",
+  href: "/developer-tools/json-minifier/",
+  order: 398,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/json-minifier/";
+
+const faqs = [
+  {
+    q: "What does this JSON minifier do?",
+    a: "It validates JSON and removes unnecessary whitespace to produce compact output.",
+  },
+  {
+    q: "Will it change the data?",
+    a: "No. It preserves the JSON structure and values. Only non-essential whitespace is removed.",
+  },
+  {
+    q: "What happens if the JSON is invalid?",
+    a: "The tool shows a parse error and does not generate minified output until the JSON is valid.",
+  },
+  {
+    q: "Is my JSON stored?",
+    a: "No. Minification runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`JSON Minifier — ${SITE_NAME}`}
+  description="Minify valid JSON into compact output with validation, result cards, metrics, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="JSON Minifier"
+  intro="Validate JSON and minify it into compact output for transport, storage, or embedding."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="json-minifier">
+    <style is:inline>
+      #jm_input,
+      #jm_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .jm-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="jm_help jm_privacy">
+      <div class="field">
+        <label for="jm_input">JSON input</label>
+        <textarea
+          id="jm_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={'e.g. {\n  "name": "Alex",\n  "age": 30,\n  "skills": ["JS", "JSON"]\n}'}
+        ></textarea>
+      </div>
+
+      <p class="note" id="jm_help" style="margin-top:6px;">
+        Standard JSON only. Comments, trailing commas, and single-quoted keys are not valid JSON.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="jm_minify">Minify JSON</button>
+        <button class="btn secondary" type="button" id="jm_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="jm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="jm_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result jm-mono" id="jm_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="jm_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="jm_output">Minified JSON</label>
+        <textarea id="jm_output" rows="12" readonly spellcheck="false" placeholder="Minified JSON will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="jm_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="jm_privacy" style="margin-top:10px;">
+        Privacy: minification runs locally in your browser. No JSON is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool parses valid JSON and serializes it again without indentation or extra spaces.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Pretty JSON</strong> → compact single-line JSON</li>
+      <li><strong>Nested objects</strong> → preserved exactly, but without formatting whitespace</li>
+      <li><strong>Invalid trailing comma</strong> → validation error shown</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/xml-minifier/">XML Minifier</a></li>
+      <li><a href="/developer-tools/json-to-yaml/">JSON to YAML</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("jm_input");
+  const minifyBtn = document.getElementById("jm_minify");
+  const copyBtn = document.getElementById("jm_copy");
+  const clearBtn = document.getElementById("jm_clear");
+  const errEl = document.getElementById("jm_error");
+  const resultEl = document.getElementById("jm_result");
+  const cardsEl = document.getElementById("jm_cards");
+  const outputEl = document.getElementById("jm_output");
+  const tbodyEl = document.getElementById("jm_tbody");
+
+  if (!inputEl || !minifyBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getTopType(value) {
+    if (Array.isArray(value)) return "array";
+    if (value === null) return "null";
+    return typeof value;
+  }
+
+  function minifyNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste JSON input.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      const minified = JSON.stringify(parsed);
+      const topType = getTopType(parsed);
+      const rootCount =
+        Array.isArray(parsed) ? parsed.length :
+        (parsed && typeof parsed === "object" ? Object.keys(parsed).length : 0);
+
+      lastOutput = minified;
+      outputEl.value = minified;
+
+      const saved = raw.length - minified.length;
+
+      resultEl.innerHTML = "<strong>Valid JSON.</strong><br/><span class='note'>Minified output is ready.</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Root type: " + topType) +
+        badge("Minified") +
+        badge(saved >= 0 ? "Saved " + saved + " chars" : "Output longer") +
+        "</div>";
+
+      fillTable([
+        ["Root type", topType],
+        ["Root item/key count", String(rootCount)],
+        ["Input length", String(raw.length)],
+        ["Output length", String(minified.length)],
+      ]);
+    } catch (e) {
+      showError("Invalid JSON: " + (e && e.message ? e.message : "parse error"));
+    }
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No minified JSON output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied minified JSON.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  minifyBtn.addEventListener("click", minifyNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") minifyNow();
+  });
+});
+</script>

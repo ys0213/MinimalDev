@@ -1,0 +1,352 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "ANOVA Calculator",
+  description:
+    "Calculate one-way ANOVA F statistic, sums of squares, mean squares, and group summaries from multiple groups.",
+  href: "/math/anova-calculator/",
+  order: 375,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/anova-calculator/";
+
+const faqs = [
+  {
+    q: "What does this ANOVA calculator compute?",
+    a: "It computes a one-way ANOVA summary including grand mean, between-group sum of squares, within-group sum of squares, mean squares, degrees of freedom, and F statistic.",
+  },
+  {
+    q: "How should I enter the data?",
+    a: "Enter one group per line. Within each line, separate numbers by commas or spaces.",
+  },
+  {
+    q: "How many groups are required?",
+    a: "At least 2 groups are required, and each group must contain at least 2 numeric values for a meaningful within-group comparison.",
+  },
+  {
+    q: "Does this calculator return a p-value?",
+    a: "No. This page focuses on the one-way ANOVA statistic and variance breakdown. It does not currently calculate the p-value.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`ANOVA Calculator — ${SITE_NAME}`}
+  description="Calculate one-way ANOVA F statistic, sums of squares, and mean squares from multiple groups."
+  canonicalPath={CANONICAL_PATH}
+  h1="ANOVA Calculator"
+  intro="Run a one-way ANOVA from multiple groups. Enter one group per line to calculate group means, sums of squares, mean squares, degrees of freedom, and F statistic."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="anova-calculator">
+    <style is:inline>
+      .anova-wrap, .anova-wrap * { box-sizing: border-box; }
+      .anova-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+      .anova-grid textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      .anova-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .anova-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form anova-wrap" role="form" aria-describedby="anova_help anova_privacy">
+      <div class="anova-grid">
+        <div class="field">
+          <label for="anova_groups">Groups (one group per line)</label>
+          <textarea
+            id="anova_groups"
+            rows="8"
+            placeholder="e.g.
+10, 12, 14, 13
+8, 9, 11, 10
+15, 16, 17, 18"
+            spellcheck="false"
+            aria-describedby="anova_help"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="anova_help" style="margin-top:6px;">
+        Enter one group per line. Within each line, separate values using commas or spaces.
+        <br />
+        Formula overview:
+        <br />
+        <span class="anova-code">F = MS_between / MS_within</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="anova_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="anova_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="anova_clear">Clear</button>
+      </div>
+
+      <div class="result" id="anova_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="anova_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="anova_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="anova_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="anova_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      One-way ANOVA compares group means by separating total variation into:
+      <strong>between-group variation</strong> and <strong>within-group variation</strong>.
+    </p>
+    <p class="note">
+      This page calculates:
+      <br />
+      <strong>SSB</strong> = sum of squares between groups
+      <br />
+      <strong>SSW</strong> = sum of squares within groups
+      <br />
+      <strong>MSB</strong> = SSB / df_between
+      <br />
+      <strong>MSW</strong> = SSW / df_within
+      <br />
+      <strong>F</strong> = MSB / MSW
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Group 1:</strong> 10, 12, 14, 13</li>
+      <li><strong>Group 2:</strong> 8, 9, 11, 10</li>
+      <li><strong>Group 3:</strong> 15, 16, 17, 18</li>
+      <li>This produces a one-way ANOVA summary and F statistic.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/t-test-calculator/">T Test Calculator</a></li>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/regression-calculator/">Regression Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const groupsEl = document.getElementById("anova_groups");
+  const calcBtn = document.getElementById("anova_calc");
+  const fillBtn = document.getElementById("anova_fill_demo");
+  const clearBtn = document.getElementById("anova_clear");
+  const errorEl = document.getElementById("anova_error");
+  const resultEl = document.getElementById("anova_result");
+  const cardsEl = document.getElementById("anova_cards");
+  const tbodyEl = document.getElementById("anova_tbody");
+
+  if (!groupsEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseGroups(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 2 groups.");
+
+    const lines = text.split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+    if (lines.length < 2) throw new Error("Please enter at least 2 groups (one group per line).");
+
+    const groups = lines.map(function (line, idx) {
+      const nums = line.split(/[\s,]+/).filter(Boolean).map(function (part) {
+        const n = Number(part);
+        if (!Number.isFinite(n)) throw new Error("Group " + (idx + 1) + " contains an invalid number.");
+        return n;
+      });
+      if (nums.length < 2) throw new Error("Each group must contain at least 2 values. Group " + (idx + 1) + " is too short.");
+      return nums;
+    });
+
+    return groups;
+  }
+
+  function mean(arr) {
+    return arr.reduce(function (a, b) { return a + b; }, 0) / arr.length;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const groups = parseGroups(groupsEl.value);
+      const groupMeans = groups.map(mean);
+      const all = groups.flat();
+      const grandMean = mean(all);
+
+      const k = groups.length;
+      const n = all.length;
+
+      let ssBetween = 0;
+      let ssWithin = 0;
+
+      groups.forEach(function (g, i) {
+        const gm = groupMeans[i];
+        ssBetween += g.length * Math.pow(gm - grandMean, 2);
+        ssWithin += g.reduce(function (sum, x) {
+          return sum + Math.pow(x - gm, 2);
+        }, 0);
+      });
+
+      const ssTotal = all.reduce(function (sum, x) {
+        return sum + Math.pow(x - grandMean, 2);
+      }, 0);
+
+      const dfBetween = k - 1;
+      const dfWithin = n - k;
+      const dfTotal = n - 1;
+
+      if (dfWithin <= 0) {
+        showError("Degrees of freedom within groups must be greater than 0.");
+        return;
+      }
+
+      const msBetween = ssBetween / dfBetween;
+      const msWithin = ssWithin / dfWithin;
+
+      if (msWithin === 0) {
+        showError("Within-group variance is 0, so F statistic is undefined or infinite in this setup.");
+        return;
+      }
+
+      const fValue = msBetween / msWithin;
+
+      let label = "Small between-group effect";
+      if (fValue >= 10) label = "Large between-group effect";
+      else if (fValue >= 4) label = "Moderate between-group effect";
+
+      resultEl.innerHTML =
+        "<strong>ANOVA result</strong><br/>" +
+        "<span class='anova-code'>F = " + fmt(fValue, 8) + "</span>" +
+        "<br/><span class='note'>Groups = " + k + ", Total observations = " + n + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("df_between = " + dfBetween) +
+        badge("df_within = " + dfWithin) +
+        "</div>";
+
+      const rows = [
+        ["Number of groups", String(k)],
+        ["Total observations", String(n)],
+        ["Grand mean", fmt(grandMean, 8)],
+        ["SS between", fmt(ssBetween, 8)],
+        ["SS within", fmt(ssWithin, 8)],
+        ["SS total", fmt(ssTotal, 8)],
+        ["df between", String(dfBetween)],
+        ["df within", String(dfWithin)],
+        ["df total", String(dfTotal)],
+        ["MS between", fmt(msBetween, 8)],
+        ["MS within", fmt(msWithin, 8)],
+        ["F statistic", fmt(fValue, 8)],
+      ];
+
+      groupMeans.forEach(function (gm, i) {
+        rows.push(["Group " + (i + 1) + " mean", fmt(gm, 8)]);
+      });
+
+      fillTable(rows);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    groupsEl.value = "10, 12, 14, 13\n8, 9, 11, 10\n15, 16, 17, 18";
+    clearOutput();
+  }
+
+  function reset() {
+    groupsEl.value = "";
+    clearOutput();
+    groupsEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  groupsEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

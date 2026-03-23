@@ -1,0 +1,319 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Slug Generator",
+  description:
+    "Generate clean URL slugs from text with lowercase, separator, and cleanup options using validation, result cards, and FAQ schema.",
+  href: "/developer-tools/slug-generator/",
+  order: 187,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/slug-generator/";
+
+const faqs = [
+  {
+    q: "What is a slug?",
+    a: "A slug is the URL-friendly part of a page address, usually made from words separated by hyphens or underscores.",
+  },
+  {
+    q: "What does this slug generator do?",
+    a: "It converts text into a cleaner URL slug by trimming whitespace, normalizing separators, removing punctuation, and optionally lowercasing the result.",
+  },
+  {
+    q: "Can I use underscores instead of hyphens?",
+    a: "Yes. You can choose the separator style.",
+  },
+  {
+    q: "Does this preserve special characters?",
+    a: "It removes or normalizes many punctuation characters for cleaner URLs. Some non-Latin characters may remain depending on browser normalization support.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Slug Generator — ${SITE_NAME}`}
+  description="Generate URL-friendly slugs from text using lowercase and separator options."
+  canonicalPath={CANONICAL_PATH}
+  h1="Slug Generator"
+  intro="Generate clean URL slugs from page titles, article headlines, product names, and similar text."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="slug-generator">
+    <style is:inline>
+      .sg-wrap, .sg-wrap * { box-sizing: border-box; }
+      .sg-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      #sg_input,
+      #sg_output,
+      .sg-grid select,
+      .sg-grid input {
+        width:100%;
+        min-width:0;
+      }
+      @media (max-width: 760px) {
+        .sg-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form sg-wrap" role="form" aria-describedby="sg_help sg_privacy">
+      <div class="field">
+        <label for="sg_input">Source text</label>
+        <textarea id="sg_input" rows="5" placeholder="e.g. Meta Tag Generator for SEO & Social Sharing"></textarea>
+      </div>
+
+      <div class="sg-grid">
+        <div class="field">
+          <label for="sg_separator">Separator</label>
+          <select id="sg_separator">
+            <option value="-" selected>Hyphen (-)</option>
+            <option value="_">Underscore (_)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="sg_lowercase">
+            <input id="sg_lowercase" type="checkbox" checked style="width:auto; min-width:auto; margin-right:8px;" />
+            Lowercase output
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="sg_help" style="margin-top:6px;">
+        The generator removes repeated separators, trims edges, and cleans common punctuation for URL-friendly output.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="sg_copy">Copy Slug</button>
+        <button class="btn secondary" type="button" id="sg_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="sg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="sg_output">Generated slug</label>
+        <input id="sg_output" type="text" readonly spellcheck="false" placeholder="Generated slug will appear here." />
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sg_privacy" style="margin-top:10px;">
+        Privacy: slug generation runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter your text, choose a separator, and generate a URL-friendly slug suitable for page paths and content URLs.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>"My Great Article Title"</strong> → <strong>my-great-article-title</strong></li>
+      <li><strong>"SEO Tools & Guides"</strong> → <strong>seo-tools-guides</strong></li>
+      <li><strong>"Product Name 2026"</strong> → <strong>product-name-2026</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/title-length-checker/">Title Length Checker</a></li>
+      <li><a href="/developer-tools/canonical-tag-generator/">Canonical Tag Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("sg_input");
+  const separatorEl = document.getElementById("sg_separator");
+  const lowercaseEl = document.getElementById("sg_lowercase");
+  const generateBtn = document.getElementById("sg_generate");
+  const copyBtn = document.getElementById("sg_copy");
+  const fillBtn = document.getElementById("sg_fill_demo");
+  const clearBtn = document.getElementById("sg_clear");
+  const errorEl = document.getElementById("sg_error");
+  const resultEl = document.getElementById("sg_result");
+  const cardsEl = document.getElementById("sg_cards");
+  const outputEl = document.getElementById("sg_output");
+  const tbodyEl = document.getElementById("sg_tbody");
+
+  if (!inputEl || !separatorEl || !lowercaseEl || !generateBtn || !copyBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function normalizeText(text) {
+    let s = String(text || "").trim();
+    if (typeof s.normalize === "function") {
+      s = s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+    }
+    return s;
+  }
+
+  function generateSlug() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const separator = String(separatorEl.value || "-");
+    const lowercase = !!lowercaseEl.checked;
+
+    if (!raw) {
+      showError("Please enter source text.");
+      return;
+    }
+
+    let slug = normalizeText(raw);
+
+    slug = slug.replace(/['"`]/g, "");
+    slug = slug.replace(/[^A-Za-z0-9\u00A0-\uFFFF]+/g, " ");
+    slug = slug.trim().replace(/\s+/g, separator);
+
+    const escapedSep = separator === "-" ? "\\-" : "_";
+    slug = slug.replace(new RegExp(escapedSep + "{2,}", "g"), separator);
+    slug = slug.replace(new RegExp("^" + escapedSep + "+|" + escapedSep + "+$", "g"), "");
+
+    if (lowercase) slug = slug.toLowerCase();
+
+    if (!slug) {
+      showError("The text became empty after cleanup. Please enter text with letters or numbers.");
+      return;
+    }
+
+    lastOutput = slug;
+    outputEl.value = slug;
+
+    resultEl.innerHTML = "<strong>Slug generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Length: " + slug.length) +
+      badge("Separator: " + separator) +
+      badge(lowercase ? "Lowercase" : "Original case") +
+      "</div>";
+
+    fillTable([
+      ["Source length", String(raw.length)],
+      ["Slug length", String(slug.length)],
+      ["Separator", separator],
+      ["Lowercase", lowercase ? "Yes" : "No"],
+      ["Slug", slug],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated slug to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied slug.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function fillDemo() {
+    inputEl.value = "Meta Tag Generator for SEO & Social Sharing";
+    separatorEl.value = "-";
+    lowercaseEl.checked = true;
+    resetOutput();
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    separatorEl.value = "-";
+    lowercaseEl.checked = true;
+    resetOutput();
+    inputEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateSlug);
+  copyBtn.addEventListener("click", copyOutput);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateSlug();
+  });
+});
+</script>

@@ -1,0 +1,465 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Meta Tag Generator",
+  description:
+    "Generate HTML meta tags for SEO, Open Graph, Twitter Cards, robots, and canonical URLs with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/meta-tag-generator/",
+  order: 180,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/meta-tag-generator/";
+
+const faqs = [
+  {
+    q: "What does this meta tag generator create?",
+    a: "It generates common HTML head tags such as title, meta description, robots, canonical URL, Open Graph tags, and Twitter Card tags.",
+  },
+  {
+    q: "Does this tool validate title and description length?",
+    a: "Yes. It gives guidance for common SEO-friendly title and description ranges.",
+  },
+  {
+    q: "Can I generate tags without Open Graph or Twitter fields?",
+    a: "Yes. Optional fields are only included when values are provided.",
+  },
+  {
+    q: "Does this generate a complete HTML page?",
+    a: "No. It generates the head tags you can paste into your page or template.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Meta Tag Generator — ${SITE_NAME}`}
+  description="Generate SEO, Open Graph, Twitter Card, robots, and canonical meta tags."
+  canonicalPath={CANONICAL_PATH}
+  h1="Meta Tag Generator"
+  intro="Generate common SEO and social-sharing meta tags for your HTML head. Includes title, description, canonical, robots, Open Graph, and Twitter Card fields."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <div slot="tool" data-tool="meta-tag-generator">
+    <style is:inline>
+      .mtg-wrap, .mtg-wrap * { box-sizing: border-box; }
+      .mtg-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .mtg-grid input,
+      .mtg-grid select,
+      .mtg-grid textarea,
+      #mtg_output {
+        width:100%;
+        min-width:0;
+      }
+      .mtg-output {
+        white-space:pre-wrap;
+        word-break:break-word;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size:14px;
+      }
+      @media (max-width: 760px) {
+        .mtg-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form mtg-wrap" role="form" aria-describedby="mtg_help mtg_privacy">
+      <div class="field">
+        <label for="mtg_title">Page title</label>
+        <input id="mtg_title" type="text" placeholder="e.g. Best SEO Tools for Developers" maxlength="300" />
+      </div>
+
+      <div class="field">
+        <label for="mtg_description">Meta description</label>
+        <textarea id="mtg_description" rows="4" placeholder="e.g. Generate SEO-friendly meta tags for titles, descriptions, Open Graph, and Twitter cards."></textarea>
+      </div>
+
+      <div class="mtg-grid">
+        <div class="field">
+          <label for="mtg_canonical">Canonical URL</label>
+          <input id="mtg_canonical" type="url" placeholder="https://example.com/page/" />
+        </div>
+
+        <div class="field">
+          <label for="mtg_robots">Robots</label>
+          <select id="mtg_robots">
+            <option value="index,follow" selected>index,follow</option>
+            <option value="noindex,follow">noindex,follow</option>
+            <option value="index,nofollow">index,nofollow</option>
+            <option value="noindex,nofollow">noindex,nofollow</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mtg_og_title">Open Graph title</label>
+          <input id="mtg_og_title" type="text" placeholder="Optional; defaults to page title if empty" />
+        </div>
+
+        <div class="field">
+          <label for="mtg_og_type">Open Graph type</label>
+          <select id="mtg_og_type">
+            <option value="website" selected>website</option>
+            <option value="article">article</option>
+            <option value="product">product</option>
+            <option value="profile">profile</option>
+          </select>
+        </div>
+
+        <div class="field" style="grid-column:1 / -1;">
+          <label for="mtg_og_description">Open Graph description</label>
+          <textarea id="mtg_og_description" rows="3" placeholder="Optional; defaults to meta description if empty"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="mtg_og_url">Open Graph URL</label>
+          <input id="mtg_og_url" type="url" placeholder="Optional; defaults to canonical URL if empty" />
+        </div>
+
+        <div class="field">
+          <label for="mtg_og_image">Open Graph image URL</label>
+          <input id="mtg_og_image" type="url" placeholder="https://example.com/preview.jpg" />
+        </div>
+
+        <div class="field">
+          <label for="mtg_twitter_card">Twitter card</label>
+          <select id="mtg_twitter_card">
+            <option value="summary" selected>summary</option>
+            <option value="summary_large_image">summary_large_image</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mtg_twitter_site">Twitter site handle</label>
+          <input id="mtg_twitter_site" type="text" placeholder="@example" />
+        </div>
+      </div>
+
+      <p class="note" id="mtg_help" style="margin-top:6px;">
+        This tool generates reusable HTML head tags. Optional social fields are included only if relevant values are provided.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mtg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="mtg_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="mtg_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="mtg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mtg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result mtg-output" id="mtg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mtg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="mtg_output">Generated meta tags</label>
+        <textarea id="mtg_output" rows="16" readonly spellcheck="false" placeholder="Generated meta tags will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mtg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mtg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter your page information, generate the HTML head tags, then paste the result into your site template or page head section.
+    </p>
+    <ul>
+      <li><strong>SEO:</strong> title, description, canonical, robots</li>
+      <li><strong>Social sharing:</strong> Open Graph and Twitter Card tags</li>
+      <li><strong>Optional fields:</strong> only included when useful values exist</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Blog post:</strong> title + description + canonical + article Open Graph tags</li>
+      <li><strong>Landing page:</strong> summary_large_image Twitter card + og:image</li>
+      <li><strong>Utility page:</strong> index,follow + canonical + concise description</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/title-length-checker/">Title Length Checker</a></li>
+      <li><a href="/developer-tools/canonical-tag-generator/">Canonical Tag Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const titleEl = document.getElementById("mtg_title");
+  const descEl = document.getElementById("mtg_description");
+  const canonicalEl = document.getElementById("mtg_canonical");
+  const robotsEl = document.getElementById("mtg_robots");
+  const ogTitleEl = document.getElementById("mtg_og_title");
+  const ogTypeEl = document.getElementById("mtg_og_type");
+  const ogDescEl = document.getElementById("mtg_og_description");
+  const ogUrlEl = document.getElementById("mtg_og_url");
+  const ogImageEl = document.getElementById("mtg_og_image");
+  const twitterCardEl = document.getElementById("mtg_twitter_card");
+  const twitterSiteEl = document.getElementById("mtg_twitter_site");
+
+  const generateBtn = document.getElementById("mtg_generate");
+  const copyBtn = document.getElementById("mtg_copy");
+  const fillBtn = document.getElementById("mtg_fill_demo");
+  const clearBtn = document.getElementById("mtg_clear");
+
+  const errorEl = document.getElementById("mtg_error");
+  const resultEl = document.getElementById("mtg_result");
+  const cardsEl = document.getElementById("mtg_cards");
+  const outputEl = document.getElementById("mtg_output");
+  const tbodyEl = document.getElementById("mtg_tbody");
+
+  if (
+    !titleEl || !descEl || !canonicalEl || !robotsEl || !ogTitleEl || !ogTypeEl || !ogDescEl ||
+    !ogUrlEl || !ogImageEl || !twitterCardEl || !twitterSiteEl || !generateBtn || !copyBtn ||
+    !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl
+  ) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function isValidUrl(v) {
+    if (!v) return true;
+    try {
+      const u = new URL(v);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function generateMeta() {
+    resetOutput();
+
+    const title = String(titleEl.value || "").trim();
+    const description = String(descEl.value || "").trim();
+    const canonical = String(canonicalEl.value || "").trim();
+    const robots = String(robotsEl.value || "index,follow").trim();
+
+    const ogTitle = String(ogTitleEl.value || "").trim() || title;
+    const ogDescription = String(ogDescEl.value || "").trim() || description;
+    const ogType = String(ogTypeEl.value || "website").trim();
+    const ogUrl = String(ogUrlEl.value || "").trim() || canonical;
+    const ogImage = String(ogImageEl.value || "").trim();
+
+    const twitterCard = String(twitterCardEl.value || "summary").trim();
+    const twitterSite = String(twitterSiteEl.value || "").trim();
+
+    if (!title) {
+      showError("Please enter a page title.");
+      return;
+    }
+
+    if (!description) {
+      showError("Please enter a meta description.");
+      return;
+    }
+
+    if (!isValidUrl(canonical)) {
+      showError("Please enter a valid canonical URL (http or https).");
+      return;
+    }
+
+    if (!isValidUrl(ogUrl)) {
+      showError("Please enter a valid Open Graph URL (http or https).");
+      return;
+    }
+
+    if (!isValidUrl(ogImage)) {
+      showError("Please enter a valid Open Graph image URL (http or https).");
+      return;
+    }
+
+    if (twitterSite && !/^@?[A-Za-z0-9_]{1,15}$/.test(twitterSite)) {
+      showError("Twitter site handle should look like @example and use only letters, numbers, or underscores.");
+      return;
+    }
+
+    const tags = [];
+    tags.push("<title>" + escapeHtml(title) + "</title>");
+    tags.push('<meta name="description" content="' + escapeHtml(description) + '" />');
+    tags.push('<meta name="robots" content="' + escapeHtml(robots) + '" />');
+
+    if (canonical) {
+      tags.push('<link rel="canonical" href="' + escapeHtml(canonical) + '" />');
+    }
+
+    tags.push('<meta property="og:title" content="' + escapeHtml(ogTitle) + '" />');
+    tags.push('<meta property="og:description" content="' + escapeHtml(ogDescription) + '" />');
+    tags.push('<meta property="og:type" content="' + escapeHtml(ogType) + '" />');
+
+    if (ogUrl) tags.push('<meta property="og:url" content="' + escapeHtml(ogUrl) + '" />');
+    if (ogImage) tags.push('<meta property="og:image" content="' + escapeHtml(ogImage) + '" />');
+
+    tags.push('<meta name="twitter:card" content="' + escapeHtml(twitterCard) + '" />');
+    if (twitterSite) {
+      const handle = twitterSite.startsWith("@") ? twitterSite : "@" + twitterSite;
+      tags.push('<meta name="twitter:site" content="' + escapeHtml(handle) + '" />');
+    }
+    if (ogTitle) tags.push('<meta name="twitter:title" content="' + escapeHtml(ogTitle) + '" />');
+    if (ogDescription) tags.push('<meta name="twitter:description" content="' + escapeHtml(ogDescription) + '" />');
+    if (ogImage) tags.push('<meta name="twitter:image" content="' + escapeHtml(ogImage) + '" />');
+
+    const output = tags.join("\n");
+    lastOutput = output;
+    outputEl.value = output;
+
+    const titleLen = title.length;
+    const descLen = description.length;
+
+    let titleStatus = "Typical";
+    if (titleLen < 30) titleStatus = "Short";
+    else if (titleLen > 60) titleStatus = "Long";
+
+    let descStatus = "Typical";
+    if (descLen < 70) descStatus = "Short";
+    else if (descLen > 160) descStatus = "Long";
+
+    resultEl.innerHTML = "<strong>Meta tags generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Title: " + titleStatus) +
+      badge("Description: " + descStatus) +
+      badge(canonical ? "Canonical included" : "No canonical") +
+      badge(ogImage ? "Social image included" : "No social image") +
+      "</div>";
+
+    fillTable([
+      ["Title length", String(titleLen)],
+      ["Description length", String(descLen)],
+      ["Canonical URL", canonical || "Not provided"],
+      ["Open Graph tags", ogImage || ogUrl || ogTitle || ogDescription ? "Included" : "Minimal"],
+      ["Twitter tags", "Included"],
+      ["Generated tag count", String(tags.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated meta tags.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function fillDemo() {
+    titleEl.value = "Meta Tag Generator for SEO and Social Sharing";
+    descEl.value = "Generate title, description, Open Graph, Twitter Card, robots, and canonical tags for your website pages.";
+    canonicalEl.value = "https://example.com/meta-tag-generator/";
+    robotsEl.value = "index,follow";
+    ogTitleEl.value = "";
+    ogTypeEl.value = "website";
+    ogDescEl.value = "";
+    ogUrlEl.value = "";
+    ogImageEl.value = "https://example.com/images/preview.jpg";
+    twitterCardEl.value = "summary_large_image";
+    twitterSiteEl.value = "@example";
+    resetOutput();
+  }
+
+  function clearAll() {
+    titleEl.value = "";
+    descEl.value = "";
+    canonicalEl.value = "";
+    robotsEl.value = "index,follow";
+    ogTitleEl.value = "";
+    ogTypeEl.value = "website";
+    ogDescEl.value = "";
+    ogUrlEl.value = "";
+    ogImageEl.value = "";
+    twitterCardEl.value = "summary";
+    twitterSiteEl.value = "";
+    resetOutput();
+    titleEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateMeta);
+  copyBtn.addEventListener("click", copyOutput);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  [titleEl, descEl, canonicalEl, ogTitleEl, ogDescEl, ogUrlEl, ogImageEl, twitterSiteEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateMeta();
+    });
+  });
+});
+</script>

@@ -1,0 +1,118 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "PNG to JPG Converter",
+  description: "Convert PNG images to JPG with background handling and compression preview.",
+  href: "/image-tools/png-to-jpg/",
+  order: 6,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/png-to-jpg/";
+
+const faqs=[
+ {q:"Why convert PNG to JPG?",a:"JPG files are smaller and better for photos."},
+ {q:"Transparency?",a:"Transparent areas become white."},
+ {q:"Upload required?",a:"No, local processing."}
+];
+
+const faqJsonLd={
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity:faqs.map(f=>({
+   "@type":"Question",
+   name:f.q,
+   acceptedAnswer:{ "@type":"Answer", text:f.a }
+ }))
+};
+---
+
+<ToolLayout
+title={`PNG to JPG — ${SITE_NAME}`}
+description="Convert PNG to JPG with size comparison."
+canonicalPath={CANONICAL_PATH}
+h1="PNG to JPG Converter"
+intro="Convert PNG images into smaller JPG files."
+faq={faqs}
+categoryName="Image Tools"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<div class="form">
+<input type="file" id="file" accept="image/png"/>
+
+<label>Quality</label>
+<input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.9"/>
+
+<canvas id="canvas"></canvas>
+
+<div id="result" class="result">Upload PNG image.</div>
+
+<button class="btn" id="convert">Convert</button>
+<button class="btn secondary" id="download">Download JPG</button>
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const quality=document.getElementById("quality");
+const result=document.getElementById("result");
+
+let img=new Image();
+let originalSize=0;
+
+file.onchange=e=>{
+ const f=e.target.files[0];
+ if(!f) return;
+
+ if(!f.type.includes("png")){
+   result.textContent="PNG only";
+   return;
+ }
+
+ originalSize=f.size;
+
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=()=>{
+     canvas.width=img.width;
+     canvas.height=img.height;
+
+     ctx.fillStyle="#fff";
+     ctx.fillRect(0,0,canvas.width,canvas.height);
+
+     ctx.drawImage(img,0,0);
+   };
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(f);
+};
+
+document.getElementById("convert").onclick=()=>{
+ canvas.toBlob(blob=>{
+   const newSize=blob.size;
+   result.innerHTML=
+   `Original: ${(originalSize/1024).toFixed(1)} KB<br>
+    JPG: ${(newSize/1024).toFixed(1)} KB<br>
+    Saved: ${((1-newSize/originalSize)*100).toFixed(1)}%`;
+ },"image/jpeg",Number(quality.value));
+};
+
+document.getElementById("download").onclick=()=>{
+ canvas.toBlob(blob=>{
+   const a=document.createElement("a");
+   a.href=URL.createObjectURL(blob);
+   a.download="converted.jpg";
+   a.click();
+ },"image/jpeg",Number(quality.value));
+};
+
+});
+</script>

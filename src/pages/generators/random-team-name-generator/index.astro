@@ -1,0 +1,681 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Team Name Generator",
+  description:
+    "Generate random team names for games, sports, clubs, projects, and competitions with style presets, tags, validation, and FAQ schema.",
+  href: "/generators/random-team-name-generator/",
+  order: 181,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-team-name-generator/";
+
+const faqs = [
+  {
+    q: "What does this team name generator create?",
+    a: "It creates random team names for sports, esports, school groups, company projects, competitions, and clubs.",
+  },
+  {
+    q: "Can I choose different team styles?",
+    a: "Yes. You can generate sporty, fantasy, esports, business, or mixed-style team names.",
+  },
+  {
+    q: "Can I add a custom word to the name?",
+    a: "Yes. You can add an optional custom keyword that is blended into the generated result.",
+  },
+  {
+    q: "Does the tool prevent duplicates?",
+    a: "Yes. Unique mode attempts to prevent duplicate team names in the result list.",
+  },
+  {
+    q: "Is anything uploaded or stored?",
+    a: "No. Team names are generated locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Team Name Generator — ${SITE_NAME}`}
+  description="Generate random team names with style presets, custom keyword support, uniqueness filtering, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Team Name Generator"
+  intro="Generate team name ideas for sports teams, gaming squads, school clubs, startup groups, internal projects, and competitions. Control style, format, keyword inclusion, and output size."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-team-name-generator">
+    <style is:inline>
+      #rtg_count,
+      #rtg_style,
+      #rtg_format,
+      #rtg_keyword,
+      #rtg_output {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .rtg-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .rtg-grid > * {
+        min-width: 0;
+      }
+
+      .rtg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+
+      .rtg-inline {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .rtg-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+
+      .rtg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+
+      .rtg-card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      @media (min-width: 760px) {
+        .rtg-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rtg_help rtg_privacy">
+      <div class="rtg-grid">
+        <div class="field">
+          <label for="rtg_count">How many team names?</label>
+          <input id="rtg_count" type="number" min="1" max="100" value="16" inputmode="numeric" />
+          <p class="note" style="margin-top:6px;">
+            Generate between 1 and 100 team names at once.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="rtg_style">Team style</label>
+          <select id="rtg_style">
+            <option value="mixed" selected>Mixed</option>
+            <option value="sports">Sports</option>
+            <option value="esports">Esports</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="business">Business / Project</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rtg_format">Name format</label>
+          <select id="rtg_format">
+            <option value="classic" selected>Classic adjective + noun</option>
+            <option value="collective">Collective / organization</option>
+            <option value="keywordFirst">Custom keyword first</option>
+            <option value="keywordLast">Custom keyword last</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rtg_keyword">Optional custom keyword</label>
+          <input
+            id="rtg_keyword"
+            type="text"
+            maxlength="24"
+            placeholder="e.g. Orion"
+            spellcheck="false"
+          />
+          <p class="note" style="margin-top:6px;">
+            Optional. Letters and numbers only.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Options</label>
+          <div style="display:grid; gap:10px;">
+            <label><input id="rtg_unique" type="checkbox" checked /> Unique results only</label>
+            <label><input id="rtg_short" type="checkbox" /> Prefer shorter team names</label>
+            <label><input id="rtg_plural" type="checkbox" checked /> Prefer plural-style endings</label>
+            <label><input id="rtg_tagline" type="checkbox" /> Add short internal tag labels</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Use cases</label>
+          <div style="display:grid; gap:10px;">
+            <label><input id="rtg_competitive" type="checkbox" checked /> Competitive / tournament-friendly</label>
+            <label><input id="rtg_brandable" type="checkbox" /> Brandable / startup-friendly</label>
+            <label><input id="rtg_fun" type="checkbox" /> Lighter / playful naming bias</label>
+          </div>
+        </div>
+      </div>
+
+      <p class="note" id="rtg_help" style="margin-top:10px;">
+        Team names are generated locally from themed word banks. This is useful for gaming clans, sports rosters, hackathons, fantasy leagues, startup groups, departments, and internal project teams.
+      </p>
+
+      <div class="rtg-inline" style="margin-top:8px;">
+        <button class="btn" type="button" id="rtg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rtg_copy">Copy</button>
+        <button class="btn secondary" type="button" id="rtg_download">Download TXT</button>
+        <button class="btn secondary" type="button" id="rtg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rtg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rtg_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rtg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rtg_output">Generated team names</label>
+        <textarea
+          id="rtg_output"
+          class="rtg-output"
+          rows="14"
+          readonly
+          spellcheck="false"
+          placeholder="Generated team names will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rtg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rtg_privacy" style="margin-top:10px;">
+        Privacy: team name generation runs locally in your browser. No keywords or generated results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool builds team names by combining themed adjectives, nouns, collective labels, and optional custom keywords.
+      Different presets shift the vocabulary toward sports, gaming, fantasy, startup, or minimal naming styles.
+    </p>
+    <ul>
+      <li><strong>Sports:</strong> classic competitive team naming such as wolves, falcons, giants, and thunder</li>
+      <li><strong>Esports:</strong> stronger cyber / competitive naming like void, glitch, nexus, and raid</li>
+      <li><strong>Fantasy:</strong> lore-inspired naming such as rune, crown, dragon, and wardens</li>
+      <li><strong>Business:</strong> cleaner project or department naming suitable for internal groups</li>
+      <li><strong>Keyword format:</strong> lets you inject a custom word at the start or end of the result</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Sports</strong> + <strong>Classic</strong> → <strong>Golden Falcons</strong>, <strong>Crimson Wolves</strong></li>
+      <li><strong>Esports</strong> + <strong>Competitive bias</strong> → <strong>Void Raiders</strong>, <strong>Glitch Core</strong></li>
+      <li><strong>Business</strong> + <strong>Keyword: Orion</strong> → <strong>Orion Collective</strong>, <strong>Velocity Orion</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-nickname-generator/">Random Nickname Generator</a></li>
+      <li><a href="/generators/random-company-name/">Random Company Name Generator</a></li>
+      <li><a href="/generators/random-domain-name/">Random Domain Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rtg_count");
+  const styleEl = document.getElementById("rtg_style");
+  const formatEl = document.getElementById("rtg_format");
+  const keywordEl = document.getElementById("rtg_keyword");
+  const uniqueEl = document.getElementById("rtg_unique");
+  const shortEl = document.getElementById("rtg_short");
+  const pluralEl = document.getElementById("rtg_plural");
+  const taglineEl = document.getElementById("rtg_tagline");
+  const competitiveEl = document.getElementById("rtg_competitive");
+  const brandableEl = document.getElementById("rtg_brandable");
+  const funEl = document.getElementById("rtg_fun");
+  const generateBtn = document.getElementById("rtg_generate");
+  const copyBtn = document.getElementById("rtg_copy");
+  const downloadBtn = document.getElementById("rtg_download");
+  const clearBtn = document.getElementById("rtg_clear");
+  const errorEl = document.getElementById("rtg_error");
+  const summaryEl = document.getElementById("rtg_summary");
+  const cardsEl = document.getElementById("rtg_cards");
+  const outputEl = document.getElementById("rtg_output");
+  const tbodyEl = document.getElementById("rtg_tbody");
+
+  if (
+    !countEl || !styleEl || !formatEl || !keywordEl || !uniqueEl ||
+    !shortEl || !pluralEl || !taglineEl || !competitiveEl || !brandableEl || !funEl ||
+    !generateBtn || !copyBtn || !downloadBtn || !clearBtn ||
+    !errorEl || !summaryEl || !cardsEl || !outputEl || !tbodyEl
+  ) return;
+
+  let lastOutput = "";
+
+  const STYLE_BANKS = {
+    sports: {
+      adjectives: ["Red", "Golden", "Crimson", "Rapid", "Iron", "Thunder", "Swift", "Wild", "Blue", "Mighty", "Royal", "Stone"],
+      nouns: ["Falcons", "Wolves", "Titans", "Giants", "Sharks", "Panthers", "Hawks", "Riders", "Strikers", "Comets", "Lions", "Raiders"],
+      collectives: ["Squad", "Club", "United", "League", "Crew", "Alliance"]
+    },
+    esports: {
+      adjectives: ["Void", "Shadow", "Neon", "Fatal", "Glitch", "Omega", "Quantum", "Zero", "Dark", "Crimson", "Hyper", "Ghost"],
+      nouns: ["Raiders", "Core", "Synapse", "Pulse", "Nexus", "Sweepers", "Recoil", "Rush", "Circuit", "Dominion", "Strike", "Queue"],
+      collectives: ["Protocol", "Collective", "Unit", "Division", "Force", "Stack"]
+    },
+    fantasy: {
+      adjectives: ["Arcane", "Silver", "Moon", "Dragon", "Elder", "Mystic", "Ashen", "Rune", "Sable", "Night", "Cinder", "Emerald"],
+      nouns: ["Wardens", "Guard", "Crown", "Flame", "Vale", "Order", "Song", "Keepers", "Shards", "Riders", "Watch", "Court"],
+      collectives: ["Circle", "Order", "Guild", "Host", "Council", "Company"]
+    },
+    business: {
+      adjectives: ["Prime", "Next", "Bright", "North", "Velocity", "Summit", "Core", "Dynamic", "Vertex", "Modern", "Elevate", "Apex"],
+      nouns: ["Collective", "Partners", "Studio", "Works", "Group", "Labs", "Network", "Office", "Team", "Division", "Project", "Unit"],
+      collectives: ["Initiative", "Program", "Hub", "Coalition", "Board", "Studio"]
+    },
+    minimal: {
+      adjectives: ["North", "Nova", "Axis", "Echo", "Aero", "Luma", "Pulse", "Vera", "Core", "Drift", "Aven", "Mono"],
+      nouns: ["Team", "Line", "Grid", "Loop", "Frame", "Mark", "Flow", "Point", "Set", "Lane", "Field", "Form"],
+      collectives: ["Collective", "Group", "Unit", "Circle", "Set", "Works"]
+    }
+  };
+
+  const TAGS = ["Alpha", "Beta", "Prime", "Elite", "HQ", "Ops", "Lab", "X", "One", "Plus"];
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      kind === "bad" ? "rgba(239,68,68,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function card(title, value, note) {
+    return (
+      '<div class="rtg-card">' +
+        '<strong>' + escapeHtml(title) + '</strong>' +
+        '<div style="font-size:26px;font-weight:900;">' + escapeHtml(value) + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + escapeHtml(note) + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function sanitizeKeyword(value) {
+    return String(value || "").trim().replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  function styleLabel(style) {
+    if (style === "sports") return "Sports";
+    if (style === "esports") return "Esports";
+    if (style === "fantasy") return "Fantasy";
+    if (style === "business") return "Business / Project";
+    if (style === "minimal") return "Minimal";
+    return "Mixed";
+  }
+
+  function chooseBank(style) {
+    if (style === "mixed") {
+      return STYLE_BANKS[pick(["sports", "esports", "fantasy", "business", "minimal"])];
+    }
+    return STYLE_BANKS[style];
+  }
+
+  function maybeShorten(word, preferShort) {
+    if (!preferShort) return word;
+    if (word.length <= 6) return word;
+    return word.slice(0, 6);
+  }
+
+  function maybeBrandable(word, brandable) {
+    if (!brandable) return word;
+    if (Math.random() < 0.18 && word.length > 4) {
+      return word.slice(0, Math.max(4, word.length - 1));
+    }
+    return word;
+  }
+
+  function buildTeamName(opts) {
+    const bank = chooseBank(opts.style);
+
+    let adj = maybeBrandable(maybeShorten(pick(bank.adjectives), opts.preferShort), opts.brandable);
+    let noun = maybeBrandable(maybeShorten(pick(bank.nouns), opts.preferShort), opts.brandable);
+    let collective = maybeBrandable(maybeShorten(pick(bank.collectives), opts.preferShort), opts.brandable);
+    let keyword = opts.keyword ? opts.keyword.split(" ").map(function (p) {
+      return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+    }).join(" ") : "";
+
+    if (opts.fun && Math.random() < 0.14) {
+      adj = pick(["Happy", "Lucky", "Bouncy", "Jolly", "Sunny", "Rocket"]);
+    }
+
+    if (opts.competitive && Math.random() < 0.18) {
+      noun = pick(["Raiders", "Titans", "Dominion", "Force", "Strike", "Guard"]);
+    }
+
+    if (!opts.preferPlural && /s$/.test(noun) && Math.random() < 0.6) {
+      noun = noun.replace(/s$/, "");
+    }
+
+    if (opts.preferPlural && !/s$/.test(noun) && Math.random() < 0.7) {
+      noun += "s";
+    }
+
+    let name = "";
+
+    if (opts.format === "classic") {
+      name = adj + " " + noun;
+    } else if (opts.format === "collective") {
+      name = adj + " " + collective;
+    } else if (opts.format === "keywordFirst") {
+      name = keyword ? (keyword + " " + noun) : (adj + " " + noun);
+    } else if (opts.format === "keywordLast") {
+      name = keyword ? (adj + " " + keyword) : (adj + " " + noun);
+    } else {
+      name = adj + " " + noun;
+    }
+
+    if (opts.keyword && opts.format === "classic" && Math.random() < 0.45) {
+      name = opts.keyword + " " + noun;
+    }
+
+    if (opts.tagline && Math.random() < 0.45) {
+      name += " " + pick(TAGS);
+    }
+
+    return name.replace(/\s+/g, " ").trim();
+  }
+
+  function generateTeamNames() {
+    resetOutput();
+
+    const count = Number(countEl.value);
+    const style = String(styleEl.value || "mixed");
+    const format = String(formatEl.value || "classic");
+    const keyword = sanitizeKeyword(keywordEl.value);
+    const uniqueOnly = !!uniqueEl.checked;
+    const preferShort = !!shortEl.checked;
+    const preferPlural = !!pluralEl.checked;
+    const addTagline = !!taglineEl.checked;
+    const competitive = !!competitiveEl.checked;
+    const brandable = !!brandableEl.checked;
+    const fun = !!funEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Enter a team name count between 1 and 100.");
+      return;
+    }
+
+    if (keywordEl.value && !keyword) {
+      showError("Custom keyword can contain letters, numbers, and spaces only.");
+      return;
+    }
+
+    if ((format === "keywordFirst" || format === "keywordLast") && !keyword) {
+      showError("Enter a custom keyword to use the selected keyword-based format.");
+      return;
+    }
+
+    const opts = {
+      style,
+      format,
+      keyword,
+      preferShort,
+      preferPlural,
+      tagline: addTagline,
+      competitive,
+      brandable,
+      fun
+    };
+
+    const results = [];
+    const seen = new Set();
+    const maxAttempts = Math.max(600, count * 35);
+    let attempts = 0;
+
+    while (results.length < count && attempts < maxAttempts) {
+      attempts += 1;
+      const name = buildTeamName(opts);
+      if (!name) continue;
+
+      if (uniqueOnly) {
+        if (seen.has(name)) continue;
+        seen.add(name);
+      }
+
+      results.push(name);
+    }
+
+    if (!results.length) {
+      showError("Could not generate any team names with the current settings.");
+      return;
+    }
+
+    const uniqueCount = new Set(results).size;
+    const avgLength = Math.round(
+      results.reduce(function (sum, item) { return sum + item.length; }, 0) / results.length
+    );
+    const longest = results.reduce(function (a, b) { return a.length >= b.length ? a : b; }, "");
+    const shortest = results.reduce(function (a, b) { return a.length <= b.length ? a : b; }, results[0]);
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    let densityLabel = "Balanced";
+    let densityKind = "neutral";
+    if (avgLength <= 11) {
+      densityLabel = "Compact";
+      densityKind = "good";
+    } else if (avgLength >= 18) {
+      densityLabel = "Long-form";
+      densityKind = "warn";
+    }
+
+    summaryEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">' +
+        '<strong>Team name list generated.</strong>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
+          badge(results.length + " results", "good") +
+          badge(styleLabel(style), "neutral") +
+          badge(densityLabel, densityKind) +
+        '</div>' +
+      '</div>' +
+      '<div class="note" style="margin-top:8px;">' +
+        'Format: <strong>' + escapeHtml(format) + '</strong>' +
+        (keyword ? ' · Keyword: <strong>' + escapeHtml(keyword) + '</strong>' : '') +
+      '</div>';
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rtg-card-grid">' +
+        card("Generated", String(results.length), "Team names returned") +
+        card("Unique", String(uniqueCount), "Distinct values in list") +
+        card("Average length", String(avgLength), "Characters per team name") +
+        card("Attempts", String(attempts), "Generation attempts used") +
+      '</div>' +
+      '<div class="rtg-card-grid" style="margin-top:10px;">' +
+        card("Shortest", shortest, "Shortest name in result set") +
+        card("Longest", longest, "Longest name in result set") +
+        card("Plural bias", preferPlural ? "On" : "Off", "Plural noun preference") +
+        card("Tag labels", addTagline ? "On" : "Off", "Short label suffix behavior") +
+      '</div>';
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(results.length)],
+      ["Unique count", String(uniqueCount)],
+      ["Style", styleLabel(style)],
+      ["Format", format],
+      ["Custom keyword", keyword || "none"],
+      ["Unique mode", uniqueOnly ? "yes" : "no"],
+      ["Prefer short", preferShort ? "yes" : "no"],
+      ["Prefer plural", preferPlural ? "yes" : "no"],
+      ["Add tag labels", addTagline ? "yes" : "no"],
+      ["Competitive bias", competitive ? "yes" : "no"],
+      ["Brandable bias", brandable ? "yes" : "no"],
+      ["Playful bias", fun ? "yes" : "no"],
+      ["Average length", String(avgLength)],
+      ["Shortest length", String(shortest.length)],
+      ["Longest length", String(longest.length)],
+      ["Output characters", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated team names to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      summaryEl.innerHTML = "<strong>Copied generated team names.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function downloadOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated team names to download yet.");
+      return;
+    }
+
+    const blob = new Blob([lastOutput], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "random-team-names.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearAll() {
+    countEl.value = "16";
+    styleEl.value = "mixed";
+    formatEl.value = "classic";
+    keywordEl.value = "";
+    uniqueEl.checked = true;
+    shortEl.checked = false;
+    pluralEl.checked = true;
+    taglineEl.checked = false;
+    competitiveEl.checked = true;
+    brandableEl.checked = false;
+    funEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateTeamNames);
+  copyBtn.addEventListener("click", copyOutput);
+  downloadBtn.addEventListener("click", downloadOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [
+    countEl, styleEl, formatEl, keywordEl,
+    uniqueEl, shortEl, pluralEl, taglineEl, competitiveEl, brandableEl, funEl
+  ].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generateTeamNames();
+    });
+  });
+
+  resetOutput();
+});
+</script>

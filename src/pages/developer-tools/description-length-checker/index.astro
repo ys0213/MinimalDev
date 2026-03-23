@@ -1,0 +1,263 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Description Length Checker",
+  description:
+    "Check meta description length, word count, and common SEO guidance with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/description-length-checker/",
+  order: 185,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/description-length-checker/";
+
+const faqs = [
+  {
+    q: "What does this description length checker measure?",
+    a: "It measures your meta description character count, word count, and gives simple guidance based on common SEO description length ranges.",
+  },
+  {
+    q: "What is a common meta description length?",
+    a: "Many pages aim roughly around 70 to 160 characters, though actual display can vary by device, language, and search layout.",
+  },
+  {
+    q: "Does this tool measure pixel width?",
+    a: "No. It measures characters and words, not rendered pixel width.",
+  },
+  {
+    q: "Can I use this for social descriptions too?",
+    a: "Yes. It can also help review descriptions used in Open Graph or Twitter metadata.",
+  },
+  {
+    q: "Is my description stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Description Length Checker — ${SITE_NAME}`}
+  description="Check meta description character count and review common SEO description guidance."
+  canonicalPath={CANONICAL_PATH}
+  h1="Description Length Checker"
+  intro="Check your meta description length, word count, and common SEO-friendly guidance ranges. Useful for search snippets, social previews, and metadata writing."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="description-length-checker">
+    <style is:inline>
+      .dlc-wrap, .dlc-wrap * { box-sizing: border-box; }
+      #dlc_input,
+      #dlc_preview {
+        width: 100%;
+        min-width: 0;
+      }
+      .dlc-preview {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form dlc-wrap" role="form" aria-describedby="dlc_help dlc_privacy">
+      <div class="field">
+        <label for="dlc_input">Meta description</label>
+        <textarea
+          id="dlc_input"
+          rows="5"
+          placeholder="e.g. Generate SEO-friendly meta tags, robots.txt files, and XML sitemaps with fast developer tools."
+        ></textarea>
+      </div>
+
+      <p class="note" id="dlc_help" style="margin-top:6px;">
+        Common guidance often places descriptions roughly around 70–160 characters, but actual display can vary.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dlc_check">Check</button>
+        <button class="btn secondary" type="button" id="dlc_fill_demo">Fill Demo</button>
+        <button class="btn secondary" type="button" id="dlc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dlc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result dlc-preview" id="dlc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="dlc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="dlc_preview">Preview</label>
+        <textarea id="dlc_preview" rows="5" readonly spellcheck="false" placeholder="Description preview will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="dlc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="dlc_privacy" style="margin-top:10px;">
+        Privacy: analysis runs locally in your browser. No description text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste or type your description, then review its character count, word count, and simple SEO guidance status.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Short description:</strong> may miss useful context or keywords</li>
+      <li><strong>Typical description:</strong> often balances clarity and brevity</li>
+      <li><strong>Long description:</strong> may be truncated in some search displays</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/title-length-checker/">Title Length Checker</a></li>
+      <li><a href="/developer-tools/meta-tag-generator/">Meta Tag Generator</a></li>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("dlc_input");
+  const checkBtn = document.getElementById("dlc_check");
+  const fillBtn = document.getElementById("dlc_fill_demo");
+  const clearBtn = document.getElementById("dlc_clear");
+  const errorEl = document.getElementById("dlc_error");
+  const resultEl = document.getElementById("dlc_result");
+  const cardsEl = document.getElementById("dlc_cards");
+  const previewEl = document.getElementById("dlc_preview");
+  const tbodyEl = document.getElementById("dlc_tbody");
+
+  if (!inputEl || !checkBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !previewEl || !tbodyEl) return;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    previewEl.value = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function wordCount(text) {
+    const words = String(text || "").trim().match(/\S+/g);
+    return words ? words.length : 0;
+  }
+
+  function checkDescription() {
+    resetOutput();
+
+    const text = String(inputEl.value || "").trim();
+    if (!text) {
+      showError("Please enter a description to analyze.");
+      return;
+    }
+
+    const chars = text.length;
+    const words = wordCount(text);
+
+    let status = "Typical";
+    if (chars < 70) status = "Short";
+    else if (chars > 160) status = "Long";
+
+    let guidance = "Common SEO description range";
+    if (status === "Short") guidance = "Consider adding more useful detail if needed";
+    else if (status === "Long") guidance = "May be truncated in some search displays";
+
+    previewEl.value = text;
+
+    resultEl.innerHTML =
+      "<strong>Description analyzed.</strong><br/>" +
+      '<span class="note">' + guidance + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Characters: " + chars) +
+      badge("Words: " + words) +
+      badge("Status: " + status) +
+      "</div>";
+
+    fillTable([
+      ["Description text", text],
+      ["Character count", String(chars)],
+      ["Word count", String(words)],
+      ["Guidance status", status],
+      ["Length note", guidance],
+    ]);
+  }
+
+  function fillDemo() {
+    inputEl.value = "Generate SEO-friendly meta tags, robots.txt files, XML sitemaps, and other developer tools quickly in your browser.";
+    resetOutput();
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  checkBtn.addEventListener("click", checkDescription);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") checkDescription();
+  });
+});
+</script>

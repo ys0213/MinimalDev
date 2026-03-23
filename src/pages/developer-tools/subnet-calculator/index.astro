@@ -1,0 +1,338 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Subnet Calculator",
+  description:
+    "Calculate IPv4 subnet details from an IP address and subnet mask, including network, broadcast, wildcard, prefix, and usable host range.",
+  href: "/developer-tools/subnet-calculator/",
+  order: 414,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/subnet-calculator/";
+
+const faqs = [
+  {
+    q: "What input does this subnet calculator use?",
+    a: "It uses an IPv4 address and a subnet mask in dotted-decimal form such as 255.255.255.0.",
+  },
+  {
+    q: "What does it calculate?",
+    a: "It calculates the network address, broadcast address, wildcard mask, CIDR prefix, and usable host range.",
+  },
+  {
+    q: "Does it validate the subnet mask?",
+    a: "Yes. It checks that the mask is a valid contiguous IPv4 subnet mask.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. The calculation runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Subnet Calculator — ${SITE_NAME}`}
+  description="Calculate IPv4 subnet details from a subnet mask and IP address."
+  canonicalPath={CANONICAL_PATH}
+  h1="Subnet Calculator"
+  intro="Enter an IPv4 address and dotted-decimal subnet mask to calculate network details."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="subnet-calculator">
+    <style is:inline>
+      #subnet_ip,
+      #subnet_mask {
+        width: 100%;
+        min-width: 0;
+      }
+      .subnet-grid {
+        display: grid;
+        gap: 10px;
+      }
+      @media (min-width: 720px) {
+        .subnet-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="subnet_help subnet_privacy">
+      <div class="subnet-grid">
+        <div class="field">
+          <label for="subnet_ip">IPv4 address</label>
+          <input id="subnet_ip" type="text" inputmode="decimal" spellcheck="false" placeholder="e.g. 192.168.1.10" />
+        </div>
+
+        <div class="field">
+          <label for="subnet_mask">Subnet mask</label>
+          <input id="subnet_mask" type="text" inputmode="decimal" spellcheck="false" placeholder="e.g. 255.255.255.0" />
+        </div>
+      </div>
+
+      <p class="note" id="subnet_help" style="margin-top:6px;">
+        Example: IP <strong>192.168.1.10</strong> with mask <strong>255.255.255.0</strong>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="subnet_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="subnet_fill">Example /24 Mask</button>
+        <button class="btn secondary" type="button" id="subnet_clear">Clear</button>
+      </div>
+
+      <div class="result" id="subnet_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="subnet_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="subnet_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="subnet_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="subnet_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No network data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The subnet mask is converted to a binary prefix, then used to calculate:
+    </p>
+    <ul>
+      <li>Network address</li>
+      <li>Broadcast address</li>
+      <li>Wildcard mask</li>
+      <li>Usable host range</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>192.168.1.10 + 255.255.255.0</strong> → network <strong>192.168.1.0</strong></li>
+      <li><strong>10.0.5.20 + 255.255.0.0</strong> → prefix <strong>/16</strong></li>
+      <li><strong>172.16.8.1 + 255.255.240.0</strong> → prefix <strong>/20</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/cidr-calculator/">CIDR Calculator</a></li>
+      <li><a href="/developer-tools/ip-range-calculator/">IP Range Calculator</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/ipv4-to-decimal/">IPv4 to Decimal</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const ipEl = document.getElementById("subnet_ip");
+  const maskEl = document.getElementById("subnet_mask");
+  const calcBtn = document.getElementById("subnet_calc");
+  const fillBtn = document.getElementById("subnet_fill");
+  const clearBtn = document.getElementById("subnet_clear");
+  const errEl = document.getElementById("subnet_error");
+  const resultEl = document.getElementById("subnet_result");
+  const cardsEl = document.getElementById("subnet_cards");
+  const tbodyEl = document.getElementById("subnet_tbody");
+
+  if (!ipEl || !maskEl || !calcBtn || !fillBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseIPv4(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter an IPv4 address." };
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) return { ok: false, msg: "IPv4 format must be four numeric octets." };
+
+    const parts = trimmed.split(".");
+    const nums = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].length > 1 && parts[i].startsWith("0")) {
+        return { ok: false, msg: "Leading zeros are not allowed in octet " + (i + 1) + "." };
+      }
+      const n = Number(parts[i]);
+      if (!Number.isInteger(n) || n < 0 || n > 255) {
+        return { ok: false, msg: "Octet " + (i + 1) + " must be between 0 and 255." };
+      }
+      nums.push(n);
+    }
+    return { ok: true, parts: nums, normalized: nums.join(".") };
+  }
+
+  function ipPartsToInt(parts) {
+    return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+  }
+
+  function intToIp(n) {
+    return [
+      (n >>> 24) & 255,
+      (n >>> 16) & 255,
+      (n >>> 8) & 255,
+      n & 255,
+    ].join(".");
+  }
+
+  function maskToPrefix(maskInt) {
+    const bin = (maskInt >>> 0).toString(2).padStart(32, "0");
+    if (!/^1*0*$/.test(bin)) return null;
+    return bin.indexOf("0") === -1 ? 32 : bin.indexOf("0");
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const ipParsed = parseIPv4(ipEl.value);
+    if (!ipParsed.ok) {
+      showError(ipParsed.msg);
+      return;
+    }
+
+    const maskParsed = parseIPv4(maskEl.value);
+    if (!maskParsed.ok) {
+      showError("Subnet mask: " + maskParsed.msg);
+      return;
+    }
+
+    const ipInt = ipPartsToInt(ipParsed.parts);
+    const maskInt = ipPartsToInt(maskParsed.parts);
+    const prefix = maskToPrefix(maskInt);
+
+    if (prefix === null) {
+      showError("Subnet mask is not contiguous. Please enter a valid IPv4 subnet mask.");
+      return;
+    }
+
+    const wildcardInt = (~maskInt) >>> 0;
+    const networkInt = (ipInt & maskInt) >>> 0;
+    const broadcastInt = (networkInt | wildcardInt) >>> 0;
+
+    let usableCount;
+    let firstHost = "N/A";
+    let lastHost = "N/A";
+
+    if (prefix === 32) {
+      usableCount = 1;
+      firstHost = intToIp(networkInt);
+      lastHost = intToIp(networkInt);
+    } else if (prefix === 31) {
+      usableCount = 2;
+      firstHost = intToIp(networkInt);
+      lastHost = intToIp(broadcastInt);
+    } else {
+      usableCount = Math.max(0, Math.pow(2, 32 - prefix) - 2);
+      firstHost = intToIp((networkInt + 1) >>> 0);
+      lastHost = intToIp((broadcastInt - 1) >>> 0);
+    }
+
+    resultEl.innerHTML =
+      "<strong>Subnet calculated successfully.</strong><br/><span class='note'>" +
+      ipParsed.normalized +
+      " with mask " +
+      maskParsed.normalized +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Prefix /" + prefix) +
+      badge("Hosts: " + usableCount.toLocaleString()) +
+      badge("Valid subnet mask") +
+      "</div>";
+
+    fillTable([
+      ["Input IP", ipParsed.normalized],
+      ["Subnet mask", maskParsed.normalized],
+      ["CIDR prefix", "/" + prefix],
+      ["Wildcard mask", intToIp(wildcardInt)],
+      ["Network address", intToIp(networkInt)],
+      ["Broadcast address", intToIp(broadcastInt)],
+      ["First usable host", firstHost],
+      ["Last usable host", lastHost],
+      ["Usable hosts", usableCount.toLocaleString()],
+      ["Address count", Math.pow(2, 32 - prefix).toLocaleString()],
+    ]);
+  }
+
+  function clearAll() {
+    ipEl.value = "";
+    maskEl.value = "";
+    resetOutput();
+    ipEl.focus();
+  }
+
+  calcBtn.addEventListener("click", calculate);
+  fillBtn.addEventListener("click", function () {
+    ipEl.value = "192.168.1.10";
+    maskEl.value = "255.255.255.0";
+    calculate();
+  });
+  clearBtn.addEventListener("click", clearAll);
+
+  [ipEl, maskEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") calculate();
+    });
+  });
+});
+</script>

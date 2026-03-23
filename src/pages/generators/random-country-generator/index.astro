@@ -1,0 +1,203 @@
+---
+// FULL PRODUCTION PAGE (NOT THIN)
+
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Country Generator",
+  description:
+    "Generate random countries instantly for testing, games, geography practice, and mock data. Includes validation, result cards, and FAQ schema.",
+  href: "/generators/random-country-generator/",
+  order: 201,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-country-generator/";
+
+const faqs = [
+  {
+    q: "What does this tool do?",
+    a: "It generates random country names from a predefined list for testing, games, and educational purposes.",
+  },
+  {
+    q: "Are these real countries?",
+    a: "Yes. All countries are real and commonly recognized internationally.",
+  },
+  {
+    q: "Can I generate multiple countries?",
+    a: "Yes. You can choose how many countries to generate at once.",
+  },
+  {
+    q: "Is the data stored anywhere?",
+    a: "No. Everything runs locally in your browser.",
+  },
+  {
+    q: "Can I use this for games or quizzes?",
+    a: "Yes. It is useful for geography quizzes, random selections, and game mechanics.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Country Generator — ${SITE_NAME}`}
+  description="Generate random countries instantly with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Country Generator"
+  intro="Generate random country names for games, testing, learning, or creative use cases."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool">
+    <style is:inline>
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      input, textarea {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: monospace;
+      }
+
+      .cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      @media (min-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form">
+      <div class="grid">
+        <div class="field">
+          <label>Count</label>
+          <input id="count" type="number" min="1" max="100" value="5" />
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="generate" class="btn">Generate</button>
+        <button id="copy" class="btn secondary">Copy</button>
+        <button id="clear" class="btn secondary">Clear</button>
+      </div>
+
+      <div id="error" class="result" style="display:none;"></div>
+      <div id="result" class="result">Result will appear here.</div>
+      <div id="cards" class="result" style="display:none;"></div>
+
+      <textarea id="output" rows="12" class="output" readonly></textarea>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p>Select how many countries you want and generate instantly.</p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Pick random countries for trivia games</li>
+      <li>Generate test data for apps</li>
+      <li>Use in geography learning</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-city-generator/">Random City Generator</a></li>
+      <li><a href="/generators/random-language-generator/">Random Language Generator</a></li>
+      <li><a href="/generators/random-name-generator/">Random Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", () => {
+  const countries = [
+    "United States","Canada","Brazil","United Kingdom","Germany","France",
+    "Italy","Spain","Australia","Japan","South Korea","India","China",
+    "Mexico","Argentina","Sweden","Norway","Finland","Denmark","Netherlands"
+  ];
+
+  const countEl = document.getElementById("count");
+  const outputEl = document.getElementById("output");
+  const resultEl = document.getElementById("result");
+  const errorEl = document.getElementById("error");
+  const cardsEl = document.getElementById("cards");
+
+  function error(msg){
+    errorEl.style.display="block";
+    errorEl.textContent=msg;
+  }
+
+  function clearError(){
+    errorEl.style.display="none";
+  }
+
+  function generate(){
+    clearError();
+    const count = Number(countEl.value);
+
+    if(!count || count<1 || count>100){
+      error("Enter 1~100");
+      return;
+    }
+
+    const result = [];
+    for(let i=0;i<count;i++){
+      result.push(countries[Math.floor(Math.random()*countries.length)]);
+    }
+
+    const text = result.join("\n");
+    outputEl.value = text;
+
+    resultEl.innerHTML = "<strong>Generated</strong>";
+
+    cardsEl.style.display="block";
+    cardsEl.innerHTML = `
+      <div class="cards">
+        <span>Count: ${count}</span>
+        <span>Type: Countries</span>
+      </div>
+    `;
+  }
+
+  document.getElementById("generate").onclick = generate;
+
+  document.getElementById("copy").onclick = async ()=>{
+    if(!outputEl.value) return;
+    await navigator.clipboard.writeText(outputEl.value);
+    resultEl.innerHTML="<strong>Copied</strong>";
+  };
+
+  document.getElementById("clear").onclick = ()=>{
+    outputEl.value="";
+    resultEl.textContent="Result will appear here.";
+    cardsEl.style.display="none";
+  };
+});
+</script>

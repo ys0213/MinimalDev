@@ -1,0 +1,447 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Matrix Calculator",
+  description:
+    "Add, subtract, or scalar-multiply matrices with validation, result cards, accessible input grids, and FAQ support.",
+  href: "/math/matrix-calculator/",
+  order: 340,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/matrix-calculator/";
+
+const faqs = [
+  {
+    q: "What can this matrix calculator do?",
+    a: "This tool supports matrix addition, subtraction, and scalar multiplication for custom matrix sizes.",
+  },
+  {
+    q: "Do both matrices need the same size?",
+    a: "For addition and subtraction, yes. For scalar multiplication, only Matrix A is required.",
+  },
+  {
+    q: "Can I use decimals and negative numbers?",
+    a: "Yes. The calculator accepts integers, decimals, and negative values.",
+  },
+  {
+    q: "Are my calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Matrix Calculator — ${SITE_NAME}`}
+  description="Matrix addition, subtraction, and scalar multiplication with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Matrix Calculator"
+  intro="Perform basic matrix operations such as addition, subtraction, and scalar multiplication using custom dimensions."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="matrix-calculator">
+    <style is:inline>
+      .mc-wrap, .mc-wrap * { box-sizing: border-box; }
+      .mc-controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .mc-mats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .mc-panel {
+        min-width: 0;
+        overflow: hidden;
+      }
+      .mc-grid-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .mc-grid {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+      }
+      .mc-grid input {
+        min-width: 0;
+        width: 100%;
+      }
+      .mc-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .mc-kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      @media (min-width: 900px) {
+        .mc-mats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form mc-wrap" role="form" aria-describedby="mc_help mc_privacy">
+      <div class="mc-controls">
+        <div class="field">
+          <label for="mc_rows">Rows</label>
+          <select id="mc_rows">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mc_cols">Columns</label>
+          <select id="mc_cols">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mc_op">Operation</label>
+          <select id="mc_op">
+            <option value="add" selected>Add (A + B)</option>
+            <option value="sub">Subtract (A − B)</option>
+            <option value="scalar">Scalar multiply (k × A)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mc_scalar">Scalar k</label>
+          <input id="mc_scalar" type="number" inputmode="decimal" value="2" step="any" />
+        </div>
+      </div>
+
+      <p class="note" id="mc_help" style="margin-top:8px;">
+        Addition and subtraction require both matrices to have the same size. Scalar multiplication uses only Matrix A.
+      </p>
+
+      <div class="mc-mats">
+        <section class="mc-panel">
+          <h3 style="margin:0 0 8px;">Matrix A</h3>
+          <div class="mc-grid-wrap">
+            <div id="mc_grid_a" class="mc-grid" aria-label="Matrix A input grid"></div>
+          </div>
+        </section>
+
+        <section class="mc-panel" id="mc_panel_b">
+          <h3 style="margin:0 0 8px;">Matrix B</h3>
+          <div class="mc-grid-wrap">
+            <div id="mc_grid_b" class="mc-grid" aria-label="Matrix B input grid"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="mc-actions">
+        <button class="btn" type="button" id="mc_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="mc_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="mc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="mc_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="mc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mc_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No matrix values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Use the same matrix size for A and B, choose an operation, then compute the result.
+      Scalar multiplication applies a number <span class="mc-kbd">k</span> to every value in Matrix A.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Addition:</strong> two 2×2 matrices added entry by entry</li>
+      <li><strong>Subtraction:</strong> A − B with matching dimensions</li>
+      <li><strong>Scalar multiplication:</strong> k × A multiplies each entry by the same number</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/matrix-multiplication/">Matrix Multiplication</a></li>
+      <li><a href="/math/matrix-determinant/">Matrix Determinant</a></li>
+      <li><a href="/math/vector-calculator/">Vector Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rowsEl = document.getElementById("mc_rows");
+  const colsEl = document.getElementById("mc_cols");
+  const opEl = document.getElementById("mc_op");
+  const scalarEl = document.getElementById("mc_scalar");
+  const gridAEl = document.getElementById("mc_grid_a");
+  const gridBEl = document.getElementById("mc_grid_b");
+  const panelBEl = document.getElementById("mc_panel_b");
+  const calcBtn = document.getElementById("mc_calc");
+  const demoBtn = document.getElementById("mc_fill_demo");
+  const clearBtn = document.getElementById("mc_clear");
+  const errorEl = document.getElementById("mc_error");
+  const resultEl = document.getElementById("mc_result");
+  const cardsEl = document.getElementById("mc_cards");
+  const tbodyEl = document.getElementById("mc_tbody");
+
+  if (!rowsEl || !colsEl || !opEl || !scalarEl || !gridAEl || !gridBEl || !panelBEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function createGrid(container, prefix, rows, cols) {
+    container.innerHTML = "";
+    container.style.gridTemplateColumns = "repeat(" + cols + ", minmax(56px, 1fr))";
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = "any";
+        input.inputMode = "decimal";
+        input.placeholder = "0";
+        input.id = prefix + "_" + r + "_" + c;
+        input.setAttribute("aria-label", prefix.toUpperCase() + " row " + (r + 1) + " column " + (c + 1));
+        container.appendChild(input);
+      }
+    }
+  }
+
+  function getDims() {
+    return {
+      rows: parseInt(String(rowsEl.value), 10),
+      cols: parseInt(String(colsEl.value), 10)
+    };
+  }
+
+  function syncUI() {
+    const dims = getDims();
+    createGrid(gridAEl, "mc_a", dims.rows, dims.cols);
+    createGrid(gridBEl, "mc_b", dims.rows, dims.cols);
+
+    const op = String(opEl.value);
+    const isScalar = op === "scalar";
+    panelBEl.style.display = isScalar ? "none" : "";
+    scalarEl.parentElement.style.display = isScalar ? "" : "";
+  }
+
+  function readMatrix(prefix, rows, cols) {
+    const out = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        const el = document.getElementById(prefix + "_" + r + "_" + c);
+        const raw = el ? String(el.value || "").trim() : "";
+        if (!raw) {
+          throw new Error("Please fill every matrix cell.");
+        }
+        const n = Number(raw);
+        if (!Number.isFinite(n)) {
+          throw new Error("Enter only valid numbers in matrix cells.");
+        }
+        row.push(n);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function matrixToHtmlTable(m) {
+    let html = "<div style='overflow:auto;'><table style='border-collapse:collapse; width:auto; min-width:220px;'>";
+    for (let r = 0; r < m.length; r++) {
+      html += "<tr>";
+      for (let c = 0; c < m[r].length; c++) {
+        html += "<td style='padding:8px 10px; border:1px solid rgba(255,255,255,0.12); text-align:right; white-space:nowrap;'>" +
+          formatNum(m[r][c]) +
+          "</td>";
+      }
+      html += "</tr>";
+    }
+    html += "</table></div>";
+    return html;
+  }
+
+  function formatNum(n) {
+    if (!Number.isFinite(n)) return "—";
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function addMatrices(A, B) {
+    return A.map(function (row, r) {
+      return row.map(function (v, c) {
+        return v + B[r][c];
+      });
+    });
+  }
+
+  function subMatrices(A, B) {
+    return A.map(function (row, r) {
+      return row.map(function (v, c) {
+        return v - B[r][c];
+      });
+    });
+  }
+
+  function scalarMultiply(A, k) {
+    return A.map(function (row) {
+      return row.map(function (v) {
+        return v * k;
+      });
+    });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const dims = getDims();
+    const op = String(opEl.value);
+
+    try {
+      const A = readMatrix("mc_a", dims.rows, dims.cols);
+      let result;
+      let opLabel = "";
+
+      if (op === "add") {
+        const B = readMatrix("mc_b", dims.rows, dims.cols);
+        result = addMatrices(A, B);
+        opLabel = "Addition";
+      } else if (op === "sub") {
+        const B = readMatrix("mc_b", dims.rows, dims.cols);
+        result = subMatrices(A, B);
+        opLabel = "Subtraction";
+      } else if (op === "scalar") {
+        const k = Number(String(scalarEl.value || "").trim());
+        if (!Number.isFinite(k)) {
+          showError("Please enter a valid scalar value.");
+          return;
+        }
+        result = scalarMultiply(A, k);
+        opLabel = "Scalar multiplication";
+      } else {
+        showError("Invalid operation selected.");
+        return;
+      }
+
+      resultEl.innerHTML =
+        "<strong>Matrix result</strong><br/>" +
+        matrixToHtmlTable(result);
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(opLabel) +
+        badge(dims.rows + " × " + dims.cols) +
+        badge(op === "scalar" ? ("k = " + formatNum(Number(scalarEl.value || 0))) : "Two matrices") +
+        "</div>";
+
+      fillTable([
+        ["Rows", String(dims.rows)],
+        ["Columns", String(dims.cols)],
+        ["Operation", opLabel],
+        ["Cells in result", String(dims.rows * dims.cols)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate the matrix result.");
+    }
+  }
+
+  function fillDemo() {
+    const dims = getDims();
+    for (let r = 0; r < dims.rows; r++) {
+      for (let c = 0; c < dims.cols; c++) {
+        const a = document.getElementById("mc_a_" + r + "_" + c);
+        const b = document.getElementById("mc_b_" + r + "_" + c);
+        if (a) a.value = String(r + c + 1);
+        if (b) b.value = String((r + 1) * (c + 1));
+      }
+    }
+    scalarEl.value = "2";
+    clearOutput();
+  }
+
+  function reset() {
+    syncUI();
+    scalarEl.value = "2";
+    clearOutput();
+  }
+
+  rowsEl.addEventListener("change", reset);
+  colsEl.addEventListener("change", reset);
+  opEl.addEventListener("change", function () {
+    syncUI();
+    clearOutput();
+  });
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  syncUI();
+  scalarEl.parentElement.style.display = "none";
+});
+</script>

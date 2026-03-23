@@ -1,0 +1,280 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Tan Calculator",
+  description:
+    "Calculate tangent of an angle in degrees or radians. Includes validation, undefined-case handling, result cards, and FAQ schema.",
+  href: "/math/tan-calculator/",
+  order: 394,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/tan-calculator/";
+
+const faqs = [
+  {
+    q: "What does this tan calculator compute?",
+    a: "It computes the tangent of an angle in either degrees or radians.",
+  },
+  {
+    q: "Can I switch between degrees and radians?",
+    a: "Yes. The calculator supports both degree mode and radian mode.",
+  },
+  {
+    q: "Why can tangent be undefined?",
+    a: "Tangent is sin(θ) divided by cos(θ), so it is undefined where cos(θ) = 0.",
+  },
+  {
+    q: "What are common undefined degree values?",
+    a: "Tangent is undefined at 90°, 270°, and more generally at 90° + 180°k.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Tan Calculator — ${SITE_NAME}`}
+  description="Calculate tangent of an angle in degrees or radians."
+  canonicalPath={CANONICAL_PATH}
+  h1="Tan Calculator"
+  intro="Calculate the tangent of an angle in degrees or radians. This page also shows sine and cosine context so undefined tangent cases are easier to understand."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="tan-calculator">
+    <style is:inline>
+      .tan-wrap, .tan-wrap * { box-sizing: border-box; }
+      .tan-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .tan-grid input,
+      .tan-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .tan-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .tan-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form tan-wrap" role="form" aria-describedby="tan_help tan_privacy">
+      <div class="tan-grid">
+        <div class="field">
+          <label for="tan_angle">Angle</label>
+          <input id="tan_angle" type="number" inputmode="decimal" step="any" placeholder="e.g., 45" />
+        </div>
+
+        <div class="field">
+          <label for="tan_mode">Angle unit</label>
+          <select id="tan_mode">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="tan_help" style="margin-top:6px;">
+        Computes:
+        <br />
+        <span class="tan-code">tan(θ) = sin(θ) / cos(θ)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tan_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="tan_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="tan_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tan_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="tan_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tan_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="tan_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tan_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts the angle to radians internally when necessary, then evaluates sine and cosine to compute tangent.
+    </p>
+    <p class="note">
+      Common values:
+      <br />
+      <strong>tan(0°) = 0</strong>,
+      <strong>tan(45°) = 1</strong>,
+      <strong>tan(30°) ≈ 0.5774</strong>,
+      <strong>tan(60°) ≈ 1.7321</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>45°</strong> → tan = <strong>1</strong></li>
+      <li><strong>30°</strong> → tan ≈ <strong>0.5774</strong></li>
+      <li><strong>90°</strong> → tangent is <strong>undefined</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sin-calculator/">Sin Calculator</a></li>
+      <li><a href="/math/cos-calculator/">Cos Calculator</a></li>
+      <li><a href="/math/trigonometry-calculator/">Trigonometry Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const angleEl = document.getElementById("tan_angle");
+  const modeEl = document.getElementById("tan_mode");
+  const calcBtn = document.getElementById("tan_calc");
+  const fillBtn = document.getElementById("tan_fill_demo");
+  const clearBtn = document.getElementById("tan_clear");
+  const errorEl = document.getElementById("tan_error");
+  const resultEl = document.getElementById("tan_result");
+  const cardsEl = document.getElementById("tan_cards");
+  const tbodyEl = document.getElementById("tan_tbody");
+
+  if (!angleEl || !modeEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    if (!Number.isFinite(n)) return "Undefined";
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 12 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function toRadians(angle, mode) {
+    return mode === "deg" ? angle * Math.PI / 180 : angle;
+  }
+
+  function safeValue(x) {
+    return Math.abs(x) < 1e-12 ? 0 : x;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const angle = Number(String(angleEl.value || "").trim());
+    const mode = String(modeEl.value || "deg");
+
+    if (!Number.isFinite(angle)) {
+      showError("Please enter a valid angle.");
+      return;
+    }
+
+    const radians = toRadians(angle, mode);
+    const s = safeValue(Math.sin(radians));
+    const c = safeValue(Math.cos(radians));
+    const t = Math.abs(c) < 1e-12 ? NaN : safeValue(s / c);
+
+    const undefinedTan = !Number.isFinite(t);
+
+    resultEl.innerHTML =
+      "<strong>Tan result</strong><br/>" +
+      "<span class='tan-code'>tan(θ) = " + fmt(t, 12) + "</span>" +
+      (undefinedTan ? "<br/><span class='note'>Tangent is undefined because cos(θ) is 0.</span>" : "");
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "deg" ? "Degree mode" : "Radian mode") +
+      badge(undefinedTan ? "Undefined tangent" : "Defined tangent") +
+      badge("Radians = " + fmt(radians, 8)) +
+      "</div>";
+
+    fillTable([
+      ["Angle", fmt(angle, 10) + (mode === "deg" ? "°" : " rad")],
+      ["Radians", fmt(radians, 12)],
+      ["sin(θ)", fmt(s, 12)],
+      ["cos(θ)", fmt(c, 12)],
+      ["tan(θ)", fmt(t, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "deg";
+    angleEl.value = "45";
+    clearOutput();
+  }
+
+  function reset() {
+    angleEl.value = "";
+    modeEl.value = "deg";
+    clearOutput();
+    angleEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [angleEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

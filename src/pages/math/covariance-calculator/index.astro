@@ -1,0 +1,287 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Covariance Calculator",
+  description:
+    "Calculate sample or population covariance for two datasets with validation, paired input checks, and FAQ support.",
+  href: "/math/covariance-calculator/",
+  order: 362,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/covariance-calculator/";
+
+const faqs = [
+  {
+    q: "What does covariance measure?",
+    a: "Covariance measures how two variables vary together. Positive covariance suggests they tend to move in the same direction, while negative covariance suggests opposite movement.",
+  },
+  {
+    q: "What is the difference between sample and population covariance?",
+    a: "Population covariance divides by n. Sample covariance divides by n − 1.",
+  },
+  {
+    q: "Do both datasets need the same number of values?",
+    a: "Yes. Covariance requires paired observations, so both lists must have the same length.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Covariance Calculator — ${SITE_NAME}`}
+  description="Covariance calculator with sample/population mode, paired input checks, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Covariance Calculator"
+  intro="Calculate covariance between two datasets using either the sample or population formula."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="covariance-calculator">
+    <style is:inline>
+      .cov-wrap, .cov-wrap * { box-sizing: border-box; }
+      .cov-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .cov-grid textarea {
+        width: 100%;
+        min-width: 0;
+        resize: vertical;
+      }
+      @media (max-width: 760px) {
+        .cov-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form cov-wrap" role="form" aria-describedby="cov_help cov_privacy">
+      <div class="field">
+        <label for="cov_mode">Mode</label>
+        <select id="cov_mode">
+          <option value="sample" selected>Sample covariance</option>
+          <option value="population">Population covariance</option>
+        </select>
+      </div>
+
+      <div class="cov-grid">
+        <div class="field">
+          <label for="cov_x">X values</label>
+          <textarea id="cov_x" rows="6" placeholder="e.g., 2, 4, 6, 8" spellcheck="false"></textarea>
+        </div>
+        <div class="field">
+          <label for="cov_y">Y values</label>
+          <textarea id="cov_y" rows="6" placeholder="e.g., 1, 3, 5, 7" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="cov_help" style="margin-top:6px;">
+        Enter paired datasets of equal length. Values can be separated by commas, spaces, or line breaks.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cov_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cov_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="cov_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cov_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cov_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cov_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cov_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cov_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Covariance compares paired deviations from each dataset’s mean.
+      <br />
+      Population covariance divides by <strong>n</strong>.
+      <br />
+      Sample covariance divides by <strong>n − 1</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>If X and Y both tend to rise together, covariance is usually positive</li>
+      <li>If one tends to rise while the other falls, covariance is usually negative</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/correlation-calculator/">Correlation Calculator</a></li>
+      <li><a href="/math/regression-calculator/">Regression Calculator</a></li>
+      <li><a href="/math/variance-calculator/">Variance Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("cov_mode");
+  const xEl = document.getElementById("cov_x");
+  const yEl = document.getElementById("cov_y");
+  const calcBtn = document.getElementById("cov_calc");
+  const demoBtn = document.getElementById("cov_fill_demo");
+  const clearBtn = document.getElementById("cov_clear");
+  const errorEl = document.getElementById("cov_error");
+  const resultEl = document.getElementById("cov_result");
+  const cardsEl = document.getElementById("cov_cards");
+  const tbodyEl = document.getElementById("cov_tbody");
+
+  if (!modeEl || !xEl || !yEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function parseValues(raw) {
+    const s = String(raw || "").trim();
+    if (!s) throw new Error("Please enter both X and Y datasets.");
+    const tokens = s.split(/[\s,]+/).filter(Boolean);
+    const nums = tokens.map(function (t) {
+      const n = Number(t);
+      if (!Number.isFinite(n)) throw new Error("All dataset entries must be valid numbers.");
+      return n;
+    });
+    if (!nums.length) throw new Error("Please enter both X and Y datasets.");
+    return nums;
+  }
+  function mean(arr) {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) sum += arr[i];
+    return sum / arr.length;
+  }
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const xs = parseValues(xEl.value);
+      const ys = parseValues(yEl.value);
+      if (xs.length !== ys.length) {
+        showError("X and Y must contain the same number of values.");
+        return;
+      }
+      if (xs.length < 2) {
+        showError("Please enter at least 2 paired values.");
+        return;
+      }
+
+      const mx = mean(xs);
+      const my = mean(ys);
+      let sum = 0;
+      for (let i = 0; i < xs.length; i++) {
+        sum += (xs[i] - mx) * (ys[i] - my);
+      }
+
+      const mode = String(modeEl.value || "sample");
+      const denom = mode === "population" ? xs.length : (xs.length - 1);
+      if (denom <= 0) {
+        showError("Sample covariance requires at least 2 paired values.");
+        return;
+      }
+
+      const cov = sum / denom;
+      let direction = "No linear co-movement";
+      if (cov > 0) direction = "Positive co-movement";
+      else if (cov < 0) direction = "Negative co-movement";
+
+      resultEl.innerHTML =
+        "<strong>Covariance result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + fmt(cov) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(mode === "population" ? "Population mode" : "Sample mode") +
+        badge("Pairs: " + xs.length) +
+        badge(direction) +
+        "</div>";
+
+      fillTable([
+        ["Mode", mode === "population" ? "Population covariance" : "Sample covariance"],
+        ["Pair count", String(xs.length)],
+        ["Mean of X", fmt(mx)],
+        ["Mean of Y", fmt(my)],
+        ["Covariance", fmt(cov)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate covariance.");
+    }
+  }
+  function fillDemo() {
+    xEl.value = "2, 4, 6, 8";
+    yEl.value = "1, 3, 5, 7";
+    modeEl.value = "sample";
+    clearOutput();
+  }
+  function reset() {
+    xEl.value = "";
+    yEl.value = "";
+    modeEl.value = "sample";
+    clearOutput();
+    xEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [xEl, yEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

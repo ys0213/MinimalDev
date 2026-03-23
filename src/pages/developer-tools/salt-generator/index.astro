@@ -1,0 +1,311 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Salt Generator",
+  description:
+    "Generate cryptographically secure salts in hex or base64url with configurable byte length and count.",
+  href: "/developer-tools/salt-generator/",
+  order: 433,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/salt-generator/";
+
+const faqs = [
+  {
+    q: "What is a salt?",
+    a: "A salt is random data added to input before hashing so identical passwords or values do not always produce identical hashes.",
+  },
+  {
+    q: "Is this salt generator secure?",
+    a: "Yes. It uses crypto.getRandomValues() in your browser.",
+  },
+  {
+    q: "What output formats are supported?",
+    a: "This page supports hex and base64 URL-safe output.",
+  },
+  {
+    q: "Is anything stored?",
+    a: "No. Everything runs locally and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Salt Generator — ${SITE_NAME}`}
+  description="Generate secure salts in hex or base64url with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Salt Generator"
+  intro="Generate cryptographically secure salts for hashing, password storage workflows, and test data."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="salt-generator">
+    <style is:inline>
+      #salt_bytes,
+      #salt_count,
+      #salt_format,
+      #salt_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .salt-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      .salt-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:10px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="salt_help salt_privacy">
+      <div class="salt-grid">
+        <div class="field">
+          <label for="salt_format">Output format</label>
+          <select id="salt_format">
+            <option value="hex" selected>Hex</option>
+            <option value="base64url">Base64 URL-safe</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="salt_bytes">Bytes per salt</label>
+          <input id="salt_bytes" type="number" inputmode="numeric" min="8" max="256" value="16" />
+        </div>
+
+        <div class="field">
+          <label for="salt_count">How many salts</label>
+          <input id="salt_count" type="number" inputmode="numeric" min="1" max="20" value="1" />
+        </div>
+      </div>
+
+      <p class="note" id="salt_help" style="margin-top:6px;">
+        Salts should be random and unique. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to generate.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="salt_generate">Generate</button>
+        <button class="btn secondary" type="button" id="salt_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="salt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="salt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result salt-mono" id="salt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="salt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="salt_output">Generated salt(s)</label>
+        <textarea id="salt_output" rows="10" spellcheck="false" readonly placeholder="Generated salt(s) will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="salt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="salt_privacy" style="margin-top:10px;">
+        Privacy: salt generation runs locally in your browser. No data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a byte size and output format. The salt is generated from secure random bytes using the browser crypto API.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>16 bytes</strong> → common compact salt size</li>
+      <li><strong>32 bytes</strong> → larger salt for stronger uniqueness margin</li>
+      <li><strong>Base64 URL-safe</strong> → convenient for configuration or storage fields</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/random-token-generator/">Random Token Generator</a></li>
+      <li><a href="/developer-tools/nonce-generator/">Nonce Generator</a></li>
+      <li><a href="/developer-tools/api-key-generator/">API Key Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const formatEl = document.getElementById("salt_format");
+  const bytesEl = document.getElementById("salt_bytes");
+  const countEl = document.getElementById("salt_count");
+  const generateBtn = document.getElementById("salt_generate");
+  const copyBtn = document.getElementById("salt_copy");
+  const clearBtn = document.getElementById("salt_clear");
+  const errEl = document.getElementById("salt_error");
+  const resultEl = document.getElementById("salt_result");
+  const cardsEl = document.getElementById("salt_cards");
+  const outputEl = document.getElementById("salt_output");
+  const tbodyEl = document.getElementById("salt_tbody");
+
+  if (!formatEl || !bytesEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function bytesToHex(arr) {
+    return Array.from(arr).map(function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  function bytesToBase64Url(arr) {
+    let binary = "";
+    for (let i = 0; i < arr.length; i++) binary += String.fromCharCode(arr[i]);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function generateSalts() {
+    resetOutput();
+
+    const format = String(formatEl.value || "hex");
+    const byteCount = parseInt(String(bytesEl.value || ""), 10);
+    const count = parseInt(String(countEl.value || ""), 10);
+
+    if (!Number.isFinite(byteCount) || byteCount < 8 || byteCount > 256) {
+      showError("Bytes per salt must be between 8 and 256.");
+      return;
+    }
+
+    if (!Number.isFinite(count) || count < 1 || count > 20) {
+      showError("How many salts must be between 1 and 20.");
+      return;
+    }
+
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const bytes = new Uint8Array(byteCount);
+      crypto.getRandomValues(bytes);
+      list.push(format === "hex" ? bytesToHex(bytes) : bytesToBase64Url(bytes));
+    }
+
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Generated salt" + (count === 1 ? "" : "s") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Format: " + format) +
+      badge("Count: " + count) +
+      badge("Bytes: " + byteCount) +
+      badge("Entropy: " + (byteCount * 8) + " bits each") +
+      "</div>";
+
+    fillTable([
+      ["Format", format],
+      ["Bytes per salt", String(byteCount)],
+      ["Generated count", String(count)],
+      ["Entropy per salt", String(byteCount * 8) + " bits"],
+      ["Approx output length", list[0] ? String(list[0].length) : "0"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated salt output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied salt output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    formatEl.value = "hex";
+    bytesEl.value = "16";
+    countEl.value = "1";
+    resetOutput();
+    bytesEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateSalts);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [bytesEl, countEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateSalts();
+    });
+  });
+});
+</script>

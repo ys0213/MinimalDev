@@ -1,0 +1,323 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Unicode Unescape",
+  description:
+    "Convert Unicode escape sequences back into readable text with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/unicode-unescape/",
+  order: 393,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/unicode-unescape/";
+
+const faqs = [
+  {
+    q: "What does Unicode unescape do?",
+    a: "It converts escape sequences such as \\u0041, \\uC548, or \\u{1F600} back into their normal text characters.",
+  },
+  {
+    q: "Does it support surrogate pairs?",
+    a: "Yes. Standard \\uXXXX pairs are interpreted correctly when they form a valid surrogate pair.",
+  },
+  {
+    q: "Can it decode code point notation like \\u{1F600}?",
+    a: "Yes. This tool supports both standard \\uXXXX notation and code point escapes such as \\u{1F600}.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Unescaping runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Unicode Unescape — ${SITE_NAME}`}
+  description="Convert Unicode escape sequences back into readable text with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Unicode Unescape"
+  intro="Decode Unicode escape sequences such as \\u0041, \\uC548, and \\u{1F600} back into readable text."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="unicode-unescape">
+    <style is:inline>
+      #uu_input,
+      #uu_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .uu-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="uu_help uu_privacy">
+      <div class="field">
+        <label for="uu_input">Escaped input</label>
+        <textarea id="uu_input" rows="10" spellcheck="false" placeholder="e.g. Hello \\u2014 \\uC548\\uB155\\uD558\\uC138\\uC694 \\u{1F600}"></textarea>
+      </div>
+
+      <p class="note" id="uu_help" style="margin-top:6px;">
+        Supports <code>\uXXXX</code> and <code>\u{"{...}"}</code> forms. Invalid escape fragments remain an error instead of being silently changed.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="uu_decode">Unescape</button>
+        <button class="btn secondary" type="button" id="uu_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="uu_clear">Clear</button>
+      </div>
+
+      <div class="result" id="uu_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result uu-mono" id="uu_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="uu_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="uu_output">Decoded output</label>
+        <textarea id="uu_output" rows="10" spellcheck="false" readonly placeholder="Decoded text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="uu_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="uu_privacy" style="margin-top:10px;">
+        Privacy: unescaping runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool decodes Unicode escape patterns back into regular characters. It supports both four-digit escapes
+      and brace-based code point escapes.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>\u0041</strong> → <strong>A</strong></li>
+      <li><strong>\uC548</strong> → <strong>안</strong></li>
+      <li><strong>\u{"{1F600}"}</strong> → <strong>😀</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/unicode-escape/">Unicode Escape</a></li>
+      <li><a href="/developer-tools/string-unescape/">String Unescape</a></li>
+      <li><a href="/developer-tools/html-entity-decoder/">HTML Entity Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("uu_input");
+  const decodeBtn = document.getElementById("uu_decode");
+  const copyBtn = document.getElementById("uu_copy");
+  const clearBtn = document.getElementById("uu_clear");
+  const errEl = document.getElementById("uu_error");
+  const resultEl = document.getElementById("uu_result");
+  const cardsEl = document.getElementById("uu_cards");
+  const outputEl = document.getElementById("uu_output");
+  const tbodyEl = document.getElementById("uu_tbody");
+
+  if (!inputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function decodeUnicodeEscapes(str) {
+    let out = "";
+    let i = 0;
+    let decodedCount = 0;
+
+    while (i < str.length) {
+      if (str[i] === "\\" && str[i + 1] === "u") {
+        if (str[i + 2] === "{") {
+          const end = str.indexOf("}", i + 3);
+          if (end === -1) throw new Error("Unclosed \\u{...} escape.");
+          const hex = str.slice(i + 3, end);
+          if (!/^[0-9a-fA-F]+$/.test(hex)) throw new Error("Invalid hex digits in \\u{...} escape.");
+          const cp = parseInt(hex, 16);
+          if (cp < 0 || cp > 0x10FFFF) throw new Error("Unicode code point out of range.");
+          out += String.fromCodePoint(cp);
+          decodedCount++;
+          i = end + 1;
+          continue;
+        }
+
+        const hex4 = str.slice(i + 2, i + 6);
+        if (!/^[0-9a-fA-F]{4}$/.test(hex4)) throw new Error("Invalid \\uXXXX escape.");
+        const first = parseInt(hex4, 16);
+
+        if (first >= 0xD800 && first <= 0xDBFF && str[i + 6] === "\\" && str[i + 7] === "u") {
+          const hexLow = str.slice(i + 8, i + 12);
+          if (/^[0-9a-fA-F]{4}$/.test(hexLow)) {
+            const low = parseInt(hexLow, 16);
+            if (low >= 0xDC00 && low <= 0xDFFF) {
+              const cp = ((first - 0xD800) << 10) + (low - 0xDC00) + 0x10000;
+              out += String.fromCodePoint(cp);
+              decodedCount++;
+              i += 12;
+              continue;
+            }
+          }
+        }
+
+        out += String.fromCharCode(first);
+        decodedCount++;
+        i += 6;
+        continue;
+      }
+
+      out += str[i];
+      i++;
+    }
+
+    return { text: out, decodedCount };
+  }
+
+  function countEscapePatterns(str) {
+    const matches = str.match(/\\u\{[0-9a-fA-F]+\}|\\u[0-9a-fA-F]{4}/g);
+    return matches ? matches.length : 0;
+  }
+
+  function decodeNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      showError("Please enter Unicode escape text to decode.");
+      return;
+    }
+
+    let decoded;
+    try {
+      decoded = decodeUnicodeEscapes(raw);
+    } catch (e) {
+      showError("Invalid Unicode escape input: " + (e && e.message ? e.message : "parse error"));
+      return;
+    }
+
+    const patternCount = countEscapePatterns(raw);
+    outputEl.value = decoded.text;
+    lastOutput = decoded.text;
+
+    resultEl.innerHTML =
+      "<strong>Unescaped successfully.</strong><br/><span class='note'>Unicode escape sequences were converted back into text.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Patterns found: " + patternCount) +
+      badge("Decoded units: " + decoded.decodedCount) +
+      badge("Readable text ready") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Output length", String(decoded.text.length)],
+      ["Length delta", String(decoded.text.length - raw.length)],
+      ["Escape patterns found", String(patternCount)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decodeNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decodeNow();
+  });
+});
+</script>

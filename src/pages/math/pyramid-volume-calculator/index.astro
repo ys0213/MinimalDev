@@ -1,0 +1,316 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Pyramid Volume Calculator",
+  description:
+    "Calculate pyramid volume from base area and height, or from square-base side length and height. Includes validation, result cards, and FAQ schema.",
+  href: "/math/pyramid-volume-calculator/",
+  order: 400,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/pyramid-volume-calculator/";
+
+const faqs = [
+  {
+    q: "What does this pyramid volume calculator compute?",
+    a: "It computes pyramid volume. You can enter base area directly or use square-base mode with side length and height.",
+  },
+  {
+    q: "What formula is used for pyramid volume?",
+    a: "The formula is V = 1/3 × base area × height.",
+  },
+  {
+    q: "What if I have a square pyramid?",
+    a: "In square-base mode, the calculator computes base area as side² and then uses the standard pyramid volume formula.",
+  },
+  {
+    q: "Does this calculate surface area too?",
+    a: "This page focuses on volume and supporting base metrics. It does not calculate full pyramid surface area for all pyramid types.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Pyramid Volume Calculator — ${SITE_NAME}`}
+  description="Calculate pyramid volume from base area and height, or from square-base side and height."
+  canonicalPath={CANONICAL_PATH}
+  h1="Pyramid Volume Calculator"
+  intro="Calculate pyramid volume using either base area and height, or square-base side length and height."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="pyramid-volume-calculator">
+    <style is:inline>
+      .pyr-wrap, .pyr-wrap * { box-sizing: border-box; }
+      .pyr-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .pyr-grid input,
+      .pyr-grid select {
+        width:100%;
+        min-width:0;
+      }
+      .pyr-code {
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break:break-word;
+      }
+      @media (max-width: 760px) {
+        .pyr-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form pyr-wrap" role="form" aria-describedby="pyr_help pyr_privacy">
+      <div class="field">
+        <label for="pyr_mode">Input mode</label>
+        <select id="pyr_mode">
+          <option value="baseArea" selected>Base area + height</option>
+          <option value="squareBase">Square base side + height</option>
+        </select>
+      </div>
+
+      <div class="pyr-grid">
+        <div class="field">
+          <label for="pyr_base_area" id="pyr_primary_label">Base area</label>
+          <input id="pyr_base_area" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 36" />
+        </div>
+
+        <div class="field">
+          <label for="pyr_height">Height (h)</label>
+          <input id="pyr_height" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <p class="note" id="pyr_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="pyr-code">V = 1/3 × base area × height</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pyr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pyr_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pyr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pyr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pyr_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="pyr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pyr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pyr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The volume of any pyramid is one-third of the product of its base area and height.
+    </p>
+    <ul>
+      <li><strong>General formula:</strong> V = 1/3 × B × h</li>
+      <li><strong>Square base:</strong> B = s², so V = 1/3 × s² × h</li>
+    </ul>
+    <p class="note">
+      This page supports both direct base-area input and square-base input for convenience.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Base area = 36, height = 10</strong> → volume = 120</li>
+      <li><strong>Square side = 6, height = 10</strong> → base area = 36 → volume = 120</li>
+      <li><strong>Square side = 4, height = 9</strong> → another square pyramid example</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/cone-volume-calculator/">Cone Volume Calculator</a></li>
+      <li><a href="/math/sphere-volume-calculator/">Sphere Volume Calculator</a></li>
+      <li><a href="/math/polygon-area-calculator/">Polygon Area Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const modeEl = document.getElementById("pyr_mode");
+  const primaryEl = document.getElementById("pyr_base_area");
+  const heightEl = document.getElementById("pyr_height");
+  const primaryLabelEl = document.getElementById("pyr_primary_label");
+  const calcBtn = document.getElementById("pyr_calc");
+  const fillBtn = document.getElementById("pyr_fill_demo");
+  const clearBtn = document.getElementById("pyr_clear");
+  const errorEl = document.getElementById("pyr_error");
+  const resultEl = document.getElementById("pyr_result");
+  const cardsEl = document.getElementById("pyr_cards");
+  const tbodyEl = document.getElementById("pyr_tbody");
+
+  if (!modeEl || !primaryEl || !heightEl || !primaryLabelEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function num(v) {
+    const n = parseFloat(String(v).trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n, d) {
+    return Number.isFinite(n)
+      ? n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 12 })
+      : "—";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function updateMode() {
+    if (modeEl.value === "baseArea") {
+      primaryLabelEl.textContent = "Base area";
+      primaryEl.placeholder = "e.g., 36";
+    } else {
+      primaryLabelEl.textContent = "Square base side length";
+      primaryEl.placeholder = "e.g., 6";
+    }
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const a = document.createElement("td");
+      const b = document.createElement("td");
+      a.textContent = row[0];
+      b.textContent = row[1];
+      tr.appendChild(a);
+      tr.appendChild(b);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const mode = String(modeEl.value || "baseArea");
+    const primary = num(primaryEl.value);
+    const h = num(heightEl.value);
+
+    if (!Number.isFinite(primary) || !Number.isFinite(h)) {
+      showError("Please enter valid values.");
+      return;
+    }
+    if (primary <= 0 || h <= 0) {
+      showError("All entered dimensions must be greater than 0.");
+      return;
+    }
+
+    let baseArea, side = NaN;
+    if (mode === "baseArea") {
+      baseArea = primary;
+    } else {
+      side = primary;
+      baseArea = side * side;
+    }
+
+    const volume = (baseArea * h) / 3;
+
+    resultEl.innerHTML =
+      "<strong>Pyramid result</strong><br/>" +
+      "<span class='pyr-code'>Volume = " + fmt(volume, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "baseArea" ? "General pyramid mode" : "Square pyramid mode") +
+      badge("Base area = " + fmt(baseArea, 8)) +
+      badge("Height = " + fmt(h, 8)) +
+      "</div>";
+
+    const rows = [
+      ["Mode", mode === "baseArea" ? "Base area + height" : "Square base side + height"],
+      ["Base area", fmt(baseArea, 12)],
+      ["Height", fmt(h, 12)],
+      ["Volume", fmt(volume, 12)],
+    ];
+
+    if (mode === "squareBase") {
+      rows.splice(1, 0, ["Square base side", fmt(side, 12)]);
+    }
+
+    fillTable(rows);
+  }
+
+  function fillDemo() {
+    modeEl.value = "squareBase";
+    updateMode();
+    primaryEl.value = "6";
+    heightEl.value = "10";
+    clearOutput();
+  }
+
+  function reset() {
+    modeEl.value = "baseArea";
+    updateMode();
+    primaryEl.value = "";
+    heightEl.value = "";
+    clearOutput();
+    primaryEl.focus();
+  }
+
+  modeEl.addEventListener("change", function () {
+    updateMode();
+    clearOutput();
+  });
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [modeEl, primaryEl, heightEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  updateMode();
+  clearOutput();
+});
+</script>

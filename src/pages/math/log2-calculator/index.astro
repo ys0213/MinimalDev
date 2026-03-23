@@ -1,0 +1,232 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Log2 Calculator",
+  description:
+    "Calculate base-2 logarithms with validation, domain checks, result cards, and FAQ support.",
+  href: "/math/log2-calculator/",
+  order: 349,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/log2-calculator/";
+
+const faqs = [
+  {
+    q: "What is log base 2?",
+    a: "Log base 2 asks what exponent y makes 2^y equal to x.",
+  },
+  {
+    q: "Why is log2 useful?",
+    a: "Base-2 logarithms are common in computer science, binary systems, algorithms, and information theory.",
+  },
+  {
+    q: "Why must x be positive?",
+    a: "Real logarithms are defined only for positive x.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Log2 Calculator — ${SITE_NAME}`}
+  description="Base-2 logarithm calculator with validation, domain checks, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Log2 Calculator"
+  intro="Calculate base-2 logarithms instantly and view the equivalent exponential meaning."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="log2-calculator">
+    <div class="form" role="form" aria-describedby="log2_help log2_privacy">
+      <div class="field">
+        <label for="log2_x">Value x</label>
+        <input id="log2_x" type="number" step="any" inputmode="decimal" placeholder="e.g., 8" />
+      </div>
+
+      <p class="note" id="log2_help" style="margin-top:6px;">
+        Domain rule: <strong>x &gt; 0</strong>. This computes <strong>log₂(x)</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="log2_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="log2_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="log2_clear">Clear</button>
+      </div>
+
+      <div class="result" id="log2_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="log2_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="log2_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="log2_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="log2_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Base-2 logarithm:
+      <br />
+      <strong>log₂(x) = ln(x) / ln(2)</strong>
+      <br />
+      Equivalent meaning:
+      <br />
+      <strong>2ʸ = x</strong> where <strong>y = log₂(x)</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>log₂(8)</strong> = <strong>3</strong></li>
+      <li><strong>log₂(16)</strong> = <strong>4</strong></li>
+      <li><strong>log₂(0.5)</strong> = <strong>-1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/logarithm-base-calculator/">Logarithm Base Calculator</a></li>
+      <li><a href="/math/log10-calculator/">Log10 Calculator</a></li>
+      <li><a href="/math/log-calculator/">Log Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("log2_x");
+  const calcBtn = document.getElementById("log2_calc");
+  const demoBtn = document.getElementById("log2_fill_demo");
+  const clearBtn = document.getElementById("log2_clear");
+  const errorEl = document.getElementById("log2_error");
+  const resultEl = document.getElementById("log2_result");
+  const cardsEl = document.getElementById("log2_cards");
+  const tbodyEl = document.getElementById("log2_tbody");
+
+  if (!xEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter a value for x.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number for x.");
+    return n;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e12) / 1e12;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 12 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const x = getNum(xEl);
+
+      if (!(x > 0)) {
+        showError("x must be greater than 0.");
+        return;
+      }
+
+      const y = Math.log2 ? Math.log2(x) : (Math.log(x) / Math.log(2));
+
+      resultEl.innerHTML =
+        "<strong>Log2 result</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>log₂(" + fmt(x) + ") = " + fmt(y) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Base 2") +
+        badge("Valid logarithm domain") +
+        badge("2^" + fmt(y) + " = " + fmt(x)) +
+        "</div>";
+
+      fillTable([
+        ["x", fmt(x)],
+        ["Base", "2"],
+        ["Formula used", "ln(x) / ln(2)"],
+        ["Result", fmt(y)],
+        ["Equivalent exponential form", "2^" + fmt(y) + " = " + fmt(x)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not calculate log2.");
+    }
+  }
+
+  function fillDemo() {
+    xEl.value = "8";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  xEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

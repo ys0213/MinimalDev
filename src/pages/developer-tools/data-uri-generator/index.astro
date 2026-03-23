@@ -1,0 +1,318 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Data URI Generator",
+  description:
+    "Generate data: URIs from text using percent-encoding or Base64, with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/data-uri-generator/",
+  order: 362,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/data-uri-generator/";
+
+const faqs = [
+  {
+    q: "What is a data URI?",
+    a: "A data URI embeds data directly inside a URL using the data: scheme.",
+  },
+  {
+    q: "What output modes are supported?",
+    a: "This tool supports percent-encoded text output and Base64 output.",
+  },
+  {
+    q: "Can I set the MIME type?",
+    a: "Yes. You can specify a MIME type such as text/plain, text/html, application/json, or image/svg+xml.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Generation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Data URI Generator — ${SITE_NAME}`}
+  description="Generate data: URIs from text using percent-encoding or Base64, with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Data URI Generator"
+  intro="Generate a data: URI from text content. Useful for testing, inline assets, and quick developer workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="data-uri-generator">
+    <style is:inline>
+      #dug_input,
+      #dug_output,
+      #dug_mime,
+      #dug_charset,
+      #dug_mode {
+        width: 100%;
+        min-width: 0;
+      }
+      .dug-mono {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="dug_help dug_privacy">
+      <div class="field">
+        <label for="dug_input">Source text</label>
+        <textarea
+          id="dug_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="Enter text content to wrap in a data URI"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="dug_mime">MIME type</label>
+        <input id="dug_mime" value="text/plain" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="dug_charset">Charset</label>
+        <input id="dug_charset" value="utf-8" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="dug_mode">Encoding mode</label>
+        <select id="dug_mode">
+          <option value="percent" selected>Percent-encoded</option>
+          <option value="base64">Base64</option>
+        </select>
+      </div>
+
+      <p class="note" id="dug_help" style="margin-top:6px;">
+        Example result: <code>data:text/plain;charset=utf-8,Hello</code> or <code>data:text/plain;charset=utf-8;base64,SGVsbG8=</code>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dug_generate">Generate</button>
+        <button class="btn secondary" type="button" id="dug_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="dug_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dug_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="dug_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="dug_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="dug_output">Data URI output</label>
+        <textarea
+          id="dug_output"
+          rows="10"
+          readonly
+          spellcheck="false"
+          placeholder="Generated data URI will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="dug_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="dug_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No input data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Enter text, choose a MIME type and encoding mode, then generate a full data: URI string.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>text/plain</strong> + plain text → inline text data URI</li>
+      <li><strong>text/html</strong> + HTML markup → inline HTML data URI</li>
+      <li><strong>application/json</strong> + JSON text → inline JSON data URI</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/data-uri-decoder/">Data URI Decoder</a></li>
+      <li><a href="/developer-tools/base32-encoder/">Base32 Encoder</a></li>
+      <li><a href="/developer-tools/text-to-binary/">Text to Binary</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("dug_input");
+  const mimeEl = document.getElementById("dug_mime");
+  const charsetEl = document.getElementById("dug_charset");
+  const modeEl = document.getElementById("dug_mode");
+  const outputEl = document.getElementById("dug_output");
+  const generateBtn = document.getElementById("dug_generate");
+  const copyBtn = document.getElementById("dug_copy");
+  const clearBtn = document.getElementById("dug_clear");
+  const errEl = document.getElementById("dug_error");
+  const resultEl = document.getElementById("dug_result");
+  const cardsEl = document.getElementById("dug_cards");
+  const tbodyEl = document.getElementById("dug_tbody");
+
+  if (!inputEl || !mimeEl || !charsetEl || !modeEl || !outputEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function utf8ToBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  function generate() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const mime = String(mimeEl.value || "").trim();
+    const charset = String(charsetEl.value || "").trim();
+    const mode = String(modeEl.value || "percent");
+
+    if (!raw.length) {
+      showError("Please enter source text.");
+      return;
+    }
+    if (!mime) {
+      showError("Please enter a MIME type.");
+      return;
+    }
+    if (!/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(mime)) {
+      showError("Please enter a valid MIME type, such as text/plain or application/json.");
+      return;
+    }
+
+    const meta = charset ? mime + ";charset=" + charset : mime;
+    const payload = mode === "base64" ? utf8ToBase64(raw) : encodeURIComponent(raw);
+    const uri = mode === "base64"
+      ? "data:" + meta + ";base64," + payload
+      : "data:" + meta + "," + payload;
+
+    lastOutput = uri;
+    outputEl.value = uri;
+
+    resultEl.innerHTML = "<strong>Data URI generated.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(mime) +
+      badge(charset ? "charset=" + charset : "No charset") +
+      badge(mode === "base64" ? "Base64" : "Percent-encoded") +
+      "</div>";
+
+    fillTable([
+      ["Input characters", String(raw.length)],
+      ["Output length", String(uri.length)],
+      ["MIME type", mime],
+      ["Charset", charset || "None"],
+      ["Encoding mode", mode === "base64" ? "Base64" : "Percent"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No data URI to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied data URI.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    mimeEl.value = "text/plain";
+    charsetEl.value = "utf-8";
+    modeEl.value = "percent";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
+  });
+});
+</script>

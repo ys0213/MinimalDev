@@ -1,0 +1,457 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Company Name Generator",
+  description:
+    "Generate random company names using brand styles, suffixes, and formatting options. Includes validation, result cards, FAQ schema, and accessibility.",
+  href: "/generators/random-company-name/",
+  order: 185,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-company-name/";
+
+const faqs = [
+  {
+    q: "What does this company name generator do?",
+    a: "It creates random company name ideas by combining prefixes, roots, styles, and optional business suffixes.",
+  },
+  {
+    q: "Are these names unique or trademark-safe?",
+    a: "No. These are random suggestions only. You must check trademarks, domain availability, and business registrations before using a name.",
+  },
+  {
+    q: "Can I generate startup-style or formal company names?",
+    a: "Yes. You can choose style options such as modern, formal, tech, or mixed naming patterns.",
+  },
+  {
+    q: "Can I include business suffixes like Labs or Group?",
+    a: "Yes. You can enable optional suffixes for more company-like naming formats.",
+  },
+  {
+    q: "Does this tool store generated names?",
+    a: "No. Everything runs locally in your browser and generated output is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Company Name Generator — ${SITE_NAME}`}
+  description="Generate random company names with multiple styles, suffix options, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Company Name Generator"
+  intro="Generate company name ideas for startups, side projects, mock branding, internal demos, and business naming inspiration."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-company-name">
+    <style is:inline>
+      .rcg-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rcg-grid > * {
+        min-width: 0;
+      }
+      .rcg-output {
+        width: 100%;
+        min-width: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rcg-cards-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .rcg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+      .rcg-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rcg-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      @media (min-width: 780px) {
+        .rcg-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rcg_help rcg_privacy">
+      <div class="rcg-grid">
+        <div class="field">
+          <label for="rcg_count">How many company names</label>
+          <input id="rcg_count" type="number" inputmode="numeric" min="1" max="100" value="12" />
+        </div>
+
+        <div class="field">
+          <label for="rcg_style">Naming style</label>
+          <select id="rcg_style">
+            <option value="modern" selected>Modern</option>
+            <option value="formal">Formal</option>
+            <option value="tech">Tech</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rcg_suffix_mode">Suffix mode</label>
+          <select id="rcg_suffix_mode">
+            <option value="optional" selected>Optional</option>
+            <option value="always">Always include suffix</option>
+            <option value="none">No suffix</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rcg_output_style">Output format</label>
+          <select id="rcg_output_style">
+            <option value="lines" selected>One per line</option>
+            <option value="bullets">Bullet list</option>
+            <option value="comma">Comma-separated</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rcg-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rcg_unique">
+            <input id="rcg_unique" type="checkbox" checked />
+            Avoid duplicates when possible
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rcg_title_case">
+            <input id="rcg_title_case" type="checkbox" checked />
+            Use title case
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rcg_help" style="margin-top:6px;">
+        These are naming ideas only. Always verify trademark status, legal use, and domain availability before adopting a company name.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rcg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rcg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rcg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rcg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rcg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rcg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rcg_output">Generated company names</label>
+        <textarea id="rcg_output" class="rcg-output" rows="12" readonly spellcheck="false" placeholder="Generated company names will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rcg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rcg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated names are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose a naming style, decide whether to include company suffixes, generate a batch, and then copy the names into brainstorming docs, mock branding, or test datasets.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Nova Harbor Labs</strong> for a startup-style brand</li>
+      <li><strong>Silver Oak Group</strong> for a more formal company name</li>
+      <li><strong>Quantify Core</strong> for a tech-oriented project identity</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-product-name/">Random Product Name Generator</a></li>
+      <li><a href="/generators/random-domain-name/">Random Domain Name Generator</a></li>
+      <li><a href="/generators/random-team-name-generator/">Random Team Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rcg_count");
+  const styleEl = document.getElementById("rcg_style");
+  const suffixModeEl = document.getElementById("rcg_suffix_mode");
+  const outputStyleEl = document.getElementById("rcg_output_style");
+  const uniqueEl = document.getElementById("rcg_unique");
+  const titleCaseEl = document.getElementById("rcg_title_case");
+  const generateBtn = document.getElementById("rcg_generate");
+  const copyBtn = document.getElementById("rcg_copy");
+  const clearBtn = document.getElementById("rcg_clear");
+  const errorEl = document.getElementById("rcg_error");
+  const resultEl = document.getElementById("rcg_result");
+  const cardsEl = document.getElementById("rcg_cards");
+  const outputEl = document.getElementById("rcg_output");
+  const tbodyEl = document.getElementById("rcg_tbody");
+
+  if (!countEl || !styleEl || !suffixModeEl || !outputStyleEl || !uniqueEl || !titleCaseEl || !generateBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const modernPrefixes = ["Nova","Aero","Luma","Echo","Vivid","Zen","Pixel","Bright","Nexa","Orbit"];
+  const formalPrefixes = ["Silver","Grand","Prime","United","Summit","Royal","Central","Sterling","Capital","Pioneer"];
+  const techPrefixes = ["Quant","Data","Cyber","Logic","Cloud","Vector","Tensor","Byte","Code","Signal"];
+
+  const roots = ["Harbor","Oak","Forge","Core","Bridge","Matrix","Scale","Flow","Peak","Field","Axis","Works","Point","Crest","Beacon"];
+  const suffixes = ["Labs","Group","Systems","Partners","Solutions","Studio","Works","Holdings","Collective","Networks"];
+
+  let lastList = [];
+  let lastOutput = "";
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastList = [];
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, sub) {
+    return (
+      '<div class="rcg-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function choosePrefix(style) {
+    if (style === "modern") return randItem(modernPrefixes);
+    if (style === "formal") return randItem(formalPrefixes);
+    if (style === "tech") return randItem(techPrefixes);
+
+    const combined = modernPrefixes.concat(formalPrefixes, techPrefixes);
+    return randItem(combined);
+  }
+
+  function maybeLowerTitleCase(str, enabled) {
+    if (enabled) return str;
+    return str.toLowerCase();
+  }
+
+  function makeName(style, suffixMode, titleCase) {
+    const prefix = choosePrefix(style);
+    const root = randItem(roots);
+
+    let name = prefix + " " + root;
+
+    const includeSuffix =
+      suffixMode === "always" ||
+      (suffixMode === "optional" && Math.random() < 0.65);
+
+    if (includeSuffix) {
+      name += " " + randItem(suffixes);
+    }
+
+    return maybeLowerTitleCase(name, titleCase);
+  }
+
+  function formatOutput(list, mode) {
+    if (mode === "bullets") return list.map(function (x) { return "• " + x; }).join("\n");
+    if (mode === "comma") return list.join(", ");
+    return list.join("\n");
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const style = String(styleEl.value || "modern");
+    const suffixMode = String(suffixModeEl.value || "optional");
+    const outputStyle = String(outputStyleEl.value || "lines");
+    const unique = !!uniqueEl.checked;
+    const titleCase = !!titleCaseEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const list = [];
+    const seen = new Set();
+    let attempts = 0;
+    const maxAttempts = count * 30;
+
+    while (list.length < count && attempts < maxAttempts) {
+      attempts++;
+      const name = makeName(style, suffixMode, titleCase);
+
+      if (unique) {
+        if (seen.has(name)) continue;
+        seen.add(name);
+      }
+
+      list.push(name);
+    }
+
+    lastList = list.slice();
+    lastOutput = formatOutput(list, outputStyle);
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>Company names generated.</strong><br/><span class='note'>Always verify legal and commercial availability before use.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rcg-cards-wrap">' +
+      card("Requested", String(count), "Requested names") +
+      card("Generated", String(list.length), "Returned in this batch") +
+      card("Style", style.charAt(0).toUpperCase() + style.slice(1), "Selected naming style") +
+      card("Suffixes", suffixMode, suffixMode === "none" ? "No business suffixes" : "Suffix rule applied") +
+      "</div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+      badge(unique ? "Duplicate avoidance enabled" : "Duplicates allowed") +
+      badge(titleCase ? "Title case" : "Lowercase") +
+      badge("Trademark check required") +
+      "</div>";
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(list.length)],
+      ["Naming style", style],
+      ["Suffix mode", suffixMode],
+      ["Output style", outputStyle],
+      ["Duplicate avoidance", unique ? "Enabled" : "Disabled"],
+      ["Title case", titleCase ? "Yes" : "No"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated company names to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated company names.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "12";
+    styleEl.value = "modern";
+    suffixModeEl.value = "optional";
+    outputStyleEl.value = "lines";
+    uniqueEl.checked = true;
+    titleCaseEl.checked = true;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, styleEl, suffixModeEl, outputStyleEl, uniqueEl, titleCaseEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

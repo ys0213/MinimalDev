@@ -1,0 +1,380 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "CSV Formatter",
+  description:
+    "Validate and normalize CSV with consistent quoting, line endings, result cards, and FAQ schema.",
+  href: "/developer-tools/csv-formatter/",
+  order: 399,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/csv-formatter/";
+
+const faqs = [
+  {
+    q: "What does this CSV formatter do?",
+    a: "It parses CSV input and writes it back in a clean, normalized format with consistent delimiters, quoting, and line breaks.",
+  },
+  {
+    q: "Does it support quoted values and commas inside fields?",
+    a: "Yes. It supports standard CSV quoting rules, including commas, quotes, and line breaks inside quoted fields.",
+  },
+  {
+    q: "What happens if rows have inconsistent column counts?",
+    a: "The tool still formats the CSV but shows row-width information so you can spot inconsistencies.",
+  },
+  {
+    q: "Is my CSV stored?",
+    a: "No. Formatting runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`CSV Formatter — ${SITE_NAME}`}
+  description="Validate and normalize CSV with consistent quoting, line endings, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="CSV Formatter"
+  intro="Parse CSV and output a normalized, consistently formatted version."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="csv-formatter">
+    <style is:inline>
+      #cf_input,
+      #cf_output,
+      #cf_quoteMode,
+      #cf_lineEnding {
+        width: 100%;
+        min-width: 0;
+      }
+      .cf-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="cf_help cf_privacy">
+      <div class="field">
+        <label for="cf_input">CSV input</label>
+        <textarea
+          id="cf_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={'e.g. name,age,city\n"Alex",30,"New York"\n"Sam",28,"Los Angeles"'}
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="cf_quoteMode">Quote output fields</label>
+        <select id="cf_quoteMode">
+          <option value="minimal" selected>Only when needed</option>
+          <option value="all">Quote all fields</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="cf_lineEnding">Line ending</label>
+        <select id="cf_lineEnding">
+          <option value="lf" selected>LF (\n)</option>
+          <option value="crlf">CRLF (\r\n)</option>
+        </select>
+      </div>
+
+      <p class="note" id="cf_help" style="margin-top:6px;">
+        Standard CSV parsing with comma delimiter and double-quote escaping. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to format.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cf_format">Format CSV</button>
+        <button class="btn secondary" type="button" id="cf_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="cf_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cf_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result cf-mono" id="cf_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cf_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="cf_output">Formatted CSV</label>
+        <textarea id="cf_output" rows="12" readonly spellcheck="false" placeholder="Formatted CSV will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cf_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cf_privacy" style="margin-top:10px;">
+        Privacy: formatting runs locally in your browser. No CSV is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool parses standard CSV and writes it back in a normalized form so delimiters, quotes, and line endings are consistent.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>name,age</strong> → preserved as two columns</li>
+      <li><strong>"New York, NY"</strong> → kept quoted correctly</li>
+      <li><strong>embedded ""quote""</strong> → preserved using CSV escaping rules</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/tsv-to-csv/">TSV to CSV</a></li>
+      <li><a href="/developer-tools/csv-to-tsv/">CSV to TSV</a></li>
+      <li><a href="/developer-tools/csv-to-json/">CSV to JSON</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("cf_input");
+  const quoteModeEl = document.getElementById("cf_quoteMode");
+  const lineEndingEl = document.getElementById("cf_lineEnding");
+  const formatBtn = document.getElementById("cf_format");
+  const copyBtn = document.getElementById("cf_copy");
+  const clearBtn = document.getElementById("cf_clear");
+  const errEl = document.getElementById("cf_error");
+  const resultEl = document.getElementById("cf_result");
+  const cardsEl = document.getElementById("cf_cards");
+  const outputEl = document.getElementById("cf_output");
+  const tbodyEl = document.getElementById("cf_tbody");
+
+  if (!inputEl || !quoteModeEl || !lineEndingEl || !formatBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseDelimited(text, delimiter) {
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < text.length) {
+      const ch = text[i];
+
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') {
+            field += '"';
+            i += 2;
+            continue;
+          }
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        field += ch;
+        i++;
+        continue;
+      }
+
+      if (ch === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+
+      if (ch === delimiter) {
+        row.push(field);
+        field = "";
+        i++;
+        continue;
+      }
+
+      if (ch === "\r") {
+        if (text[i + 1] === "\n") i++;
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = "";
+        i++;
+        continue;
+      }
+
+      if (ch === "\n") {
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = "";
+        i++;
+        continue;
+      }
+
+      field += ch;
+      i++;
+    }
+
+    if (inQuotes) throw new Error("Unclosed quoted field.");
+    row.push(field);
+    if (!(row.length === 1 && row[0] === "" && rows.length === 0 && text.trim() === "")) {
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function serializeDelimited(rows, delimiter, quoteMode, lineEnding) {
+    const eol = lineEnding === "crlf" ? "\r\n" : "\n";
+    return rows.map(function (row) {
+      return row.map(function (field) {
+        const s = String(field == null ? "" : field);
+        const needsQuote =
+          quoteMode === "all" ||
+          s.includes(delimiter) ||
+          s.includes('"') ||
+          s.includes("\n") ||
+          s.includes("\r") ||
+          /^\s|\s$/.test(s);
+        if (!needsQuote) return s;
+        return '"' + s.replace(/"/g, '""') + '"';
+      }).join(delimiter);
+    }).join(eol);
+  }
+
+  function formatNow() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.trim()) {
+      showError("Please paste CSV input.");
+      return;
+    }
+
+    try {
+      const rows = parseDelimited(raw, ",");
+      const quoteMode = String(quoteModeEl.value || "minimal");
+      const lineEnding = String(lineEndingEl.value || "lf");
+      const output = serializeDelimited(rows, ",", quoteMode, lineEnding);
+
+      const widths = rows.map(function (r) { return r.length; });
+      const minCols = Math.min.apply(null, widths);
+      const maxCols = Math.max.apply(null, widths);
+
+      lastOutput = output;
+      outputEl.value = output;
+
+      resultEl.innerHTML = "<strong>CSV parsed successfully.</strong><br/><span class='note'>Normalized output is ready.</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge("Rows: " + rows.length) +
+        badge("Cols: " + minCols + (minCols === maxCols ? "" : "–" + maxCols)) +
+        badge(quoteMode === "all" ? "All fields quoted" : "Minimal quoting") +
+        "</div>";
+
+      fillTable([
+        ["Row count", String(rows.length)],
+        ["Minimum columns in a row", String(minCols)],
+        ["Maximum columns in a row", String(maxCols)],
+        ["Input length", String(raw.length)],
+        ["Output length", String(output.length)],
+      ]);
+    } catch (e) {
+      showError("Invalid CSV: " + (e && e.message ? e.message : "parse error"));
+    }
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No formatted CSV output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied formatted CSV.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    quoteModeEl.value = "minimal";
+    lineEndingEl.value = "lf";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  formatBtn.addEventListener("click", formatNow);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") formatNow();
+  });
+});
+</script>

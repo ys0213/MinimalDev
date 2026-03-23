@@ -1,0 +1,371 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "IPv6 Compressor",
+  description:
+    "Compress an expanded IPv6 address into canonical shorter form with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/ipv6-compressor/",
+  order: 530,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/ipv6-compressor/";
+
+const faqs = [
+  {
+    q: "What does this IPv6 compressor do?",
+    a: "It validates a standard IPv6 address and compresses it into a shorter canonical form using :: where appropriate.",
+  },
+  {
+    q: "Does it support already compressed IPv6 input?",
+    a: "Yes. Valid IPv6 input can be normalized and returned in compressed form.",
+  },
+  {
+    q: "Does it support IPv4-mapped IPv6 addresses?",
+    a: "No. This page focuses on standard hexadecimal IPv6 notation only and does not parse embedded IPv4 tails.",
+  },
+  {
+    q: "Is my IP address stored?",
+    a: "No. Everything runs locally in your browser and no input is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`IPv6 Compressor — ${SITE_NAME}`}
+  description="Compress IPv6 addresses with validation, canonical output, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="IPv6 Compressor"
+  intro="Compress a standard IPv6 address into shorter canonical form. Useful for normalization, documentation, and network tooling."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ipv6-compressor">
+    <style is:inline>
+      #ipv6c_input,
+      #ipv6c_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .ipv6c-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .ipv6c-break {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ipv6c_help ipv6c_privacy">
+      <div class="field">
+        <label for="ipv6c_input">IPv6 input</label>
+        <textarea
+          id="ipv6c_input"
+          rows="5"
+          spellcheck="false"
+          class="ipv6c-mono"
+          placeholder="e.g. 2001:0db8:0000:0000:0000:ff00:0042:8329"
+        ></textarea>
+      </div>
+
+      <p class="note" id="ipv6c_help" style="margin-top:6px;">
+        Standard hexadecimal IPv6 only. This tool does not parse IPv4-embedded tails such as <code>::ffff:192.168.0.1</code>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ipv6c_run">Compress</button>
+        <button class="btn secondary" type="button" id="ipv6c_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="ipv6c_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ipv6c_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result ipv6c-break" id="ipv6c_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ipv6c_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="ipv6c_output">Compressed IPv6</label>
+        <textarea id="ipv6c_output" rows="4" readonly spellcheck="false" class="ipv6c-mono" placeholder="Compressed IPv6 will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ipv6c_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ipv6c_privacy" style="margin-top:10px;">
+        Privacy: processing runs locally in your browser. No IP addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This page validates a standard IPv6 address, expands it to eight 16-bit groups internally,
+      then compresses the longest run of zero groups using <code>::</code>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2001:0db8:0000:0000:0000:ff00:0042:8329</strong> → <strong>2001:db8::ff00:42:8329</strong></li>
+      <li><strong>0000:0000:0000:0000:0000:0000:0000:0001</strong> → <strong>::1</strong></li>
+      <li><strong>fe80:0000:0000:0000:0202:b3ff:fe1e:8329</strong> → <strong>fe80::202:b3ff:fe1e:8329</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/ipv6-expander/">IPv6 Expander</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/ipv4-to-decimal/">IPv4 to Decimal</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("ipv6c_input");
+  const outputEl = document.getElementById("ipv6c_output");
+  const runBtn = document.getElementById("ipv6c_run");
+  const copyBtn = document.getElementById("ipv6c_copy");
+  const clearBtn = document.getElementById("ipv6c_clear");
+  const errEl = document.getElementById("ipv6c_error");
+  const resultEl = document.getElementById("ipv6c_result");
+  const cardsEl = document.getElementById("ipv6c_cards");
+  const tbodyEl = document.getElementById("ipv6c_tbody");
+
+  if (!inputEl || !outputEl || !runBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    outputEl.value = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseIPv6(raw) {
+    const s = String(raw || "").trim().toLowerCase();
+
+    if (!s) return { ok: false, error: "Please enter an IPv6 address." };
+    if (s.indexOf(".") !== -1) return { ok: false, error: "IPv4-embedded IPv6 notation is not supported on this page." };
+    if (/[^0-9a-f:]/.test(s)) return { ok: false, error: "IPv6 can contain only hexadecimal digits and colons." };
+
+    const dbl = s.split("::");
+    if (dbl.length > 2) return { ok: false, error: "An IPv6 address can contain at most one double-colon (::)." };
+
+    let left = [];
+    let right = [];
+
+    if (dbl.length === 2) {
+      left = dbl[0] ? dbl[0].split(":") : [];
+      right = dbl[1] ? dbl[1].split(":") : [];
+    } else {
+      left = s.split(":");
+    }
+
+    function validGroup(g) {
+      return g.length >= 1 && g.length <= 4 && /^[0-9a-f]{1,4}$/.test(g);
+    }
+
+    for (let i = 0; i < left.length; i++) {
+      if (!validGroup(left[i])) return { ok: false, error: "Invalid IPv6 group on the left side." };
+    }
+    for (let i = 0; i < right.length; i++) {
+      if (!validGroup(right[i])) return { ok: false, error: "Invalid IPv6 group on the right side." };
+    }
+
+    let groups = [];
+
+    if (dbl.length === 1) {
+      if (left.length !== 8) return { ok: false, error: "A full IPv6 address without :: must contain exactly 8 groups." };
+      groups = left.slice();
+    } else {
+      const missing = 8 - (left.length + right.length);
+      if (missing < 1) return { ok: false, error: "Compressed IPv6 is malformed." };
+      groups = left.concat(new Array(missing).fill("0"), right);
+    }
+
+    if (groups.length !== 8) return { ok: false, error: "IPv6 must resolve to exactly 8 groups." };
+
+    const expanded = groups.map(function (g) {
+      return g.padStart(4, "0");
+    });
+
+    return { ok: true, groups: expanded };
+  }
+
+  function compressGroups(groups) {
+    const short = groups.map(function (g) {
+      return g.replace(/^0+/, "") || "0";
+    });
+
+    let bestStart = -1;
+    let bestLen = 0;
+    let curStart = -1;
+    let curLen = 0;
+
+    for (let i = 0; i < short.length; i++) {
+      if (short[i] === "0") {
+        if (curStart === -1) {
+          curStart = i;
+          curLen = 1;
+        } else {
+          curLen++;
+        }
+      } else {
+        if (curLen > bestLen) {
+          bestStart = curStart;
+          bestLen = curLen;
+        }
+        curStart = -1;
+        curLen = 0;
+      }
+    }
+
+    if (curLen > bestLen) {
+      bestStart = curStart;
+      bestLen = curLen;
+    }
+
+    if (bestLen < 2) return short.join(":");
+
+    const left = short.slice(0, bestStart).join(":");
+    const right = short.slice(bestStart + bestLen).join(":");
+
+    if (!left && !right) return "::";
+    if (!left) return "::" + right;
+    if (!right) return left + "::";
+    return left + "::" + right;
+  }
+
+  function run() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    const parsed = parseIPv6(raw);
+
+    if (!parsed.ok) {
+      showError(parsed.error);
+      return;
+    }
+
+    const expanded = parsed.groups.join(":");
+    const compressed = compressGroups(parsed.groups);
+
+    lastOutput = compressed;
+    outputEl.value = compressed;
+
+    resultEl.innerHTML =
+      "<strong>Compressed IPv6:</strong> " + compressed +
+      "<br/><span class='note ipv6c-break'>Expanded form: " + expanded + "</span>";
+
+    const zeroGroups = parsed.groups.filter(function (g) { return g === "0000"; }).length;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid IPv6") +
+      badge("8 groups") +
+      badge("Zero groups: " + zeroGroups) +
+      badge(compressed.indexOf("::") !== -1 ? "Compressed with ::" : "No :: run") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Expanded length", String(expanded.length)],
+      ["Compressed length", String(compressed.length)],
+      ["Groups", "8"],
+      ["Zero groups", String(zeroGroups)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No compressed IPv6 result to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied compressed IPv6.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  runBtn.addEventListener("click", run);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run();
+  });
+});
+</script>

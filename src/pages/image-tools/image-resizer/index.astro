@@ -1,0 +1,190 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Resizer",
+  description:
+    "Resize images with custom width, height, aspect ratio lock, preview, validation, and download support.",
+  href: "/image-tools/image-resizer/",
+  order: 1,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-resizer/";
+
+const faqs = [
+  {
+    q: "What does this image resizer do?",
+    a: "It resizes images to custom dimensions using browser-based processing.",
+  },
+  {
+    q: "Does it keep aspect ratio?",
+    a: "Yes. You can lock aspect ratio to scale proportionally.",
+  },
+  {
+    q: "Is my image uploaded?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Resizer — ${SITE_NAME}`}
+  description="Resize images with preview, aspect ratio control, and download."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Resizer"
+  intro="Resize images easily with custom width and height. Supports preview and download."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool">
+    <style is:inline>
+      #ir_canvas {
+        max-width:100%;
+        border:1px solid rgba(255,255,255,0.1);
+        border-radius:10px;
+      }
+      .ir-grid {
+        display:grid;
+        gap:10px;
+      }
+      @media(min-width:768px){
+        .ir-grid { grid-template-columns:1fr 1fr; }
+      }
+    </style>
+
+    <div class="form">
+      <div class="field">
+        <label>Select image</label>
+        <input type="file" id="ir_file" accept="image/*" />
+      </div>
+
+      <div class="ir-grid">
+        <div class="field">
+          <label>Width</label>
+          <input type="number" id="ir_width" />
+        </div>
+        <div class="field">
+          <label>Height</label>
+          <input type="number" id="ir_height" />
+        </div>
+      </div>
+
+      <label><input type="checkbox" id="ir_lock" checked/> Lock aspect ratio</label>
+
+      <div style="margin-top:10px;">
+        <button class="btn" id="ir_resize">Resize</button>
+        <button class="btn secondary" id="ir_download">Download</button>
+      </div>
+
+      <div id="ir_error" class="result" style="display:none;"></div>
+      <div id="ir_info" class="result">Preview will appear here.</div>
+
+      <canvas id="ir_canvas"></canvas>
+    </div>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", () => {
+
+const fileInput = document.getElementById("ir_file");
+const canvas = document.getElementById("ir_canvas");
+const ctx = canvas.getContext("2d");
+const widthInput = document.getElementById("ir_width");
+const heightInput = document.getElementById("ir_height");
+const lock = document.getElementById("ir_lock");
+const resizeBtn = document.getElementById("ir_resize");
+const downloadBtn = document.getElementById("ir_download");
+const error = document.getElementById("ir_error");
+const info = document.getElementById("ir_info");
+
+let img = new Image();
+let ratio = 1;
+
+function showError(msg){
+  error.style.display="block";
+  error.textContent=msg;
+}
+
+function clearError(){
+  error.style.display="none";
+}
+
+fileInput.onchange = e=>{
+  clearError();
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    img.onload = ()=>{
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img,0,0);
+      widthInput.value = img.width;
+      heightInput.value = img.height;
+      ratio = img.width / img.height;
+      info.textContent = `Original: ${img.width} x ${img.height}`;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+widthInput.oninput = ()=>{
+  if(lock.checked){
+    heightInput.value = Math.round(widthInput.value / ratio);
+  }
+};
+
+heightInput.oninput = ()=>{
+  if(lock.checked){
+    widthInput.value = Math.round(heightInput.value * ratio);
+  }
+};
+
+resizeBtn.onclick = ()=>{
+  clearError();
+  const w = Number(widthInput.value);
+  const h = Number(heightInput.value);
+
+  if(!img.src){
+    showError("Upload image first");
+    return;
+  }
+
+  if(w<=0 || h<=0){
+    showError("Invalid size");
+    return;
+  }
+
+  canvas.width = w;
+  canvas.height = h;
+  ctx.drawImage(img,0,0,w,h);
+
+  info.textContent = `Resized: ${w} x ${h}`;
+};
+
+downloadBtn.onclick = ()=>{
+  if(!canvas.width) return;
+  const link = document.createElement("a");
+  link.download = "resized.png";
+  link.href = canvas.toDataURL();
+  link.click();
+};
+
+});
+</script>

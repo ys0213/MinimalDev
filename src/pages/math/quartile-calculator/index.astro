@@ -1,0 +1,306 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Quartile Calculator",
+  description:
+    "Calculate Q1, Q2, Q3, IQR, min, max, and sorted data from a numeric dataset.",
+  href: "/math/quartile-calculator/",
+  order: 381,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/quartile-calculator/";
+
+const faqs = [
+  {
+    q: "What are quartiles?",
+    a: "Quartiles divide sorted data into four parts. Q1 is the first quartile, Q2 is the median, and Q3 is the third quartile.",
+  },
+  {
+    q: "What is IQR?",
+    a: "IQR stands for interquartile range and is calculated as Q3 − Q1.",
+  },
+  {
+    q: "How does this calculator split the data?",
+    a: "This page uses the median-of-halves method on the sorted dataset.",
+  },
+  {
+    q: "How should I enter the data?",
+    a: "Enter values separated by commas, spaces, or line breaks.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Quartile Calculator — ${SITE_NAME}`}
+  description="Calculate Q1, Q2, Q3, IQR, minimum, maximum, and sorted data from numeric values."
+  canonicalPath={CANONICAL_PATH}
+  h1="Quartile Calculator"
+  intro="Calculate quartiles Q1, Q2, Q3, interquartile range (IQR), and a sorted summary from a dataset."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="quartile-calculator">
+    <style is:inline>
+      .qt-wrap, .qt-wrap * { box-sizing: border-box; }
+      .qt-grid {
+        display:grid;
+        grid-template-columns:minmax(0, 1fr);
+        gap:10px;
+      }
+      .qt-grid textarea {
+        width:100%;
+        min-width:0;
+        resize:vertical;
+      }
+      .qt-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      .qt-list {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+    </style>
+
+    <div class="form qt-wrap" role="form" aria-describedby="qt_help qt_privacy">
+      <div class="qt-grid">
+        <div class="field">
+          <label for="qt_data">Data values</label>
+          <textarea
+            id="qt_data"
+            rows="7"
+            placeholder="e.g.
+5, 7, 8, 11, 13, 16, 20"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="qt_help" style="margin-top:6px;">
+        Enter values separated by commas, spaces, or line breaks.
+        <br />
+        This calculator returns:
+        <br />
+        <span class="qt-code">Q1, Q2 (median), Q3, and IQR = Q3 − Q1</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="qt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="qt_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="qt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="qt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="qt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="qt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="qt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="qt_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The data is sorted first. Then:
+      <br />
+      <strong>Q2</strong> is the median,
+      <strong>Q1</strong> is the median of the lower half,
+      and <strong>Q3</strong> is the median of the upper half.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>5, 7, 8, 11, 13, 16, 20</strong></li>
+      <li>Q2 = median = <strong>11</strong></li>
+      <li>Q1 = <strong>7</strong>, Q3 = <strong>16</strong>, IQR = <strong>9</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/percentile-calculator/">Percentile Calculator</a></li>
+      <li><a href="/math/iqr-calculator/">IQR Calculator</a></li>
+      <li><a href="/math/median-absolute-deviation/">Median Absolute Deviation Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("qt_data");
+  const calcBtn = document.getElementById("qt_calc");
+  const fillBtn = document.getElementById("qt_fill_demo");
+  const clearBtn = document.getElementById("qt_clear");
+  const errorEl = document.getElementById("qt_error");
+  const resultEl = document.getElementById("qt_result");
+  const cardsEl = document.getElementById("qt_cards");
+  const tbodyEl = document.getElementById("qt_tbody");
+
+  if (!dataEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseData(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 1 numeric value.");
+
+    const nums = text.split(/[\s,]+/).filter(Boolean).map(function (part) {
+      const n = Number(part);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    if (!nums.length) throw new Error("Please enter at least 1 numeric value.");
+    return nums;
+  }
+
+  function median(arr) {
+    const s = arr.slice().sort(function (a, b) { return a - b; });
+    const n = s.length;
+    const mid = Math.floor(n / 2);
+    return n % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
+  }
+
+  function quartiles(sorted) {
+    const n = sorted.length;
+    const q2 = median(sorted);
+    const mid = Math.floor(n / 2);
+
+    const lower = sorted.slice(0, mid);
+    const upper = n % 2 === 0 ? sorted.slice(mid) : sorted.slice(mid + 1);
+
+    const q1 = lower.length ? median(lower) : sorted[0];
+    const q3 = upper.length ? median(upper) : sorted[sorted.length - 1];
+
+    return { q1, q2, q3, lower, upper };
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      if (row[2] === "html") td2.innerHTML = row[1];
+      else td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const arr = parseData(dataEl.value);
+      const sorted = arr.slice().sort(function (a, b) { return a - b; });
+      const qs = quartiles(sorted);
+      const iqr = qs.q3 - qs.q1;
+      const min = sorted[0];
+      const max = sorted[sorted.length - 1];
+
+      let spread = "Moderate middle spread";
+      if (iqr === 0) spread = "No middle spread";
+      else if (iqr < 1) spread = "Low middle spread";
+      else if (iqr >= 10) spread = "High middle spread";
+
+      resultEl.innerHTML =
+        "<strong>Quartile result</strong><br/>" +
+        "<span class='qt-code'>Q1 = " + fmt(qs.q1, 8) + ", Q2 = " + fmt(qs.q2, 8) + ", Q3 = " + fmt(qs.q3, 8) + "</span>" +
+        "<br/><span class='note'>IQR = " + fmt(iqr, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(spread) +
+        badge("Count = " + sorted.length) +
+        badge("IQR = " + fmt(iqr, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Count", String(sorted.length)],
+        ["Minimum", fmt(min, 8)],
+        ["Q1", fmt(qs.q1, 8)],
+        ["Q2 (Median)", fmt(qs.q2, 8)],
+        ["Q3", fmt(qs.q3, 8)],
+        ["Maximum", fmt(max, 8)],
+        ["IQR (Q3 − Q1)", fmt(iqr, 8)],
+        ["Lower half", "<span class='qt-list'>" + (qs.lower.length ? qs.lower.map(function (x) { return fmt(x, 8); }).join(", ") : "—") + "</span>", "html"],
+        ["Upper half", "<span class='qt-list'>" + (qs.upper.length ? qs.upper.map(function (x) { return fmt(x, 8); }).join(", ") : "—") + "</span>", "html"],
+        ["Sorted data", "<span class='qt-list'>" + sorted.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    dataEl.value = "5, 7, 8, 11, 13, 16, 20";
+    clearOutput();
+  }
+
+  function reset() {
+    dataEl.value = "";
+    clearOutput();
+    dataEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  dataEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

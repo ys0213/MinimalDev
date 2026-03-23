@@ -1,0 +1,284 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Days to Years",
+  description:
+    "Convert days to years instantly using a standard 365-day year. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/days-to-years/",
+  order: 333,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/days-to-years/";
+
+const faqs = [
+  {
+    q: "How do you convert days to years?",
+    a: "Divide days by 365 in this tool, using a standard non-leap year.",
+  },
+  {
+    q: "Does this account for leap years?",
+    a: "No. This converter uses the simple standard of 1 year = 365 days. For exact calendar results, use a date-based calculator.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between days to years and years to days.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Days to Years Converter — ${SITE_NAME}`}
+  description="Convert days to years instantly using a standard 365-day year, with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Days to Years Converter"
+  intro="Convert time from days to years instantly using the standard 365-day year. Useful for estimates, planning, and simple duration conversions."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="days-to-years">
+    <div class="form" role="form" aria-describedby="d2y_hint d2y_privacy">
+      <div class="field">
+        <label for="d2y_input">Days</label>
+        <input id="d2y_input" type="number" inputmode="decimal" placeholder="e.g., 730" />
+        <p class="note" id="d2y_hint" style="margin-top:6px;">
+          Enter a non-negative value. This tool uses <strong>365 days = 1 year</strong>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="d2y_round">Rounding</label>
+        <select id="d2y_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="d2y_convert">Convert</button>
+        <button class="btn secondary" type="button" id="d2y_swap">Reverse (years → days)</button>
+        <button class="btn secondary" type="button" id="d2y_clear">Clear</button>
+      </div>
+
+      <div class="result" id="d2y_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="d2y_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="d2y_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="d2y_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="d2y_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the simple standard conversion: <strong>365 days = 1 year</strong>.<br />
+      Formula: <strong>years = days ÷ 365</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>365 days</strong> = <strong>1 year</strong></li>
+      <li><strong>730 days</strong> = <strong>2 years</strong></li>
+      <li><strong>182.5 days</strong> = <strong>0.5 years</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/time-converter/">Time Converter</a></li>
+      <li><a href="/converter/years-to-days/">Years to Days</a></li>
+      <li><a href="/converter/days-to-weeks/">Days to Weeks</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("d2y_input");
+  const roundEl = document.getElementById("d2y_round");
+  const convertBtn = document.getElementById("d2y_convert");
+  const swapBtn = document.getElementById("d2y_swap");
+  const clearBtn = document.getElementById("d2y_clear");
+  const errEl = document.getElementById("d2y_error");
+  const outEl = document.getElementById("d2y_result");
+  const cardsEl = document.getElementById("d2y_cards");
+  const tbodyEl = document.getElementById("d2y_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const DAY_TO_YEAR = 1 / 365;
+  const YEAR_TO_DAY = 365;
+  let mode = "day-to-year";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="d2y_input"]');
+    if (!label) return;
+    if (mode === "day-to-year") {
+      label.textContent = "Days";
+      inEl.placeholder = "e.g., 730";
+      swapBtn.textContent = "Reverse (years → days)";
+    } else {
+      label.textContent = "Years";
+      inEl.placeholder = "e.g., 2";
+      swapBtn.textContent = "Reverse (days → years)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "day-to-year"
+      ? [
+          ["Conversion factor", "365 days = 1 year"],
+          ["Formula", "years = days ÷ 365"],
+          ["Input", fmt(input) + " days"],
+          ["Output", fmt(output) + " years"],
+        ]
+      : [
+          ["Conversion factor", "1 year = 365 days"],
+          ["Formula", "days = years × 365"],
+          ["Input", fmt(input) + " years"],
+          ["Output", fmt(output) + " days"],
+        ];
+
+    rows.push(["Note", "Uses a standard 365-day year"]);
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function classifyYears(years) {
+    if (years < 1) return "Under one year";
+    if (years < 5) return "Multi-year duration";
+    return "Long-term duration";
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "day-to-year" ? input * DAY_TO_YEAR : input * YEAR_TO_DAY;
+
+    if (mode === "day-to-year") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} years<br/><span class="note">${fmt(input)} days = ${fmt(output)} years</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} days<br/><span class="note">${fmt(input)} years = ${fmt(output)} days</span>`;
+    }
+
+    const years = mode === "day-to-year" ? output : input;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "day-to-year" ? "days → years" : "years → days")}
+        ${badge("Base ≈ " + fmtSmart(years) + " years")}
+        ${badge(classifyYears(years))}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "day-to-year" ? "year-to-day" : "day-to-year";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

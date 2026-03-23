@@ -1,0 +1,282 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Megabits to Megabytes",
+  description:
+    "Convert megabits (Mb) to megabytes (MB) instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/megabits-to-megabytes/",
+  order: 320,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/megabits-to-megabytes/";
+
+const faqs = [
+  {
+    q: "How do you convert megabits to megabytes?",
+    a: "Divide megabits by 8, because 8 bits equal 1 byte.",
+  },
+  {
+    q: "What is the difference between Mb and MB?",
+    a: "Mb means megabits and MB means megabytes. The capital B stands for bytes, and 1 MB = 8 Mb.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between megabits to megabytes and megabytes to megabits.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Megabits to Megabytes Converter — ${SITE_NAME}`}
+  description="Convert megabits (Mb) to megabytes (MB) instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Megabits to Megabytes Converter"
+  intro="Convert data size from megabits (Mb) to megabytes (MB) instantly. Useful for internet speeds, downloads, file sizes, and transfer estimates."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="megabits-to-megabytes">
+    <div class="form" role="form" aria-describedby="mbit2mbyte_hint mbit2mbyte_privacy">
+      <div class="field">
+        <label for="mbit2mbyte_input">Megabits (Mb)</label>
+        <input id="mbit2mbyte_input" type="number" inputmode="decimal" placeholder="e.g., 80" />
+        <p class="note" id="mbit2mbyte_hint" style="margin-top:6px;">
+          Enter a non-negative value. 8 megabits equals 1 megabyte.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="mbit2mbyte_round">Rounding</label>
+        <select id="mbit2mbyte_round">
+          <option value="2">2 decimals</option>
+          <option value="3" selected>3 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mbit2mbyte_convert">Convert</button>
+        <button class="btn secondary" type="button" id="mbit2mbyte_swap">Reverse (MB → Mb)</button>
+        <button class="btn secondary" type="button" id="mbit2mbyte_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mbit2mbyte_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mbit2mbyte_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mbit2mbyte_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mbit2mbyte_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mbit2mbyte_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard bit/byte relationship: <strong>1 byte = 8 bits</strong>.<br />
+      Formula: <strong>MB = Mb ÷ 8</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>8 Mb</strong> = <strong>1 MB</strong></li>
+      <li><strong>80 Mb</strong> = <strong>10 MB</strong></li>
+      <li><strong>800 Mb</strong> = <strong>100 MB</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/digital-storage-converter/">Digital Storage Converter</a></li>
+      <li><a href="/converter/megabytes-to-megabits/">Megabytes to Megabits</a></li>
+      <li><a href="/converter/bits-to-bytes/">Bits to Bytes</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("mbit2mbyte_input");
+  const roundEl = document.getElementById("mbit2mbyte_round");
+  const convertBtn = document.getElementById("mbit2mbyte_convert");
+  const swapBtn = document.getElementById("mbit2mbyte_swap");
+  const clearBtn = document.getElementById("mbit2mbyte_clear");
+  const errEl = document.getElementById("mbit2mbyte_error");
+  const outEl = document.getElementById("mbit2mbyte_result");
+  const cardsEl = document.getElementById("mbit2mbyte_cards");
+  const tbodyEl = document.getElementById("mbit2mbyte_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const MBIT_TO_MBYTE = 1 / 8;
+  const MBYTE_TO_MBIT = 8;
+  let mode = "mbit-to-mbyte";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="mbit2mbyte_input"]');
+    if (!label) return;
+    if (mode === "mbit-to-mbyte") {
+      label.textContent = "Megabits (Mb)";
+      inEl.placeholder = "e.g., 80";
+      swapBtn.textContent = "Reverse (MB → Mb)";
+    } else {
+      label.textContent = "Megabytes (MB)";
+      inEl.placeholder = "e.g., 10";
+      swapBtn.textContent = "Reverse (Mb → MB)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "mbit-to-mbyte"
+      ? [
+          ["Conversion factor", "8 Mb = 1 MB"],
+          ["Formula", "MB = Mb ÷ 8"],
+          ["Input", fmt(input) + " Mb"],
+          ["Output", fmt(output) + " MB"],
+        ]
+      : [
+          ["Conversion factor", "1 MB = 8 Mb"],
+          ["Formula", "Mb = MB × 8"],
+          ["Input", fmt(input) + " MB"],
+          ["Output", fmt(output) + " Mb"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function classifyMB(mb) {
+    if (mb < 1) return "Small data size";
+    if (mb < 100) return "Typical size";
+    return "Large transfer";
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "mbit-to-mbyte" ? input * MBIT_TO_MBYTE : input * MBYTE_TO_MBIT;
+
+    if (mode === "mbit-to-mbyte") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} MB<br/><span class="note">${fmt(input)} Mb = ${fmt(output)} MB</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} Mb<br/><span class="note">${fmt(input)} MB = ${fmt(output)} Mb</span>`;
+    }
+
+    const megaBytes = mode === "mbit-to-mbyte" ? output : input;
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        ${badge(mode === "mbit-to-mbyte" ? "Mb → MB" : "MB → Mb")}
+        ${badge("Base ≈ " + fmtSmart(megaBytes) + " MB")}
+        ${badge(classifyMB(megaBytes))}
+      </div>
+    `;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "3";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "mbit-to-mbyte" ? "mbyte-to-mbit" : "mbit-to-mbyte";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

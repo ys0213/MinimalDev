@@ -1,0 +1,599 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Blur",
+  description:
+    "Blur an image with adjustable strength, quality controls, result preview, download, and FAQ schema.",
+  href: "/image-tools/image-blur/",
+  order: 113,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-blur/";
+
+const faqs = [
+  {
+    q: "How does this image blur tool work?",
+    a: "It draws your image onto a canvas, applies a browser-based blur filter, and lets you preview or download the result.",
+  },
+  {
+    q: "Does this upload my image?",
+    a: "No. The entire blur process runs locally in your browser.",
+  },
+  {
+    q: "Can I adjust blur strength before downloading?",
+    a: "Yes. You can change the blur radius and quality settings, then re-render the result.",
+  },
+  {
+    q: "Which formats can I export?",
+    a: "You can export as PNG, JPEG, or WebP depending on your browser's image encoder support.",
+  },
+  {
+    q: "Will blur reduce file size?",
+    a: "Sometimes, but not always. File size depends on both image content and the selected output format and quality.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Blur — ${SITE_NAME}`}
+  description="Blur images in your browser with adjustable blur strength, output format, quality settings, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Blur"
+  intro="Upload an image, adjust blur strength, preview the result, and download the blurred version. Useful for privacy masking, background effects, and quick visual edits."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-blur">
+    <style is:inline>
+      #iblur_file,
+      #iblur_radius,
+      #iblur_quality,
+      #iblur_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .iblur-canvas-wrap {
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.03);
+        padding: 8px;
+      }
+      .iblur-canvas-wrap canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+        border-radius: 10px;
+      }
+      .iblur-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+        width: 100%;
+      }
+      .iblur-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+        width: 100%;
+      }
+      .iblur-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .iblur-big {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-top: 4px;
+        word-break: break-word;
+      }
+      .iblur-slider-note {
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-top:6px;
+      }
+      @media (max-width: 640px) {
+        .iblur-big {
+          font-size: 22px;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="iblur_help iblur_privacy">
+      <div class="field">
+        <label for="iblur_file">Image file</label>
+        <input id="iblur_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="iblur-grid">
+        <div class="field">
+          <label for="iblur_radius">Blur radius</label>
+          <input id="iblur_radius" type="range" min="0" max="40" step="1" value="8" />
+          <div class="iblur-slider-note">
+            <span class="note">Lower = subtle blur</span>
+            <strong id="iblur_radius_value">8 px</strong>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="iblur_format">Output format</label>
+          <select id="iblur_format">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="iblur_quality">Quality (JPEG/WebP)</label>
+          <input id="iblur_quality" type="range" min="0.1" max="1" step="0.05" value="0.9" />
+          <div class="iblur-slider-note">
+            <span class="note">Ignored for PNG</span>
+            <strong id="iblur_quality_value">0.90</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <label>
+          <input id="iblur_fill_bg" type="checkbox" checked />
+          Fill transparent background when exporting JPEG
+        </label>
+        <label>
+          <input id="iblur_live_preview" type="checkbox" checked />
+          Update preview automatically when sliders change
+        </label>
+      </div>
+
+      <p class="note" id="iblur_help" style="margin-top:6px;">
+        Upload an image, adjust the blur radius, choose an output format, then render and download.
+        Transparent images exported as JPEG need a background fill.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="iblur_apply">Apply Blur</button>
+        <button class="btn secondary" type="button" id="iblur_download">Download</button>
+        <button class="btn secondary" type="button" id="iblur_reset">Reset</button>
+        <button class="btn secondary" type="button" id="iblur_clear">Clear</button>
+      </div>
+
+      <div class="result" id="iblur_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="iblur_summary" role="status" style="margin-top:12px;">
+        Blur result will appear here.
+      </div>
+
+      <div class="iblur-mini-grid" id="iblur_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="iblur-grid" style="margin-top:14px;">
+        <div>
+          <strong>Original preview</strong>
+          <div class="iblur-canvas-wrap" style="margin-top:8px;">
+            <canvas id="iblur_original_canvas" aria-label="Original image preview"></canvas>
+          </div>
+        </div>
+
+        <div>
+          <strong>Blurred preview</strong>
+          <div class="iblur-canvas-wrap" style="margin-top:8px;">
+            <canvas id="iblur_output_canvas" aria-label="Blurred image preview"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <p class="note" id="iblur_privacy" style="margin-top:10px;">
+        Privacy: blur processing runs locally in your browser. No image data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses the browser canvas to render your image, then applies a blur filter to produce a softened result.
+      You can choose blur strength, output format, and quality. JPEG and WebP can often reduce file size more than PNG.
+    </p>
+    <ul>
+      <li><strong>Blur radius:</strong> controls how strong the blur looks</li>
+      <li><strong>Format:</strong> affects both quality and final file size</li>
+      <li><strong>Quality:</strong> only matters for JPEG and WebP export</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Blur sensitive information in screenshots before sharing</li>
+      <li>Create soft backgrounds for design mockups</li>
+      <li>Reduce detail to focus attention on foreground elements</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-palette-generator/">Image Palette Generator</a></li>
+      <li><a href="/image-tools/image-color-extractor/">Image Color Extractor</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("iblur_file");
+  const radiusEl = document.getElementById("iblur_radius");
+  const radiusValueEl = document.getElementById("iblur_radius_value");
+  const formatEl = document.getElementById("iblur_format");
+  const qualityEl = document.getElementById("iblur_quality");
+  const qualityValueEl = document.getElementById("iblur_quality_value");
+  const fillBgEl = document.getElementById("iblur_fill_bg");
+  const livePreviewEl = document.getElementById("iblur_live_preview");
+
+  const applyBtn = document.getElementById("iblur_apply");
+  const downloadBtn = document.getElementById("iblur_download");
+  const resetBtn = document.getElementById("iblur_reset");
+  const clearBtn = document.getElementById("iblur_clear");
+
+  const errorEl = document.getElementById("iblur_error");
+  const summaryEl = document.getElementById("iblur_summary");
+  const cardsEl = document.getElementById("iblur_cards");
+
+  const originalCanvas = document.getElementById("iblur_original_canvas");
+  const outputCanvas = document.getElementById("iblur_output_canvas");
+  const originalCtx = originalCanvas.getContext("2d");
+  const outputCtx = outputCanvas.getContext("2d");
+
+  if (
+    !fileEl || !radiusEl || !radiusValueEl || !formatEl || !qualityEl || !qualityValueEl ||
+    !fillBgEl || !livePreviewEl || !applyBtn || !downloadBtn || !resetBtn || !clearBtn ||
+    !errorEl || !summaryEl || !cardsEl || !originalCanvas || !outputCanvas || !originalCtx || !outputCtx
+  ) return;
+
+  const sourceCanvas = document.createElement("canvas");
+  const sourceCtx = sourceCanvas.getContext("2d");
+
+  let currentImage = null;
+  let currentFileName = "";
+  let originalBytes = 0;
+  let lastRenderedBlob = null;
+  let naturalWidth = 0;
+  let naturalHeight = 0;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function miniCard(label, value, sub) {
+    return (
+      '<div class="iblur-mini-card">' +
+        '<strong>' + escapeHtml(label) + '</strong>' +
+        '<div class="iblur-big">' + escapeHtml(value) + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + '</div>' +
+      '</div>'
+    );
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(2) + " MB";
+    return (n / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+
+  function mimeLabel(mime) {
+    if (mime === "image/png") return "PNG";
+    if (mime === "image/jpeg") return "JPEG";
+    if (mime === "image/webp") return "WebP";
+    return mime;
+  }
+
+  function extensionFromMime(mime) {
+    if (mime === "image/png") return "png";
+    if (mime === "image/jpeg") return "jpg";
+    if (mime === "image/webp") return "webp";
+    return "img";
+  }
+
+  function updateUiValues() {
+    radiusValueEl.textContent = String(radiusEl.value || "0") + " px";
+    qualityValueEl.textContent = Number(qualityEl.value || 0.9).toFixed(2);
+  }
+
+  function resetOutputOnly() {
+    clearError();
+    summaryEl.textContent = "Blur result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputCanvas.width = 0;
+    outputCanvas.height = 0;
+    lastRenderedBlob = null;
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    radiusEl.value = "8";
+    formatEl.value = "image/jpeg";
+    qualityEl.value = "0.9";
+    fillBgEl.checked = true;
+    livePreviewEl.checked = true;
+    updateUiValues();
+
+    currentImage = null;
+    currentFileName = "";
+    originalBytes = 0;
+    naturalWidth = 0;
+    naturalHeight = 0;
+
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    sourceCanvas.width = 0;
+    sourceCanvas.height = 0;
+
+    resetOutputOnly();
+    fileEl.focus();
+  }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = function () { reject(new Error("Could not decode the selected image.")); };
+        img.src = String(ev.target.result || "");
+      };
+      reader.onerror = function () { reject(new Error("Could not read the selected file.")); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function drawOriginalPreview() {
+    if (!currentImage) return;
+
+    naturalWidth = currentImage.naturalWidth || currentImage.width;
+    naturalHeight = currentImage.naturalHeight || currentImage.height;
+
+    originalCanvas.width = naturalWidth;
+    originalCanvas.height = naturalHeight;
+    originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+    originalCtx.drawImage(currentImage, 0, 0);
+
+    sourceCanvas.width = naturalWidth;
+    sourceCanvas.height = naturalHeight;
+    if (sourceCtx) {
+      sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+      sourceCtx.drawImage(currentImage, 0, 0);
+    }
+  }
+
+  function renderToOutputCanvas() {
+    if (!currentImage) {
+      showError("Please upload an image first.");
+      return false;
+    }
+
+    const radius = Number(radiusEl.value || 0);
+    const mime = String(formatEl.value || "image/jpeg");
+    const quality = Number(qualityEl.value || 0.9);
+
+    outputCanvas.width = naturalWidth;
+    outputCanvas.height = naturalHeight;
+    outputCtx.save();
+    outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+    if (mime === "image/jpeg" && fillBgEl.checked) {
+      outputCtx.fillStyle = "#FFFFFF";
+      outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+    }
+
+    outputCtx.filter = "blur(" + radius + "px)";
+    outputCtx.drawImage(sourceCanvas, 0, 0);
+    outputCtx.filter = "none";
+    outputCtx.restore();
+
+    return { radius, mime, quality };
+  }
+
+  function canvasToBlob(canvas, mime, quality) {
+    return new Promise(function (resolve, reject) {
+      try {
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            reject(new Error("Could not encode the blurred image in the selected format."));
+            return;
+          }
+          resolve(blob);
+        }, mime, quality);
+      } catch (_) {
+        reject(new Error("The selected export format is not supported by this browser."));
+      }
+    });
+  }
+
+  async function applyBlur() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    const renderMeta = renderToOutputCanvas();
+    if (!renderMeta) return;
+
+    summaryEl.innerHTML = "<strong>Rendering blurred image…</strong>";
+
+    try {
+      const blob = await canvasToBlob(outputCanvas, renderMeta.mime, renderMeta.quality);
+      lastRenderedBlob = blob;
+
+      const reduction = originalBytes > 0
+        ? ((1 - (blob.size / originalBytes)) * 100)
+        : 0;
+
+      cardsEl.style.display = "grid";
+      cardsEl.innerHTML =
+        miniCard("Blur radius", String(renderMeta.radius) + " px", "Current blur strength") +
+        miniCard("Output format", mimeLabel(renderMeta.mime), "Selected export type") +
+        miniCard("Original size", formatBytes(originalBytes), "Uploaded file size") +
+        miniCard("Blurred size", formatBytes(blob.size), "Current rendered result");
+
+      summaryEl.innerHTML =
+        '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">' +
+          '<strong>Blur applied successfully.</strong>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            badge(renderMeta.radius + " px blur", "good") +
+            badge(mimeLabel(renderMeta.mime), "neutral") +
+            badge(renderMeta.mime === "image/png" ? "Lossless container" : "Quality " + Number(renderMeta.quality || 0).toFixed(2), renderMeta.mime === "image/png" ? "neutral" : "good") +
+          '</div>' +
+        '</div>' +
+        '<div class="note" style="margin-top:8px;">' +
+          'Size change vs original: ' +
+          (reduction >= 0 ? reduction.toFixed(1) + '% smaller' : Math.abs(reduction).toFixed(1) + '% larger') +
+          '. Final size depends on both image content and output format.' +
+        '</div>';
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not render the blurred result.");
+      summaryEl.textContent = "Blur result will appear here.";
+      cardsEl.style.display = "none";
+      cardsEl.innerHTML = "";
+    }
+  }
+
+  async function downloadResult() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please upload and render an image first.");
+      return;
+    }
+
+    if (!lastRenderedBlob) {
+      await applyBlur();
+      if (!lastRenderedBlob) return;
+    }
+
+    const mime = String(formatEl.value || "image/jpeg");
+    const base = (currentFileName || "blurred-image").replace(/\.[^.]+$/, "");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(lastRenderedBlob);
+    a.download = base + "-blurred." + extensionFromMime(mime);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function resetControls() {
+    radiusEl.value = "8";
+    formatEl.value = "image/jpeg";
+    qualityEl.value = "0.9";
+    fillBgEl.checked = true;
+    livePreviewEl.checked = true;
+    updateUiValues();
+    resetOutputOnly();
+
+    if (currentImage) {
+      applyBlur();
+    }
+  }
+
+  let liveTimer = null;
+  function scheduleLiveRender() {
+    updateUiValues();
+    if (!livePreviewEl.checked || !currentImage) return;
+
+    if (liveTimer) window.clearTimeout(liveTimer);
+    liveTimer = window.setTimeout(function () {
+      applyBlur();
+    }, 120);
+  }
+
+  fileEl.addEventListener("change", async function () {
+    clearError();
+    resetOutputOnly();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please upload a valid image file.");
+      fileEl.value = "";
+      return;
+    }
+
+    try {
+      currentImage = await loadImage(file);
+      currentFileName = file.name || "image";
+      originalBytes = Number(file.size || 0);
+
+      drawOriginalPreview();
+      summaryEl.innerHTML =
+        "<strong>Image loaded.</strong>" +
+        '<div class="note" style="margin-top:6px;">Adjust blur settings and render the result.</div>';
+
+      if (livePreviewEl.checked) {
+        applyBlur();
+      }
+    } catch (err) {
+      currentImage = null;
+      showError(err && err.message ? err.message : "Could not load the selected image.");
+    }
+  });
+
+  radiusEl.addEventListener("input", scheduleLiveRender);
+  qualityEl.addEventListener("input", scheduleLiveRender);
+  formatEl.addEventListener("change", scheduleLiveRender);
+  fillBgEl.addEventListener("change", scheduleLiveRender);
+  livePreviewEl.addEventListener("change", scheduleLiveRender);
+
+  applyBtn.addEventListener("click", applyBlur);
+  downloadBtn.addEventListener("click", downloadResult);
+  resetBtn.addEventListener("click", resetControls);
+  clearBtn.addEventListener("click", clearAll);
+
+  clearAll();
+});
+</script>

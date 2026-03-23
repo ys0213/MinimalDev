@@ -1,0 +1,354 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Metadata Viewer",
+  description:
+    "View image file metadata locally, including file type, size, dimensions, last modified date, and basic image information with result cards and FAQ schema.",
+  href: "/utility/image-metadata-viewer/",
+  order: 183,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/image-metadata-viewer/";
+
+const faqs = [
+  {
+    q: "Does this image metadata viewer upload files?",
+    a: "No. File inspection runs locally in your browser and the image is not uploaded or transmitted.",
+  },
+  {
+    q: "What metadata can this tool show?",
+    a: "It shows file-level metadata such as filename, file type, size, last modified date, and image dimensions. Browser support for deeper metadata is limited without additional parsing libraries.",
+  },
+  {
+    q: "Can this tool read EXIF camera data?",
+    a: "This version focuses on file metadata and image dimensions in a browser-safe way. Full EXIF extraction would require additional client-side parsing logic.",
+  },
+  {
+    q: "Can I preview the selected image?",
+    a: "Yes. The tool shows a preview and reports the image width, height, aspect ratio, and other basic information.",
+  },
+  {
+    q: "Is this mobile friendly?",
+    a: "Yes. The layout is designed to avoid horizontal overflow on smaller screens.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Metadata Viewer — ${SITE_NAME}`}
+  description="Inspect image file metadata locally with preview, validation, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Metadata Viewer"
+  intro="Select an image file to inspect its basic metadata, preview it, and review file properties such as dimensions, type, size, and modification date."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-metadata-viewer">
+    <style is:inline>
+      #imv_file {
+        width: 100%;
+        min-width: 0;
+      }
+      .imv-grid {
+        display:grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .imv-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .imv-panel img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+      }
+      .imv-meta-wrap {
+        overflow-wrap:anywhere;
+        word-break:break-word;
+      }
+      @media (max-width: 700px) {
+        .imv-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="imv_help imv_privacy">
+      <div class="field">
+        <label for="imv_file">Image file</label>
+        <input id="imv_file" type="file" accept="image/*" />
+        <p class="note" id="imv_help" style="margin-top:6px;">
+          Select an image file to inspect it locally in your browser.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="imv_inspect">Inspect</button>
+        <button class="btn secondary" type="button" id="imv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="imv_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="imv_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="imv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="imv_preview_wrap" style="display:none; margin-top:16px;">
+        <div class="imv-grid">
+          <div class="imv-panel">
+            <strong>Image preview</strong>
+            <div style="margin-top:10px;">
+              <img id="imv_preview" alt="Selected image preview" />
+            </div>
+          </div>
+
+          <div class="imv-panel imv-meta-wrap">
+            <strong>Quick info</strong>
+            <div id="imv_quickinfo" class="note" style="margin-top:10px;">
+              No image inspected yet.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="imv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="imv_privacy" style="margin-top:10px;">
+        Privacy: file inspection runs locally in your browser. No image data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool reads the selected image file locally, displays a preview, and reports practical file metadata that is safely available in a browser environment.
+    </p>
+    <ul>
+      <li><strong>File-level data</strong>: filename, type, size, last modified timestamp</li>
+      <li><strong>Image-level data</strong>: width, height, aspect ratio, orientation summary</li>
+      <li><strong>No upload</strong>: everything runs inside your browser session</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Quickly inspect image dimensions before publishing</li>
+      <li>Verify whether a file is PNG, JPG, WebP, GIF, or another supported image type</li>
+      <li>Check approximate aspect ratio for layout planning</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/exif-remover/">EXIF Remover</a></li>
+      <li><a href="/utility/gif-maker/">GIF Maker</a></li>
+      <li><a href="/utility/gif-splitter/">GIF Splitter</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("imv_file");
+  const inspectBtn = document.getElementById("imv_inspect");
+  const clearBtn = document.getElementById("imv_clear");
+  const errEl = document.getElementById("imv_error");
+  const resultEl = document.getElementById("imv_result");
+  const cardsEl = document.getElementById("imv_cards");
+  const tbodyEl = document.getElementById("imv_tbody");
+  const previewWrap = document.getElementById("imv_preview_wrap");
+  const previewEl = document.getElementById("imv_preview");
+  const quickInfoEl = document.getElementById("imv_quickinfo");
+
+  if (
+    !fileEl || !inspectBtn || !clearBtn || !errEl || !resultEl ||
+    !cardsEl || !tbodyEl || !previewWrap || !previewEl || !quickInfoEl
+  ) return;
+
+  let objectUrl = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    previewWrap.style.display = "none";
+    previewEl.removeAttribute("src");
+    quickInfoEl.textContent = "No image inspected yet.";
+
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      objectUrl = "";
+    }
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + String(text) + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function bytesToHuman(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function aspectRatioText(w, h) {
+    if (!w || !h) return "—";
+    const d = gcd(w, h);
+    return (w / d) + ":" + (h / d);
+  }
+
+  function inspectFile() {
+    resetOutput();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    if (!/^image\//i.test(file.type)) {
+      showError("The selected file is not recognized as an image.");
+      return;
+    }
+
+    objectUrl = URL.createObjectURL(file);
+
+    const img = new Image();
+    img.onload = function () {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const ratio = aspectRatioText(w, h);
+      const orient = w > h ? "Landscape" : (w < h ? "Portrait" : "Square");
+
+      previewEl.src = objectUrl;
+      previewWrap.style.display = "block";
+
+      quickInfoEl.innerHTML =
+        "<strong>Filename:</strong> " + file.name + "<br/>" +
+        "<strong>Type:</strong> " + (file.type || "image/*") + "<br/>" +
+        "<strong>Dimensions:</strong> " + w + " × " + h + "<br/>" +
+        "<strong>Aspect ratio:</strong> " + ratio + "<br/>" +
+        "<strong>Orientation:</strong> " + orient + "<br/>" +
+        "<strong>File size:</strong> " + bytesToHuman(file.size);
+
+      resultEl.innerHTML =
+        "<strong>Metadata loaded successfully.</strong><br/>" +
+        '<span class="note">Review the image preview and file properties below.</span>';
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+        badge(file.type || "image/*", "neutral") +
+        badge(w + " × " + h, "neutral") +
+        badge(ratio, "neutral") +
+        badge(orient, "good") +
+        "</div>";
+
+      fillTable([
+        ["Filename", file.name],
+        ["File type", file.type || "image/*"],
+        ["File size", bytesToHuman(file.size)],
+        ["Last modified", Number.isFinite(file.lastModified) ? new Date(file.lastModified).toLocaleString() : "—"],
+        ["Width", String(w)],
+        ["Height", String(h)],
+        ["Aspect ratio", ratio],
+        ["Orientation", orient],
+      ]);
+    };
+
+    img.onerror = function () {
+      showError("The selected image could not be loaded for inspection.");
+    };
+
+    img.src = objectUrl;
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    resetOutput();
+    fileEl.focus();
+  }
+
+  inspectBtn.addEventListener("click", inspectFile);
+  clearBtn.addEventListener("click", clearAll);
+
+  fileEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") inspectFile();
+  });
+
+  resetOutput();
+});
+</script>

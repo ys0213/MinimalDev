@@ -1,0 +1,279 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Probability Calculator",
+  description:
+    "Calculate basic probability, complement probability, and percentage from favorable and total outcomes.",
+  href: "/math/probability-calculator/",
+  order: 369,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/probability-calculator/";
+
+const faqs = [
+  {
+    q: "What does this probability calculator compute?",
+    a: "It computes basic probability from favorable outcomes divided by total outcomes, and also shows complement probability and percentage form.",
+  },
+  {
+    q: "What is the formula for basic probability?",
+    a: "Probability = favorable outcomes / total outcomes.",
+  },
+  {
+    q: "Can favorable outcomes be larger than total outcomes?",
+    a: "In a standard basic probability setup, favorable outcomes should be between 0 and total outcomes inclusive.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Probability Calculator — ${SITE_NAME}`}
+  description="Calculate basic probability, complement probability, and percentage."
+  canonicalPath={CANONICAL_PATH}
+  h1="Probability Calculator"
+  intro="Calculate basic probability from favorable and total outcomes, then view the result as a decimal, fraction, percentage, and complement probability."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="probability-calculator">
+    <style is:inline>
+      .pr-wrap, .pr-wrap * { box-sizing: border-box; }
+      .pr-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .pr-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .pr-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form pr-wrap" role="form" aria-describedby="pr_help pr_privacy">
+      <div class="pr-grid">
+        <div class="field">
+          <label for="pr_fav">Favorable outcomes</label>
+          <input id="pr_fav" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 3" />
+        </div>
+        <div class="field">
+          <label for="pr_total">Total outcomes</label>
+          <input id="pr_total" type="number" inputmode="numeric" step="1" min="1" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <p class="note" id="pr_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="pr-code">P(A) = favorable / total</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="pr_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="pr_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="pr_clear">Clear</button>
+      </div>
+
+      <div class="result" id="pr_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="pr_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+      <div class="result" id="pr_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="pr_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="pr_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool computes the probability of an event from a simple count model:
+      <br />
+      <strong>P(A) = favorable outcomes / total outcomes</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>3 favorable</strong> out of <strong>10 total</strong> → probability = <strong>0.3</strong></li>
+      <li>Percentage form = <strong>30%</strong></li>
+      <li>Complement probability = <strong>1 − P(A)</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/odds-calculator/">Odds Calculator</a></li>
+      <li><a href="/math/binomial-distribution-calculator/">Binomial Distribution Calculator</a></li>
+      <li><a href="/math/bayes-theorem-calculator/">Bayes Theorem Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const favEl = document.getElementById("pr_fav");
+  const totalEl = document.getElementById("pr_total");
+  const calcBtn = document.getElementById("pr_calc");
+  const fillBtn = document.getElementById("pr_fill_demo");
+  const clearBtn = document.getElementById("pr_clear");
+  const errorEl = document.getElementById("pr_error");
+  const resultEl = document.getElementById("pr_result");
+  const cardsEl = document.getElementById("pr_cards");
+  const tbodyEl = document.getElementById("pr_tbody");
+
+  if (!favEl || !totalEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function gcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y !== 0) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x || 1;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const fav = toInt(favEl, "favorable outcomes");
+      const total = toInt(totalEl, "total outcomes");
+
+      if (fav < 0) {
+        showError("Favorable outcomes must be 0 or greater.");
+        return;
+      }
+      if (total <= 0) {
+        showError("Total outcomes must be greater than 0.");
+        return;
+      }
+      if (fav > total) {
+        showError("Favorable outcomes cannot be greater than total outcomes in this basic probability calculator.");
+        return;
+      }
+
+      const p = fav / total;
+      const complement = 1 - p;
+      const percent = p * 100;
+      const reducedGcd = gcd(fav, total);
+      const reducedNum = fav / reducedGcd;
+      const reducedDen = total / reducedGcd;
+
+      let classification = "Possible";
+      if (p === 0) classification = "Impossible";
+      else if (p === 1) classification = "Certain";
+      else if (p < 0.5) classification = "Less likely than not";
+      else if (p > 0.5) classification = "More likely than not";
+
+      resultEl.innerHTML =
+        "<strong>Probability result</strong><br/>" +
+        "<span class='pr-code'>P(A) = " + reducedNum + "/" + reducedDen + " ≈ " + fmt(p, 8) + "</span>" +
+        "<br/><span class='note'>" + fmt(percent, 4) + "%</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(classification) +
+        badge("Complement = " + fmt(complement, 8)) +
+        badge("Percentage = " + fmt(percent, 4) + "%") +
+        "</div>";
+
+      fillTable([
+        ["Favorable outcomes", String(fav)],
+        ["Total outcomes", String(total)],
+        ["Probability P(A)", fmt(p, 8)],
+        ["Reduced fraction", reducedNum + "/" + reducedDen],
+        ["Percentage", fmt(percent, 4) + "%"],
+        ["Complement P(not A)", fmt(complement, 8)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    favEl.value = "3";
+    totalEl.value = "10";
+    clearOutput();
+  }
+  function reset() {
+    favEl.value = "";
+    totalEl.value = "";
+    clearOutput();
+    favEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [favEl, totalEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

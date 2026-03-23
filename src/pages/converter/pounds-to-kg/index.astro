@@ -1,0 +1,270 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Pounds to kg",
+  description:
+    "Convert pounds to kilograms instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/pounds-to-kg/",
+  order: 305,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/pounds-to-kg/";
+
+const faqs = [
+  {
+    q: "How do you convert pounds to kilograms?",
+    a: "Multiply pounds by 0.45359237 to get kilograms.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between pounds to kilograms and kilograms to pounds.",
+  },
+  {
+    q: "Is this for body weight or general weight?",
+    a: "It works for body weight, luggage, shipping, and general everyday weight conversions.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Pounds to kg Converter — ${SITE_NAME}`}
+  description="Convert pounds to kilograms instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Pounds to kg Converter"
+  intro="Convert weight from pounds to kilograms instantly. Useful for body weight, luggage, shipping, and general weight comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="pounds-to-kg">
+    <div class="form" role="form" aria-describedby="p2k_hint p2k_privacy">
+      <div class="field">
+        <label for="p2k_input">Pounds</label>
+        <input id="p2k_input" type="number" inputmode="decimal" placeholder="e.g., 154" />
+        <p class="note" id="p2k_hint" style="margin-top:6px;">
+          Enter a non-negative value. Useful for body weight, luggage, and shipping.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="p2k_round">Rounding</label>
+        <select id="p2k_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="p2k_convert">Convert</button>
+        <button class="btn secondary" type="button" id="p2k_swap">Reverse (kg → lb)</button>
+        <button class="btn secondary" type="button" id="p2k_clear">Clear</button>
+      </div>
+
+      <div class="result" id="p2k_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="p2k_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="p2k_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="p2k_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="p2k_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 lb = 0.45359237 kg</strong>.<br />
+      Formula: <strong>kg = lb × 0.45359237</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 lb</strong> ≈ <strong>0.4536 kg</strong></li>
+      <li><strong>100 lb</strong> ≈ <strong>45.3592 kg</strong></li>
+      <li><strong>154 lb</strong> ≈ <strong>69.8532 kg</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/kg-to-pounds/">kg to Pounds</a></li>
+      <li><a href="/converter/grams-to-ounces/">Grams to Ounces</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("p2k_input");
+  const roundEl = document.getElementById("p2k_round");
+  const convertBtn = document.getElementById("p2k_convert");
+  const swapBtn = document.getElementById("p2k_swap");
+  const clearBtn = document.getElementById("p2k_clear");
+  const errEl = document.getElementById("p2k_error");
+  const outEl = document.getElementById("p2k_result");
+  const cardsEl = document.getElementById("p2k_cards");
+  const tbodyEl = document.getElementById("p2k_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const LB_TO_KG = 0.45359237;
+  const KG_TO_LB = 1 / LB_TO_KG;
+  let mode = "lb-to-kg";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="p2k_input"]');
+    if (!label) return;
+
+    if (mode === "lb-to-kg") {
+      label.textContent = "Pounds";
+      inEl.placeholder = "e.g., 154";
+      swapBtn.textContent = "Reverse (kg → lb)";
+    } else {
+      label.textContent = "Kilograms";
+      inEl.placeholder = "e.g., 70";
+      swapBtn.textContent = "Reverse (lb → kg)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "lb-to-kg"
+      ? [
+          ["Conversion factor", "1 lb = 0.45359237 kg"],
+          ["Reverse factor", "1 kg ≈ " + fmtSmart(KG_TO_LB) + " lb"],
+          ["Input", fmt(input) + " lb"],
+          ["Output", fmt(output) + " kg"],
+        ]
+      : [
+          ["Conversion factor", "1 kg ≈ " + fmtSmart(KG_TO_LB) + " lb"],
+          ["Reverse factor", "1 lb = 0.45359237 kg"],
+          ["Input", fmt(input) + " kg"],
+          ["Output", fmt(output) + " lb"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const output = mode === "lb-to-kg" ? raw * LB_TO_KG : raw * KG_TO_LB;
+
+    if (mode === "lb-to-kg") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} kg<br/><span class="note">${fmt(raw)} lb = ${fmt(output)} kg</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} lb<br/><span class="note">${fmt(raw)} kg = ${fmt(output)} lb</span>`;
+    }
+
+    const kg = mode === "lb-to-kg" ? output : raw;
+    let scale = "Typical";
+    if (kg < 1) scale = "Very light";
+    else if (kg >= 100) scale = "Heavy weight";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "lb-to-kg" ? "lb → kg" : "kg → lb")}
+      ${badge("Base ≈ " + fmtSmart(kg) + " kg")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(raw, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "lb-to-kg" ? "kg-to-lb" : "lb-to-kg";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

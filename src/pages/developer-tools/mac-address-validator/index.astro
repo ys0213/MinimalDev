@@ -1,0 +1,289 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "MAC Address Validator",
+  description:
+    "Validate MAC addresses, normalize format, inspect bits, and review result cards with FAQ schema.",
+  href: "/developer-tools/mac-address-validator/",
+  order: 533,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/mac-address-validator/";
+
+const faqs = [
+  {
+    q: "What formats does this validator support?",
+    a: "It supports common MAC formats such as colon-separated, hyphen-separated, and plain 12-hex-digit input.",
+  },
+  {
+    q: "Does it normalize the MAC address?",
+    a: "Yes. Valid input is normalized into a consistent uppercase colon-separated format.",
+  },
+  {
+    q: "Can it tell whether a MAC is multicast or locally administered?",
+    a: "Yes. It inspects the first octet and reports those bit flags.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Validation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`MAC Address Validator — ${SITE_NAME}`}
+  description="Validate MAC addresses, normalize format, inspect bit flags, and review result cards with FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="MAC Address Validator"
+  intro="Validate a MAC address, normalize it to standard form, and inspect multicast and local-administration flags."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="mac-address-validator">
+    <style is:inline>
+      #macv_input,
+      #macv_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .macv-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="macv_help macv_privacy">
+      <div class="field">
+        <label for="macv_input">MAC address input</label>
+        <textarea
+          id="macv_input"
+          rows="4"
+          spellcheck="false"
+          class="macv-mono"
+          placeholder="e.g. 02:1A:2B:3C:4D:5E"
+        ></textarea>
+      </div>
+
+      <p class="note" id="macv_help" style="margin-top:6px;">
+        Accepted formats: <code>AA:BB:CC:DD:EE:FF</code>, <code>AA-BB-CC-DD-EE-FF</code>, or <code>AABBCCDDEEFF</code>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="macv_run">Validate</button>
+        <button class="btn secondary" type="button" id="macv_copy">Copy Normalized</button>
+        <button class="btn secondary" type="button" id="macv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="macv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="macv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="macv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="macv_output">Normalized MAC address</label>
+        <textarea id="macv_output" rows="4" readonly spellcheck="false" class="macv-mono" placeholder="Normalized MAC address will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="macv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="macv_privacy" style="margin-top:10px;">
+        Privacy: validation runs locally in your browser. No MAC addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This page strips separators, checks that the value contains exactly 12 hexadecimal digits,
+      normalizes it to uppercase colon-separated form, and inspects the first octet flags.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>02:1A:2B:3C:4D:5E</strong> → valid, locally administered, unicast</li>
+      <li><strong>01-00-5E-00-00-FB</strong> → valid, multicast</li>
+      <li><strong>AABBCCDDEEFF</strong> → valid, normalized to <strong>AA:BB:CC:DD:EE:FF</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/mac-address-generator/">MAC Address Generator</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/mime-type-checker/">MIME Type Checker</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("macv_input");
+  const outputEl = document.getElementById("macv_output");
+  const runBtn = document.getElementById("macv_run");
+  const copyBtn = document.getElementById("macv_copy");
+  const clearBtn = document.getElementById("macv_clear");
+  const errEl = document.getElementById("macv_error");
+  const resultEl = document.getElementById("macv_result");
+  const cardsEl = document.getElementById("macv_cards");
+  const tbodyEl = document.getElementById("macv_tbody");
+
+  if (!inputEl || !outputEl || !runBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    outputEl.value = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function normalize(raw) {
+    const s = String(raw || "").trim();
+    if (!s) return { ok: false, error: "Please enter a MAC address." };
+
+    const stripped = s.replace(/[:-]/g, "");
+    if (!/^[0-9a-fA-F]{12}$/.test(stripped)) {
+      return { ok: false, error: "Enter 12 hexadecimal digits, with optional : or - separators." };
+    }
+
+    const up = stripped.toUpperCase();
+    const bytes = up.match(/.{2}/g);
+    const normalized = bytes.join(":");
+    const first = parseInt(bytes[0], 16);
+
+    return {
+      ok: true,
+      stripped: up,
+      normalized: normalized,
+      first: first,
+      isMulticast: (first & 1) === 1,
+      isLocal: (first & 2) === 2,
+    };
+  }
+
+  function run() {
+    resetOutput();
+
+    const parsed = normalize(inputEl.value);
+    if (!parsed.ok) {
+      showError(parsed.error);
+      return;
+    }
+
+    lastOutput = parsed.normalized;
+    outputEl.value = parsed.normalized;
+
+    resultEl.innerHTML =
+      "<strong>Valid MAC address.</strong><br/><span class='note'>Normalized form: " + parsed.normalized + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid") +
+      badge(parsed.isMulticast ? "Multicast" : "Unicast") +
+      badge(parsed.isLocal ? "Locally administered" : "Universally administered bit pattern") +
+      badge("48-bit") +
+      "</div>";
+
+    fillTable([
+      ["Normalized", parsed.normalized],
+      ["Hex digits", parsed.stripped],
+      ["Address length", "48 bits"],
+      ["First octet", parsed.first.toString(16).toUpperCase().padStart(2, "0")],
+      ["Multicast bit", parsed.isMulticast ? "set" : "clear"],
+      ["Local bit", parsed.isLocal ? "set" : "clear"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No normalized MAC address to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied normalized MAC address.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  runBtn.addEventListener("click", run);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run();
+  });
+});
+</script>

@@ -1,0 +1,253 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sphere Volume Calculator",
+  description:
+    "Calculate sphere volume, surface area, and diameter from a radius. Includes validation, result cards, and FAQ schema.",
+  href: "/math/sphere-volume-calculator/",
+  order: 398,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/sphere-volume-calculator/";
+
+const faqs = [
+  {
+    q: "What does this sphere volume calculator compute?",
+    a: "It computes sphere volume, surface area, and diameter from the radius.",
+  },
+  {
+    q: "What formula is used for sphere volume?",
+    a: "The formula is V = 4/3 × π × r³.",
+  },
+  {
+    q: "What formula is used for sphere surface area?",
+    a: "The formula is A = 4 × π × r².",
+  },
+  {
+    q: "Can radius be 0 or negative?",
+    a: "No. Radius must be greater than 0 for a meaningful geometric sphere.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Sphere Volume Calculator — ${SITE_NAME}`}
+  description="Calculate sphere volume, surface area, and diameter from radius."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sphere Volume Calculator"
+  intro="Calculate sphere volume, surface area, and diameter from a radius. Useful for geometry, physics, and measurement problems."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="sphere-volume-calculator">
+    <style is:inline>
+      .sphere-wrap, .sphere-wrap * { box-sizing: border-box; }
+      .sphere-grid {
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+      .sphere-grid input { width:100%; min-width:0; }
+      .sphere-code {
+        font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break:break-word;
+      }
+    </style>
+
+    <div class="form sphere-wrap" role="form" aria-describedby="sphere_help sphere_privacy">
+      <div class="sphere-grid">
+        <div class="field">
+          <label for="sphere_radius">Radius (r)</label>
+          <input id="sphere_radius" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 4" />
+        </div>
+      </div>
+
+      <p class="note" id="sphere_help" style="margin-top:6px;">
+        Formulas:
+        <br />
+        <span class="sphere-code">V = 4/3 × π × r³</span>
+        <br />
+        <span class="sphere-code">A = 4 × π × r²</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sphere_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sphere_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="sphere_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sphere_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sphere_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sphere_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sphere_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sphere_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      A sphere is a three-dimensional shape where every point on the surface is the same distance from the center.
+    </p>
+    <ul>
+      <li><strong>Volume:</strong> 4/3 × π × r³</li>
+      <li><strong>Surface area:</strong> 4 × π × r²</li>
+      <li><strong>Diameter:</strong> 2r</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>r = 1</strong> → volume = 4.18879...</li>
+      <li><strong>r = 3</strong> → volume and surface area of a larger sphere</li>
+      <li><strong>r = 10</strong> → geometry scaling example</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/cone-volume-calculator/">Cone Volume Calculator</a></li>
+      <li><a href="/math/pyramid-volume-calculator/">Pyramid Volume Calculator</a></li>
+      <li><a href="/math/circle-area-calculator/">Circle Area Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const rEl = document.getElementById("sphere_radius");
+  const calcBtn = document.getElementById("sphere_calc");
+  const fillBtn = document.getElementById("sphere_fill_demo");
+  const clearBtn = document.getElementById("sphere_clear");
+  const errorEl = document.getElementById("sphere_error");
+  const resultEl = document.getElementById("sphere_result");
+  const cardsEl = document.getElementById("sphere_cards");
+  const tbodyEl = document.getElementById("sphere_tbody");
+
+  if (!rEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function num(v) {
+    const n = parseFloat(String(v).trim());
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function fmt(n, d) {
+    return Number.isFinite(n)
+      ? n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 12 })
+      : "—";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const a = document.createElement("td");
+      const b = document.createElement("td");
+      a.textContent = row[0];
+      b.textContent = row[1];
+      tr.appendChild(a);
+      tr.appendChild(b);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const r = num(rEl.value);
+    if (!Number.isFinite(r)) {
+      showError("Please enter a valid radius.");
+      return;
+    }
+    if (r <= 0) {
+      showError("Radius must be greater than 0.");
+      return;
+    }
+
+    const diameter = 2 * r;
+    const volume = (4 / 3) * Math.PI * Math.pow(r, 3);
+    const surfaceArea = 4 * Math.PI * r * r;
+
+    resultEl.innerHTML =
+      "<strong>Sphere result</strong><br/>" +
+      "<span class='sphere-code'>Volume = " + fmt(volume, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge("3D solid") +
+      badge("Diameter = " + fmt(diameter, 8)) +
+      badge(r >= 10 ? "Large radius" : "Typical radius") +
+      "</div>";
+
+    fillTable([
+      ["Radius", fmt(r, 12)],
+      ["Diameter", fmt(diameter, 12)],
+      ["Volume", fmt(volume, 12)],
+      ["Surface area", fmt(surfaceArea, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    rEl.value = "4";
+    clearOutput();
+  }
+
+  function reset() {
+    rEl.value = "";
+    clearOutput();
+    rEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  rEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

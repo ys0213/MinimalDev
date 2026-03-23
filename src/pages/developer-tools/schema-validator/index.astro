@@ -1,0 +1,310 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Schema Validator",
+  description:
+    "Validate JSON-LD schema syntax, inspect core properties, and review result cards and FAQ schema.",
+  href: "/developer-tools/schema-validator/",
+  order: 210,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/schema-validator/";
+
+const faqs = [
+  {
+    q: "What does this schema validator check?",
+    a: "It checks whether the JSON-LD is valid JSON and whether common schema properties such as @context and @type are present.",
+  },
+  {
+    q: "Does it guarantee Google rich results support?",
+    a: "No. It validates syntax and basic structure only. Rich results eligibility depends on more specific requirements.",
+  },
+  {
+    q: "Can it validate arrays of schema objects?",
+    a: "Yes. It can parse JSON arrays as long as the JSON syntax is valid.",
+  },
+  {
+    q: "Is my schema stored?",
+    a: "No. Everything runs locally in your browser and is not transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Schema Validator — ${SITE_NAME}`}
+  description="Validate JSON-LD schema syntax, inspect core fields, and review structure with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Schema Validator"
+  intro="Validate JSON-LD structured data, inspect common schema fields, and pretty-print valid output."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="schema-validator">
+    <style is:inline>
+      #sv_input,
+      #sv_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .sv-code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="sv_help sv_privacy">
+      <div class="field">
+        <label for="sv_input">JSON-LD input</label>
+        <textarea
+          id="sv_input"
+          rows="14"
+          spellcheck="false"
+          placeholder={`e.g.\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "Example Page",\n  "url": "https://example.com/"\n}`}
+        ></textarea>
+      </div>
+
+      <p class="note" id="sv_help" style="margin-top:6px;">
+        This tool validates JSON syntax and inspects common schema properties such as
+        <strong>@context</strong> and <strong>@type</strong>. It does not call external validators.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sv_validate">Validate</button>
+        <button class="btn secondary" type="button" id="sv_copy">Copy Pretty JSON</button>
+        <button class="btn secondary" type="button" id="sv_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sv_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sv_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sv_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="sv_output">Pretty-printed output</label>
+        <textarea
+          id="sv_output"
+          rows="14"
+          readonly
+          spellcheck="false"
+          placeholder="Validated JSON-LD will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sv_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sv_privacy" style="margin-top:10px;">
+        Privacy: validation runs locally in your browser. No schema content is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste JSON-LD into the input area and validate it. If the syntax is valid, the tool pretty-prints the JSON and inspects key fields.
+    </p>
+    <p class="note">
+      It is useful as a local pre-check before testing in external search-engine-specific tools.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Valid object</strong> → schema object with <code>@context</code> and <code>@type</code></li>
+      <li><strong>Valid array</strong> → multiple schema objects in one JSON array</li>
+      <li><strong>Invalid JSON</strong> → shows parse error and does not output formatted JSON</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/schema-markup-generator/">Schema Markup Generator</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/meta-tag-analyzer/">Meta Tag Analyzer</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("sv_input");
+  const validateBtn = document.getElementById("sv_validate");
+  const copyBtn = document.getElementById("sv_copy");
+  const clearBtn = document.getElementById("sv_clear");
+  const errEl = document.getElementById("sv_error");
+  const resultEl = document.getElementById("sv_result");
+  const cardsEl = document.getElementById("sv_cards");
+  const outputEl = document.getElementById("sv_output");
+  const tbodyEl = document.getElementById("sv_tbody");
+
+  if (!inputEl || !validateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastPretty = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastPretty = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function getRootType(v) {
+    if (Array.isArray(v)) return "array";
+    if (v === null) return "null";
+    return typeof v;
+  }
+
+  function inspectSchema(obj) {
+    if (Array.isArray(obj)) {
+      const first = obj[0];
+      return {
+        context: first && typeof first === "object" ? first["@context"] || "" : "",
+        type: first && typeof first === "object" ? first["@type"] || "" : "",
+        count: obj.length,
+      };
+    }
+    if (obj && typeof obj === "object") {
+      return {
+        context: obj["@context"] || "",
+        type: obj["@type"] || "",
+        count: Object.keys(obj).length,
+      };
+    }
+    return { context: "", type: "", count: 0 };
+  }
+
+  function validate() {
+    clearOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please paste JSON-LD input.");
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      showError("Invalid JSON-LD: " + (e && e.message ? e.message : "parse error"));
+      return;
+    }
+
+    const pretty = JSON.stringify(parsed, null, 2);
+    lastPretty = pretty;
+    outputEl.value = pretty;
+
+    const rootType = getRootType(parsed);
+    const info = inspectSchema(parsed);
+    const hasContext = !!info.context;
+    const hasType = !!info.type;
+
+    resultEl.innerHTML = "<strong>Valid JSON-LD syntax.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid JSON") +
+      badge("Root: " + rootType) +
+      badge(hasContext ? "@context present" : "No @context") +
+      badge(hasType ? "@type present" : "No @type") +
+      "</div>";
+
+    fillTable([
+      ["Root type", rootType],
+      ["@context", hasContext ? info.context : "Missing"],
+      ["@type", hasType ? info.type : "Missing"],
+      ["Top-level count", String(info.count)],
+      ["Input length", String(raw.length)],
+      ["Output length", String(pretty.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastPretty) {
+      showError("No validated output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastPretty);
+      resultEl.innerHTML = "<strong>Copied pretty JSON-LD.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    clearOutput();
+    inputEl.focus();
+  }
+
+  validateBtn.addEventListener("click", validate);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") validate();
+  });
+});
+</script>

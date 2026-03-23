@@ -1,0 +1,309 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Polygon Area Calculator",
+  description:
+    "Calculate the area of a regular polygon from the number of sides and side length. Includes validation, result cards, and FAQ schema.",
+  href: "/math/polygon-area-calculator/",
+  order: 390,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/polygon-area-calculator/";
+
+const faqs = [
+  {
+    q: "What does this polygon area calculator compute?",
+    a: "It calculates the area of a regular polygon using the number of sides and the side length.",
+  },
+  {
+    q: "What is the formula used?",
+    a: "This page uses Area = n × s² / (4 × tan(π / n)), where n is the number of sides and s is the side length.",
+  },
+  {
+    q: "What is a regular polygon?",
+    a: "A regular polygon has all sides equal and all interior angles equal.",
+  },
+  {
+    q: "Why must the number of sides be at least 3?",
+    a: "Because a polygon needs at least 3 sides to form a closed geometric shape.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Polygon Area Calculator — ${SITE_NAME}`}
+  description="Calculate the area of a regular polygon from the number of sides and side length."
+  canonicalPath={CANONICAL_PATH}
+  h1="Polygon Area Calculator"
+  intro="Calculate the area of a regular polygon from its number of sides and side length. This page also shows perimeter, apothem, and interior angle."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="polygon-area-calculator">
+    <style is:inline>
+      .poly-wrap, .poly-wrap * { box-sizing: border-box; }
+      .poly-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .poly-grid input,
+      .poly-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .poly-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .poly-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form poly-wrap" role="form" aria-describedby="poly_help poly_privacy">
+      <div class="poly-grid">
+        <div class="field">
+          <label for="poly_n">Number of sides (n)</label>
+          <input id="poly_n" type="number" inputmode="numeric" min="3" step="1" placeholder="e.g., 6" />
+        </div>
+
+        <div class="field">
+          <label for="poly_s">Side length (s)</label>
+          <input id="poly_s" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <p class="note" id="poly_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="poly-code">Area = n × s² / (4 × tan(π / n))</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="poly_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="poly_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="poly_clear">Clear</button>
+      </div>
+
+      <div class="result" id="poly_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="poly_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="poly_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="poly_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="poly_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator works for <strong>regular polygons</strong>, meaning every side and every interior angle is equal.
+      It uses the standard trigonometric area formula based on the number of sides and side length.
+    </p>
+    <p class="note">
+      It also reports:
+      <br />
+      <strong>Perimeter = n × s</strong>
+      <br />
+      <strong>Apothem = s / (2 × tan(π / n))</strong>
+      <br />
+      <strong>Interior angle = ((n − 2) × 180) / n</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>n = 3, s = 10</strong> → regular triangle area</li>
+      <li><strong>n = 4, s = 10</strong> → square area = 100</li>
+      <li><strong>n = 6, s = 10</strong> → regular hexagon area</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/triangle-area-calculator/">Triangle Area Calculator</a></li>
+      <li><a href="/math/circle-area-calculator/">Circle Area Calculator</a></li>
+      <li><a href="/math/triangle-perimeter-calculator/">Triangle Perimeter Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const nEl = document.getElementById("poly_n");
+  const sEl = document.getElementById("poly_s");
+  const calcBtn = document.getElementById("poly_calc");
+  const fillBtn = document.getElementById("poly_fill_demo");
+  const clearBtn = document.getElementById("poly_clear");
+  const errorEl = document.getElementById("poly_error");
+  const resultEl = document.getElementById("poly_result");
+  const cardsEl = document.getElementById("poly_cards");
+  const tbodyEl = document.getElementById("poly_tbody");
+
+  if (!nEl || !sEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 10 });
+  }
+
+  function fmtDeg(n, digits) {
+    return fmt(n, Number.isFinite(digits) ? digits : 6) + "°";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function polygonName(n) {
+    if (n === 3) return "Triangle";
+    if (n === 4) return "Quadrilateral";
+    if (n === 5) return "Pentagon";
+    if (n === 6) return "Hexagon";
+    if (n === 7) return "Heptagon";
+    if (n === 8) return "Octagon";
+    if (n === 9) return "Nonagon";
+    if (n === 10) return "Decagon";
+    if (n === 12) return "Dodecagon";
+    return "Regular polygon";
+  }
+
+  function compute() {
+    clearOutput();
+
+    const n = Number(String(nEl.value || "").trim());
+    const s = Number(String(sEl.value || "").trim());
+
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      showError("Please enter a valid whole number for the number of sides.");
+      return;
+    }
+
+    if (!Number.isFinite(s)) {
+      showError("Please enter a valid side length.");
+      return;
+    }
+
+    if (n < 3) {
+      showError("A polygon must have at least 3 sides.");
+      return;
+    }
+
+    if (s <= 0) {
+      showError("Side length must be greater than 0.");
+      return;
+    }
+
+    const perimeter = n * s;
+    const apothem = s / (2 * Math.tan(Math.PI / n));
+    const area = (perimeter * apothem) / 2;
+    const interiorAngle = ((n - 2) * 180) / n;
+    const centralAngle = 360 / n;
+    const name = polygonName(n);
+
+    let label = "Many-sided polygon";
+    if (n <= 4) label = "Small side count";
+    else if (n <= 8) label = "Common regular polygon";
+
+    resultEl.innerHTML =
+      "<strong>Polygon area result</strong><br/>" +
+      "<span class='poly-code'>Area = " + fmt(area, 10) + "</span>" +
+      "<br/><span class='note'>" + name + " with " + fmt(n, 0) + " sides</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(name) +
+      badge("Perimeter = " + fmt(perimeter, 4)) +
+      badge(label) +
+      "</div>";
+
+    fillTable([
+      ["Polygon type", name],
+      ["Number of sides (n)", fmt(n, 0)],
+      ["Side length (s)", fmt(s, 8)],
+      ["Perimeter", fmt(perimeter, 8)],
+      ["Apothem", fmt(apothem, 8)],
+      ["Interior angle", fmtDeg(interiorAngle, 8)],
+      ["Central angle", fmtDeg(centralAngle, 8)],
+      ["Area", fmt(area, 10)],
+    ]);
+  }
+
+  function fillDemo() {
+    nEl.value = "6";
+    sEl.value = "10";
+    clearOutput();
+  }
+
+  function reset() {
+    nEl.value = "";
+    sEl.value = "";
+    clearOutput();
+    nEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [nEl, sEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

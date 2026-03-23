@@ -1,0 +1,116 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Flip",
+  description: "Flip images horizontally or vertically with preview and download.",
+  href: "/image-tools/image-flip/",
+  order: 5,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/image-flip/";
+
+const faqs=[
+ {q:"What does flip mean?",a:"It mirrors the image."},
+ {q:"Is it destructive?",a:"No original is kept."},
+ {q:"Upload needed?",a:"No."}
+];
+
+const faqJsonLd={
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity:faqs.map(f=>({
+   "@type":"Question",
+   name:f.q,
+   acceptedAnswer:{ "@type":"Answer", text:f.a }
+ }))
+};
+---
+
+<ToolLayout
+title={`Image Flip — ${SITE_NAME}`}
+description="Flip images horizontally or vertically."
+canonicalPath={CANONICAL_PATH}
+h1="Image Flip"
+intro="Mirror your image horizontally or vertically."
+faq={faqs}
+categoryName="Image Tools"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+<div class="form">
+<input type="file" id="file" accept="image/*"/>
+
+<div style="display:flex;gap:10px;">
+<button class="btn" id="flipH">Flip Horizontal</button>
+<button class="btn" id="flipV">Flip Vertical</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<button class="btn secondary" id="download">Download</button>
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let img=new Image();
+let flipH=false, flipV=false;
+
+file.onchange=e=>{
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=draw;
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(e.target.files[0]);
+};
+
+function draw(){
+ canvas.width=img.width;
+ canvas.height=img.height;
+
+ ctx.save();
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ ctx.translate(
+   flipH?canvas.width:0,
+   flipV?canvas.height:0
+ );
+
+ ctx.scale(
+   flipH?-1:1,
+   flipV?-1:1
+ );
+
+ ctx.drawImage(img,0,0);
+ ctx.restore();
+}
+
+document.getElementById("flipH").onclick=()=>{
+ flipH=!flipH;
+ draw();
+};
+
+document.getElementById("flipV").onclick=()=>{
+ flipV=!flipV;
+ draw();
+};
+
+document.getElementById("download").onclick=()=>{
+ const a=document.createElement("a");
+ a.href=canvas.toDataURL();
+ a.download="flipped.png";
+ a.click();
+};
+
+});
+</script>

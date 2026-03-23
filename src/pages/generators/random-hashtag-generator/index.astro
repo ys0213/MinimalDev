@@ -1,0 +1,515 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Hashtag Generator",
+  description:
+    "Generate random hashtags for social posts, campaign ideas, testing, and placeholder content with validation, result cards, FAQ schema, and accessibility.",
+  href: "/generators/random-hashtag-generator/",
+  order: 190,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-hashtag-generator/";
+
+const faqs = [
+  {
+    q: "What does this random hashtag generator do?",
+    a: "It generates random hashtag ideas from built-in word lists for social media drafts, campaign brainstorming, mock data, and testing.",
+  },
+  {
+    q: "Are these hashtags guaranteed to be trending?",
+    a: "No. This tool generates random hashtag ideas only. It does not check current trends or platform popularity.",
+  },
+  {
+    q: "Can I generate multiple hashtags at once?",
+    a: "Yes. You can generate one hashtag or a larger batch in a single run.",
+  },
+  {
+    q: "Can I include numbers or mixed word styles?",
+    a: "Yes. You can choose capitalization style, optional numbers, and how many words each hashtag should contain.",
+  },
+  {
+    q: "Does this tool store what I generate?",
+    a: "No. Everything runs locally in your browser and the generated hashtags are not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Hashtag Generator — ${SITE_NAME}`}
+  description="Generate random hashtag ideas with configurable count, word length, capitalization, number options, result cards, FAQ schema, and accessibility."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Hashtag Generator"
+  intro="Generate random hashtag ideas for social posts, campaign mockups, content planning, UI testing, and placeholder data."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-hashtag-generator">
+    <style is:inline>
+      .rhg-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rhg-grid > * {
+        min-width: 0;
+      }
+      .rhg-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rhg-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .rhg-output,
+      #rhg_count,
+      #rhg_words,
+      #rhg_style {
+        width: 100%;
+        min-width: 0;
+      }
+      .rhg-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rhg-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .rhg-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .rhg-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      @media (min-width: 760px) {
+        .rhg-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .rhg-cards {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rhg_help rhg_privacy">
+      <div class="rhg-grid">
+        <div class="field">
+          <label for="rhg_count">How many hashtags</label>
+          <input id="rhg_count" type="number" inputmode="numeric" min="1" max="100" value="12" />
+        </div>
+
+        <div class="field">
+          <label for="rhg_words">Words per hashtag</label>
+          <select id="rhg_words">
+            <option value="1">1 word</option>
+            <option value="2" selected>2 words</option>
+            <option value="3">3 words</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rhg_style">Capitalization style</label>
+          <select id="rhg_style">
+            <option value="camel" selected>CamelCase</option>
+            <option value="lower">lowercase</option>
+            <option value="upper">UPPERCASE</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rhg_output_mode">Output format</label>
+          <select id="rhg_output_mode">
+            <option value="lines" selected>One per line</option>
+            <option value="comma">Comma-separated</option>
+            <option value="space">Space-separated</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rhg-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rhg_include_number">
+            <input id="rhg_include_number" type="checkbox" />
+            Optionally append numbers
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rhg_unique">
+            <input id="rhg_unique" type="checkbox" checked />
+            Avoid duplicates when possible
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rhg_prefix_hash">
+            <input id="rhg_prefix_hash" type="checkbox" checked />
+            Include # prefix
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rhg_help" style="margin-top:6px;">
+        This tool creates random hashtag ideas only. It does not check platform popularity, current trends, moderation rules, or search volume.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rhg_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rhg_copy">Copy Results</button>
+        <button class="btn secondary" type="button" id="rhg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rhg_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rhg_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rhg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rhg_output">Generated hashtags</label>
+        <textarea
+          id="rhg_output"
+          class="rhg-output"
+          rows="14"
+          readonly
+          spellcheck="false"
+          placeholder="Generated hashtags will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rhg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rhg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated hashtags are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose how many hashtags you want, pick a word count and style, optionally allow numbers, and then copy the generated output into drafts, mock social posts, or UI samples.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>#BrightLaunch</strong> for a product post</li>
+      <li><strong>#marketpulse</strong> for lowercase style testing</li>
+      <li><strong>#TRENDWAVE42</strong> for uppercase plus numbers</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-sentence-generator/">Random Sentence Generator</a></li>
+      <li><a href="/generators/random-paragraph-generator/">Random Paragraph Generator</a></li>
+      <li><a href="/generators/random-domain-name/">Random Domain Name Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rhg_count");
+  const wordsEl = document.getElementById("rhg_words");
+  const styleEl = document.getElementById("rhg_style");
+  const outputModeEl = document.getElementById("rhg_output_mode");
+  const includeNumberEl = document.getElementById("rhg_include_number");
+  const uniqueEl = document.getElementById("rhg_unique");
+  const prefixHashEl = document.getElementById("rhg_prefix_hash");
+  const generateBtn = document.getElementById("rhg_generate");
+  const copyBtn = document.getElementById("rhg_copy");
+  const clearBtn = document.getElementById("rhg_clear");
+  const errEl = document.getElementById("rhg_error");
+  const resultEl = document.getElementById("rhg_result");
+  const cardsEl = document.getElementById("rhg_cards");
+  const outputEl = document.getElementById("rhg_output");
+  const tbodyEl = document.getElementById("rhg_tbody");
+
+  if (!countEl || !wordsEl || !styleEl || !outputModeEl || !includeNumberEl || !uniqueEl || !prefixHashEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const adjectives = [
+    "bright","rapid","urban","fresh","social","daily","smart","viral","clean","happy",
+    "epic","vivid","quick","bold","trending","global","local","creative","silent","lucky",
+    "prime","next","peak","silver","golden","future","simple","open","wild","blue"
+  ];
+
+  const nouns = [
+    "launch","moment","style","market","pulse","story","brand","motion","focus","trend",
+    "spark","wave","vision","studio","growth","signal","energy","design","voice","world",
+    "campaign","idea","shift","guide","power","stream","impact","rhythm","culture","line"
+  ];
+
+  let lastOutput = "";
+  let lastItems = [];
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function titleCaseWord(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }
+
+  function randomDigitSuffix() {
+    return String(Math.floor(10 + Math.random() * 90));
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+    lastItems = [];
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makeCard(title, value, desc) {
+    return (
+      '<div class="rhg-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(desc) + "</div>" +
+      "</div>"
+    );
+  }
+
+  function formatWords(parts, style) {
+    if (style === "lower") return parts.join("").toLowerCase();
+    if (style === "upper") return parts.join("").toUpperCase();
+    return parts.map(titleCaseWord).join("");
+  }
+
+  function getWordCount(mode) {
+    if (mode === "mixed") return randItem([1,2,3]);
+    return Number(mode);
+  }
+
+  function buildHashtag(wordsMode, style, includeNumber, prefixHash) {
+    const count = getWordCount(wordsMode);
+    const parts = [];
+
+    if (count >= 1) parts.push(randItem(adjectives));
+    if (count >= 2) parts.push(randItem(nouns));
+    if (count >= 3) parts.push(randItem(nouns));
+
+    let tag = formatWords(parts, style);
+
+    if (includeNumber && Math.random() < 0.45) {
+      tag += randomDigitSuffix();
+    }
+
+    if (prefixHash) tag = "#" + tag;
+    return tag;
+  }
+
+  function formatOutput(items, mode) {
+    if (mode === "comma") return items.join(", ");
+    if (mode === "space") return items.join(" ");
+    return items.join("\n");
+  }
+
+  function estimateCategory(count, wordsMode, includeNumber) {
+    const avgWords = wordsMode === "mixed" ? 2 : Number(wordsMode);
+    if (avgWords === 1 && !includeNumber && count <= 10) return "Short batch";
+    if (avgWords >= 3 || includeNumber) return "More complex";
+    return "Balanced";
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const wordsMode = String(wordsEl.value || "2");
+    const style = String(styleEl.value || "camel");
+    const outputMode = String(outputModeEl.value || "lines");
+    const includeNumber = !!includeNumberEl.checked;
+    const unique = !!uniqueEl.checked;
+    const prefixHash = !!prefixHashEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Please enter a quantity from 1 to 100.");
+      return;
+    }
+
+    const items = [];
+    const seen = new Set();
+    let attempts = 0;
+    const maxAttempts = count * 30;
+
+    while (items.length < count && attempts < maxAttempts) {
+      attempts++;
+      const item = buildHashtag(wordsMode, style, includeNumber, prefixHash);
+
+      if (unique) {
+        if (seen.has(item)) continue;
+        seen.add(item);
+      }
+
+      items.push(item);
+    }
+
+    lastItems = items.slice();
+    lastOutput = formatOutput(items, outputMode);
+    outputEl.value = lastOutput;
+
+    const category = estimateCategory(count, wordsMode, includeNumber);
+
+    resultEl.innerHTML =
+      "<strong>Hashtags generated.</strong><br/><span class='note'>Review relevance and moderation rules before using them on real platforms.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rhg-cards">' +
+      makeCard("Requested", String(count), "Requested hashtag count") +
+      makeCard("Generated", String(items.length), "Returned in this batch") +
+      makeCard("Style", style === "camel" ? "CamelCase" : style === "lower" ? "lowercase" : "UPPERCASE", "Selected text style") +
+      makeCard("Profile", category, "Practical batch category") +
+      "</div>" +
+      '<div class="rhg-tags" style="margin-top:10px;">' +
+      badge("Words: " + wordsMode) +
+      badge("Numbers: " + (includeNumber ? "Optional" : "Off")) +
+      badge("Duplicates: " + (unique ? "Avoided" : "Allowed")) +
+      badge("Prefix #: " + (prefixHash ? "On" : "Off")) +
+      badge("Output: " + outputMode) +
+      "</div>";
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(items.length)],
+      ["Words per hashtag", wordsMode],
+      ["Capitalization style", style],
+      ["Output format", outputMode],
+      ["Optional numbers", includeNumber ? "Enabled" : "Disabled"],
+      ["Avoid duplicates", unique ? "Enabled" : "Disabled"],
+      ["Include hash prefix", prefixHash ? "Yes" : "No"],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+
+    if (!lastOutput) {
+      showError("No generated hashtags to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated hashtags.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "12";
+    wordsEl.value = "2";
+    styleEl.value = "camel";
+    outputModeEl.value = "lines";
+    includeNumberEl.checked = false;
+    uniqueEl.checked = true;
+    prefixHashEl.checked = true;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, wordsEl, styleEl, outputModeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

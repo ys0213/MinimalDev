@@ -1,0 +1,528 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Aspect Ratio Calculator",
+  description:
+    "Calculate image aspect ratios, simplify dimensions, compare common ratios, generate scaled sizes, and review result cards with FAQ schema.",
+  href: "/image-tools/image-aspect-ratio-calculator/",
+  order: 150,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-aspect-ratio-calculator/";
+
+const faqs = [
+  {
+    q: "What does this aspect ratio calculator do?",
+    a: "It calculates the aspect ratio from width and height, simplifies it, shows decimal format, compares it with common presets, and generates scaled sizes while preserving proportion.",
+  },
+  {
+    q: "Can I upload an image instead of typing dimensions?",
+    a: "Yes. You can upload an image and the tool will read its natural width and height in your browser.",
+  },
+  {
+    q: "Does this tool crop or resize my image?",
+    a: "No. It only analyzes dimensions and calculates ratio-related values. It does not modify the uploaded image.",
+  },
+  {
+    q: "Why is 1920 × 1080 shown as 16:9?",
+    a: "Because both values can be divided by their greatest common divisor, which simplifies the ratio to 16:9.",
+  },
+  {
+    q: "Is my image uploaded or stored?",
+    a: "No. Image analysis runs locally in your browser and no file is uploaded, stored, or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Aspect Ratio Calculator — ${SITE_NAME}`}
+  description="Calculate and simplify image aspect ratios, compare them with common presets, and generate proportional dimensions."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Aspect Ratio Calculator"
+  intro="Enter image width and height or upload an image to calculate its aspect ratio, simplified ratio, decimal ratio, orientation, and scaled sizes. Useful for image editing, design layouts, responsive assets, and print planning."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-aspect-ratio-calculator">
+    <style is:inline>
+      #iarc_width,
+      #iarc_height,
+      #iarc_target_width,
+      #iarc_target_height,
+      #iarc_file {
+        width: 100%;
+        min-width: 0;
+      }
+      .iarc-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .iarc-grid > * {
+        min-width: 0;
+      }
+      .iarc-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .iarc-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .iarc-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .iarc-preview {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        padding: 12px;
+        margin-top: 14px;
+        overflow: hidden;
+      }
+      .iarc-preview-box {
+        width: 100%;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.03);
+        border-radius: 10px;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      .iarc-shape {
+        max-width: 100%;
+        max-height: 220px;
+        background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.05));
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 10px;
+        box-sizing: border-box;
+      }
+      .iarc-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .iarc-list-item {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      @media (min-width: 900px) {
+        .iarc-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="iarc_help iarc_privacy">
+      <div class="field">
+        <label for="iarc_file">Optional image upload</label>
+        <input id="iarc_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="iarc-grid">
+        <div class="field">
+          <label for="iarc_width">Width (px)</label>
+          <input id="iarc_width" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 1920" />
+        </div>
+
+        <div class="field">
+          <label for="iarc_height">Height (px)</label>
+          <input id="iarc_height" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 1080" />
+        </div>
+      </div>
+
+      <div class="iarc-grid">
+        <div class="field">
+          <label for="iarc_target_width">Scaled from target width (px)</label>
+          <input id="iarc_target_width" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 1200" />
+          <p class="note" style="margin-top:6px;">If you enter a target width, the tool calculates the matching proportional height.</p>
+        </div>
+
+        <div class="field">
+          <label for="iarc_target_height">Scaled from target height (px)</label>
+          <input id="iarc_target_height" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 800" />
+          <p class="note" style="margin-top:6px;">If you enter a target height, the tool calculates the matching proportional width.</p>
+        </div>
+      </div>
+
+      <p class="note" id="iarc_help" style="margin-top:6px;">
+        Enter valid positive dimensions. If you upload an image, its natural width and height will automatically fill the dimension fields.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="iarc_calculate">Calculate Ratio</button>
+        <button class="btn secondary" type="button" id="iarc_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="iarc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="iarc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="iarc_result" role="status" style="margin-top:12px;">Aspect ratio results will appear here.</div>
+      <div class="result" id="iarc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="iarc-preview">
+        <strong>Ratio preview</strong>
+        <div class="iarc-preview-box" aria-label="Visual aspect ratio preview">
+          <div id="iarc_shape" class="iarc-shape" style="width:160px; height:90px;"></div>
+        </div>
+      </div>
+
+      <div class="result" id="iarc_presets" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="iarc_scaled" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="iarc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="iarc_privacy" style="margin-top:10px;">
+        Privacy: aspect ratio calculation and optional image analysis run locally in your browser. No file or data is uploaded or stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool reads width and height values, simplifies them into a ratio using the greatest common divisor, shows the decimal width-to-height value, and estimates proportional dimensions based on a target width or height.
+    </p>
+    <ul>
+      <li><strong>Simplified ratio:</strong> the smallest whole-number ratio such as 16:9 or 4:3</li>
+      <li><strong>Decimal ratio:</strong> useful for calculations and comparisons</li>
+      <li><strong>Scaled size:</strong> helps preserve proportions when resizing layouts or images</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>1920 × 1080 → 16:9 landscape ratio</li>
+      <li>1080 × 1350 → 4:5 portrait ratio often used in social posts</li>
+      <li>1200 target width for 4:3 → proportional height of 900</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+      <li><a href="/image-tools/image-size-calculator/">Image Size Calculator</a></li>
+      <li><a href="/image-tools/image-dpi-converter/">Image DPI Converter</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("iarc_file");
+  const widthEl = document.getElementById("iarc_width");
+  const heightEl = document.getElementById("iarc_height");
+  const targetWidthEl = document.getElementById("iarc_target_width");
+  const targetHeightEl = document.getElementById("iarc_target_height");
+  const calcBtn = document.getElementById("iarc_calculate");
+  const copyBtn = document.getElementById("iarc_copy");
+  const clearBtn = document.getElementById("iarc_clear");
+  const errorEl = document.getElementById("iarc_error");
+  const resultEl = document.getElementById("iarc_result");
+  const cardsEl = document.getElementById("iarc_cards");
+  const presetsEl = document.getElementById("iarc_presets");
+  const scaledEl = document.getElementById("iarc_scaled");
+  const tbodyEl = document.getElementById("iarc_tbody");
+  const shapeEl = document.getElementById("iarc_shape");
+
+  if (!fileEl || !widthEl || !heightEl || !targetWidthEl || !targetHeightEl || !calcBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !presetsEl || !scaledEl || !tbodyEl || !shapeEl) return;
+
+  let lastSummary = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Aspect ratio results will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    presetsEl.style.display = "none";
+    presetsEl.innerHTML = "";
+    scaledEl.style.display = "none";
+    scaledEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastSummary = "";
+    shapeEl.style.width = "160px";
+    shapeEl.style.height = "90px";
+  }
+
+  function gcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x || 1;
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function card(label, value, sub) {
+    return (
+      '<div class="iarc-card">' +
+        '<strong>' + label + '</strong>' +
+        '<div class="iarc-big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + sub + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parsePositiveInt(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0 || Math.floor(n) !== n) return null;
+    return n;
+  }
+
+  function getOrientation(w, h) {
+    if (w > h) return "Landscape";
+    if (h > w) return "Portrait";
+    return "Square";
+  }
+
+  function getCommonPresetMatch(sw, sh) {
+    const presets = [
+      ["1:1", 1, 1],
+      ["4:3", 4, 3],
+      ["3:2", 3, 2],
+      ["16:9", 16, 9],
+      ["16:10", 16, 10],
+      ["21:9", 21, 9],
+      ["9:16", 9, 16],
+      ["4:5", 4, 5],
+      ["2:3", 2, 3],
+    ];
+    return presets.map(function (p) {
+      const label = p[0];
+      const pw = p[1];
+      const ph = p[2];
+      const diff = Math.abs((sw / sh) - (pw / ph));
+      return { label, diff };
+    }).sort(function (a, b) {
+      return a.diff - b.diff;
+    });
+  }
+
+  function renderShape(w, h) {
+    const maxW = 280;
+    const maxH = 180;
+    const scale = Math.min(maxW / w, maxH / h, 1);
+    shapeEl.style.width = Math.max(40, Math.round(w * scale)) + "px";
+    shapeEl.style.height = Math.max(40, Math.round(h * scale)) + "px";
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const width = parsePositiveInt(widthEl.value);
+    const height = parsePositiveInt(heightEl.value);
+
+    if (!width || !height) {
+      showError("Please enter valid positive whole numbers for width and height.");
+      return;
+    }
+
+    const divisor = gcd(width, height);
+    const simpleW = width / divisor;
+    const simpleH = height / divisor;
+    const decimalRatio = width / height;
+    const orientation = getOrientation(width, height);
+
+    let scaledFromWidth = "";
+    let scaledFromHeight = "";
+
+    const targetWidth = parsePositiveInt(targetWidthEl.value);
+    const targetHeight = parsePositiveInt(targetHeightEl.value);
+
+    if (targetWidth) {
+      scaledFromWidth = targetWidth + " × " + Math.round(targetWidth / decimalRatio);
+    }
+    if (targetHeight) {
+      scaledFromHeight = Math.round(targetHeight * decimalRatio) + " × " + targetHeight;
+    }
+
+    renderShape(width, height);
+
+    resultEl.innerHTML =
+      "<strong>Aspect ratio calculated.</strong>" +
+      '<div class="note" style="margin-top:6px;">Use the simplified ratio for layout planning and the scaled dimensions for proportion-safe resizing.</div>';
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="iarc-cards">' +
+        card("Simplified ratio", simpleW + ":" + simpleH, "Reduced whole-number ratio") +
+        card("Decimal ratio", decimalRatio.toFixed(4), "Width divided by height") +
+        card("Orientation", orientation, "Landscape, portrait, or square") +
+        card("Original size", width + " × " + height, "Entered or uploaded dimensions") +
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        badge(simpleW + ":" + simpleH, "good") +
+        badge(orientation, orientation === "Square" ? "neutral" : "good") +
+        badge(decimalRatio > 2 || decimalRatio < 0.5 ? "Unusual ratio" : "Common range", decimalRatio > 2 || decimalRatio < 0.5 ? "warn" : "good") +
+      '</div>';
+
+    const presetMatches = getCommonPresetMatch(simpleW, simpleH).slice(0, 3);
+    presetsEl.style.display = "block";
+    presetsEl.innerHTML =
+      "<strong>Closest common ratios</strong>" +
+      '<div class="iarc-list" style="margin-top:10px;">' +
+      presetMatches.map(function (m, index) {
+        return (
+          '<div class="iarc-list-item">' +
+            '<strong>#' + (index + 1) + " — " + m.label + '</strong>' +
+            '<div class="note" style="margin-top:6px;">Difference score: ' + m.diff.toFixed(4) + "</div>" +
+          "</div>"
+        );
+      }).join("") +
+      "</div>";
+
+    scaledEl.style.display = "block";
+    scaledEl.innerHTML =
+      "<strong>Scaled size helpers</strong>" +
+      '<div class="iarc-list" style="margin-top:10px;">' +
+        '<div class="iarc-list-item"><strong>From target width</strong><div class="note" style="margin-top:6px;">' + (scaledFromWidth || "Enter a target width to calculate proportional height.") + '</div></div>' +
+        '<div class="iarc-list-item"><strong>From target height</strong><div class="note" style="margin-top:6px;">' + (scaledFromHeight || "Enter a target height to calculate proportional width.") + '</div></div>' +
+      '</div>';
+
+    fillTable([
+      ["Original width", String(width)],
+      ["Original height", String(height)],
+      ["Simplified width", String(simpleW)],
+      ["Simplified height", String(simpleH)],
+      ["Decimal ratio", decimalRatio.toFixed(6)],
+      ["Orientation", orientation],
+      ["GCD used for simplification", String(divisor)],
+    ]);
+
+    lastSummary =
+      "Original size: " + width + " × " + height + "\n" +
+      "Simplified ratio: " + simpleW + ":" + simpleH + "\n" +
+      "Decimal ratio: " + decimalRatio.toFixed(6) + "\n" +
+      "Orientation: " + orientation + "\n" +
+      "Scaled from target width: " + (scaledFromWidth || "N/A") + "\n" +
+      "Scaled from target height: " + (scaledFromHeight || "N/A");
+  }
+
+  async function copySummary() {
+    clearError();
+    if (!lastSummary) {
+      showError("No calculation summary to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastSummary);
+      resultEl.innerHTML = "<strong>Copied ratio summary.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  async function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showError("Please choose a valid image file.");
+      return;
+    }
+    clearError();
+
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      const img = new Image();
+      img.onload = function () {
+        widthEl.value = String(img.naturalWidth || img.width);
+        heightEl.value = String(img.naturalHeight || img.height);
+        calculate();
+      };
+      img.onerror = function () {
+        showError("Could not read image dimensions from the selected file.");
+      };
+      img.src = String(ev.target.result || "");
+    };
+    reader.onerror = function () {
+      showError("Could not load the selected file.");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    widthEl.value = "";
+    heightEl.value = "";
+    targetWidthEl.value = "";
+    targetHeightEl.value = "";
+    resetOutput();
+    widthEl.focus();
+  }
+
+  fileEl.addEventListener("change", function () {
+    const file = fileEl.files && fileEl.files[0];
+    if (file) handleFile(file);
+  });
+
+  calcBtn.addEventListener("click", calculate);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

@@ -1,0 +1,311 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Nonce Generator",
+  description:
+    "Generate secure nonces in hex or base64url format with configurable byte length and count. Includes result cards and FAQ schema.",
+  href: "/developer-tools/nonce-generator/",
+  order: 434,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/nonce-generator/";
+
+const faqs = [
+  {
+    q: "What is a nonce?",
+    a: "A nonce is a random one-time value used in security protocols, CSP headers, signatures, or request validation flows.",
+  },
+  {
+    q: "Is this nonce generator secure?",
+    a: "Yes. It uses the browser’s crypto.getRandomValues() API for cryptographically secure randomness.",
+  },
+  {
+    q: "What formats are supported?",
+    a: "This page supports hex and base64 URL-safe output formats.",
+  },
+  {
+    q: "Is anything stored?",
+    a: "No. Generation runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Nonce Generator — ${SITE_NAME}`}
+  description="Generate secure nonces with configurable settings, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Nonce Generator"
+  intro="Generate secure one-time nonces for CSP, signatures, request validation, and other security workflows."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="nonce-generator">
+    <style is:inline>
+      #nonce_bytes,
+      #nonce_count,
+      #nonce_format,
+      #nonce_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .nonce-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+      .nonce-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:10px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="nonce_help nonce_privacy">
+      <div class="nonce-grid">
+        <div class="field">
+          <label for="nonce_format">Output format</label>
+          <select id="nonce_format">
+            <option value="base64url" selected>Base64 URL-safe</option>
+            <option value="hex">Hex</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="nonce_bytes">Bytes per nonce</label>
+          <input id="nonce_bytes" type="number" inputmode="numeric" min="8" max="256" value="16" />
+        </div>
+
+        <div class="field">
+          <label for="nonce_count">How many nonces</label>
+          <input id="nonce_count" type="number" inputmode="numeric" min="1" max="20" value="1" />
+        </div>
+      </div>
+
+      <p class="note" id="nonce_help" style="margin-top:6px;">
+        Nonces are usually unique per request or per response. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to generate.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="nonce_generate">Generate</button>
+        <button class="btn secondary" type="button" id="nonce_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="nonce_clear">Clear</button>
+      </div>
+
+      <div class="result" id="nonce_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result nonce-mono" id="nonce_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="nonce_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="nonce_output">Generated nonce(s)</label>
+        <textarea id="nonce_output" rows="10" spellcheck="false" readonly placeholder="Generated nonce(s) will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="nonce_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="nonce_privacy" style="margin-top:10px;">
+        Privacy: nonce generation runs locally in your browser. No data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Choose an output format and byte size. The page generates secure random bytes and converts them to nonce output locally in your browser.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Base64 URL-safe nonce</strong> → common for CSP or URL-safe transport</li>
+      <li><strong>Hex nonce</strong> → easier to inspect in logs and debugging output</li>
+      <li><strong>16 bytes</strong> → 128-bit nonce</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/salt-generator/">Salt Generator</a></li>
+      <li><a href="/developer-tools/random-token-generator/">Random Token Generator</a></li>
+      <li><a href="/developer-tools/api-key-generator/">API Key Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const formatEl = document.getElementById("nonce_format");
+  const bytesEl = document.getElementById("nonce_bytes");
+  const countEl = document.getElementById("nonce_count");
+  const generateBtn = document.getElementById("nonce_generate");
+  const copyBtn = document.getElementById("nonce_copy");
+  const clearBtn = document.getElementById("nonce_clear");
+  const errEl = document.getElementById("nonce_error");
+  const resultEl = document.getElementById("nonce_result");
+  const cardsEl = document.getElementById("nonce_cards");
+  const outputEl = document.getElementById("nonce_output");
+  const tbodyEl = document.getElementById("nonce_tbody");
+
+  if (!formatEl || !bytesEl || !countEl || !generateBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function bytesToHex(arr) {
+    return Array.from(arr).map(function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  function bytesToBase64Url(arr) {
+    let binary = "";
+    for (let i = 0; i < arr.length; i++) binary += String.fromCharCode(arr[i]);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function generateNonces() {
+    resetOutput();
+
+    const format = String(formatEl.value || "base64url");
+    const byteCount = parseInt(String(bytesEl.value || ""), 10);
+    const count = parseInt(String(countEl.value || ""), 10);
+
+    if (!Number.isFinite(byteCount) || byteCount < 8 || byteCount > 256) {
+      showError("Bytes per nonce must be between 8 and 256.");
+      return;
+    }
+
+    if (!Number.isFinite(count) || count < 1 || count > 20) {
+      showError("How many nonces must be between 1 and 20.");
+      return;
+    }
+
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      const bytes = new Uint8Array(byteCount);
+      crypto.getRandomValues(bytes);
+      list.push(format === "hex" ? bytesToHex(bytes) : bytesToBase64Url(bytes));
+    }
+
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML = "<strong>Generated nonce" + (count === 1 ? "" : "s") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Format: " + format) +
+      badge("Count: " + count) +
+      badge("Bytes: " + byteCount) +
+      badge("Entropy: " + (byteCount * 8) + " bits each") +
+      "</div>";
+
+    fillTable([
+      ["Format", format],
+      ["Bytes per nonce", String(byteCount)],
+      ["Generated count", String(count)],
+      ["Entropy per nonce", String(byteCount * 8) + " bits"],
+      ["Approx output length", list[0] ? String(list[0].length) : "0"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated nonce output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied nonce output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    formatEl.value = "base64url";
+    bytesEl.value = "16";
+    countEl.value = "1";
+    resetOutput();
+    bytesEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateNonces);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [bytesEl, countEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateNonces();
+    });
+  });
+});
+</script>

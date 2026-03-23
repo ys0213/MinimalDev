@@ -1,0 +1,300 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base32 Encoder",
+  description:
+    "Encode text to Base32 (RFC 4648) with UTF-8 support, validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base32-encoder/",
+  order: 330,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base32-encoder/";
+
+const faqs = [
+  {
+    q: "What does this Base32 encoder do?",
+    a: "It converts UTF-8 text into Base32 using the RFC 4648 alphabet (A-Z and 2-7).",
+  },
+  {
+    q: "Does it use padding?",
+    a: "Yes. This tool outputs standard RFC 4648 Base32 with = padding when needed.",
+  },
+  {
+    q: "Can I encode non-English text?",
+    a: "Yes. Input text is encoded as UTF-8 before Base32 conversion.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Encoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base32 Encoder — ${SITE_NAME}`}
+  description="Encode text to Base32 (RFC 4648) with UTF-8 support, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base32 Encoder"
+  intro="Encode plain text to Base32 using the standard RFC 4648 alphabet. Useful for developer workflows, data transport, and testing."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base32-encoder">
+    <style is:inline>
+      #b32e_input,
+      #b32e_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b32e-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b32e_help b32e_privacy">
+      <div class="field">
+        <label for="b32e_input">Text input</label>
+        <textarea
+          id="b32e_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="Enter text to encode as Base32"
+        ></textarea>
+      </div>
+
+      <p class="note" id="b32e_help" style="margin-top:6px;">
+        Uses standard RFC 4648 Base32 alphabet: <strong>A-Z</strong> and <strong>2-7</strong>, with <strong>=</strong> padding.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b32e_encode">Encode</button>
+        <button class="btn secondary" type="button" id="b32e_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b32e_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b32e_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b32e_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b32e_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b32e_output">Base32 output</label>
+        <textarea
+          id="b32e_output"
+          rows="10"
+          readonly
+          spellcheck="false"
+          placeholder="Encoded Base32 output will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b32e_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b32e_privacy" style="margin-top:10px;">
+        Privacy: encoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool converts your text to UTF-8 bytes, then encodes those bytes using Base32 with the RFC 4648 alphabet.
+    </p>
+    <p class="note">
+      Base32 is commonly used where a case-insensitive, text-safe encoding is helpful.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Hello</strong> → Base32-encoded output using RFC 4648 rules</li>
+      <li><strong>developer-tools</strong> → safe uppercase Base32 text</li>
+      <li><strong>안녕하세요</strong> → encoded from UTF-8 bytes</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base32-decoder/">Base32 Decoder</a></li>
+      <li><a href="/developer-tools/base58-encoder/">Base58 Encoder</a></li>
+      <li><a href="/developer-tools/base85-encoder/">Base85 Encoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b32e_input");
+  const outputEl = document.getElementById("b32e_output");
+  const encodeBtn = document.getElementById("b32e_encode");
+  const copyBtn = document.getElementById("b32e_copy");
+  const clearBtn = document.getElementById("b32e_clear");
+  const errEl = document.getElementById("b32e_error");
+  const resultEl = document.getElementById("b32e_result");
+  const cardsEl = document.getElementById("b32e_cards");
+  const tbodyEl = document.getElementById("b32e_tbody");
+
+  if (!inputEl || !outputEl || !encodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base32Encode(bytes) {
+    let bits = 0;
+    let value = 0;
+    let output = "";
+
+    for (let i = 0; i < bytes.length; i++) {
+      value = (value << 8) | bytes[i];
+      bits += 8;
+
+      while (bits >= 5) {
+        output += ALPHABET[(value >>> (bits - 5)) & 31];
+        bits -= 5;
+      }
+    }
+
+    if (bits > 0) {
+      output += ALPHABET[(value << (5 - bits)) & 31];
+    }
+
+    while (output.length % 8 !== 0) {
+      output += "=";
+    }
+
+    return output;
+  }
+
+  function encode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    if (!raw.length) {
+      showError("Please enter text to encode.");
+      return;
+    }
+
+    const bytes = new TextEncoder().encode(raw);
+    const encoded = base32Encode(bytes);
+
+    lastOutput = encoded;
+    outputEl.value = encoded;
+
+    resultEl.innerHTML = "<strong>Text encoded to Base32.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("RFC 4648") +
+      badge("UTF-8 input") +
+      badge("Padding enabled") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      "</div>";
+
+    fillTable([
+      ["Input characters", String(raw.length)],
+      ["UTF-8 byte length", String(bytes.length)],
+      ["Output length", String(encoded.length)],
+      ["Alphabet", "A-Z, 2-7"],
+      ["Padding used", encoded.includes("=") ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No encoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied Base32 output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  encodeBtn.addEventListener("click", encode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") encode();
+  });
+});
+</script>

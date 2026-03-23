@@ -1,0 +1,310 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Matrix Determinant",
+  description:
+    "Calculate the determinant of a square matrix with validation, result cards, and FAQ support.",
+  href: "/math/matrix-determinant/",
+  order: 342,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/matrix-determinant/";
+
+const faqs = [
+  {
+    q: "What is a determinant?",
+    a: "A determinant is a scalar value associated with a square matrix. It helps determine whether the matrix is invertible and describes certain geometric properties.",
+  },
+  {
+    q: "Can I use any matrix size?",
+    a: "This tool supports square matrices from 2×2 to 4×4.",
+  },
+  {
+    q: "What does determinant 0 mean?",
+    a: "A determinant of 0 means the matrix is singular and does not have an inverse.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Matrix Determinant — ${SITE_NAME}`}
+  description="Square matrix determinant calculator with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Matrix Determinant"
+  intro="Calculate the determinant of a square matrix from 2×2 up to 4×4."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="matrix-determinant">
+    <style is:inline>
+      .md-wrap, .md-wrap * { box-sizing: border-box; }
+      .md-grid-wrap { width: 100%; overflow-x: auto; margin-top: 12px; }
+      .md-grid {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+      }
+      .md-grid input {
+        width: 100%;
+        min-width: 0;
+      }
+    </style>
+
+    <div class="form md-wrap" role="form" aria-describedby="md_help md_privacy">
+      <div class="field">
+        <label for="md_size">Matrix size</label>
+        <select id="md_size">
+          <option value="2">2 × 2</option>
+          <option value="3" selected>3 × 3</option>
+          <option value="4">4 × 4</option>
+        </select>
+      </div>
+
+      <p class="note" id="md_help" style="margin-top:6px;">
+        Determinants are defined for square matrices only.
+      </p>
+
+      <div class="md-grid-wrap">
+        <div id="md_grid" class="md-grid" aria-label="Determinant matrix input grid"></div>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="btn" type="button" id="md_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="md_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="md_clear">Clear</button>
+      </div>
+
+      <div class="result" id="md_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="md_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="md_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="md_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="md_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No matrix values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The determinant is computed from the square matrix values. A non-zero determinant means the matrix is invertible.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2×2:</strong> determinant = ad − bc</li>
+      <li><strong>3×3 and 4×4:</strong> computed with row-reduction based elimination</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/matrix-calculator/">Matrix Calculator</a></li>
+      <li><a href="/math/matrix-multiplication/">Matrix Multiplication</a></li>
+      <li><a href="/math/linear-equation-solver/">Linear Equation Solver</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const sizeEl = document.getElementById("md_size");
+  const gridEl = document.getElementById("md_grid");
+  const calcBtn = document.getElementById("md_calc");
+  const demoBtn = document.getElementById("md_fill_demo");
+  const clearBtn = document.getElementById("md_clear");
+  const errorEl = document.getElementById("md_error");
+  const resultEl = document.getElementById("md_result");
+  const cardsEl = document.getElementById("md_cards");
+  const tbodyEl = document.getElementById("md_tbody");
+
+  if (!sizeEl || !gridEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function size() {
+    return parseInt(String(sizeEl.value), 10);
+  }
+
+  function createGrid(n) {
+    gridEl.innerHTML = "";
+    gridEl.style.gridTemplateColumns = "repeat(" + n + ", minmax(56px, 1fr))";
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.step = "any";
+        input.inputMode = "decimal";
+        input.placeholder = "0";
+        input.id = "md_" + r + "_" + c;
+        input.setAttribute("aria-label", "Matrix row " + (r + 1) + " column " + (c + 1));
+        gridEl.appendChild(input);
+      }
+    }
+  }
+
+  function readMatrix(n) {
+    const out = [];
+    for (let r = 0; r < n; r++) {
+      const row = [];
+      for (let c = 0; c < n; c++) {
+        const el = document.getElementById("md_" + r + "_" + c);
+        const raw = el ? String(el.value || "").trim() : "";
+        if (!raw) throw new Error("Please fill every matrix cell.");
+        const v = Number(raw);
+        if (!Number.isFinite(v)) throw new Error("Enter only valid numbers in matrix cells.");
+        row.push(v);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function determinant(m) {
+    const n = m.length;
+    const a = m.map(function (row) { return row.slice(); });
+    let det = 1;
+    let sign = 1;
+
+    for (let i = 0; i < n; i++) {
+      let pivot = i;
+      for (let r = i + 1; r < n; r++) {
+        if (Math.abs(a[r][i]) > Math.abs(a[pivot][i])) pivot = r;
+      }
+
+      if (Math.abs(a[pivot][i]) < 1e-12) return 0;
+
+      if (pivot !== i) {
+        const tmp = a[i];
+        a[i] = a[pivot];
+        a[pivot] = tmp;
+        sign *= -1;
+      }
+
+      const pivotVal = a[i][i];
+      det *= pivotVal;
+
+      for (let r = i + 1; r < n; r++) {
+        const factor = a[r][i] / pivotVal;
+        for (let c = i; c < n; c++) {
+          a[r][c] -= factor * a[i][c];
+        }
+      }
+    }
+
+    return det * sign;
+  }
+
+  function formatNum(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const n = size();
+      const M = readMatrix(n);
+      const det = determinant(M);
+      const singular = Math.abs(det) < 1e-12;
+
+      resultEl.innerHTML =
+        "<strong>Determinant</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>" + formatNum(det) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(n + " × " + n) +
+        badge(singular ? "Singular matrix" : "Invertible matrix") +
+        badge(det === 0 ? "det = 0" : "det ≠ 0") +
+        "</div>";
+
+      fillTable([
+        ["Matrix size", n + " × " + n],
+        ["Determinant", formatNum(det)],
+        ["Invertible", singular ? "No" : "Yes"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not compute the determinant.");
+    }
+  }
+
+  function fillDemo() {
+    const n = size();
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const el = document.getElementById("md_" + r + "_" + c);
+        if (el) el.value = String(r === c ? 2 : 1);
+      }
+    }
+    clearOutput();
+  }
+
+  function reset() {
+    createGrid(size());
+    clearOutput();
+  }
+
+  sizeEl.addEventListener("change", reset);
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  createGrid(size());
+});
+</script>

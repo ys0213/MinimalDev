@@ -1,0 +1,144 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "YAML to JSON",
+  description:
+    "Convert YAML to JSON with validation, pretty-printing, result cards, and FAQ schema.",
+  href: "/developer-tools/yaml-to-json/",
+  order: 364,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/yaml-to-json/";
+
+const faqs = [
+  {
+    q: "What does this YAML to JSON tool do?",
+    a: "It parses YAML input and converts it to JSON output.",
+  },
+  {
+    q: "Does it support nested objects and arrays?",
+    a: "Yes. Valid YAML structures such as nested mappings and sequences are supported by the YAML parser.",
+  },
+  {
+    q: "What if the YAML is invalid?",
+    a: "The tool shows a parse error and does not generate JSON output until the YAML is valid.",
+  },
+  {
+    q: "Is my YAML stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`YAML to JSON — ${SITE_NAME}`}
+  description="Convert YAML to JSON with validation, pretty-printing, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="YAML to JSON"
+  intro="Convert YAML to JSON for developer workflows, configuration inspection, and data transformation."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="yaml-to-json">
+    <style is:inline>
+      #y2j_input,
+      #y2j_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .y2j-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="y2j_help y2j_privacy">
+      <div class="field">
+        <label for="y2j_input">YAML input</label>
+        <textarea
+          id="y2j_input"
+          rows="12"
+          spellcheck="false"
+          placeholder={"e.g.\nname: Alex\nage: 30\nskills:\n  - JavaScript\n  - YAML"}
+        ></textarea>
+      </div>
+
+      <p class="note" id="y2j_help" style="margin-top:6px;">
+        This page requires the <code>yaml</code> package in your project: <code>npm install yaml</code>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="y2j_convert">Convert</button>
+        <button class="btn secondary" type="button" id="y2j_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="y2j_clear">Clear</button>
+      </div>
+
+      <div class="result" id="y2j_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result y2j-mono" id="y2j_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="y2j_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="y2j_output">JSON output</label>
+        <textarea id="y2j_output" rows="12" readonly spellcheck="false" placeholder="Converted JSON will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="y2j_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="y2j_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No YAML data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste YAML into the input area and convert it to formatted JSON output.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>name: Alex</strong> → JSON object field</li>
+      <li><strong>- item</strong> → JSON array item</li>
+      <li><strong>nested:</strong> → nested JSON object</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/json-to-yaml/">JSON to YAML</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/developer-tools/json-minifier/">JSON Minifier</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>

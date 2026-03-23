@@ -1,0 +1,71 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "WebP to JPG Converter",
+  description: "Convert WebP images to JPG format.",
+  href: "/image-tools/webp-to-jpg/",
+  order: 8,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/webp-to-jpg/";
+---
+
+<ToolLayout
+title={`WebP to JPG — ${SITE_NAME}`}
+description="Convert WebP to JPG."
+canonicalPath={CANONICAL_PATH}
+h1="WebP to JPG Converter"
+intro="Convert WebP images into JPG."
+categoryName="Image Tools"
+>
+<div slot="tool">
+<div class="form">
+<input type="file" id="file" accept="image/webp"/>
+
+<canvas id="canvas"></canvas>
+
+<div id="info" class="result">Upload WebP image.</div>
+
+<button class="btn" id="convert">Convert</button>
+<button class="btn secondary" id="download">Download JPG</button>
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+
+let img=new Image();
+
+file.onchange=e=>{
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=()=>{
+     canvas.width=img.width;
+     canvas.height=img.height;
+
+     ctx.fillStyle="#fff";
+     ctx.fillRect(0,0,canvas.width,canvas.height);
+
+     ctx.drawImage(img,0,0);
+   };
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(e.target.files[0]);
+};
+
+document.getElementById("download").onclick=()=>{
+ const a=document.createElement("a");
+ a.href=canvas.toDataURL("image/jpeg",0.9);
+ a.download="converted.jpg";
+ a.click();
+};
+
+});
+</script>

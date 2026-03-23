@@ -1,0 +1,363 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "HTML Entity Encoder",
+  description:
+    "Encode text into HTML entities with validation, result cards, output options, and FAQ schema.",
+  href: "/developer-tools/html-entity-encoder/",
+  order: 390,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/html-entity-encoder/";
+
+const faqs = [
+  {
+    q: "What does an HTML entity encoder do?",
+    a: "It converts reserved HTML characters such as <, >, &, quotes, and optionally non-ASCII characters into HTML-safe entity representations.",
+  },
+  {
+    q: "Why would I encode HTML entities?",
+    a: "Encoding helps display raw markup as text, reduces accidental HTML interpretation, and is useful in templates, documentation, and code snippets.",
+  },
+  {
+    q: "What is the difference between named and numeric entities?",
+    a: "Named entities use forms like &amp; and &lt;. Numeric entities use forms like &#38; or &#x26; and can represent a wider range of Unicode characters.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. Encoding runs locally in your browser and nothing is stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`HTML Entity Encoder — ${SITE_NAME}`}
+  description="Encode text into HTML entities with validation, mode options, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="HTML Entity Encoder"
+  intro="Convert text into HTML entities for safer display in markup, docs, templates, and code examples."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="html-entity-encoder">
+    <style is:inline>
+      #hee_input,
+      #hee_output,
+      #hee_mode,
+      #hee_quoteMode {
+        width: 100%;
+        min-width: 0;
+      }
+      .hee-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="hee_help hee_privacy">
+      <div class="field">
+        <label for="hee_input">Text input</label>
+        <textarea
+          id="hee_input"
+          rows="10"
+          spellcheck="false"
+          placeholder={`e.g. <div class="notice">Tom & Jerry's "Best" < 5</div>`}
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="hee_mode">Encoding mode</label>
+        <select id="hee_mode">
+          <option value="basic" selected>Basic HTML entities only</option>
+          <option value="named">Basic + common named entities</option>
+          <option value="decimal">Encode non-ASCII as decimal entities</option>
+          <option value="hex">Encode non-ASCII as hex entities</option>
+          <option value="all-decimal">Encode every character as decimal entities</option>
+          <option value="all-hex">Encode every character as hex entities</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="hee_quoteMode">Quote handling</label>
+        <select id="hee_quoteMode">
+          <option value="double" selected>Encode double quotes only</option>
+          <option value="single">Encode single quotes only</option>
+          <option value="both">Encode both quote types</option>
+          <option value="none">Do not encode quotes</option>
+        </select>
+      </div>
+
+      <p class="note" id="hee_help" style="margin-top:6px;">
+        Useful for showing raw HTML safely. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> to encode.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="hee_encode">Encode</button>
+        <button class="btn secondary" type="button" id="hee_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="hee_clear">Clear</button>
+      </div>
+
+      <div class="result" id="hee_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result hee-mono" id="hee_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="hee_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="hee_output">Encoded output</label>
+        <textarea id="hee_output" rows="10" spellcheck="false" readonly placeholder="Encoded text will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="hee_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="hee_privacy" style="margin-top:10px;">
+        Privacy: encoding runs locally in your browser. No text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The encoder replaces reserved HTML characters such as <code>&lt;</code>, <code>&gt;</code>, and <code>&amp;</code>
+      with entity-safe forms. Depending on the selected mode, it can also convert Unicode characters into numeric entities.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>&lt;div&gt;</strong> → <strong>&amp;lt;div&amp;gt;</strong></li>
+      <li><strong>Tom &amp; Jerry</strong> → <strong>Tom &amp;amp; Jerry</strong></li>
+      <li><strong>©</strong> → <strong>&amp;copy;</strong> or <strong>&amp;#169;</strong> depending on mode</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/html-entity-decoder/">HTML Entity Decoder</a></li>
+      <li><a href="/developer-tools/unicode-escape/">Unicode Escape</a></li>
+      <li><a href="/developer-tools/string-escape/">String Escape</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("hee_input");
+  const modeEl = document.getElementById("hee_mode");
+  const quoteModeEl = document.getElementById("hee_quoteMode");
+  const encodeBtn = document.getElementById("hee_encode");
+  const copyBtn = document.getElementById("hee_copy");
+  const clearBtn = document.getElementById("hee_clear");
+  const errEl = document.getElementById("hee_error");
+  const resultEl = document.getElementById("hee_result");
+  const cardsEl = document.getElementById("hee_cards");
+  const outputEl = document.getElementById("hee_output");
+  const tbodyEl = document.getElementById("hee_tbody");
+
+  if (!inputEl || !modeEl || !quoteModeEl || !encodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  const namedMap = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+    "©": "&copy;",
+    "®": "&reg;",
+    "™": "&trade;",
+    "€": "&euro;",
+    "£": "&pound;",
+    "¥": "&yen;",
+    "—": "&mdash;",
+    "–": "&ndash;",
+    " ": "&nbsp;"
+  };
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function shouldEncodeQuote(ch, quoteMode) {
+    if (quoteMode === "none") return false;
+    if (quoteMode === "both") return ch === '"' || ch === "'";
+    if (quoteMode === "double") return ch === '"';
+    if (quoteMode === "single") return ch === "'";
+    return false;
+  }
+
+  function encodeChar(ch, mode, quoteMode) {
+    const cp = ch.codePointAt(0);
+
+    if (ch === "&" || ch === "<" || ch === ">" || shouldEncodeQuote(ch, quoteMode)) {
+      if (mode === "decimal" || mode === "all-decimal") return "&#" + cp + ";";
+      if (mode === "hex" || mode === "all-hex") return "&#x" + cp.toString(16).toUpperCase() + ";";
+      if (namedMap[ch]) return namedMap[ch];
+      return "&#" + cp + ";";
+    }
+
+    if (mode === "all-decimal") return "&#" + cp + ";";
+    if (mode === "all-hex") return "&#x" + cp.toString(16).toUpperCase() + ";";
+
+    if (cp > 127) {
+      if (mode === "named" && namedMap[ch]) return namedMap[ch];
+      if (mode === "decimal") return "&#" + cp + ";";
+      if (mode === "hex") return "&#x" + cp.toString(16).toUpperCase() + ";";
+    }
+
+    return ch;
+  }
+
+  function encodeText(raw, mode, quoteMode) {
+    const chars = Array.from(raw);
+    return chars.map(function (ch) {
+      return encodeChar(ch, mode, quoteMode);
+    }).join("");
+  }
+
+  function countDifferences(a, b) {
+    if (a === b) return 0;
+    let changed = 0;
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+      if (a[i] !== b[i]) changed++;
+    }
+    return changed;
+  }
+
+  function encode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "");
+    const trimmed = raw.trim();
+    const mode = String(modeEl.value || "basic");
+    const quoteMode = String(quoteModeEl.value || "double");
+
+    if (!trimmed) {
+      showError("Please enter text to encode.");
+      return;
+    }
+
+    const encoded = encodeText(raw, mode, quoteMode);
+    const changed = raw !== encoded;
+    const diffCount = countDifferences(raw, encoded);
+
+    outputEl.value = encoded;
+    lastOutput = encoded;
+
+    resultEl.innerHTML =
+      "<strong>Encoded successfully.</strong><br/><span class='note'>" +
+      (changed ? "Special characters were converted to HTML entities." : "No characters required encoding with the selected options.") +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Mode: " + mode) +
+      badge("Quotes: " + quoteMode) +
+      badge(changed ? "Output changed" : "No changes") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Output length", String(encoded.length)],
+      ["Length delta", String(encoded.length - raw.length)],
+      ["Changed positions (approx.)", String(diffCount)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No encoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied encoded output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    modeEl.value = "basic";
+    quoteModeEl.value = "double";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  encodeBtn.addEventListener("click", encode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") encode();
+  });
+});
+</script>

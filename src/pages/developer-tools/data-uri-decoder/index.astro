@@ -1,0 +1,330 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Data URI Decoder",
+  description:
+    "Decode data: URIs, inspect media type and encoding, and extract UTF-8 text content with result cards and FAQ schema.",
+  href: "/developer-tools/data-uri-decoder/",
+  order: 363,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/data-uri-decoder/";
+
+const faqs = [
+  {
+    q: "What does this tool decode?",
+    a: "It decodes data: URIs and extracts the metadata and payload.",
+  },
+  {
+    q: "Does it support Base64 data URIs?",
+    a: "Yes. It supports both Base64 and non-Base64 text payloads.",
+  },
+  {
+    q: "Will it always show readable text?",
+    a: "Only if the decoded bytes represent valid UTF-8 text. Binary data may not decode to readable text.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Data URI Decoder — ${SITE_NAME}`}
+  description="Decode data: URIs, inspect metadata, and extract UTF-8 text content with result cards and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Data URI Decoder"
+  intro="Decode a data: URI, inspect its media type and encoding, and extract text content when possible."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="data-uri-decoder">
+    <style is:inline>
+      #dud_input,
+      #dud_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .dud-mono {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="dud_help dud_privacy">
+      <div class="field">
+        <label for="dud_input">Data URI input</label>
+        <textarea
+          id="dud_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="Paste a data: URI here"
+        ></textarea>
+      </div>
+
+      <p class="note" id="dud_help" style="margin-top:6px;">
+        Supports both percent-encoded and Base64 data URIs.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="dud_decode">Decode</button>
+        <button class="btn secondary" type="button" id="dud_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="dud_clear">Clear</button>
+      </div>
+
+      <div class="result" id="dud_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="dud_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="dud_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="dud_output">Decoded text output</label>
+        <textarea
+          id="dud_output"
+          rows="10"
+          readonly
+          spellcheck="false"
+          placeholder="Decoded text will appear here when available."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="dud_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="dud_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No input data is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste a full data: URI. The tool splits the metadata and payload, decodes the data, and shows text output when the content is valid UTF-8.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>data:text/plain;charset=utf-8,Hello</strong> → plain text output</li>
+      <li><strong>data:text/plain;base64,SGVsbG8=</strong> → Base64-decoded text output</li>
+      <li><strong>Binary data</strong> → metadata still shown even if text display is not possible</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/data-uri-generator/">Data URI Generator</a></li>
+      <li><a href="/developer-tools/base32-decoder/">Base32 Decoder</a></li>
+      <li><a href="/developer-tools/binary-to-text/">Binary to Text</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("dud_input");
+  const outputEl = document.getElementById("dud_output");
+  const decodeBtn = document.getElementById("dud_decode");
+  const copyBtn = document.getElementById("dud_copy");
+  const clearBtn = document.getElementById("dud_clear");
+  const errEl = document.getElementById("dud_error");
+  const resultEl = document.getElementById("dud_result");
+  const cardsEl = document.getElementById("dud_cards");
+  const tbodyEl = document.getElementById("dud_tbody");
+
+  if (!inputEl || !outputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function decodeBase64ToBytes(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  function decode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw) {
+      showError("Please enter a data URI.");
+      return;
+    }
+    if (!raw.startsWith("data:")) {
+      showError("Input must start with data:.");
+      return;
+    }
+
+    const commaIndex = raw.indexOf(",");
+    if (commaIndex === -1) {
+      showError("Invalid data URI: missing comma separator.");
+      return;
+    }
+
+    const metaPart = raw.slice(5, commaIndex);
+    const dataPart = raw.slice(commaIndex + 1);
+
+    const metaSegments = metaPart ? metaPart.split(";") : [];
+    let mimeType = "text/plain";
+    let charset = "";
+    let isBase64 = false;
+
+    if (metaSegments.length && metaSegments[0].includes("/")) {
+      mimeType = metaSegments.shift();
+    }
+
+    metaSegments.forEach(function (seg) {
+      if (seg.toLowerCase() === "base64") isBase64 = true;
+      else if (seg.toLowerCase().startsWith("charset=")) charset = seg.slice(8);
+    });
+
+    let bytes;
+    try {
+      if (isBase64) {
+        bytes = decodeBase64ToBytes(dataPart);
+      } else {
+        const decodedString = decodeURIComponent(dataPart);
+        bytes = new TextEncoder().encode(decodedString);
+      }
+    } catch (_) {
+      showError("Failed to decode the data URI payload.");
+      return;
+    }
+
+    let text = "";
+    let utf8Ok = true;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (_) {
+      utf8Ok = false;
+      text = "";
+    }
+
+    if (utf8Ok) {
+      lastOutput = text;
+      outputEl.value = text;
+      resultEl.innerHTML = "<strong>Data URI decoded.</strong>";
+    } else {
+      lastOutput = "";
+      outputEl.value = "";
+      resultEl.innerHTML = "<strong>Data URI decoded, but payload is not valid UTF-8 text.</strong>";
+    }
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge(mimeType) +
+      badge(isBase64 ? "Base64" : "Percent/plain") +
+      badge(charset ? "charset=" + charset : "No charset") +
+      badge(utf8Ok ? "UTF-8 text available" : "Binary/non-text") +
+      "</div>";
+
+    fillTable([
+      ["MIME type", mimeType],
+      ["Charset", charset || "Not specified"],
+      ["Encoding", isBase64 ? "Base64" : "Percent/plain"],
+      ["Payload length", String(dataPart.length)],
+      ["Decoded bytes", String(bytes.length)],
+      ["UTF-8 text available", utf8Ok ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded text output is available to copy.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded text.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decode();
+  });
+});
+</script>

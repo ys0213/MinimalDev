@@ -1,0 +1,535 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Brightness Adjuster",
+  description:
+    "Adjust image brightness in your browser with live preview, export options, result cards, and FAQ schema.",
+  href: "/image-tools/image-brightness-adjuster/",
+  order: 131,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-brightness-adjuster/";
+
+const faqs = [
+  {
+    q: "What does brightness adjustment do?",
+    a: "It makes the whole image lighter or darker by shifting pixel intensity across the RGB channels.",
+  },
+  {
+    q: "Will brightness adjustment preserve transparency?",
+    a: "The preview preserves transparency. If you export as JPEG, transparent areas may need a background fill because JPEG does not support transparency.",
+  },
+  {
+    q: "Can I brighten a dark screenshot or document scan?",
+    a: "Yes. This tool is useful for brightening screenshots, scanned notes, forms, and other images that look too dark.",
+  },
+  {
+    q: "Is my image uploaded anywhere?",
+    a: "No. Everything runs locally in your browser.",
+  },
+  {
+    q: "What export formats are available?",
+    a: "PNG, JPEG, and WebP are available depending on your browser support.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Brightness Adjuster — ${SITE_NAME}`}
+  description="Increase or decrease image brightness with real-time preview, result cards, and browser-based export."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Brightness Adjuster"
+  intro="Upload an image, increase or decrease brightness, preview the result, and download the adjusted version. This tool is useful when photos, UI screenshots, or scanned files appear too dark or too bright."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-brightness-adjuster">
+    <style is:inline>
+      #iba_file,
+      #iba_amount,
+      #iba_quality,
+      #iba_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .iba-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .iba-grid > * {
+        min-width: 0;
+      }
+      .iba-canvases {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .iba-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        padding: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .iba-panel canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.03);
+      }
+      .iba-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .iba-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .iba-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+      }
+      .iba-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 900px) {
+        .iba-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .iba-canvases {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="iba_help iba_privacy">
+      <div class="field">
+        <label for="iba_file">Image file</label>
+        <input id="iba_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="iba-grid">
+        <div class="field">
+          <label for="iba_amount">Brightness adjustment</label>
+          <input id="iba_amount" type="range" min="-100" max="100" step="1" value="0" />
+          <p class="note" id="iba_amount_note" style="margin-top:6px;">Current adjustment: 0</p>
+        </div>
+
+        <div class="field">
+          <label for="iba_format">Output format</label>
+          <select id="iba_format">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="iba_quality">Export quality (JPEG/WebP)</label>
+          <input id="iba_quality" type="range" min="0.1" max="1" step="0.05" value="0.9" />
+          <p class="note" id="iba_quality_note" style="margin-top:6px;">Current quality: 0.90</p>
+        </div>
+      </div>
+
+      <div class="iba-row">
+        <label>
+          <input id="iba_live" type="checkbox" checked />
+          Update preview automatically
+        </label>
+        <label>
+          <input id="iba_fill_bg" type="checkbox" checked />
+          Fill transparent background when exporting JPEG
+        </label>
+      </div>
+
+      <p class="note" id="iba_help" style="margin-top:6px;">
+        Negative values darken the image. Positive values brighten it. Extreme values can clip highlight or shadow detail.
+      </p>
+
+      <div class="iba-row">
+        <button class="btn" type="button" id="iba_apply">Apply Brightness</button>
+        <button class="btn secondary" type="button" id="iba_download">Download Result</button>
+        <button class="btn secondary" type="button" id="iba_reset">Reset Controls</button>
+        <button class="btn secondary" type="button" id="iba_clear">Clear</button>
+      </div>
+
+      <div class="result" id="iba_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="iba_result" role="status" style="margin-top:12px;">Adjusted image details will appear here.</div>
+      <div class="result" id="iba_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="iba-canvases">
+        <div class="iba-panel">
+          <strong>Original preview</strong>
+          <canvas id="iba_original_canvas" aria-label="Original image preview"></canvas>
+        </div>
+        <div class="iba-panel">
+          <strong>Adjusted preview</strong>
+          <canvas id="iba_output_canvas" aria-label="Brightness-adjusted image preview"></canvas>
+        </div>
+      </div>
+
+      <p class="note" id="iba_privacy" style="margin-top:10px;">
+        Privacy: brightness adjustment runs locally in your browser. No image is uploaded, stored, or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool adjusts brightness by adding the same offset to the red, green, and blue channels of each pixel.
+      Positive values make the image brighter and negative values make it darker.
+    </p>
+    <ul>
+      <li><strong>Use small changes</strong> when you want to preserve detail</li>
+      <li><strong>Use larger positive changes</strong> for underexposed screenshots or scans</li>
+      <li><strong>Use negative changes</strong> when bright backgrounds look washed out</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Brighten a dark scan so text is easier to read</li>
+      <li>Darken an overexposed screenshot before publishing it</li>
+      <li>Adjust a product image to look more balanced in a catalog</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-contrast-adjuster/">Image Contrast Adjuster</a></li>
+      <li><a href="/image-tools/image-sharpen/">Image Sharpen Tool</a></li>
+      <li><a href="/image-tools/image-blur/">Image Blur</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("iba_file");
+  const amountEl = document.getElementById("iba_amount");
+  const qualityEl = document.getElementById("iba_quality");
+  const formatEl = document.getElementById("iba_format");
+  const liveEl = document.getElementById("iba_live");
+  const fillBgEl = document.getElementById("iba_fill_bg");
+
+  const applyBtn = document.getElementById("iba_apply");
+  const downloadBtn = document.getElementById("iba_download");
+  const resetBtn = document.getElementById("iba_reset");
+  const clearBtn = document.getElementById("iba_clear");
+
+  const amountNoteEl = document.getElementById("iba_amount_note");
+  const qualityNoteEl = document.getElementById("iba_quality_note");
+
+  const errorEl = document.getElementById("iba_error");
+  const resultEl = document.getElementById("iba_result");
+  const cardsEl = document.getElementById("iba_cards");
+
+  const originalCanvas = document.getElementById("iba_original_canvas");
+  const outputCanvas = document.getElementById("iba_output_canvas");
+  const originalCtx = originalCanvas.getContext("2d");
+  const outputCtx = outputCanvas.getContext("2d");
+
+  if (
+    !fileEl || !amountEl || !qualityEl || !formatEl || !liveEl || !fillBgEl ||
+    !applyBtn || !downloadBtn || !resetBtn || !clearBtn ||
+    !amountNoteEl || !qualityNoteEl || !errorEl || !resultEl || !cardsEl ||
+    !originalCanvas || !outputCanvas || !originalCtx || !outputCtx
+  ) return;
+
+  const sourceCanvas = document.createElement("canvas");
+  const sourceCtx = sourceCanvas.getContext("2d");
+
+  let currentImage = null;
+  let currentFileName = "";
+  let originalFileSize = 0;
+  let lastBlob = null;
+  let debounceTimer = null;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetMessages() {
+    clearError();
+    resultEl.textContent = "Adjusted image details will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function miniCard(label, value, sub) {
+    return (
+      '<div class="iba-mini-card">' +
+        "<strong>" + label + "</strong>" +
+        '<div class="iba-big">' + value + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function updateControlLabels() {
+    amountNoteEl.textContent = "Current adjustment: " + String(amountEl.value);
+    qualityNoteEl.textContent = "Current quality: " + Number(qualityEl.value).toFixed(2);
+  }
+
+  function clamp(v) {
+    return Math.max(0, Math.min(255, v));
+  }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = function () { reject(new Error("Could not decode the selected image.")); };
+        img.src = String(ev.target.result || "");
+      };
+      reader.onerror = function () {
+        reject(new Error("Could not read the selected file."));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function drawOriginal() {
+    if (!currentImage || !sourceCtx) return;
+    const w = currentImage.naturalWidth || currentImage.width;
+    const h = currentImage.naturalHeight || currentImage.height;
+
+    sourceCanvas.width = w;
+    sourceCanvas.height = h;
+    originalCanvas.width = w;
+    originalCanvas.height = h;
+
+    sourceCtx.clearRect(0, 0, w, h);
+    sourceCtx.drawImage(currentImage, 0, 0);
+
+    originalCtx.clearRect(0, 0, w, h);
+    originalCtx.drawImage(currentImage, 0, 0);
+  }
+
+  async function renderBrightness() {
+    clearError();
+
+    if (!currentImage || !sourceCtx) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    const w = sourceCanvas.width;
+    const h = sourceCanvas.height;
+    if (!w || !h) {
+      showError("Source image is not ready yet.");
+      return;
+    }
+
+    const amount = Number(amountEl.value || 0);
+    const mime = String(formatEl.value || "image/jpeg");
+    const quality = Number(qualityEl.value || 0.9);
+
+    const srcData = sourceCtx.getImageData(0, 0, w, h);
+    const data = srcData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = clamp(data[i] + amount);
+      data[i + 1] = clamp(data[i + 1] + amount);
+      data[i + 2] = clamp(data[i + 2] + amount);
+    }
+
+    outputCanvas.width = w;
+    outputCanvas.height = h;
+
+    if (mime === "image/jpeg" && fillBgEl.checked) {
+      outputCtx.fillStyle = "#FFFFFF";
+      outputCtx.fillRect(0, 0, w, h);
+    } else {
+      outputCtx.clearRect(0, 0, w, h);
+    }
+
+    outputCtx.putImageData(srcData, 0, 0);
+
+    resultEl.innerHTML =
+      "<strong>Brightness adjustment applied.</strong>" +
+      '<div class="note" style="margin-top:6px;">Review the preview and download the adjusted image if it looks right.</div>';
+
+    try {
+      const blob = await new Promise(function (resolve, reject) {
+        outputCanvas.toBlob(function (b) {
+          if (!b) {
+            reject(new Error("Could not encode the adjusted image."));
+            return;
+          }
+          resolve(b);
+        }, mime, quality);
+      });
+
+      lastBlob = blob;
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div class="iba-card-grid">' +
+          miniCard("Adjustment", String(amount), "Brightness offset") +
+          miniCard("Output format", mime.replace("image/", "").toUpperCase(), "Selected export format") +
+          miniCard("Original size", formatBytes(originalFileSize), "Uploaded file size") +
+          miniCard("Output size", formatBytes(blob.size), "Current rendered file") +
+        "</div>" +
+        '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
+          badge(amount === 0 ? "Neutral" : amount > 0 ? "Brightened" : "Darkened", amount === 0 ? "neutral" : "good") +
+          badge(mime === "image/png" ? "Lossless container" : "Quality " + quality.toFixed(2), mime === "image/png" ? "neutral" : "good") +
+        "</div>";
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not create the export file.");
+    }
+  }
+
+  async function downloadResult() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please upload an image first.");
+      return;
+    }
+
+    if (!lastBlob) {
+      await renderBrightness();
+      if (!lastBlob) return;
+    }
+
+    const ext = String(formatEl.value || "image/jpeg").replace("image/", "").replace("jpeg", "jpg");
+    const base = (currentFileName || "image").replace(/\.[^.]+$/, "");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(lastBlob);
+    a.download = base + "-brightness-adjusted." + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function scheduleRender() {
+    updateControlLabels();
+    if (!liveEl.checked || !currentImage) return;
+    if (debounceTimer) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(function () {
+      renderBrightness();
+    }, 120);
+  }
+
+  function resetControls() {
+    amountEl.value = "0";
+    qualityEl.value = "0.9";
+    formatEl.value = "image/jpeg";
+    liveEl.checked = true;
+    fillBgEl.checked = true;
+    updateControlLabels();
+    if (currentImage) renderBrightness();
+    else resetMessages();
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    currentImage = null;
+    currentFileName = "";
+    originalFileSize = 0;
+    lastBlob = null;
+    sourceCanvas.width = 0;
+    sourceCanvas.height = 0;
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    outputCanvas.width = 0;
+    outputCanvas.height = 0;
+    amountEl.value = "0";
+    qualityEl.value = "0.9";
+    formatEl.value = "image/jpeg";
+    liveEl.checked = true;
+    fillBgEl.checked = true;
+    updateControlLabels();
+    resetMessages();
+    fileEl.focus();
+  }
+
+  fileEl.addEventListener("change", async function () {
+    resetMessages();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please select a valid image file.");
+      return;
+    }
+
+    try {
+      currentImage = await loadImage(file);
+      currentFileName = file.name || "image";
+      originalFileSize = Number(file.size || 0);
+      drawOriginal();
+      if (liveEl.checked) renderBrightness();
+      else {
+        resultEl.innerHTML =
+          "<strong>Image loaded.</strong>" +
+          '<div class="note" style="margin-top:6px;">Adjust settings, then click “Apply Brightness”.</div>';
+      }
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not load the image.");
+    }
+  });
+
+  amountEl.addEventListener("input", scheduleRender);
+  qualityEl.addEventListener("input", scheduleRender);
+  formatEl.addEventListener("change", scheduleRender);
+  liveEl.addEventListener("change", scheduleRender);
+  fillBgEl.addEventListener("change", scheduleRender);
+
+  applyBtn.addEventListener("click", renderBrightness);
+  downloadBtn.addEventListener("click", downloadResult);
+  resetBtn.addEventListener("click", resetControls);
+  clearBtn.addEventListener("click", clearAll);
+
+  updateControlLabels();
+});
+</script>

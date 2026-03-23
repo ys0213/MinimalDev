@@ -1,0 +1,82 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "JPG to PNG Converter",
+  description: "Convert JPG images to PNG format with lossless output.",
+  href: "/image-tools/jpg-to-png/",
+  order: 7,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/jpg-to-png/";
+---
+
+<ToolLayout
+title={`JPG to PNG — ${SITE_NAME}`}
+description="Convert JPG to PNG."
+canonicalPath={CANONICAL_PATH}
+h1="JPG to PNG Converter"
+intro="Convert JPG images into PNG format."
+categoryName="Image Tools"
+>
+<div slot="tool">
+<div class="form">
+<input type="file" id="file" accept="image/jpeg"/>
+
+<canvas id="canvas"></canvas>
+
+<div id="info" class="result">Upload JPG image.</div>
+
+<button class="btn" id="convert">Convert</button>
+<button class="btn secondary" id="download">Download PNG</button>
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+const info=document.getElementById("info");
+
+let img=new Image();
+let originalSize=0;
+
+file.onchange=e=>{
+ const f=e.target.files[0];
+ if(!f) return;
+
+ originalSize=f.size;
+
+ const r=new FileReader();
+ r.onload=ev=>{
+   img.onload=()=>{
+     canvas.width=img.width;
+     canvas.height=img.height;
+     ctx.drawImage(img,0,0);
+   };
+   img.src=ev.target.result;
+ };
+ r.readAsDataURL(f);
+};
+
+document.getElementById("convert").onclick=()=>{
+ canvas.toBlob(blob=>{
+   info.innerHTML=
+   `Original: ${(originalSize/1024).toFixed(1)} KB<br>
+    PNG: ${(blob.size/1024).toFixed(1)} KB`;
+ },"image/png");
+};
+
+document.getElementById("download").onclick=()=>{
+ const a=document.createElement("a");
+ a.href=canvas.toDataURL("image/png");
+ a.download="converted.png";
+ a.click();
+};
+
+});
+</script>

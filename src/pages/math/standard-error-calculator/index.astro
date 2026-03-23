@@ -1,0 +1,264 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Standard Error Calculator",
+  description:
+    "Calculate standard error from sample standard deviation and sample size with validation and result cards.",
+  href: "/math/standard-error-calculator/",
+  order: 377,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/standard-error-calculator/";
+
+const faqs = [
+  {
+    q: "What is standard error?",
+    a: "Standard error measures the typical sampling variability of a statistic such as the sample mean.",
+  },
+  {
+    q: "What formula does this calculator use?",
+    a: "It uses standard error of the mean: SE = s / √n.",
+  },
+  {
+    q: "Why must sample size be greater than 0?",
+    a: "Because the formula divides by the square root of sample size.",
+  },
+  {
+    q: "Can standard deviation be 0?",
+    a: "Yes. If standard deviation is 0, the standard error is also 0.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Standard Error Calculator — ${SITE_NAME}`}
+  description="Calculate standard error from sample standard deviation and sample size."
+  canonicalPath={CANONICAL_PATH}
+  h1="Standard Error Calculator"
+  intro="Calculate the standard error of the mean using sample standard deviation and sample size."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="standard-error-calculator">
+    <style is:inline>
+      .se-wrap, .se-wrap * { box-sizing: border-box; }
+      .se-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .se-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .se-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form se-wrap" role="form" aria-describedby="se_help se_privacy">
+      <div class="se-grid">
+        <div class="field">
+          <label for="se_sd">Sample standard deviation</label>
+          <input id="se_sd" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 12" />
+        </div>
+        <div class="field">
+          <label for="se_n">Sample size (n)</label>
+          <input id="se_n" type="number" inputmode="numeric" step="1" min="1" placeholder="e.g., 100" />
+        </div>
+      </div>
+
+      <p class="note" id="se_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="se-code">SE = s / √n</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="se_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="se_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="se_clear">Clear</button>
+      </div>
+
+      <div class="result" id="se_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="se_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="se_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="se_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="se_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Standard error of the mean decreases as sample size increases, assuming the sample standard deviation stays the same.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>s = 12</strong>, <strong>n = 100</strong> → SE = <strong>1.2</strong></li>
+      <li><strong>s = 8</strong>, <strong>n = 25</strong> → SE = <strong>1.6</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/confidence-interval-calculator/">Confidence Interval Calculator</a></li>
+      <li><a href="/math/t-test-calculator/">T Test Calculator</a></li>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const sdEl = document.getElementById("se_sd");
+  const nEl = document.getElementById("se_n");
+  const calcBtn = document.getElementById("se_calc");
+  const fillBtn = document.getElementById("se_fill_demo");
+  const clearBtn = document.getElementById("se_clear");
+  const errorEl = document.getElementById("se_error");
+  const resultEl = document.getElementById("se_result");
+  const cardsEl = document.getElementById("se_cards");
+  const tbodyEl = document.getElementById("se_tbody");
+
+  if (!sdEl || !nEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const sdRaw = String(sdEl.value || "").trim();
+    const nRaw = String(nEl.value || "").trim();
+
+    if (!sdRaw || !nRaw) {
+      showError("Please enter both sample standard deviation and sample size.");
+      return;
+    }
+
+    const sd = Number(sdRaw);
+    const n = Number(nRaw);
+
+    if (!Number.isFinite(sd) || sd < 0) {
+      showError("Sample standard deviation must be a valid number greater than or equal to 0.");
+      return;
+    }
+
+    if (!Number.isInteger(n) || n <= 0) {
+      showError("Sample size must be a positive integer.");
+      return;
+    }
+
+    const se = sd / Math.sqrt(n);
+
+    let label = "Moderate sampling variability";
+    if (se === 0) label = "No sampling variability";
+    else if (se < 1) label = "Low sampling variability";
+    else if (se >= 5) label = "High sampling variability";
+
+    resultEl.innerHTML =
+      "<strong>Standard error result</strong><br/>" +
+      "<span class='se-code'>SE = " + fmt(se, 8) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(label) +
+      badge("n = " + n) +
+      badge("s = " + fmt(sd, 6)) +
+      "</div>";
+
+    fillTable([
+      ["Sample standard deviation", fmt(sd, 8)],
+      ["Sample size (n)", String(n)],
+      ["Square root of n", fmt(Math.sqrt(n), 8)],
+      ["Standard error", fmt(se, 8)],
+    ]);
+  }
+
+  function fillDemo() {
+    sdEl.value = "12";
+    nEl.value = "100";
+    clearOutput();
+  }
+
+  function reset() {
+    sdEl.value = "";
+    nEl.value = "";
+    clearOutput();
+    sdEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [sdEl, nEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

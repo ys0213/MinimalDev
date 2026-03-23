@@ -1,0 +1,277 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Miles to Yards",
+  description:
+    "Convert miles to yards instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/miles-to-yards/",
+  order: 314,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/miles-to-yards/";
+
+const faqs = [
+  {
+    q: "How do you convert miles to yards?",
+    a: "Multiply miles by 1,760 to get yards.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between miles to yards and yards to miles.",
+  },
+  {
+    q: "What is this useful for?",
+    a: "It is useful for race distances, road measurements, land planning, and long-distance comparisons.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Miles to Yards Converter — ${SITE_NAME}`}
+  description="Convert miles to yards instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Miles to Yards Converter"
+  intro="Convert length from miles to yards instantly. Useful for race distances, roads, fields, and long-distance comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="miles-to-yards">
+    <div class="form" role="form" aria-describedby="mi2yd_hint mi2yd_privacy">
+      <div class="field">
+        <label for="mi2yd_input">Miles</label>
+        <input id="mi2yd_input" type="number" inputmode="decimal" placeholder="e.g., 1.5" />
+        <p class="note" id="mi2yd_hint" style="margin-top:6px;">
+          Enter a non-negative value. One mile equals exactly 1,760 yards.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="mi2yd_round">Rounding</label>
+        <select id="mi2yd_round">
+          <option value="0">0 decimals</option>
+          <option value="2" selected>2 decimals</option>
+          <option value="4">4 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="mi2yd_convert">Convert</button>
+        <button class="btn secondary" type="button" id="mi2yd_swap">Reverse (yd → mi)</button>
+        <button class="btn secondary" type="button" id="mi2yd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="mi2yd_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="mi2yd_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="mi2yd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="mi2yd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="mi2yd_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 mile = 1,760 yards</strong>.<br />
+      Formula: <strong>yd = mi × 1,760</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 mi</strong> = <strong>1,760 yd</strong></li>
+      <li><strong>1.5 mi</strong> = <strong>2,640 yd</strong></li>
+      <li><strong>5 mi</strong> = <strong>8,800 yd</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/yards-to-miles/">Yards to Miles</a></li>
+      <li><a href="/converter/miles-to-km/">Miles to km</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("mi2yd_input");
+  const roundEl = document.getElementById("mi2yd_round");
+  const convertBtn = document.getElementById("mi2yd_convert");
+  const swapBtn = document.getElementById("mi2yd_swap");
+  const clearBtn = document.getElementById("mi2yd_clear");
+  const errEl = document.getElementById("mi2yd_error");
+  const outEl = document.getElementById("mi2yd_result");
+  const cardsEl = document.getElementById("mi2yd_cards");
+  const tbodyEl = document.getElementById("mi2yd_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const MI_TO_YD = 1760;
+  const YD_TO_MI = 1 / MI_TO_YD;
+  let mode = "mi-to-yd";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="mi2yd_input"]');
+    if (!label) return;
+    if (mode === "mi-to-yd") {
+      label.textContent = "Miles";
+      inEl.placeholder = "e.g., 1.5";
+      swapBtn.textContent = "Reverse (yd → mi)";
+    } else {
+      label.textContent = "Yards";
+      inEl.placeholder = "e.g., 2640";
+      swapBtn.textContent = "Reverse (mi → yd)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "mi-to-yd"
+      ? [
+          ["Conversion factor", "1 mi = 1,760 yd"],
+          ["Reverse factor", "1 yd = " + fmtSmart(YD_TO_MI) + " mi"],
+          ["Input", fmt(input) + " mi"],
+          ["Output", fmt(output) + " yd"],
+        ]
+      : [
+          ["Conversion factor", "1 yd = " + fmtSmart(YD_TO_MI) + " mi"],
+          ["Reverse factor", "1 mi = 1,760 yd"],
+          ["Input", fmt(input) + " yd"],
+          ["Output", fmt(output) + " mi"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const input = Math.min(raw, 1e15);
+    if (input !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
+
+    const output = mode === "mi-to-yd" ? input * MI_TO_YD : input * YD_TO_MI;
+
+    if (mode === "mi-to-yd") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} yd<br/><span class="note">${fmt(input)} mi = ${fmt(output)} yd</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} mi<br/><span class="note">${fmt(input)} yd = ${fmt(output)} mi</span>`;
+    }
+
+    const yards = mode === "mi-to-yd" ? output : input;
+    let scale = "Typical";
+    if (yards < 1760) scale = "Under one mile";
+    else if (yards >= 17600) scale = "Long distance";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "mi-to-yd" ? "mi → yd" : "yd → mi")}
+      ${badge("Base ≈ " + fmtSmart(yards) + " yd")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(input, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "2";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "mi-to-yd" ? "yd-to-mi" : "mi-to-yd";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

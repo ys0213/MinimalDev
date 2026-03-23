@@ -1,0 +1,313 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Base32 Decoder",
+  description:
+    "Decode Base32 (RFC 4648) to UTF-8 text with validation, result cards, and FAQ schema.",
+  href: "/developer-tools/base32-decoder/",
+  order: 331,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/base32-decoder/";
+
+const faqs = [
+  {
+    q: "What Base32 format does this decoder support?",
+    a: "It supports standard RFC 4648 Base32 using A-Z, 2-7, and optional = padding.",
+  },
+  {
+    q: "Does it ignore whitespace?",
+    a: "Yes. It ignores spaces and line breaks in the Base32 input.",
+  },
+  {
+    q: "What if the decoded bytes are not valid UTF-8 text?",
+    a: "This tool expects the decoded bytes to represent UTF-8 text. Invalid UTF-8 content will trigger an error.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Base32 Decoder — ${SITE_NAME}`}
+  description="Decode Base32 (RFC 4648) to UTF-8 text with validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base32 Decoder"
+  intro="Decode Base32 text back to UTF-8 content using the standard RFC 4648 alphabet."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="base32-decoder">
+    <style is:inline>
+      #b32d_input,
+      #b32d_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .b32d-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b32d_help b32d_privacy">
+      <div class="field">
+        <label for="b32d_input">Base32 input</label>
+        <textarea
+          id="b32d_input"
+          rows="10"
+          spellcheck="false"
+          placeholder="Enter RFC 4648 Base32 text to decode"
+        ></textarea>
+      </div>
+
+      <p class="note" id="b32d_help" style="margin-top:6px;">
+        Accepts standard RFC 4648 Base32 using <strong>A-Z</strong>, <strong>2-7</strong>, and optional <strong>=</strong> padding.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="b32d_decode">Decode</button>
+        <button class="btn secondary" type="button" id="b32d_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="b32d_clear">Clear</button>
+      </div>
+
+      <div class="result" id="b32d_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="b32d_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="b32d_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="b32d_output">Decoded text output</label>
+        <textarea
+          id="b32d_output"
+          rows="10"
+          readonly
+          spellcheck="false"
+          placeholder="Decoded text will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="b32d_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="b32d_privacy" style="margin-top:10px;">
+        Privacy: decoding runs locally in your browser. No input text is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Paste Base32 text, and the tool will decode it to bytes and then interpret the bytes as UTF-8 text.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>JBSWY3DP</strong> → may decode to plain UTF-8 text depending on original input</li>
+      <li><strong>JBSWY3DP====</strong> → same Base32 data with explicit padding</li>
+      <li><strong>Whitespace</strong> → spaces and newlines are ignored</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/base32-encoder/">Base32 Encoder</a></li>
+      <li><a href="/developer-tools/base58-decoder/">Base58 Decoder</a></li>
+      <li><a href="/developer-tools/base85-decoder/">Base85 Decoder</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("b32d_input");
+  const outputEl = document.getElementById("b32d_output");
+  const decodeBtn = document.getElementById("b32d_decode");
+  const copyBtn = document.getElementById("b32d_copy");
+  const clearBtn = document.getElementById("b32d_clear");
+  const errEl = document.getElementById("b32d_error");
+  const resultEl = document.getElementById("b32d_result");
+  const cardsEl = document.getElementById("b32d_cards");
+  const tbodyEl = document.getElementById("b32d_tbody");
+
+  if (!inputEl || !outputEl || !decodeBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const MAP = {};
+  for (let i = 0; i < ALPHABET.length; i++) MAP[ALPHABET[i]] = i;
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function base32Decode(str) {
+    const clean = str.toUpperCase().replace(/\s+/g, "").replace(/=+$/g, "");
+    if (!clean.length) return new Uint8Array(0);
+
+    for (let i = 0; i < clean.length; i++) {
+      if (!(clean[i] in MAP)) {
+        throw new Error('Invalid Base32 character: "' + clean[i] + '"');
+      }
+    }
+
+    let bits = 0;
+    let value = 0;
+    const bytes = [];
+
+    for (let i = 0; i < clean.length; i++) {
+      value = (value << 5) | MAP[clean[i]];
+      bits += 5;
+
+      if (bits >= 8) {
+        bytes.push((value >>> (bits - 8)) & 255);
+        bits -= 8;
+      }
+    }
+
+    return new Uint8Array(bytes);
+  }
+
+  function decode() {
+    resetOutput();
+
+    const raw = String(inputEl.value || "").trim();
+    if (!raw.length) {
+      showError("Please enter Base32 text to decode.");
+      return;
+    }
+
+    let bytes;
+    try {
+      bytes = base32Decode(raw);
+    } catch (e) {
+      showError(e && e.message ? e.message : "Invalid Base32 input.");
+      return;
+    }
+
+    let text = "";
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (_) {
+      showError("Decoded bytes are not valid UTF-8 text.");
+      return;
+    }
+
+    lastOutput = text;
+    outputEl.value = text;
+
+    resultEl.innerHTML = "<strong>Base32 decoded to UTF-8 text.</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("RFC 4648") +
+      badge("Valid Base32") +
+      badge(bytes.length + " byte" + (bytes.length === 1 ? "" : "s")) +
+      badge("UTF-8 decoded") +
+      "</div>";
+
+    fillTable([
+      ["Input length", String(raw.length)],
+      ["Decoded byte length", String(bytes.length)],
+      ["Output characters", String(text.length)],
+      ["Padding present", raw.includes("=") ? "Yes" : "No"],
+      ["Whitespace ignored", /\s/.test(raw) ? "Yes" : "No"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decoded output to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decoded text.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  decodeBtn.addEventListener("click", decode);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decode();
+  });
+});
+</script>

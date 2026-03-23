@@ -1,0 +1,712 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Nickname Generator",
+  description:
+    "Generate random nicknames with style, tone, separators, numbers, uniqueness, and result cards. Includes validation, accessibility, and FAQ schema.",
+  href: "/generators/random-nickname-generator/",
+  order: 180,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-nickname-generator/";
+
+const faqs = [
+  {
+    q: "What does this nickname generator do?",
+    a: "It creates random nicknames using configurable styles, tones, separators, suffixes, and number options.",
+  },
+  {
+    q: "Can I generate gamer-style or softer nicknames?",
+    a: "Yes. You can choose from multiple style presets such as cute, cool, fantasy, gamer, and minimal.",
+  },
+  {
+    q: "Can I avoid duplicates?",
+    a: "Yes. The unique-results option removes duplicates from the generated list whenever possible.",
+  },
+  {
+    q: "Does this tool store generated nicknames?",
+    a: "No. Everything runs locally in your browser and nothing is stored or transmitted.",
+  },
+  {
+    q: "Can I use these names for usernames or gaming tags?",
+    a: "Yes. They are useful as inspiration for usernames, gaming tags, profile handles, and team member aliases.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Nickname Generator — ${SITE_NAME}`}
+  description="Generate random nicknames with style presets, uniqueness controls, separators, suffixes, and result cards. Includes validation, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Nickname Generator"
+  intro="Generate nickname ideas for usernames, gaming tags, social profiles, test data, and character naming. Control the style, tone, separator, number suffix, and result length."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-nickname-generator">
+    <style is:inline>
+      #rng_count,
+      #rng_style,
+      #rng_tone,
+      #rng_separator,
+      #rng_case,
+      #rng_prefix,
+      #rng_suffix,
+      #rng_output {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .rng-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .rng-grid > * {
+        min-width: 0;
+      }
+
+      .rng-inline {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .rng-checkboxes {
+        display: grid;
+        gap: 10px;
+      }
+
+      .rng-output {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+
+      .rng-card-wrap {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 10px;
+      }
+
+      .rng-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+
+      .rng-mini-card strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      @media (min-width: 760px) {
+        .rng-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rng_help rng_privacy">
+      <div class="rng-grid">
+        <div class="field">
+          <label for="rng_count">How many nicknames?</label>
+          <input id="rng_count" type="number" min="1" max="100" value="20" inputmode="numeric" />
+          <p class="note" style="margin-top:6px;">
+            Generate between 1 and 100 nickname ideas at a time.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="rng_style">Style preset</label>
+          <select id="rng_style">
+            <option value="mixed" selected>Mixed</option>
+            <option value="cute">Cute</option>
+            <option value="cool">Cool</option>
+            <option value="gamer">Gamer</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rng_tone">Tone</label>
+          <select id="rng_tone">
+            <option value="balanced" selected>Balanced</option>
+            <option value="soft">Soft</option>
+            <option value="bold">Bold</option>
+            <option value="dark">Dark</option>
+            <option value="playful">Playful</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rng_separator">Separator</label>
+          <select id="rng_separator">
+            <option value="" selected>No separator</option>
+            <option value="-">Hyphen (-)</option>
+            <option value="_">Underscore (_)</option>
+            <option value=".">Dot (.)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rng_case">Letter case</label>
+          <select id="rng_case">
+            <option value="title" selected>Title case</option>
+            <option value="lower">lowercase</option>
+            <option value="upper">UPPERCASE</option>
+            <option value="camel">camelCase</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rng_prefix">Optional custom prefix</label>
+          <input
+            id="rng_prefix"
+            type="text"
+            maxlength="20"
+            placeholder="e.g. Neo"
+            spellcheck="false"
+          />
+          <p class="note" style="margin-top:6px;">
+            Letters and numbers only. Optional.
+          </p>
+        </div>
+
+        <div class="field">
+          <label for="rng_suffix">Optional custom suffix</label>
+          <input
+            id="rng_suffix"
+            type="text"
+            maxlength="20"
+            placeholder="e.g. X"
+            spellcheck="false"
+          />
+          <p class="note" style="margin-top:6px;">
+            Letters and numbers only. Optional.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Generation options</label>
+          <div class="rng-checkboxes">
+            <label><input id="rng_unique" type="checkbox" checked /> Unique results only</label>
+            <label><input id="rng_numbers" type="checkbox" checked /> Append random numbers</label>
+            <label><input id="rng_short" type="checkbox" /> Prefer shorter nicknames</label>
+            <label><input id="rng_symbolic" type="checkbox" /> Allow stylized fragments</label>
+          </div>
+        </div>
+      </div>
+
+      <p class="note" id="rng_help" style="margin-top:10px;">
+        Nicknames are generated locally from preset word banks and your selected options. Use this for usernames, aliases, gaming tags, placeholder profiles, and naming inspiration.
+      </p>
+
+      <div class="rng-inline" style="margin-top:8px;">
+        <button class="btn" type="button" id="rng_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rng_copy">Copy</button>
+        <button class="btn secondary" type="button" id="rng_download">Download TXT</button>
+        <button class="btn secondary" type="button" id="rng_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rng_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="rng_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="rng_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rng_output">Generated nicknames</label>
+        <textarea
+          id="rng_output"
+          class="rng-output"
+          rows="14"
+          readonly
+          spellcheck="false"
+          placeholder="Generated nicknames will appear here."
+        ></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rng_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rng_privacy" style="margin-top:10px;">
+        Privacy: nickname generation runs locally in your browser. No inputs or results are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This generator combines themed word parts, optional prefixes and suffixes, separators, case formatting, and numeric endings.
+      It is designed to produce a broad range of nickname styles without requiring any server or API.
+    </p>
+    <ul>
+      <li><strong>Style preset:</strong> selects a themed word bank such as cute, gamer, fantasy, or minimal</li>
+      <li><strong>Tone:</strong> biases the output toward softer, bolder, darker, or more playful fragments</li>
+      <li><strong>Separator:</strong> inserts hyphens, underscores, dots, or no separator</li>
+      <li><strong>Letter case:</strong> formats results as title, lower, upper, or camel case</li>
+      <li><strong>Unique results:</strong> removes duplicate outputs when possible</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Style: Cute</strong> + <strong>Tone: Soft</strong> → names like <strong>FluffyMochi</strong> or <strong>SunnyBunny</strong></li>
+      <li><strong>Style: Gamer</strong> + <strong>Numbers on</strong> → names like <strong>ShadowRush87</strong> or <strong>VoidSniper21</strong></li>
+      <li><strong>Style: Minimal</strong> + <strong>Lowercase</strong> → names like <strong>nova</strong> or <strong>driftline</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-team-name-generator/">Random Team Name Generator</a></li>
+      <li><a href="/generators/random-company-name/">Random Company Name Generator</a></li>
+      <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rng_count");
+  const styleEl = document.getElementById("rng_style");
+  const toneEl = document.getElementById("rng_tone");
+  const separatorEl = document.getElementById("rng_separator");
+  const caseEl = document.getElementById("rng_case");
+  const prefixEl = document.getElementById("rng_prefix");
+  const suffixEl = document.getElementById("rng_suffix");
+  const uniqueEl = document.getElementById("rng_unique");
+  const numbersEl = document.getElementById("rng_numbers");
+  const shortEl = document.getElementById("rng_short");
+  const symbolicEl = document.getElementById("rng_symbolic");
+  const generateBtn = document.getElementById("rng_generate");
+  const copyBtn = document.getElementById("rng_copy");
+  const downloadBtn = document.getElementById("rng_download");
+  const clearBtn = document.getElementById("rng_clear");
+  const errorEl = document.getElementById("rng_error");
+  const summaryEl = document.getElementById("rng_summary");
+  const cardsEl = document.getElementById("rng_cards");
+  const outputEl = document.getElementById("rng_output");
+  const tbodyEl = document.getElementById("rng_tbody");
+
+  if (
+    !countEl || !styleEl || !toneEl || !separatorEl || !caseEl ||
+    !prefixEl || !suffixEl || !uniqueEl || !numbersEl || !shortEl || !symbolicEl ||
+    !generateBtn || !copyBtn || !downloadBtn || !clearBtn ||
+    !errorEl || !summaryEl || !cardsEl || !outputEl || !tbodyEl
+  ) return;
+
+  let lastOutput = "";
+
+  const BANKS = {
+    cute: {
+      first: ["Mochi", "Bunny", "Sunny", "Peach", "Berry", "Panda", "Luna", "Poppy", "Mimi", "Sugar", "Puff", "Coco"],
+      second: ["Cloud", "Bean", "Boo", "Biscuit", "Sparkle", "Petal", "Blush", "Neko", "Fluff", "Twinkle", "Breeze", "Honey"]
+    },
+    cool: {
+      first: ["Nova", "Drift", "Steel", "Blaze", "Echo", "Frost", "Storm", "Flint", "Jet", "Slate", "Vex", "Rogue"],
+      second: ["Strike", "Core", "Shift", "Pulse", "Shade", "Blade", "Rush", "Spark", "Drive", "Volt", "Wave", "Edge"]
+    },
+    gamer: {
+      first: ["Shadow", "Void", "Sniper", "Ghost", "Rapid", "Crimson", "Turbo", "Night", "Hyper", "Omega", "Fatal", "Zero"],
+      second: ["Rush", "Kill", "Scope", "Byte", "Rekt", "Fury", "Aim", "Drop", "Glitch", "Queue", "Zone", "Raid"]
+    },
+    fantasy: {
+      first: ["Elder", "Moon", "Dragon", "Rune", "Silver", "Mystic", "Fae", "Night", "Ashen", "Arcane", "Sable", "Thorn"],
+      second: ["Whisper", "Warden", "Flame", "Song", "Vale", "Rider", "Gale", "Crown", "Shard", "Spell", "Dawn", "Bloom"]
+    },
+    minimal: {
+      first: ["Nox", "Luma", "Kiro", "Vera", "Sora", "Aero", "Mira", "Zeno", "Oryn", "Aven", "Rin", "Elio"],
+      second: ["", "line", "mark", "core", "loop", "mint", "ray", "form", "grid", "lane", "dot", "sync"]
+    }
+  };
+
+  const TONE_PARTS = {
+    balanced: ["", "", "", "Prime", "Ultra"],
+    soft: ["Mini", "Soft", "Sweet", "Light", "Calm"],
+    bold: ["Max", "Iron", "Boss", "Alpha", "Titan"],
+    dark: ["Night", "Black", "Dusk", "Hex", "Grim"],
+    playful: ["Zippy", "Wobble", "Pop", "Jolly", "Bouncy"]
+  };
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      kind === "bad" ? "rgba(239,68,68,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function miniCard(title, value, note) {
+    return (
+      '<div class="rng-mini-card">' +
+        '<strong>' + escapeHtml(title) + '</strong>' +
+        '<div style="font-size:26px;font-weight:900;">' + escapeHtml(value) + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + escapeHtml(note) + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function sanitizeCustomPart(value) {
+    return String(value || "").trim().replace(/[^a-zA-Z0-9]/g, "");
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function applyCase(str, mode) {
+    if (mode === "lower") return str.toLowerCase();
+    if (mode === "upper") return str.toUpperCase();
+    if (mode === "camel") {
+      const parts = str.split(/[-_.\s]+/).filter(Boolean);
+      if (!parts.length) return "";
+      return parts
+        .map(function (p, i) {
+          const low = p.toLowerCase();
+          if (i === 0) return low;
+          return low.charAt(0).toUpperCase() + low.slice(1);
+        })
+        .join("");
+    }
+
+    return str
+      .split(/[-_.\s]+/)
+      .filter(Boolean)
+      .map(function (p) {
+        return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+      })
+      .join(mode === "title" ? "" : " ");
+  }
+
+  function buildNickname(style, tone, separator, addNumbers, preferShort, allowSymbolic, customPrefix, customSuffix) {
+    const styleKey = style === "mixed"
+      ? pick(["cute", "cool", "gamer", "fantasy", "minimal"])
+      : style;
+
+    const bank = BANKS[styleKey];
+    const tonePart = pick(TONE_PARTS[tone] || [""]);
+
+    let first = pick(bank.first);
+    let second = pick(bank.second);
+
+    if (preferShort) {
+      if (first.length > 6) first = first.slice(0, 6);
+      if (second.length > 6) second = second.slice(0, 6);
+    }
+
+    let parts = [];
+    if (customPrefix) parts.push(customPrefix);
+    if (tonePart) parts.push(tonePart);
+    parts.push(first);
+    if (second) parts.push(second);
+    if (customSuffix) parts.push(customSuffix);
+
+    let joined = parts.filter(Boolean).join(separator || "");
+
+    if (allowSymbolic) {
+      joined = joined
+        .replace(/a/gi, function (m) { return Math.random() < 0.12 ? "4" : m; })
+        .replace(/e/gi, function (m) { return Math.random() < 0.12 ? "3" : m; })
+        .replace(/o/gi, function (m) { return Math.random() < 0.08 ? "0" : m; });
+    }
+
+    if (addNumbers) {
+      const mode = Math.random();
+      let num = "";
+      if (mode < 0.34) num = String(Math.floor(Math.random() * 10));
+      else if (mode < 0.68) num = String(10 + Math.floor(Math.random() * 90));
+      else num = String(100 + Math.floor(Math.random() * 900));
+      joined += num;
+    }
+
+    return joined.replace(/\s+/g, "").trim();
+  }
+
+  function classifyStyle(style) {
+    if (style === "cute") return "Soft / Cute";
+    if (style === "cool") return "Modern / Cool";
+    if (style === "gamer") return "Gaming / Competitive";
+    if (style === "fantasy") return "Fantasy / Character";
+    if (style === "minimal") return "Minimal / Clean";
+    return "Mixed";
+  }
+
+  function generateNicknames() {
+    resetOutput();
+
+    const count = Number(countEl.value);
+    const style = String(styleEl.value || "mixed");
+    const tone = String(toneEl.value || "balanced");
+    const separator = String(separatorEl.value || "");
+    const casing = String(caseEl.value || "title");
+    const customPrefix = sanitizeCustomPart(prefixEl.value);
+    const customSuffix = sanitizeCustomPart(suffixEl.value);
+    const uniqueOnly = !!uniqueEl.checked;
+    const addNumbers = !!numbersEl.checked;
+    const preferShort = !!shortEl.checked;
+    const allowSymbolic = !!symbolicEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      showError("Enter a nickname count between 1 and 100.");
+      return;
+    }
+
+    if (prefixEl.value && !customPrefix) {
+      showError("Custom prefix can contain letters and numbers only.");
+      return;
+    }
+
+    if (suffixEl.value && !customSuffix) {
+      showError("Custom suffix can contain letters and numbers only.");
+      return;
+    }
+
+    const results = [];
+    const seen = new Set();
+    const maxAttempts = Math.max(500, count * 30);
+    let attempts = 0;
+
+    while (results.length < count && attempts < maxAttempts) {
+      attempts += 1;
+      let nick = buildNickname(
+        style,
+        tone,
+        separator,
+        addNumbers,
+        preferShort,
+        allowSymbolic,
+        customPrefix,
+        customSuffix
+      );
+
+      nick = applyCase(nick, casing);
+
+      if (!nick) continue;
+
+      if (uniqueOnly) {
+        if (seen.has(nick)) continue;
+        seen.add(nick);
+      }
+
+      results.push(nick);
+    }
+
+    if (!results.length) {
+      showError("Could not generate any nickname with the current settings.");
+      return;
+    }
+
+    const uniqueCount = new Set(results).size;
+    const avgLength = Math.round(
+      results.reduce(function (sum, item) { return sum + item.length; }, 0) / results.length
+    );
+    const longest = results.reduce(function (a, b) { return a.length >= b.length ? a : b; }, "");
+    const shortest = results.reduce(function (a, b) { return a.length <= b.length ? a : b; }, results[0]);
+
+    lastOutput = results.join("\n");
+    outputEl.value = lastOutput;
+
+    let sizeLabel = "Balanced";
+    let sizeKind = "neutral";
+    if (avgLength <= 8) {
+      sizeLabel = "Short";
+      sizeKind = "good";
+    } else if (avgLength >= 14) {
+      sizeLabel = "Long";
+      sizeKind = "warn";
+    }
+
+    summaryEl.innerHTML =
+      '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">' +
+        '<strong>Nickname list generated.</strong>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
+          badge(results.length + " results", "good") +
+          badge(classifyStyle(style), "neutral") +
+          badge(sizeLabel + " avg length", sizeKind) +
+        '</div>' +
+      '</div>' +
+      '<div class="note" style="margin-top:8px;">' +
+        'Tone: <strong>' + escapeHtml(tone) + '</strong> · ' +
+        'Case: <strong>' + escapeHtml(casing) + '</strong> · ' +
+        'Separator: <strong>' + escapeHtml(separator || "none") + '</strong>' +
+      '</div>';
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rng-card-wrap">' +
+        miniCard("Generated", String(results.length), "Nickname ideas returned") +
+        miniCard("Unique", String(uniqueCount), "Distinct values in result set") +
+        miniCard("Average length", String(avgLength), "Characters per nickname") +
+        miniCard("Attempts", String(attempts), "Generation attempts used") +
+      '</div>' +
+      '<div class="rng-card-wrap" style="margin-top:10px;">' +
+        miniCard("Shortest", shortest, "Shortest nickname in list") +
+        miniCard("Longest", longest, "Longest nickname in list") +
+        miniCard("Numbers", addNumbers ? "On" : "Off", "Random numeric suffix behavior") +
+        miniCard("Unique mode", uniqueOnly ? "On" : "Off", "Duplicate filtering behavior") +
+      '</div>';
+
+    fillTable([
+      ["Requested count", String(count)],
+      ["Generated count", String(results.length)],
+      ["Unique count", String(uniqueCount)],
+      ["Style preset", classifyStyle(style)],
+      ["Tone", tone],
+      ["Separator", separator || "none"],
+      ["Case", casing],
+      ["Custom prefix", customPrefix || "none"],
+      ["Custom suffix", customSuffix || "none"],
+      ["Numbers appended", addNumbers ? "yes" : "no"],
+      ["Prefer short names", preferShort ? "yes" : "no"],
+      ["Stylized fragments", allowSymbolic ? "yes" : "no"],
+      ["Average length", String(avgLength)],
+      ["Shortest length", String(shortest.length)],
+      ["Longest length", String(longest.length)],
+      ["Output characters", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated nicknames to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      summaryEl.innerHTML = "<strong>Copied generated nicknames.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function downloadOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated nicknames to download yet.");
+      return;
+    }
+
+    const blob = new Blob([lastOutput], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "random-nicknames.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearAll() {
+    countEl.value = "20";
+    styleEl.value = "mixed";
+    toneEl.value = "balanced";
+    separatorEl.value = "";
+    caseEl.value = "title";
+    prefixEl.value = "";
+    suffixEl.value = "";
+    uniqueEl.checked = true;
+    numbersEl.checked = true;
+    shortEl.checked = false;
+    symbolicEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generateNicknames);
+  copyBtn.addEventListener("click", copyOutput);
+  downloadBtn.addEventListener("click", downloadOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  [
+    countEl, styleEl, toneEl, separatorEl, caseEl,
+    prefixEl, suffixEl, uniqueEl, numbersEl, shortEl, symbolicEl
+  ].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generateNicknames();
+    });
+  });
+
+  resetOutput();
+});
+</script>

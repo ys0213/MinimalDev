@@ -1,0 +1,283 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Sin Calculator",
+  description:
+    "Calculate sine of an angle in degrees or radians. Includes validation, result cards, and FAQ schema.",
+  href: "/math/sin-calculator/",
+  order: 392,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/sin-calculator/";
+
+const faqs = [
+  {
+    q: "What does this sin calculator compute?",
+    a: "It computes the sine of an angle in either degrees or radians.",
+  },
+  {
+    q: "Can I switch between degrees and radians?",
+    a: "Yes. The calculator supports both degree mode and radian mode.",
+  },
+  {
+    q: "What is sine?",
+    a: "In right-triangle trigonometry, sine is opposite divided by hypotenuse. More generally, it is the y-coordinate on the unit circle.",
+  },
+  {
+    q: "Why do some results look like 0 when they should be tiny?",
+    a: "Very small floating-point values are rounded to 0 for readability.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Sin Calculator — ${SITE_NAME}`}
+  description="Calculate sine of an angle in degrees or radians."
+  canonicalPath={CANONICAL_PATH}
+  h1="Sin Calculator"
+  intro="Calculate the sine of an angle in degrees or radians. This page also shows the angle converted to radians and indicates common known-angle cases."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="sin-calculator">
+    <style is:inline>
+      .sin-wrap, .sin-wrap * { box-sizing: border-box; }
+      .sin-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .sin-grid input,
+      .sin-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .sin-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .sin-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form sin-wrap" role="form" aria-describedby="sin_help sin_privacy">
+      <div class="sin-grid">
+        <div class="field">
+          <label for="sin_angle">Angle</label>
+          <input id="sin_angle" type="number" inputmode="decimal" step="any" placeholder="e.g., 30" />
+        </div>
+
+        <div class="field">
+          <label for="sin_mode">Angle unit</label>
+          <select id="sin_mode">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="sin_help" style="margin-top:6px;">
+        Computes:
+        <br />
+        <span class="sin-code">sin(θ)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="sin_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="sin_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="sin_clear">Clear</button>
+      </div>
+
+      <div class="result" id="sin_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="sin_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="sin_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="sin_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="sin_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts the angle to radians internally when necessary, then evaluates the sine function.
+    </p>
+    <p class="note">
+      Common values:
+      <br />
+      <strong>sin(0°) = 0</strong>,
+      <strong>sin(30°) = 0.5</strong>,
+      <strong>sin(45°) ≈ 0.7071</strong>,
+      <strong>sin(90°) = 1</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>30°</strong> → sin = <strong>0.5</strong></li>
+      <li><strong>45°</strong> → sin ≈ <strong>0.7071</strong></li>
+      <li><strong>π/2</strong> rad → sin = <strong>1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/cos-calculator/">Cos Calculator</a></li>
+      <li><a href="/math/tan-calculator/">Tan Calculator</a></li>
+      <li><a href="/math/trigonometry-calculator/">Trigonometry Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const angleEl = document.getElementById("sin_angle");
+  const modeEl = document.getElementById("sin_mode");
+  const calcBtn = document.getElementById("sin_calc");
+  const fillBtn = document.getElementById("sin_fill_demo");
+  const clearBtn = document.getElementById("sin_clear");
+  const errorEl = document.getElementById("sin_error");
+  const resultEl = document.getElementById("sin_result");
+  const cardsEl = document.getElementById("sin_cards");
+  const tbodyEl = document.getElementById("sin_tbody");
+
+  if (!angleEl || !modeEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 12 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function toRadians(angle, mode) {
+    return mode === "deg" ? angle * Math.PI / 180 : angle;
+  }
+
+  function safeValue(x) {
+    return Math.abs(x) < 1e-12 ? 0 : x;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function knownLabel(angle, mode) {
+    if (mode !== "deg") return "General angle";
+    const normalized = ((angle % 360) + 360) % 360;
+    if (Math.abs(normalized - 0) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 30) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 45) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 60) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 90) < 1e-9) return "Known angle";
+    return "General angle";
+  }
+
+  function compute() {
+    clearOutput();
+
+    const angle = Number(String(angleEl.value || "").trim());
+    const mode = String(modeEl.value || "deg");
+
+    if (!Number.isFinite(angle)) {
+      showError("Please enter a valid angle.");
+      return;
+    }
+
+    const radians = toRadians(angle, mode);
+    const s = safeValue(Math.sin(radians));
+
+    resultEl.innerHTML =
+      "<strong>Sin result</strong><br/>" +
+      "<span class='sin-code'>sin(θ) = " + fmt(s, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "deg" ? "Degree mode" : "Radian mode") +
+      badge(knownLabel(angle, mode)) +
+      badge("Radians = " + fmt(radians, 8)) +
+      "</div>";
+
+    fillTable([
+      ["Angle", fmt(angle, 10) + (mode === "deg" ? "°" : " rad")],
+      ["Radians", fmt(radians, 12)],
+      ["sin(θ)", fmt(s, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "deg";
+    angleEl.value = "30";
+    clearOutput();
+  }
+
+  function reset() {
+    angleEl.value = "";
+    modeEl.value = "deg";
+    clearOutput();
+    angleEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [angleEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

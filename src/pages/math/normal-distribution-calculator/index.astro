@@ -1,0 +1,301 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Normal Distribution Calculator",
+  description:
+    "Calculate normal distribution PDF, CDF, z-score, and tail probabilities with validation and result cards.",
+  href: "/math/normal-distribution-calculator/",
+  order: 365,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/normal-distribution-calculator/";
+
+const faqs = [
+  {
+    q: "What does this normal distribution calculator compute?",
+    a: "It computes z-score, probability density (PDF), cumulative probability to the left of x (CDF), and right-tail probability for a normal distribution.",
+  },
+  {
+    q: "What is z-score?",
+    a: "A z-score tells you how many standard deviations a value is above or below the mean.",
+  },
+  {
+    q: "What happens if standard deviation is 0?",
+    a: "The calculation is undefined because a normal distribution requires a positive standard deviation.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Normal Distribution Calculator — ${SITE_NAME}`}
+  description="Calculate z-score, PDF, CDF, and tail probabilities for a normal distribution."
+  canonicalPath={CANONICAL_PATH}
+  h1="Normal Distribution Calculator"
+  intro="Calculate z-score, probability density, cumulative probability, and right-tail probability for a normal distribution using a value, mean, and standard deviation."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="normal-distribution-calculator">
+    <style is:inline>
+      .nd-wrap, .nd-wrap * { box-sizing: border-box; }
+      .nd-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .nd-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 800px) {
+        .nd-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form nd-wrap" role="form" aria-describedby="nd_help nd_privacy">
+      <div class="nd-grid">
+        <div class="field">
+          <label for="nd_x">Value (x)</label>
+          <input id="nd_x" type="number" inputmode="decimal" step="any" placeholder="e.g., 85" />
+        </div>
+        <div class="field">
+          <label for="nd_mean">Mean (μ)</label>
+          <input id="nd_mean" type="number" inputmode="decimal" step="any" placeholder="e.g., 70" />
+        </div>
+        <div class="field">
+          <label for="nd_sd">Standard deviation (σ)</label>
+          <input id="nd_sd" type="number" inputmode="decimal" step="any" placeholder="e.g., 10" />
+        </div>
+      </div>
+
+      <p class="note" id="nd_help" style="margin-top:6px;">
+        Formulae used:
+        <br />
+        <span class="nd-code">z = (x − μ) / σ</span>
+        <br />
+        <span class="nd-code">PDF = (1 / (σ√(2π))) · e^(-(1/2)z²)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="nd_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="nd_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="nd_clear">Clear</button>
+      </div>
+
+      <div class="result" id="nd_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="nd_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="nd_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="nd_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="nd_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool standardizes the value with a z-score, then estimates the normal CDF using a numerical approximation of the error function.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>x = 85</strong>, <strong>μ = 70</strong>, <strong>σ = 10</strong> → <strong>z = 1.5</strong></li>
+      <li>Left-tail probability is <strong>P(X ≤ x)</strong></li>
+      <li>Right-tail probability is <strong>P(X &gt; x)</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/z-score-calculator/">Z-Score Calculator</a></li>
+      <li><a href="/math/probability-density-calculator/">Probability Density Calculator</a></li>
+      <li><a href="/math/cumulative-distribution-calculator/">Cumulative Distribution Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const xEl = document.getElementById("nd_x");
+  const meanEl = document.getElementById("nd_mean");
+  const sdEl = document.getElementById("nd_sd");
+  const calcBtn = document.getElementById("nd_calc");
+  const fillBtn = document.getElementById("nd_fill_demo");
+  const clearBtn = document.getElementById("nd_clear");
+  const errorEl = document.getElementById("nd_error");
+  const resultEl = document.getElementById("nd_result");
+  const cardsEl = document.getElementById("nd_cards");
+  const tbodyEl = document.getElementById("nd_tbody");
+
+  if (!xEl || !meanEl || !sdEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function erf(x) {
+    const sign = x >= 0 ? 1 : -1;
+    const ax = Math.abs(x);
+    const a1 = 0.254829592;
+    const a2 = -0.284496736;
+    const a3 = 1.421413741;
+    const a4 = -1.453152027;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
+    const t = 1 / (1 + p * ax);
+    const y = 1 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-ax * ax));
+    return sign * y;
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function toNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+
+  function fmt(n, digits) {
+    const d = Number.isFinite(digits) ? digits : 6;
+    return n.toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const x = toNum(xEl, "value (x)");
+      const mean = toNum(meanEl, "mean (μ)");
+      const sd = toNum(sdEl, "standard deviation (σ)");
+
+      if (sd <= 0) {
+        showError("Standard deviation must be greater than 0.");
+        return;
+      }
+
+      const z = (x - mean) / sd;
+      const pdf = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * z * z);
+      const cdf = 0.5 * (1 + erf(z / Math.sqrt(2)));
+      const rightTail = 1 - cdf;
+
+      let position = "At the mean";
+      if (z > 0) position = "Above mean";
+      if (z < 0) position = "Below mean";
+
+      let extremeness = "Typical";
+      const az = Math.abs(z);
+      if (az >= 3) extremeness = "Extreme";
+      else if (az >= 2) extremeness = "Far from mean";
+      else if (az >= 1) extremeness = "Moderately away";
+
+      resultEl.innerHTML =
+        "<strong>Normal distribution result</strong><br/>" +
+        "<span class='nd-code'>z = " + fmt(z, 6) + "</span>" +
+        "<br/><span class='note'>Left-tail P(X ≤ x) ≈ " + fmt(cdf, 6) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(position) +
+        badge(extremeness) +
+        badge("Right tail ≈ " + fmt(rightTail, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Value x", fmt(x, 6)],
+        ["Mean μ", fmt(mean, 6)],
+        ["Standard deviation σ", fmt(sd, 6)],
+        ["Z-score", fmt(z, 6)],
+        ["PDF at x", fmt(pdf, 8)],
+        ["Left-tail P(X ≤ x)", fmt(cdf, 8)],
+        ["Right-tail P(X > x)", fmt(rightTail, 8)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    xEl.value = "85";
+    meanEl.value = "70";
+    sdEl.value = "10";
+    clearOutput();
+  }
+
+  function reset() {
+    xEl.value = "";
+    meanEl.value = "";
+    sdEl.value = "";
+    clearOutput();
+    xEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [xEl, meanEl, sdEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

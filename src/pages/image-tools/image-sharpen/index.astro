@@ -1,0 +1,577 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image Sharpen Tool",
+  description:
+    "Sharpen images in your browser with adjustable strength, live preview, download options, result cards, and FAQ schema.",
+  href: "/image-tools/image-sharpen/",
+  order: 130,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-sharpen/";
+
+const faqs = [
+  {
+    q: "What does this image sharpen tool do?",
+    a: "It increases edge contrast in your image to make details appear crisper. The effect is applied locally in your browser.",
+  },
+  {
+    q: "Can sharpening restore a blurry photo perfectly?",
+    a: "No. Sharpening can improve perceived edge definition, but it cannot recover detail that is missing from the original image.",
+  },
+  {
+    q: "Will sharpening increase noise or artifacts?",
+    a: "It can. Strong sharpening may exaggerate grain, halos, or compression artifacts, especially on already noisy images.",
+  },
+  {
+    q: "Is my image uploaded or stored?",
+    a: "No. The tool processes your image locally in your browser and does not upload or store it.",
+  },
+  {
+    q: "Which formats can I export?",
+    a: "You can export the sharpened result as PNG, JPEG, or WebP depending on your browser support.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image Sharpen Tool — ${SITE_NAME}`}
+  description="Sharpen images with adjustable strength, preview the result, compare before and after, and download the processed file."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Sharpen Tool"
+  intro="Upload an image, adjust sharpening strength, preview the result side by side, and download the processed version. This tool is useful for product images, screenshots, scanned documents, and photos that need a little more edge definition."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-sharpen">
+    <style is:inline>
+      #ish_file,
+      #ish_strength,
+      #ish_quality,
+      #ish_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .ish-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .ish-grid > * {
+        min-width: 0;
+      }
+      .ish-canvases {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .ish-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        padding: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .ish-panel canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.03);
+      }
+      .ish-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .ish-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .ish-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .ish-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 900px) {
+        .ish-canvases {
+          grid-template-columns: 1fr 1fr;
+        }
+        .ish-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="ish_help ish_privacy">
+      <div class="field">
+        <label for="ish_file">Image file</label>
+        <input id="ish_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="ish-grid">
+        <div class="field">
+          <label for="ish_strength">Sharpen strength</label>
+          <input id="ish_strength" type="range" min="0" max="5" step="0.1" value="1.2" />
+          <p class="note" id="ish_strength_note" style="margin-top:6px;">Current strength: 1.2</p>
+        </div>
+
+        <div class="field">
+          <label for="ish_format">Output format</label>
+          <select id="ish_format">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ish_quality">Export quality (JPEG/WebP)</label>
+          <input id="ish_quality" type="range" min="0.1" max="1" step="0.05" value="0.9" />
+          <p class="note" id="ish_quality_note" style="margin-top:6px;">Current quality: 0.90</p>
+        </div>
+      </div>
+
+      <div class="ish-row">
+        <label>
+          <input id="ish_live" type="checkbox" checked />
+          Update preview automatically
+        </label>
+        <label>
+          <input id="ish_fill_bg" type="checkbox" checked />
+          Fill transparent background when exporting JPEG
+        </label>
+      </div>
+
+      <p class="note" id="ish_help" style="margin-top:6px;">
+        Use lower values for a subtle cleanup and higher values for stronger edge emphasis. Heavy sharpening may add halos or noise.
+      </p>
+
+      <div class="ish-row">
+        <button class="btn" type="button" id="ish_apply">Apply Sharpen</button>
+        <button class="btn secondary" type="button" id="ish_download">Download Result</button>
+        <button class="btn secondary" type="button" id="ish_reset">Reset Controls</button>
+        <button class="btn secondary" type="button" id="ish_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ish_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ish_result" role="status" style="margin-top:12px;">Processed image details will appear here.</div>
+      <div class="result" id="ish_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="ish-canvases">
+        <div class="ish-panel">
+          <strong>Original preview</strong>
+          <canvas id="ish_original_canvas" aria-label="Original uploaded image preview"></canvas>
+        </div>
+        <div class="ish-panel">
+          <strong>Sharpened preview</strong>
+          <canvas id="ish_output_canvas" aria-label="Sharpened image preview"></canvas>
+        </div>
+      </div>
+
+      <p class="note" id="ish_privacy" style="margin-top:10px;">
+        Privacy: image sharpening runs locally in your browser. No file is uploaded, stored, or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool loads your image into a browser canvas, applies a sharpening filter that increases local edge contrast,
+      and then lets you preview or download the result. The “strength” slider controls how aggressively the filter boosts detail.
+    </p>
+    <ul>
+      <li><strong>Low strength:</strong> mild crispness for photos and UI screenshots</li>
+      <li><strong>Medium strength:</strong> good general-purpose sharpening</li>
+      <li><strong>High strength:</strong> stronger edge emphasis, but may reveal halos or noise</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Sharpen a screenshot before adding it to documentation</li>
+      <li>Improve the clarity of a scanned note or receipt</li>
+      <li>Add a little more crispness to a soft product image</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-blur/">Image Blur</a></li>
+      <li><a href="/image-tools/image-contrast-adjuster/">Image Contrast Adjuster</a></li>
+      <li><a href="/image-tools/image-brightness-adjuster/">Image Brightness Adjuster</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("ish_file");
+  const strengthEl = document.getElementById("ish_strength");
+  const qualityEl = document.getElementById("ish_quality");
+  const formatEl = document.getElementById("ish_format");
+  const liveEl = document.getElementById("ish_live");
+  const fillBgEl = document.getElementById("ish_fill_bg");
+
+  const applyBtn = document.getElementById("ish_apply");
+  const downloadBtn = document.getElementById("ish_download");
+  const resetBtn = document.getElementById("ish_reset");
+  const clearBtn = document.getElementById("ish_clear");
+
+  const strengthNoteEl = document.getElementById("ish_strength_note");
+  const qualityNoteEl = document.getElementById("ish_quality_note");
+
+  const errorEl = document.getElementById("ish_error");
+  const resultEl = document.getElementById("ish_result");
+  const cardsEl = document.getElementById("ish_cards");
+
+  const originalCanvas = document.getElementById("ish_original_canvas");
+  const outputCanvas = document.getElementById("ish_output_canvas");
+  const originalCtx = originalCanvas.getContext("2d");
+  const outputCtx = outputCanvas.getContext("2d");
+
+  if (
+    !fileEl || !strengthEl || !qualityEl || !formatEl || !liveEl || !fillBgEl ||
+    !applyBtn || !downloadBtn || !resetBtn || !clearBtn ||
+    !strengthNoteEl || !qualityNoteEl || !errorEl || !resultEl || !cardsEl ||
+    !originalCanvas || !outputCanvas || !originalCtx || !outputCtx
+  ) return;
+
+  const sourceCanvas = document.createElement("canvas");
+  const sourceCtx = sourceCanvas.getContext("2d");
+
+  let currentImage = null;
+  let currentFileName = "";
+  let originalFileSize = 0;
+  let lastBlob = null;
+  let debounceTimer = null;
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetMessages() {
+    clearError();
+    resultEl.textContent = "Processed image details will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+  }
+
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function miniCard(label, value, sub) {
+    return (
+      '<div class="ish-mini-card">' +
+        "<strong>" + label + "</strong>" +
+        '<div class="ish-big">' + value + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function updateControlLabels() {
+    strengthNoteEl.textContent = "Current strength: " + Number(strengthEl.value).toFixed(1);
+    qualityNoteEl.textContent = "Current quality: " + Number(qualityEl.value).toFixed(2);
+  }
+
+  function clamp(v) {
+    return Math.max(0, Math.min(255, v));
+  }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const img = new Image();
+        img.onload = function () { resolve(img); };
+        img.onerror = function () { reject(new Error("Could not decode the selected image.")); };
+        img.src = String(ev.target.result || "");
+      };
+      reader.onerror = function () {
+        reject(new Error("Could not read the selected file."));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function drawOriginal() {
+    if (!currentImage || !sourceCtx) return;
+    const w = currentImage.naturalWidth || currentImage.width;
+    const h = currentImage.naturalHeight || currentImage.height;
+
+    sourceCanvas.width = w;
+    sourceCanvas.height = h;
+    originalCanvas.width = w;
+    originalCanvas.height = h;
+
+    sourceCtx.clearRect(0, 0, w, h);
+    sourceCtx.drawImage(currentImage, 0, 0);
+
+    originalCtx.clearRect(0, 0, w, h);
+    originalCtx.drawImage(currentImage, 0, 0);
+  }
+
+  function sharpenImageData(src, width, height, amount) {
+    const dst = new Uint8ClampedArray(src.length);
+
+    const center = 5 + amount;
+    const kernel = [
+      0, -1, 0,
+      -1, center, -1,
+      0, -1, 0
+    ];
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+
+        if (x === 0 || y === 0 || x === width - 1 || y === height - 1) {
+          dst[idx] = src[idx];
+          dst[idx + 1] = src[idx + 1];
+          dst[idx + 2] = src[idx + 2];
+          dst[idx + 3] = src[idx + 3];
+          continue;
+        }
+
+        let r = 0, g = 0, b = 0;
+        let k = 0;
+
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const p = ((y + ky) * width + (x + kx)) * 4;
+            const weight = kernel[k++];
+            r += src[p] * weight;
+            g += src[p + 1] * weight;
+            b += src[p + 2] * weight;
+          }
+        }
+
+        dst[idx] = clamp(r);
+        dst[idx + 1] = clamp(g);
+        dst[idx + 2] = clamp(b);
+        dst[idx + 3] = src[idx + 3];
+      }
+    }
+
+    return dst;
+  }
+
+  async function renderSharpen() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please choose an image file first.");
+      return;
+    }
+
+    const w = sourceCanvas.width;
+    const h = sourceCanvas.height;
+    if (!w || !h || !sourceCtx) {
+      showError("Source image is not ready yet.");
+      return;
+    }
+
+    const amount = Number(strengthEl.value || 0);
+    const mime = String(formatEl.value || "image/jpeg");
+    const quality = Number(qualityEl.value || 0.9);
+
+    const srcData = sourceCtx.getImageData(0, 0, w, h);
+    const sharpened = sharpenImageData(srcData.data, w, h, amount);
+
+    outputCanvas.width = w;
+    outputCanvas.height = h;
+
+    if (mime === "image/jpeg" && fillBgEl.checked) {
+      outputCtx.fillStyle = "#FFFFFF";
+      outputCtx.fillRect(0, 0, w, h);
+    } else {
+      outputCtx.clearRect(0, 0, w, h);
+    }
+
+    const outImageData = new ImageData(sharpened, w, h);
+    outputCtx.putImageData(outImageData, 0, 0);
+
+    resultEl.innerHTML =
+      "<strong>Sharpening applied.</strong>" +
+      '<div class="note" style="margin-top:6px;">Review the side-by-side preview and download the result when ready.</div>';
+
+    try {
+      const blob = await new Promise(function (resolve, reject) {
+        outputCanvas.toBlob(function (b) {
+          if (!b) {
+            reject(new Error("Could not encode the sharpened image."));
+            return;
+          }
+          resolve(b);
+        }, mime, quality);
+      });
+
+      lastBlob = blob;
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div class="ish-card-grid">' +
+          miniCard("Strength", amount.toFixed(1), "Sharpen intensity") +
+          miniCard("Output format", mime.replace("image/", "").toUpperCase(), "Selected export format") +
+          miniCard("Original size", formatBytes(originalFileSize), "Uploaded file size") +
+          miniCard("Output size", formatBytes(blob.size), "Current rendered file") +
+        "</div>" +
+        '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
+          badge(amount <= 1.5 ? "Subtle sharpening" : amount <= 3 ? "Moderate sharpening" : "Strong sharpening", amount <= 3 ? "good" : "warn") +
+          badge(mime === "image/png" ? "Lossless container" : "Quality " + quality.toFixed(2), mime === "image/png" ? "neutral" : "good") +
+        "</div>";
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not create the export file.");
+    }
+  }
+
+  async function downloadResult() {
+    clearError();
+
+    if (!currentImage) {
+      showError("Please upload an image first.");
+      return;
+    }
+
+    if (!lastBlob) {
+      await renderSharpen();
+      if (!lastBlob) return;
+    }
+
+    const ext = String(formatEl.value || "image/jpeg").replace("image/", "").replace("jpeg", "jpg");
+    const base = (currentFileName || "image").replace(/\.[^.]+$/, "");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(lastBlob);
+    a.download = base + "-sharpened." + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function scheduleRender() {
+    updateControlLabels();
+    if (!liveEl.checked || !currentImage) return;
+    if (debounceTimer) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(function () {
+      renderSharpen();
+    }, 120);
+  }
+
+  function resetControls() {
+    strengthEl.value = "1.2";
+    qualityEl.value = "0.9";
+    formatEl.value = "image/jpeg";
+    liveEl.checked = true;
+    fillBgEl.checked = true;
+    updateControlLabels();
+    if (currentImage) renderSharpen();
+    else resetMessages();
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    currentImage = null;
+    currentFileName = "";
+    originalFileSize = 0;
+    lastBlob = null;
+    sourceCanvas.width = 0;
+    sourceCanvas.height = 0;
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    outputCanvas.width = 0;
+    outputCanvas.height = 0;
+    strengthEl.value = "1.2";
+    qualityEl.value = "0.9";
+    formatEl.value = "image/jpeg";
+    liveEl.checked = true;
+    fillBgEl.checked = true;
+    updateControlLabels();
+    resetMessages();
+    fileEl.focus();
+  }
+
+  fileEl.addEventListener("change", async function () {
+    resetMessages();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please select a valid image file.");
+      return;
+    }
+
+    try {
+      currentImage = await loadImage(file);
+      currentFileName = file.name || "image";
+      originalFileSize = Number(file.size || 0);
+      drawOriginal();
+      if (liveEl.checked) renderSharpen();
+      else {
+        resultEl.innerHTML =
+          "<strong>Image loaded.</strong>" +
+          '<div class="note" style="margin-top:6px;">Adjust settings, then click “Apply Sharpen”.</div>';
+      }
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not load the image.");
+    }
+  });
+
+  strengthEl.addEventListener("input", scheduleRender);
+  qualityEl.addEventListener("input", scheduleRender);
+  formatEl.addEventListener("change", scheduleRender);
+  liveEl.addEventListener("change", scheduleRender);
+  fillBgEl.addEventListener("change", scheduleRender);
+
+  applyBtn.addEventListener("click", renderSharpen);
+  downloadBtn.addEventListener("click", downloadResult);
+  resetBtn.addEventListener("click", resetControls);
+  clearBtn.addEventListener("click", clearAll);
+
+  updateControlLabels();
+});
+</script>

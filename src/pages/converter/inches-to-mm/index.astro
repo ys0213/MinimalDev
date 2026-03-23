@@ -1,0 +1,270 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Inches to mm",
+  description:
+    "Convert inches to millimeters instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/inches-to-mm/",
+  order: 309,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/inches-to-mm/";
+
+const faqs = [
+  {
+    q: "How do you convert inches to millimeters?",
+    a: "Multiply inches by 25.4 to get millimeters.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between inches to millimeters and millimeters to inches.",
+  },
+  {
+    q: "What is this useful for?",
+    a: "It is useful for hardware sizes, manufacturing, crafts, screens, and everyday measurement conversion.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Inches to mm Converter — ${SITE_NAME}`}
+  description="Convert inches to millimeters instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Inches to mm Converter"
+  intro="Convert length from inches to millimeters instantly. Useful for hardware, engineering, crafts, and measurement comparison."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="inches-to-mm">
+    <div class="form" role="form" aria-describedby="in2mm_hint in2mm_privacy">
+      <div class="field">
+        <label for="in2mm_input">Inches</label>
+        <input id="in2mm_input" type="number" inputmode="decimal" placeholder="e.g., 1" />
+        <p class="note" id="in2mm_hint" style="margin-top:6px;">
+          Enter a non-negative value. 1 inch equals exactly 25.4 mm.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="in2mm_round">Rounding</label>
+        <select id="in2mm_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="in2mm_convert">Convert</button>
+        <button class="btn secondary" type="button" id="in2mm_swap">Reverse (mm → in)</button>
+        <button class="btn secondary" type="button" id="in2mm_clear">Clear</button>
+      </div>
+
+      <div class="result" id="in2mm_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="in2mm_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="in2mm_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="in2mm_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="in2mm_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 inch = 25.4 mm</strong>.<br />
+      Formula: <strong>mm = in × 25.4</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 in</strong> = <strong>25.4 mm</strong></li>
+      <li><strong>2 in</strong> = <strong>50.8 mm</strong></li>
+      <li><strong>10 in</strong> = <strong>254 mm</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/mm-to-inches/">mm to Inches</a></li>
+      <li><a href="/converter/inches-to-cm/">Inches to cm</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("in2mm_input");
+  const roundEl = document.getElementById("in2mm_round");
+  const convertBtn = document.getElementById("in2mm_convert");
+  const swapBtn = document.getElementById("in2mm_swap");
+  const clearBtn = document.getElementById("in2mm_clear");
+  const errEl = document.getElementById("in2mm_error");
+  const outEl = document.getElementById("in2mm_result");
+  const cardsEl = document.getElementById("in2mm_cards");
+  const tbodyEl = document.getElementById("in2mm_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const IN_TO_MM = 25.4;
+  const MM_TO_IN = 1 / IN_TO_MM;
+  let mode = "in-to-mm";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="in2mm_input"]');
+    if (!label) return;
+
+    if (mode === "in-to-mm") {
+      label.textContent = "Inches";
+      inEl.placeholder = "e.g., 1";
+      swapBtn.textContent = "Reverse (mm → in)";
+    } else {
+      label.textContent = "Millimeters";
+      inEl.placeholder = "e.g., 25.4";
+      swapBtn.textContent = "Reverse (in → mm)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "in-to-mm"
+      ? [
+          ["Conversion factor", "1 in = 25.4 mm"],
+          ["Reverse factor", "1 mm ≈ " + fmtSmart(MM_TO_IN) + " in"],
+          ["Input", fmt(input) + " in"],
+          ["Output", fmt(output) + " mm"],
+        ]
+      : [
+          ["Conversion factor", "1 mm ≈ " + fmtSmart(MM_TO_IN) + " in"],
+          ["Reverse factor", "1 in = 25.4 mm"],
+          ["Input", fmt(input) + " mm"],
+          ["Output", fmt(output) + " in"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const output = mode === "in-to-mm" ? raw * IN_TO_MM : raw * MM_TO_IN;
+
+    if (mode === "in-to-mm") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} mm<br/><span class="note">${fmt(raw)} in = ${fmt(output)} mm</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} in<br/><span class="note">${fmt(raw)} mm = ${fmt(output)} in</span>`;
+    }
+
+    const mm = mode === "in-to-mm" ? output : raw;
+    let scale = "Typical";
+    if (mm < 10) scale = "Very small length";
+    else if (mm >= 1000) scale = "Large length";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "in-to-mm" ? "in → mm" : "mm → in")}
+      ${badge("Base ≈ " + fmtSmart(mm) + " mm")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(raw, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "in-to-mm" ? "mm-to-in" : "in-to-mm";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

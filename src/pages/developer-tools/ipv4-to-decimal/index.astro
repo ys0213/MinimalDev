@@ -1,0 +1,305 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "IPv4 to Decimal",
+  description:
+    "Convert IPv4 addresses to 32-bit decimal integers with validation, binary output, result cards, and FAQ schema.",
+  href: "/developer-tools/ipv4-to-decimal/",
+  order: 411,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/ipv4-to-decimal/";
+
+const faqs = [
+  {
+    q: "What does this tool convert?",
+    a: "It converts a valid IPv4 address into its unsigned 32-bit decimal representation.",
+  },
+  {
+    q: "Why convert IPv4 to decimal?",
+    a: "It is useful in networking, databases, logging systems, and range comparisons.",
+  },
+  {
+    q: "Does it support IPv6?",
+    a: "No. This tool converts IPv4 only.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`IPv4 to Decimal — ${SITE_NAME}`}
+  description="Convert IPv4 addresses into unsigned 32-bit decimal numbers with validation and binary details."
+  canonicalPath={CANONICAL_PATH}
+  h1="IPv4 to Decimal"
+  intro="Convert a valid IPv4 address to its unsigned 32-bit decimal integer form."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="ipv4-to-decimal">
+    <style is:inline>
+      #i4d_input,
+      #i4d_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .i4d-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="i4d_help i4d_privacy">
+      <div class="field">
+        <label for="i4d_input">IPv4 address</label>
+        <input
+          id="i4d_input"
+          type="text"
+          inputmode="decimal"
+          spellcheck="false"
+          placeholder="e.g. 192.168.0.1"
+          autocomplete="off"
+        />
+      </div>
+
+      <p class="note" id="i4d_help" style="margin-top:6px;">
+        Example: <span class="i4d-mono">192.168.0.1</span> → <span class="i4d-mono">3232235521</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="i4d_convert">Convert</button>
+        <button class="btn secondary" type="button" id="i4d_copy">Copy Decimal</button>
+        <button class="btn secondary" type="button" id="i4d_clear">Clear</button>
+      </div>
+
+      <div class="result" id="i4d_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="i4d_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="i4d_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="i4d_output">Decimal output</label>
+        <textarea id="i4d_output" rows="3" readonly spellcheck="false" class="i4d-mono" placeholder="Converted decimal will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="i4d_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="i4d_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No IP addresses are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool treats the IPv4 address as a 32-bit unsigned value:
+      <br />
+      <strong>a.b.c.d</strong> → <strong>((a×256 + b)×256 + c)×256 + d</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>127.0.0.1</strong> → <strong>2130706433</strong></li>
+      <li><strong>192.168.0.1</strong> → <strong>3232235521</strong></li>
+      <li><strong>8.8.8.8</strong> → <strong>134744072</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/decimal-to-ipv4/">Decimal to IPv4</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/cidr-calculator/">CIDR Calculator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("i4d_input");
+  const outputEl = document.getElementById("i4d_output");
+  const convertBtn = document.getElementById("i4d_convert");
+  const copyBtn = document.getElementById("i4d_copy");
+  const clearBtn = document.getElementById("i4d_clear");
+  const errEl = document.getElementById("i4d_error");
+  const resultEl = document.getElementById("i4d_result");
+  const cardsEl = document.getElementById("i4d_cards");
+  const tbodyEl = document.getElementById("i4d_tbody");
+
+  if (!inputEl || !outputEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseIPv4(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter an IPv4 address." };
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) {
+      return { ok: false, msg: "IPv4 format must be four dot-separated numeric octets." };
+    }
+
+    const parts = trimmed.split(".");
+    const nums = [];
+
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].length > 1 && parts[i].startsWith("0")) {
+        return { ok: false, msg: "Leading zeros are not allowed in octet " + (i + 1) + "." };
+      }
+      const n = Number(parts[i]);
+      if (!Number.isInteger(n) || n < 0 || n > 255) {
+        return { ok: false, msg: "Octet " + (i + 1) + " must be an integer between 0 and 255." };
+      }
+      nums.push(n);
+    }
+
+    return { ok: true, parts: nums, normalized: nums.join(".") };
+  }
+
+  function toUint32Decimal(parts) {
+    return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+  }
+
+  function toBinary32(n) {
+    const raw = (n >>> 0).toString(2).padStart(32, "0");
+    return raw.replace(/(.{8})/g, "$1 ").trim();
+  }
+
+  function convert() {
+    resetOutput();
+
+    const parsed = parseIPv4(inputEl.value);
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      return;
+    }
+
+    const n = toUint32Decimal(parsed.parts);
+    const binary = toBinary32(n);
+
+    lastOutput = String(n);
+    outputEl.value = String(n);
+
+    resultEl.innerHTML =
+      "<strong>Converted successfully.</strong><br/><span class='note'>" +
+      parsed.normalized +
+      " → " +
+      String(n) +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Valid IPv4") +
+      badge("Unsigned 32-bit") +
+      badge("Decimal output") +
+      "</div>";
+
+    fillTable([
+      ["IPv4 input", parsed.normalized],
+      ["Decimal output", String(n)],
+      ["Hex output", "0x" + (n >>> 0).toString(16).toUpperCase()],
+      ["Binary (32-bit)", binary],
+      ["Octets", parsed.parts.join(" · ")],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No decimal output to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied decimal output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") convert();
+  });
+});
+</script>

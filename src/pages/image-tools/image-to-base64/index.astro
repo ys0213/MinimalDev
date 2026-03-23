@@ -1,0 +1,159 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image to Base64",
+  description: "Convert images to Base64 string or Data URL with preview and copy support.",
+  href: "/image-tools/image-to-base64/",
+  order: 10,
+};
+
+const SITE_NAME="MinimalDev";
+const CANONICAL_PATH="/image-tools/image-to-base64/";
+
+const faqs=[
+ {q:"What is Base64?",a:"It encodes binary data into text format."},
+ {q:"Is my image uploaded?",a:"No, everything runs locally."},
+ {q:"Why use Base64?",a:"Useful for embedding images in HTML/CSS."}
+];
+
+const faqJsonLd={
+ "@context":"https://schema.org",
+ "@type":"FAQPage",
+ mainEntity:faqs.map(f=>({
+   "@type":"Question",
+   name:f.q,
+   acceptedAnswer:{ "@type":"Answer", text:f.a }
+ }))
+};
+---
+
+<ToolLayout
+title={`Image to Base64 — ${SITE_NAME}`}
+description="Convert images to Base64 string or Data URL."
+canonicalPath={CANONICAL_PATH}
+h1="Image to Base64"
+intro="Convert images into Base64 encoding instantly."
+faq={faqs}
+categoryName="Image Tools"
+>
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<div slot="tool">
+
+<style is:inline>
+textarea { width:100%; min-height:140px; }
+img { max-width:100%; border-radius:10px; }
+</style>
+
+<div class="form">
+
+<input type="file" id="file" accept="image/*"/>
+
+<label>
+<input type="checkbox" id="dataUrl" checked/>
+Include Data URL prefix
+</label>
+
+<div id="error" class="result" style="display:none;"></div>
+
+<div id="preview" style="margin-top:10px;"></div>
+
+<textarea id="output" placeholder="Base64 result"></textarea>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
+<button class="btn" id="convert">Convert</button>
+<button class="btn secondary" id="copy">Copy</button>
+<button class="btn secondary" id="download">Download TXT</button>
+</div>
+
+<div id="result" class="result"></div>
+
+</div>
+</div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded",()=>{
+
+const file=document.getElementById("file");
+const output=document.getElementById("output");
+const preview=document.getElementById("preview");
+const result=document.getElementById("result");
+const error=document.getElementById("error");
+const dataUrlCheckbox=document.getElementById("dataUrl");
+
+let fileData=null;
+
+function showError(msg){
+ error.style.display="block";
+ error.textContent=msg;
+}
+
+function clearError(){
+ error.style.display="none";
+ error.textContent="";
+}
+
+file.onchange=e=>{
+ clearError();
+ const f=e.target.files[0];
+ if(!f) return;
+
+ if(!f.type.startsWith("image/")){
+   showError("Only image files allowed");
+   return;
+ }
+
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   fileData=ev.target.result;
+   preview.innerHTML=`<img src="${fileData}" alt="preview"/>`;
+ };
+ reader.readAsDataURL(f);
+};
+
+document.getElementById("convert").onclick=()=>{
+ clearError();
+
+ if(!fileData){
+   showError("Upload image first");
+   return;
+ }
+
+ let base64=fileData;
+
+ if(!dataUrlCheckbox.checked){
+   base64=base64.split(",")[1];
+ }
+
+ output.value=base64;
+
+ result.innerHTML=
+ `Length: ${base64.length.toLocaleString()} chars<br>
+  Type: ${dataUrlCheckbox.checked?"Data URL":"Raw Base64"}`;
+};
+
+document.getElementById("copy").onclick=async()=>{
+ if(!output.value) return;
+
+ try{
+   await navigator.clipboard.writeText(output.value);
+   result.innerHTML="<strong>Copied to clipboard</strong>";
+ }catch{
+   showError("Clipboard failed");
+ }
+};
+
+document.getElementById("download").onclick=()=>{
+ if(!output.value) return;
+
+ const blob=new Blob([output.value],{type:"text/plain"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="base64.txt";
+ a.click();
+};
+
+});
+</script>

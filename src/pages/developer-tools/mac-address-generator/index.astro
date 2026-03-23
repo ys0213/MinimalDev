@@ -1,0 +1,325 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "MAC Address Generator",
+  description:
+    "Generate random MAC addresses with separator, case, and local-admin options. Includes validation, result cards, and FAQ schema.",
+  href: "/developer-tools/mac-address-generator/",
+  order: 532,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/mac-address-generator/";
+
+const faqs = [
+  {
+    q: "What does this MAC address generator do?",
+    a: "It generates random MAC-style addresses in common hexadecimal formats.",
+  },
+  {
+    q: "Can I choose separators?",
+    a: "Yes. You can generate addresses using colons, hyphens, or no separator.",
+  },
+  {
+    q: "What is a locally administered MAC address?",
+    a: "It is a MAC address with the local administration bit set in the first octet. This is commonly used for virtual or software-defined addresses.",
+  },
+  {
+    q: "Are generated values stored?",
+    a: "No. Generation runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`MAC Address Generator — ${SITE_NAME}`}
+  description="Generate random MAC addresses with formatting options, validation, result cards, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="MAC Address Generator"
+  intro="Generate random MAC-style addresses with separator, case, and administration-bit options. Useful for testing, demos, and tooling."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="mac-address-generator">
+    <style is:inline>
+      #macg_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .macg-mono {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="macg_help macg_privacy">
+      <div class="field">
+        <label for="macg_count">Count</label>
+        <input id="macg_count" type="number" min="1" max="100" step="1" value="5" inputmode="numeric" />
+      </div>
+
+      <div class="field">
+        <label for="macg_sep">Separator</label>
+        <select id="macg_sep">
+          <option value=":">Colon (:)</option>
+          <option value="-">Hyphen (-)</option>
+          <option value="">None</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="macg_case">Letter case</label>
+        <select id="macg_case">
+          <option value="upper">Uppercase</option>
+          <option value="lower">Lowercase</option>
+        </select>
+      </div>
+
+      <fieldset class="field" style="border:0; padding:0; margin:0;">
+        <legend class="note" style="margin:0 0 6px; font-weight:600;">Options</legend>
+        <label style="display:flex; gap:10px; align-items:center;">
+          <input id="macg_local" type="checkbox" checked />
+          <span>Set locally administered bit</span>
+        </label>
+        <label style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+          <input id="macg_unicast" type="checkbox" checked />
+          <span>Force unicast (clear multicast bit)</span>
+        </label>
+      </fieldset>
+
+      <p class="note" id="macg_help" style="margin-top:6px;">
+        This page generates MAC-style values for testing and tooling. It does not reserve or verify real hardware vendor assignments.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="macg_run">Generate</button>
+        <button class="btn secondary" type="button" id="macg_copy">Copy Output</button>
+        <button class="btn secondary" type="button" id="macg_clear">Clear</button>
+      </div>
+
+      <div class="result" id="macg_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="macg_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="macg_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="macg_output">Generated MAC addresses</label>
+        <textarea id="macg_output" rows="10" readonly spellcheck="false" class="macg-mono" placeholder="Generated MAC addresses will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="macg_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="macg_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This page generates six random bytes and formats them as a MAC address. You can force the local-administration bit and clear the multicast bit in the first byte.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>02:7F:9A:1C:44:E0</strong> → locally administered unicast style</li>
+      <li><strong>AA-BB-CC-11-22-33</strong> → hyphen-separated format</li>
+      <li><strong>00163EABCDEF</strong> → no-separator format</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/mac-address-validator/">MAC Address Validator</a></li>
+      <li><a href="/developer-tools/random-token-generator/">Random Token Generator</a></li>
+      <li><a href="/developer-tools/api-key-generator/">API Key Generator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("macg_count");
+  const sepEl = document.getElementById("macg_sep");
+  const caseEl = document.getElementById("macg_case");
+  const localEl = document.getElementById("macg_local");
+  const unicastEl = document.getElementById("macg_unicast");
+  const outputEl = document.getElementById("macg_output");
+  const runBtn = document.getElementById("macg_run");
+  const copyBtn = document.getElementById("macg_copy");
+  const clearBtn = document.getElementById("macg_clear");
+  const errEl = document.getElementById("macg_error");
+  const resultEl = document.getElementById("macg_result");
+  const cardsEl = document.getElementById("macg_cards");
+  const tbodyEl = document.getElementById("macg_tbody");
+
+  if (!countEl || !sepEl || !caseEl || !localEl || !unicastEl || !outputEl || !runBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    outputEl.value = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function randomByte() {
+    const buf = new Uint8Array(1);
+    crypto.getRandomValues(buf);
+    return buf[0];
+  }
+
+  function generateOne(separator, letterCase, setLocal, forceUnicast) {
+    const bytes = [];
+    for (let i = 0; i < 6; i++) bytes.push(randomByte());
+
+    if (setLocal) bytes[0] = bytes[0] | 0x02;
+    if (forceUnicast) bytes[0] = bytes[0] & 0xFE;
+
+    let parts = bytes.map(function (b) {
+      let hx = b.toString(16).padStart(2, "0");
+      return letterCase === "upper" ? hx.toUpperCase() : hx.toLowerCase();
+    });
+
+    return separator ? parts.join(separator) : parts.join("");
+  }
+
+  function run() {
+    resetOutput();
+
+    const count = parseInt(String(countEl.value || ""), 10);
+    const separator = String(sepEl.value || ":");
+    const letterCase = String(caseEl.value || "upper");
+    const setLocal = !!localEl.checked;
+    const forceUnicast = !!unicastEl.checked;
+
+    if (!Number.isFinite(count) || count < 1 || count > 100) {
+      showError("Count must be between 1 and 100.");
+      return;
+    }
+
+    if (!window.crypto || !crypto.getRandomValues) {
+      showError("Secure random generation is not available in this browser.");
+      return;
+    }
+
+    const values = [];
+    for (let i = 0; i < count; i++) {
+      values.push(generateOne(separator, letterCase, setLocal, forceUnicast));
+    }
+
+    lastOutput = values.join("\n");
+    outputEl.value = lastOutput;
+
+    resultEl.innerHTML =
+      "<strong>Generated " + count + " MAC address" + (count === 1 ? "" : "es") + ".</strong>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Random") +
+      badge(setLocal ? "Local-admin on" : "Local-admin unchanged") +
+      badge(forceUnicast ? "Unicast forced" : "Multicast allowed") +
+      badge(separator === "" ? "No separator" : 'Separator "' + separator + '"') +
+      "</div>";
+
+    fillTable([
+      ["Count", String(count)],
+      ["Separator", separator === "" ? "(none)" : separator],
+      ["Letter case", letterCase],
+      ["Locally administered bit", setLocal ? "set" : "not forced"],
+      ["Multicast bit", forceUnicast ? "cleared" : "not forced"],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No generated MAC addresses to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied generated MAC addresses.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "5";
+    sepEl.value = ":";
+    caseEl.value = "upper";
+    localEl.checked = true;
+    unicastEl.checked = true;
+    resetOutput();
+    countEl.focus();
+  }
+
+  runBtn.addEventListener("click", run);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

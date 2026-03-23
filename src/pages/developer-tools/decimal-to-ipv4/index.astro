@@ -1,0 +1,300 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Decimal to IPv4",
+  description:
+    "Convert unsigned 32-bit decimal values to IPv4 addresses with validation, octet breakdown, result cards, and FAQ schema.",
+  href: "/developer-tools/decimal-to-ipv4/",
+  order: 412,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/developer-tools/decimal-to-ipv4/";
+
+const faqs = [
+  {
+    q: "What does this tool convert?",
+    a: "It converts an unsigned 32-bit decimal integer into an IPv4 address.",
+  },
+  {
+    q: "What range is allowed?",
+    a: "Valid decimal input must be between 0 and 4294967295 inclusive.",
+  },
+  {
+    q: "Why use decimal-to-IP conversion?",
+    a: "It is useful when analyzing logs, databases, firewall rules, or network datasets stored as integers.",
+  },
+  {
+    q: "Is my input stored?",
+    a: "No. Conversion runs locally in your browser and is not stored or transmitted.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Decimal to IPv4 — ${SITE_NAME}`}
+  description="Convert unsigned 32-bit decimal integers into IPv4 addresses."
+  canonicalPath={CANONICAL_PATH}
+  h1="Decimal to IPv4"
+  intro="Convert an unsigned 32-bit decimal number into its dotted IPv4 address form."
+  faq={faqs}
+  categoryName="Developer Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="decimal-to-ipv4">
+    <style is:inline>
+      #d4i_input,
+      #d4i_output {
+        width: 100%;
+        min-width: 0;
+      }
+      .d4i-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="d4i_help d4i_privacy">
+      <div class="field">
+        <label for="d4i_input">Unsigned decimal value</label>
+        <input
+          id="d4i_input"
+          type="text"
+          inputmode="numeric"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="e.g. 3232235521"
+        />
+      </div>
+
+      <p class="note" id="d4i_help" style="margin-top:6px;">
+        Valid range: <span class="d4i-mono">0</span> to <span class="d4i-mono">4294967295</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="d4i_convert">Convert</button>
+        <button class="btn secondary" type="button" id="d4i_copy">Copy IPv4</button>
+        <button class="btn secondary" type="button" id="d4i_clear">Clear</button>
+      </div>
+
+      <div class="result" id="d4i_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="d4i_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="d4i_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="d4i_output">IPv4 output</label>
+        <textarea id="d4i_output" rows="3" readonly spellcheck="false" class="d4i-mono" placeholder="Converted IPv4 address will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="d4i_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="d4i_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The tool splits a 32-bit unsigned integer into 4 octets using base-256 arithmetic:
+      <br />
+      <strong>decimal → a.b.c.d</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>3232235521</strong> → <strong>192.168.0.1</strong></li>
+      <li><strong>2130706433</strong> → <strong>127.0.0.1</strong></li>
+      <li><strong>134744072</strong> → <strong>8.8.8.8</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/developer-tools/ipv4-to-decimal/">IPv4 to Decimal</a></li>
+      <li><a href="/developer-tools/ip-validator/">IP Validator</a></li>
+      <li><a href="/developer-tools/ip-range-calculator/">IP Range Calculator</a></li>
+      <li><a href="/developer-tools/">All Developer Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inputEl = document.getElementById("d4i_input");
+  const outputEl = document.getElementById("d4i_output");
+  const convertBtn = document.getElementById("d4i_convert");
+  const copyBtn = document.getElementById("d4i_copy");
+  const clearBtn = document.getElementById("d4i_clear");
+  const errEl = document.getElementById("d4i_error");
+  const resultEl = document.getElementById("d4i_result");
+  const cardsEl = document.getElementById("d4i_cards");
+  const tbodyEl = document.getElementById("d4i_tbody");
+
+  if (!inputEl || !outputEl || !convertBtn || !copyBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  let lastOutput = "";
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parseUint32(raw) {
+    const trimmed = String(raw || "").trim();
+    if (!trimmed) return { ok: false, msg: "Please enter a decimal value." };
+    if (!/^\d+$/.test(trimmed)) return { ok: false, msg: "Input must be a non-negative integer." };
+
+    const n = Number(trimmed);
+    if (!Number.isFinite(n) || !Number.isInteger(n)) {
+      return { ok: false, msg: "Input must be a valid integer." };
+    }
+    if (n < 0 || n > 4294967295) {
+      return { ok: false, msg: "Value must be between 0 and 4294967295." };
+    }
+
+    return { ok: true, value: n >>> 0 };
+  }
+
+  function toIPv4(n) {
+    return [
+      (n >>> 24) & 255,
+      (n >>> 16) & 255,
+      (n >>> 8) & 255,
+      n & 255,
+    ];
+  }
+
+  function convert() {
+    resetOutput();
+
+    const parsed = parseUint32(inputEl.value);
+    if (!parsed.ok) {
+      showError(parsed.msg);
+      return;
+    }
+
+    const n = parsed.value;
+    const octets = toIPv4(n);
+    const ip = octets.join(".");
+
+    lastOutput = ip;
+    outputEl.value = ip;
+
+    resultEl.innerHTML =
+      "<strong>Converted successfully.</strong><br/><span class='note'>" +
+      String(n) +
+      " → " +
+      ip +
+      "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      badge("Unsigned 32-bit") +
+      badge("IPv4 output") +
+      badge("4 octets") +
+      "</div>";
+
+    fillTable([
+      ["Decimal input", String(n)],
+      ["IPv4 output", ip],
+      ["Hex input", "0x" + (n >>> 0).toString(16).toUpperCase()],
+      ["Octet 1", String(octets[0])],
+      ["Octet 2", String(octets[1])],
+      ["Octet 3", String(octets[2])],
+      ["Octet 4", String(octets[3])],
+    ]);
+  }
+
+  async function copyOutput() {
+    clearError();
+    if (!lastOutput) {
+      showError("No IPv4 output to copy yet.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastOutput);
+      resultEl.innerHTML = "<strong>Copied IPv4 output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    inputEl.value = "";
+    outputEl.value = "";
+    resetOutput();
+    inputEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  copyBtn.addEventListener("click", copyOutput);
+  clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") convert();
+  });
+});
+</script>

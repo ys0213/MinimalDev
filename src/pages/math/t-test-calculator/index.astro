@@ -1,0 +1,292 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "T Test Calculator",
+  description:
+    "Calculate a one-sample t statistic, degrees of freedom, and standard error from sample mean, hypothesized mean, sample SD, and sample size.",
+  href: "/math/t-test-calculator/",
+  order: 373,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/t-test-calculator/";
+
+const faqs = [
+  {
+    q: "What kind of t test does this page calculate?",
+    a: "This page calculates a one-sample t statistic using sample mean, hypothesized mean, sample standard deviation, and sample size.",
+  },
+  {
+    q: "What is the formula for the t statistic?",
+    a: "t = (sample mean − hypothesized mean) / (sample SD / √n).",
+  },
+  {
+    q: "Why must sample size be at least 2?",
+    a: "A one-sample t test needs at least 2 observations so that degrees of freedom n − 1 is at least 1.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`T Test Calculator — ${SITE_NAME}`}
+  description="Calculate a one-sample t statistic, standard error, and degrees of freedom."
+  canonicalPath={CANONICAL_PATH}
+  h1="T Test Calculator"
+  intro="Calculate a one-sample t statistic, standard error, and degrees of freedom using sample mean, hypothesized mean, sample standard deviation, and sample size."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="t-test-calculator">
+    <style is:inline>
+      .tt-wrap, .tt-wrap * { box-sizing: border-box; }
+      .tt-grid {
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+      }
+      .tt-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 900px) {
+        .tt-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form tt-wrap" role="form" aria-describedby="tt_help tt_privacy">
+      <div class="tt-grid">
+        <div class="field">
+          <label for="tt_mean">Sample mean</label>
+          <input id="tt_mean" type="number" inputmode="decimal" step="any" placeholder="e.g., 72" />
+        </div>
+        <div class="field">
+          <label for="tt_mu">Hypothesized mean</label>
+          <input id="tt_mu" type="number" inputmode="decimal" step="any" placeholder="e.g., 70" />
+        </div>
+        <div class="field">
+          <label for="tt_sd">Sample SD</label>
+          <input id="tt_sd" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 8" />
+        </div>
+        <div class="field">
+          <label for="tt_n">Sample size (n)</label>
+          <input id="tt_n" type="number" inputmode="numeric" step="1" min="2" placeholder="e.g., 25" />
+        </div>
+      </div>
+
+      <p class="note" id="tt_help" style="margin-top:6px;">
+        Formula:
+        <br />
+        <span class="tt-code">t = (x̄ − μ₀) / (s / √n)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="tt_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="tt_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="tt_clear">Clear</button>
+      </div>
+
+      <div class="result" id="tt_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="tt_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="tt_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="tt_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="tt_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool computes the one-sample t statistic, standard error, and degrees of freedom.
+      It does not assume a known population standard deviation.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>x̄ = 72</strong>, <strong>μ₀ = 70</strong>, <strong>s = 8</strong>, <strong>n = 25</strong></li>
+      <li>Standard error = <strong>s / √n</strong></li>
+      <li>Degrees of freedom = <strong>n − 1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/confidence-interval-calculator/">Confidence Interval Calculator</a></li>
+      <li><a href="/math/standard-error-calculator/">Standard Error Calculator</a></li>
+      <li><a href="/math/z-score-calculator/">Z-Score Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const meanEl = document.getElementById("tt_mean");
+  const muEl = document.getElementById("tt_mu");
+  const sdEl = document.getElementById("tt_sd");
+  const nEl = document.getElementById("tt_n");
+  const calcBtn = document.getElementById("tt_calc");
+  const fillBtn = document.getElementById("tt_fill_demo");
+  const clearBtn = document.getElementById("tt_clear");
+  const errorEl = document.getElementById("tt_error");
+  const resultEl = document.getElementById("tt_result");
+  const cardsEl = document.getElementById("tt_cards");
+  const tbodyEl = document.getElementById("tt_tbody");
+
+  if (!meanEl || !muEl || !sdEl || !nEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function toNum(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Please enter a valid number for " + label + ".");
+    return n;
+  }
+  function toInt(el, label) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please enter " + label + ".");
+    const n = Number(raw);
+    if (!Number.isInteger(n) || !Number.isFinite(n)) throw new Error(label + " must be an integer.");
+    return n;
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const mean = toNum(meanEl, "sample mean");
+      const mu0 = toNum(muEl, "hypothesized mean");
+      const sd = toNum(sdEl, "sample SD");
+      const n = toInt(nEl, "sample size (n)");
+
+      if (sd < 0) {
+        showError("Sample SD must be 0 or greater.");
+        return;
+      }
+      if (sd === 0) {
+        showError("Sample SD must be greater than 0 for a t test.");
+        return;
+      }
+      if (n < 2) {
+        showError("Sample size must be at least 2.");
+        return;
+      }
+
+      const se = sd / Math.sqrt(n);
+      const t = (mean - mu0) / se;
+      const df = n - 1;
+      const diff = mean - mu0;
+
+      let strength = "Small deviation";
+      const at = Math.abs(t);
+      if (at >= 3) strength = "Very large t value";
+      else if (at >= 2) strength = "Large t value";
+      else if (at >= 1) strength = "Moderate t value";
+
+      let direction = "No difference";
+      if (t > 0) direction = "Sample mean above hypothesized mean";
+      else if (t < 0) direction = "Sample mean below hypothesized mean";
+
+      resultEl.innerHTML =
+        "<strong>T test result</strong><br/>" +
+        "<span class='tt-code'>t = " + fmt(t, 8) + "</span>" +
+        "<br/><span class='note'>df = " + df + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(direction) +
+        badge(strength) +
+        badge("SE = " + fmt(se, 8)) +
+        "</div>";
+
+      fillTable([
+        ["Sample mean", fmt(mean, 8)],
+        ["Hypothesized mean", fmt(mu0, 8)],
+        ["Difference (x̄ − μ₀)", fmt(diff, 8)],
+        ["Sample SD", fmt(sd, 8)],
+        ["Sample size (n)", String(n)],
+        ["Standard error", fmt(se, 8)],
+        ["T statistic", fmt(t, 8)],
+        ["Degrees of freedom", String(df)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    meanEl.value = "72";
+    muEl.value = "70";
+    sdEl.value = "8";
+    nEl.value = "25";
+    clearOutput();
+  }
+  function reset() {
+    meanEl.value = "";
+    muEl.value = "";
+    sdEl.value = "";
+    nEl.value = "";
+    clearOutput();
+    meanEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [meanEl, muEl, sdEl, nEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

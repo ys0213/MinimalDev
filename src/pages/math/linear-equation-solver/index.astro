@@ -1,0 +1,282 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Linear Equation Solver",
+  description:
+    "Solve one-variable linear equations of the form ax + b = c with validation, result cards, and FAQ support.",
+  href: "/math/linear-equation-solver/",
+  order: 346,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/linear-equation-solver/";
+
+const faqs = [
+  {
+    q: "What kind of equations does this solver handle?",
+    a: "This tool solves one-variable linear equations in the form ax + b = c.",
+  },
+  {
+    q: "What happens if a = 0?",
+    a: "If a = 0, the equation may have no solution or infinitely many solutions depending on b and c.",
+  },
+  {
+    q: "Can I use decimals and negative values?",
+    a: "Yes. The solver accepts integers, decimals, and negative values.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Linear Equation Solver — ${SITE_NAME}`}
+  description="Solve ax + b = c with validation, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Linear Equation Solver"
+  intro="Solve one-variable linear equations in the form ax + b = c and view the algebraic steps."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="linear-equation-solver">
+    <style is:inline>
+      .les-wrap, .les-wrap * { box-sizing: border-box; }
+      .les-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (max-width: 720px) {
+        .les-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form les-wrap" role="form" aria-describedby="les_help les_privacy">
+      <div class="les-grid">
+        <div class="field">
+          <label for="les_a">a</label>
+          <input id="les_a" type="number" step="any" inputmode="decimal" placeholder="e.g., 2" />
+        </div>
+        <div class="field">
+          <label for="les_b">b</label>
+          <input id="les_b" type="number" step="any" inputmode="decimal" placeholder="e.g., 3" />
+        </div>
+        <div class="field">
+          <label for="les_c">c</label>
+          <input id="les_c" type="number" step="any" inputmode="decimal" placeholder="e.g., 11" />
+        </div>
+      </div>
+
+      <p class="note" id="les_help" style="margin-top:8px;">
+        This solves equations in the form <strong>ax + b = c</strong>.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="les_calc">Solve</button>
+        <button class="btn secondary" type="button" id="les_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="les_clear">Clear</button>
+      </div>
+
+      <div class="result" id="les_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="les_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="les_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Step</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="les_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="les_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No equation values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Rearrangement:
+      <br />
+      <strong>ax + b = c</strong>
+      <br />
+      <strong>ax = c − b</strong>
+      <br />
+      <strong>x = (c − b) / a</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2x + 3 = 11</strong> → <strong>x = 4</strong></li>
+      <li><strong>-3x + 6 = 0</strong> → <strong>x = 2</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/inequality-solver/">Inequality Solver</a></li>
+      <li><a href="/math/quadratic-equation-calculator/">Quadratic Equation Calculator</a></li>
+      <li><a href="/math/equation-solver/">Equation Solver</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("les_a");
+  const bEl = document.getElementById("les_b");
+  const cEl = document.getElementById("les_c");
+  const calcBtn = document.getElementById("les_calc");
+  const demoBtn = document.getElementById("les_fill_demo");
+  const clearBtn = document.getElementById("les_clear");
+  const errorEl = document.getElementById("les_error");
+  const resultEl = document.getElementById("les_result");
+  const cardsEl = document.getElementById("les_cards");
+  const tbodyEl = document.getElementById("les_tbody");
+
+  if (!aEl || !bEl || !cEl || !calcBtn || !demoBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function getNum(el, name) {
+    const raw = String(el.value || "").trim();
+    if (!raw) throw new Error("Please fill all coefficients.");
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Error("Enter a valid number for " + name + ".");
+    return n;
+  }
+
+  function fmt(n) {
+    const rounded = Math.round(n * 1e9) / 1e9;
+    return rounded.toLocaleString(undefined, { maximumFractionDigits: 9 });
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const a = getNum(aEl, "a");
+      const b = getNum(bEl, "b");
+      const c = getNum(cEl, "c");
+
+      if (Math.abs(a) < 1e-12) {
+        if (Math.abs(b - c) < 1e-12) {
+          resultEl.innerHTML = "<strong>Infinite solutions</strong><br/><span class='note'>Because 0x + b = c and b = c.</span>";
+          cardsEl.style.display = "block";
+          cardsEl.innerHTML = "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" + badge("Dependent equation") + badge("Infinitely many solutions") + "</div>";
+          fillTable([
+            ["Equation", "0x + " + fmt(b) + " = " + fmt(c)],
+            ["Conclusion", "Infinitely many solutions"],
+          ]);
+        } else {
+          resultEl.innerHTML = "<strong>No solution</strong><br/><span class='note'>Because 0x + b = c and b ≠ c.</span>";
+          cardsEl.style.display = "block";
+          cardsEl.innerHTML = "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" + badge("Inconsistent equation") + badge("No solution") + "</div>";
+          fillTable([
+            ["Equation", "0x + " + fmt(b) + " = " + fmt(c)],
+            ["Conclusion", "No solution"],
+          ]);
+        }
+        return;
+      }
+
+      const rhs = c - b;
+      const x = rhs / a;
+
+      resultEl.innerHTML =
+        "<strong>Solution</strong><br/>" +
+        "<span style='font-size:1.15rem;font-weight:800;'>x = " + fmt(x) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge("Unique solution") +
+        badge("a ≠ 0") +
+        badge("x = " + fmt(x)) +
+        "</div>";
+
+      fillTable([
+        ["Original form", fmt(a) + "x + " + fmt(b) + " = " + fmt(c)],
+        ["Move b to the right", fmt(a) + "x = " + fmt(rhs)],
+        ["Divide by a", "x = " + fmt(rhs) + " / " + fmt(a)],
+        ["Final answer", "x = " + fmt(x)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not solve the equation.");
+    }
+  }
+
+  function fillDemo() {
+    aEl.value = "2";
+    bEl.value = "3";
+    cEl.value = "11";
+    clearOutput();
+  }
+
+  function reset() {
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    clearOutput();
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  demoBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl, cEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

@@ -1,0 +1,497 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Image DPI Converter",
+  description:
+    "Convert image dimensions between pixels, inches, and centimeters using DPI or PPI assumptions with validation, result cards, and FAQ schema.",
+  href: "/image-tools/image-dpi-converter/",
+  order: 151,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-dpi-converter/";
+
+const faqs = [
+  {
+    q: "What does this DPI converter do?",
+    a: "It converts dimensions between pixels, inches, and centimeters using a specified DPI or PPI value, and shows how print size changes when the DPI changes.",
+  },
+  {
+    q: "Does this tool modify the actual image file?",
+    a: "No. It only performs dimension calculations. It does not rewrite metadata or resample the image.",
+  },
+  {
+    q: "What is the difference between DPI and PPI here?",
+    a: "In practical screen and image calculators like this one, DPI and PPI are often treated the same for size conversion calculations.",
+  },
+  {
+    q: "Why does a higher DPI produce a smaller print size?",
+    a: "Because the same number of pixels is packed more densely per inch, which reduces the physical print dimensions.",
+  },
+  {
+    q: "Is image upload required?",
+    a: "No. Upload is optional. You can manually enter pixel dimensions or extract them from an image locally in your browser.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Image DPI Converter — ${SITE_NAME}`}
+  description="Convert between pixels and physical size using DPI. Includes inch/cm calculations, alternative DPI comparisons, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image DPI Converter"
+  intro="Enter pixel dimensions and DPI to estimate physical print size in inches or centimeters, or enter physical size and DPI to estimate required pixel dimensions. Useful for print planning, export specs, and image preparation."
+  faq={faqs}
+  categoryName="Image Tools"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="image-dpi-converter">
+    <style is:inline>
+      #idc_file,
+      #idc_px_width,
+      #idc_px_height,
+      #idc_dpi,
+      #idc_in_width,
+      #idc_in_height,
+      #idc_cm_width,
+      #idc_cm_height,
+      #idc_alt_dpi {
+        width: 100%;
+        min-width: 0;
+      }
+      .idc-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .idc-grid > * {
+        min-width: 0;
+      }
+      .idc-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .idc-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .idc-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .idc-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .idc-list-item {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      @media (min-width: 900px) {
+        .idc-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="idc_help idc_privacy">
+      <div class="field">
+        <label for="idc_file">Optional image upload</label>
+        <input id="idc_file" type="file" accept="image/*" />
+      </div>
+
+      <div class="idc-grid">
+        <div class="field">
+          <label for="idc_px_width">Pixel width</label>
+          <input id="idc_px_width" type="number" inputmode="decimal" min="1" step="1" placeholder="e.g. 2400" />
+        </div>
+        <div class="field">
+          <label for="idc_px_height">Pixel height</label>
+          <input id="idc_px_height" type="number" inputmode="decimal" min="1" step="1" placeholder="e.g. 3000" />
+        </div>
+      </div>
+
+      <div class="idc-grid">
+        <div class="field">
+          <label for="idc_dpi">Primary DPI / PPI</label>
+          <input id="idc_dpi" type="number" inputmode="decimal" min="1" step="1" value="300" />
+        </div>
+        <div class="field">
+          <label for="idc_alt_dpi">Compare with alternate DPI</label>
+          <input id="idc_alt_dpi" type="number" inputmode="decimal" min="1" step="1" value="150" />
+        </div>
+      </div>
+
+      <div class="idc-grid">
+        <div class="field">
+          <label for="idc_in_width">Physical width (inches)</label>
+          <input id="idc_in_width" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Optional reverse calculation" />
+        </div>
+        <div class="field">
+          <label for="idc_in_height">Physical height (inches)</label>
+          <input id="idc_in_height" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Optional reverse calculation" />
+        </div>
+      </div>
+
+      <div class="idc-grid">
+        <div class="field">
+          <label for="idc_cm_width">Physical width (cm)</label>
+          <input id="idc_cm_width" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Optional reverse calculation" />
+        </div>
+        <div class="field">
+          <label for="idc_cm_height">Physical height (cm)</label>
+          <input id="idc_cm_height" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Optional reverse calculation" />
+        </div>
+      </div>
+
+      <p class="note" id="idc_help" style="margin-top:6px;">
+        Use pixel dimensions plus DPI to estimate physical size, or use physical size plus DPI to estimate required pixel dimensions. Reverse calculations use whichever physical inputs you provide.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="idc_calculate">Convert</button>
+        <button class="btn secondary" type="button" id="idc_copy">Copy Summary</button>
+        <button class="btn secondary" type="button" id="idc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="idc_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="idc_result" role="status" style="margin-top:12px;">DPI conversion results will appear here.</div>
+      <div class="result" id="idc_cards" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="idc_compare" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="idc_reverse" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="idc_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="idc_privacy" style="margin-top:10px;">
+        Privacy: calculations and optional image dimension reading run locally in your browser. No file or data is uploaded or stored.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool uses the standard relationship between pixels and physical size:
+      <strong> inches = pixels ÷ DPI </strong>. It also converts inches to centimeters and estimates reverse pixel requirements when you enter a target physical size.
+    </p>
+    <ul>
+      <li><strong>Higher DPI:</strong> smaller physical size from the same pixels</li>
+      <li><strong>Lower DPI:</strong> larger physical size from the same pixels</li>
+      <li><strong>Reverse calculation:</strong> helps plan export dimensions for print</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>2400 × 3000 at 300 DPI → 8 × 10 inches</li>
+      <li>1800 × 1200 at 300 DPI → 6 × 4 inches</li>
+      <li>Need 5 × 7 inches at 300 DPI → 1500 × 2100 pixels</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-size-calculator/">Image Size Calculator</a></li>
+      <li><a href="/image-tools/image-aspect-ratio-calculator/">Image Aspect Ratio Calculator</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("idc_file");
+  const pxWidthEl = document.getElementById("idc_px_width");
+  const pxHeightEl = document.getElementById("idc_px_height");
+  const dpiEl = document.getElementById("idc_dpi");
+  const altDpiEl = document.getElementById("idc_alt_dpi");
+  const inWidthEl = document.getElementById("idc_in_width");
+  const inHeightEl = document.getElementById("idc_in_height");
+  const cmWidthEl = document.getElementById("idc_cm_width");
+  const cmHeightEl = document.getElementById("idc_cm_height");
+  const calcBtn = document.getElementById("idc_calculate");
+  const copyBtn = document.getElementById("idc_copy");
+  const clearBtn = document.getElementById("idc_clear");
+  const errorEl = document.getElementById("idc_error");
+  const resultEl = document.getElementById("idc_result");
+  const cardsEl = document.getElementById("idc_cards");
+  const compareEl = document.getElementById("idc_compare");
+  const reverseEl = document.getElementById("idc_reverse");
+  const tbodyEl = document.getElementById("idc_tbody");
+
+  if (!fileEl || !pxWidthEl || !pxHeightEl || !dpiEl || !altDpiEl || !inWidthEl || !inHeightEl || !cmWidthEl || !cmHeightEl || !calcBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !compareEl || !reverseEl || !tbodyEl) return;
+
+  let lastSummary = "";
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "DPI conversion results will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    compareEl.style.display = "none";
+    compareEl.innerHTML = "";
+    reverseEl.style.display = "none";
+    reverseEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    lastSummary = "";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + '</span>';
+  }
+
+  function card(label, value, sub) {
+    return (
+      '<div class="idc-card">' +
+        '<strong>' + label + '</strong>' +
+        '<div class="idc-big">' + value + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + sub + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function parsePositiveNumber(value) {
+    if (value === "" || value == null) return null;
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return n;
+  }
+
+  function inToCm(value) {
+    return value * 2.54;
+  }
+
+  function cmToIn(value) {
+    return value / 2.54;
+  }
+
+  async function handleFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      showError("Please choose a valid image file.");
+      return;
+    }
+    clearError();
+
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      const img = new Image();
+      img.onload = function () {
+        pxWidthEl.value = String(img.naturalWidth || img.width);
+        pxHeightEl.value = String(img.naturalHeight || img.height);
+        calculate();
+      };
+      img.onerror = function () {
+        showError("Could not read image dimensions from the selected file.");
+      };
+      img.src = String(ev.target.result || "");
+    };
+    reader.onerror = function () {
+      showError("Could not load the selected file.");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function calculate() {
+    resetOutput();
+
+    const pxWidth = parsePositiveNumber(pxWidthEl.value);
+    const pxHeight = parsePositiveNumber(pxHeightEl.value);
+    const dpi = parsePositiveNumber(dpiEl.value);
+    const altDpi = parsePositiveNumber(altDpiEl.value);
+
+    if (!dpi) {
+      showError("Please enter a valid positive DPI value.");
+      return;
+    }
+
+    let inchesW = null;
+    let inchesH = null;
+    let cmW = null;
+    let cmH = null;
+
+    if (pxWidth && pxHeight) {
+      inchesW = pxWidth / dpi;
+      inchesH = pxHeight / dpi;
+      cmW = inToCm(inchesW);
+      cmH = inToCm(inchesH);
+    }
+
+    const inputInW = parsePositiveNumber(inWidthEl.value);
+    const inputInH = parsePositiveNumber(inHeightEl.value);
+    const inputCmW = parsePositiveNumber(cmWidthEl.value);
+    const inputCmH = parsePositiveNumber(cmHeightEl.value);
+
+    const reverseInW = inputInW || (inputCmW ? cmToIn(inputCmW) : null);
+    const reverseInH = inputInH || (inputCmH ? cmToIn(inputCmH) : null);
+
+    let reversePxW = null;
+    let reversePxH = null;
+    if (reverseInW) reversePxW = Math.round(reverseInW * dpi);
+    if (reverseInH) reversePxH = Math.round(reverseInH * dpi);
+
+    if (!pxWidth && !pxHeight && !reversePxW && !reversePxH) {
+      showError("Enter either pixel dimensions or physical dimensions with DPI to perform a conversion.");
+      return;
+    }
+
+    resultEl.innerHTML =
+      "<strong>DPI conversion calculated.</strong>" +
+      '<div class="note" style="margin-top:6px;">Review physical size estimates and reverse pixel requirements below.</div>';
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="idc-cards">' +
+        card("Primary DPI", String(dpi), "Main calculation density") +
+        card("Pixel width", pxWidth ? String(pxWidth) : "—", "Current entered width") +
+        card("Pixel height", pxHeight ? String(pxHeight) : "—", "Current entered height") +
+        card("Print width", inchesW ? inchesW.toFixed(2) + " in" : "—", "Estimated physical width") +
+        card("Print height", inchesH ? inchesH.toFixed(2) + " in" : "—", "Estimated physical height") +
+        card("Centimeters", cmW && cmH ? cmW.toFixed(2) + " × " + cmH.toFixed(2) : "—", "Estimated print size in cm") +
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+        badge("DPI " + dpi, "good") +
+        badge(pxWidth && pxHeight ? "Pixel to print conversion" : "Reverse calculation mode", "good") +
+        badge(dpi >= 300 ? "High print density" : dpi >= 150 ? "Medium density" : "Low density", dpi >= 300 ? "good" : dpi >= 150 ? "neutral" : "warn") +
+      '</div>';
+
+    if (pxWidth && pxHeight && altDpi) {
+      const altInW = pxWidth / altDpi;
+      const altInH = pxHeight / altDpi;
+      const altCmW = inToCm(altInW);
+      const altCmH = inToCm(altInH);
+
+      compareEl.style.display = "block";
+      compareEl.innerHTML =
+        "<strong>Alternate DPI comparison</strong>" +
+        '<div class="idc-list" style="margin-top:10px;">' +
+          '<div class="idc-list-item"><strong>At ' + dpi + ' DPI</strong><div class="note" style="margin-top:6px;">' + inchesW.toFixed(2) + " × " + inchesH.toFixed(2) + ' inches (' + cmW.toFixed(2) + " × " + cmH.toFixed(2) + " cm)</div></div>" +
+          '<div class="idc-list-item"><strong>At ' + altDpi + ' DPI</strong><div class="note" style="margin-top:6px;">' + altInW.toFixed(2) + " × " + altInH.toFixed(2) + ' inches (' + altCmW.toFixed(2) + " × " + altCmH.toFixed(2) + " cm)</div></div>" +
+        '</div>';
+    }
+
+    reverseEl.style.display = "block";
+    reverseEl.innerHTML =
+      "<strong>Reverse pixel requirement</strong>" +
+      '<div class="idc-list" style="margin-top:10px;">' +
+        '<div class="idc-list-item"><strong>From physical width</strong><div class="note" style="margin-top:6px;">' + (reversePxW ? reversePxW + " px" : "Enter width in inches or cm for reverse conversion.") + '</div></div>' +
+        '<div class="idc-list-item"><strong>From physical height</strong><div class="note" style="margin-top:6px;">' + (reversePxH ? reversePxH + " px" : "Enter height in inches or cm for reverse conversion.") + '</div></div>' +
+      '</div>';
+
+    fillTable([
+      ["Primary DPI", String(dpi)],
+      ["Alternate DPI", altDpi ? String(altDpi) : "—"],
+      ["Pixel width", pxWidth ? String(pxWidth) : "—"],
+      ["Pixel height", pxHeight ? String(pxHeight) : "—"],
+      ["Width in inches", inchesW ? inchesW.toFixed(4) : "—"],
+      ["Height in inches", inchesH ? inchesH.toFixed(4) : "—"],
+      ["Width in cm", cmW ? cmW.toFixed(4) : "—"],
+      ["Height in cm", cmH ? cmH.toFixed(4) : "—"],
+      ["Required pixels from physical width", reversePxW ? String(reversePxW) : "—"],
+      ["Required pixels from physical height", reversePxH ? String(reversePxH) : "—"],
+    ]);
+
+    lastSummary =
+      "Primary DPI: " + dpi + "\n" +
+      "Pixel dimensions: " + (pxWidth ? pxWidth : "—") + " × " + (pxHeight ? pxHeight : "—") + "\n" +
+      "Physical size at primary DPI: " + (inchesW ? inchesW.toFixed(2) + " × " + inchesH.toFixed(2) + " inches" : "N/A") + "\n" +
+      "Physical size in cm: " + (cmW ? cmW.toFixed(2) + " × " + cmH.toFixed(2) + " cm" : "N/A") + "\n" +
+      "Reverse width pixels: " + (reversePxW ? reversePxW : "N/A") + "\n" +
+      "Reverse height pixels: " + (reversePxH ? reversePxH : "N/A");
+  }
+
+  async function copySummary() {
+    clearError();
+    if (!lastSummary) {
+      showError("No conversion summary to copy yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastSummary);
+      resultEl.innerHTML = "<strong>Copied DPI conversion summary.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    pxWidthEl.value = "";
+    pxHeightEl.value = "";
+    dpiEl.value = "300";
+    altDpiEl.value = "150";
+    inWidthEl.value = "";
+    inHeightEl.value = "";
+    cmWidthEl.value = "";
+    cmHeightEl.value = "";
+    resetOutput();
+    pxWidthEl.focus();
+  }
+
+  fileEl.addEventListener("change", function () {
+    const file = fileEl.files && fileEl.files[0];
+    if (file) handleFile(file);
+  });
+
+  calcBtn.addEventListener("click", calculate);
+  copyBtn.addEventListener("click", copySummary);
+  clearBtn.addEventListener("click", clearAll);
+});
+</script>

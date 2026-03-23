@@ -1,0 +1,273 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Population Variance Calculator",
+  description:
+    "Calculate population variance, mean, and population standard deviation from a dataset.",
+  href: "/math/variance-population-calculator/",
+  order: 378,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/variance-population-calculator/";
+
+const faqs = [
+  {
+    q: "What is population variance?",
+    a: "Population variance measures how far values in an entire population are spread around the population mean.",
+  },
+  {
+    q: "What formula does this calculator use?",
+    a: "It uses population variance: σ² = Σ(x − μ)² / N.",
+  },
+  {
+    q: "How should I enter the data?",
+    a: "Enter values separated by commas, spaces, or line breaks.",
+  },
+  {
+    q: "What is the difference between population and sample variance?",
+    a: "Population variance divides by N, while sample variance divides by n − 1.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Population Variance Calculator — ${SITE_NAME}`}
+  description="Calculate population variance, mean, and population standard deviation."
+  canonicalPath={CANONICAL_PATH}
+  h1="Population Variance Calculator"
+  intro="Calculate population variance, population standard deviation, mean, and dataset size from a list of values."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="variance-population-calculator">
+    <style is:inline>
+      .vp-wrap, .vp-wrap * { box-sizing: border-box; }
+      .vp-grid {
+        display:grid;
+        grid-template-columns:minmax(0, 1fr);
+        gap:10px;
+      }
+      .vp-grid textarea {
+        width:100%;
+        min-width:0;
+        resize:vertical;
+      }
+      .vp-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+    </style>
+
+    <div class="form vp-wrap" role="form" aria-describedby="vp_help vp_privacy">
+      <div class="vp-grid">
+        <div class="field">
+          <label for="vp_data">Data values</label>
+          <textarea
+            id="vp_data"
+            rows="7"
+            placeholder="e.g.
+12, 15, 18, 21, 24"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="vp_help" style="margin-top:6px;">
+        Enter values separated by commas, spaces, or line breaks.
+        <br />
+        Formula:
+        <br />
+        <span class="vp-code">σ² = Σ(x − μ)² / N</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="vp_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="vp_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="vp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="vp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="vp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="vp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="vp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="vp_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Population variance assumes the data represents the entire population, so the sum of squared deviations is divided by <strong>N</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>12, 15, 18, 21, 24</strong></li>
+      <li>Mean, variance, and standard deviation are all calculated from the same dataset.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/standard-deviation-calculator/">Standard Deviation Calculator</a></li>
+      <li><a href="/math/average-calculator/">Average Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("vp_data");
+  const calcBtn = document.getElementById("vp_calc");
+  const fillBtn = document.getElementById("vp_fill_demo");
+  const clearBtn = document.getElementById("vp_clear");
+  const errorEl = document.getElementById("vp_error");
+  const resultEl = document.getElementById("vp_result");
+  const cardsEl = document.getElementById("vp_cards");
+  const tbodyEl = document.getElementById("vp_tbody");
+
+  if (!dataEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseData(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 1 numeric value.");
+
+    const nums = text.split(/[\s,]+/).filter(Boolean).map(function (part) {
+      const n = Number(part);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    if (!nums.length) throw new Error("Please enter at least 1 numeric value.");
+    return nums;
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const arr = parseData(dataEl.value);
+      const n = arr.length;
+      const mean = arr.reduce(function (a, b) { return a + b; }, 0) / n;
+      const sumSq = arr.reduce(function (sum, x) { return sum + Math.pow(x - mean, 2); }, 0);
+      const variance = sumSq / n;
+      const stdDev = Math.sqrt(variance);
+      const min = Math.min.apply(null, arr);
+      const max = Math.max.apply(null, arr);
+
+      let spread = "Moderate spread";
+      if (variance === 0) spread = "No spread";
+      else if (variance < 1) spread = "Low spread";
+      else if (variance >= 100) spread = "High spread";
+
+      resultEl.innerHTML =
+        "<strong>Population variance result</strong><br/>" +
+        "<span class='vp-code'>σ² = " + fmt(variance, 8) + "</span>" +
+        "<br/><span class='note'>σ = " + fmt(stdDev, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(spread) +
+        badge("Count = " + n) +
+        badge("Mean = " + fmt(mean, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Count (N)", String(n)],
+        ["Mean (μ)", fmt(mean, 8)],
+        ["Population variance (σ²)", fmt(variance, 8)],
+        ["Population standard deviation (σ)", fmt(stdDev, 8)],
+        ["Minimum", fmt(min, 8)],
+        ["Maximum", fmt(max, 8)],
+        ["Range", fmt(max - min, 8)],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    dataEl.value = "12, 15, 18, 21, 24";
+    clearOutput();
+  }
+
+  function reset() {
+    dataEl.value = "";
+    clearOutput();
+    dataEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  dataEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

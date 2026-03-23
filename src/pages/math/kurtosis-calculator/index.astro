@@ -1,0 +1,297 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Kurtosis Calculator",
+  description:
+    "Calculate sample excess kurtosis, mean, standard deviation, and tail/peakedness summary from numeric data.",
+  href: "/math/kurtosis-calculator/",
+  order: 384,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/kurtosis-calculator/";
+
+const faqs = [
+  {
+    q: "What is kurtosis?",
+    a: "Kurtosis describes how heavy the tails are and how concentrated values are around the center compared with a normal distribution.",
+  },
+  {
+    q: "What does excess kurtosis mean?",
+    a: "Excess kurtosis is kurtosis relative to the normal distribution. A normal distribution has excess kurtosis of 0.",
+  },
+  {
+    q: "How many values are required?",
+    a: "At least 4 values are required, and the sample standard deviation must be greater than 0.",
+  },
+  {
+    q: "What does positive excess kurtosis suggest?",
+    a: "Positive excess kurtosis suggests heavier tails or more extreme values than a normal distribution.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Kurtosis Calculator — ${SITE_NAME}`}
+  description="Calculate sample excess kurtosis, mean, standard deviation, and tail summary from a dataset."
+  canonicalPath={CANONICAL_PATH}
+  h1="Kurtosis Calculator"
+  intro="Calculate sample excess kurtosis from a dataset to estimate how heavy-tailed or light-tailed the distribution is relative to a normal distribution."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="kurtosis-calculator">
+    <style is:inline>
+      .ku-wrap, .ku-wrap * { box-sizing: border-box; }
+      .ku-grid {
+        display:grid;
+        grid-template-columns:minmax(0, 1fr);
+        gap:10px;
+      }
+      .ku-grid textarea {
+        width:100%;
+        min-width:0;
+        resize:vertical;
+      }
+      .ku-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      .ku-list {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+    </style>
+
+    <div class="form ku-wrap" role="form" aria-describedby="ku_help ku_privacy">
+      <div class="ku-grid">
+        <div class="field">
+          <label for="ku_data">Data values</label>
+          <textarea
+            id="ku_data"
+            rows="7"
+            placeholder="e.g.
+2, 3, 3, 4, 5, 9, 12"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="ku_help" style="margin-top:6px;">
+        Enter values separated by commas, spaces, or line breaks.
+        <br />
+        This page returns <strong>sample excess kurtosis</strong>, where a normal distribution is near 0.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ku_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ku_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="ku_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ku_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ku_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ku_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ku_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ku_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator computes sample excess kurtosis, which compares tail behavior to the normal distribution.
+      Values near 0 suggest approximately normal-like tail weight.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>2, 3, 3, 4, 5, 9, 12</strong></li>
+      <li>Large outliers can increase kurtosis by making tails heavier.</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/skewness-calculator/">Skewness Calculator</a></li>
+      <li><a href="/math/variance-sample-calculator/">Sample Variance Calculator</a></li>
+      <li><a href="/math/standard-deviation-calculator/">Standard Deviation Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const dataEl = document.getElementById("ku_data");
+  const calcBtn = document.getElementById("ku_calc");
+  const fillBtn = document.getElementById("ku_fill_demo");
+  const clearBtn = document.getElementById("ku_clear");
+  const errorEl = document.getElementById("ku_error");
+  const resultEl = document.getElementById("ku_result");
+  const cardsEl = document.getElementById("ku_cards");
+  const tbodyEl = document.getElementById("ku_tbody");
+
+  if (!dataEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function parseData(raw) {
+    const text = String(raw || "").trim();
+    if (!text) throw new Error("Please enter at least 4 numeric values.");
+
+    const nums = text.split(/[\s,]+/).filter(Boolean).map(function (part) {
+      const n = Number(part);
+      if (!Number.isFinite(n)) throw new Error("All entries must be valid numbers.");
+      return n;
+    });
+
+    if (nums.length < 4) throw new Error("Please enter at least 4 numeric values.");
+    return nums;
+  }
+
+  function mean(arr) {
+    return arr.reduce(function (a, b) { return a + b; }, 0) / arr.length;
+  }
+
+  function sampleStdDev(arr, avg) {
+    const n = arr.length;
+    const sumSq = arr.reduce(function (sum, x) {
+      return sum + Math.pow(x - avg, 2);
+    }, 0);
+    return Math.sqrt(sumSq / (n - 1));
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.innerHTML = row[2] === "html" ? row[1] : row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    try {
+      const arr = parseData(dataEl.value);
+      const n = arr.length;
+      const avg = mean(arr);
+      const s = sampleStdDev(arr, avg);
+
+      if (s === 0) {
+        showError("Kurtosis is undefined when all values are identical (sample standard deviation is 0).");
+        return;
+      }
+
+      const z4sum = arr.reduce(function (sum, x) {
+        return sum + Math.pow((x - avg) / s, 4);
+      }, 0);
+
+      const term1 = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * z4sum;
+      const term2 = (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
+      const excessKurtosis = term1 - term2;
+
+      let label = "Approximately normal-like tails";
+      if (excessKurtosis > 1) label = "Heavy tails / peaked";
+      else if (excessKurtosis < -1) label = "Light tails / flatter";
+      else if (excessKurtosis > 0.3) label = "Somewhat heavy-tailed";
+      else if (excessKurtosis < -0.3) label = "Somewhat light-tailed";
+
+      resultEl.innerHTML =
+        "<strong>Kurtosis result</strong><br/>" +
+        "<span class='ku-code'>Excess kurtosis = " + fmt(excessKurtosis, 8) + "</span>" +
+        "<br/><span class='note'>Mean = " + fmt(avg, 8) + ", Sample SD = " + fmt(s, 8) + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("Count = " + n) +
+        badge("SD = " + fmt(s, 6)) +
+        "</div>";
+
+      fillTable([
+        ["Count", String(n)],
+        ["Mean", fmt(avg, 8)],
+        ["Sample standard deviation", fmt(s, 8)],
+        ["Sample excess kurtosis", fmt(excessKurtosis, 8)],
+        ["Data", "<span class='ku-list'>" + arr.map(function (x) { return fmt(x, 8); }).join(", ") + "</span>", "html"],
+      ]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+
+  function fillDemo() {
+    dataEl.value = "2, 3, 3, 4, 5, 9, 12";
+    clearOutput();
+  }
+
+  function reset() {
+    dataEl.value = "";
+    clearOutput();
+    dataEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  dataEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  clearOutput();
+});
+</script>

@@ -1,0 +1,283 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Cos Calculator",
+  description:
+    "Calculate cosine of an angle in degrees or radians. Includes validation, result cards, and FAQ schema.",
+  href: "/math/cos-calculator/",
+  order: 393,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/cos-calculator/";
+
+const faqs = [
+  {
+    q: "What does this cos calculator compute?",
+    a: "It computes the cosine of an angle in either degrees or radians.",
+  },
+  {
+    q: "Can I switch between degrees and radians?",
+    a: "Yes. The calculator supports both degree mode and radian mode.",
+  },
+  {
+    q: "What is cosine?",
+    a: "In right-triangle trigonometry, cosine is adjacent divided by hypotenuse. More generally, it is the x-coordinate on the unit circle.",
+  },
+  {
+    q: "Why do some results look like 0 when they should be tiny?",
+    a: "Very small floating-point values are rounded to 0 for readability.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Cos Calculator — ${SITE_NAME}`}
+  description="Calculate cosine of an angle in degrees or radians."
+  canonicalPath={CANONICAL_PATH}
+  h1="Cos Calculator"
+  intro="Calculate the cosine of an angle in degrees or radians. This page also shows the angle converted to radians and indicates common known-angle cases."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="cos-calculator">
+    <style is:inline>
+      .cos-wrap, .cos-wrap * { box-sizing: border-box; }
+      .cos-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .cos-grid input,
+      .cos-grid select {
+        width: 100%;
+        min-width: 0;
+      }
+      .cos-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .cos-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form cos-wrap" role="form" aria-describedby="cos_help cos_privacy">
+      <div class="cos-grid">
+        <div class="field">
+          <label for="cos_angle">Angle</label>
+          <input id="cos_angle" type="number" inputmode="decimal" step="any" placeholder="e.g., 60" />
+        </div>
+
+        <div class="field">
+          <label for="cos_mode">Angle unit</label>
+          <select id="cos_mode">
+            <option value="deg" selected>Degrees</option>
+            <option value="rad">Radians</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note" id="cos_help" style="margin-top:6px;">
+        Computes:
+        <br />
+        <span class="cos-code">cos(θ)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cos_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cos_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="cos_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cos_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cos_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cos_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cos_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cos_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This calculator converts the angle to radians internally when necessary, then evaluates the cosine function.
+    </p>
+    <p class="note">
+      Common values:
+      <br />
+      <strong>cos(0°) = 1</strong>,
+      <strong>cos(60°) = 0.5</strong>,
+      <strong>cos(45°) ≈ 0.7071</strong>,
+      <strong>cos(90°) = 0</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>60°</strong> → cos = <strong>0.5</strong></li>
+      <li><strong>45°</strong> → cos ≈ <strong>0.7071</strong></li>
+      <li><strong>π</strong> rad → cos = <strong>-1</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/sin-calculator/">Sin Calculator</a></li>
+      <li><a href="/math/tan-calculator/">Tan Calculator</a></li>
+      <li><a href="/math/trigonometry-calculator/">Trigonometry Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const angleEl = document.getElementById("cos_angle");
+  const modeEl = document.getElementById("cos_mode");
+  const calcBtn = document.getElementById("cos_calc");
+  const fillBtn = document.getElementById("cos_fill_demo");
+  const clearBtn = document.getElementById("cos_clear");
+  const errorEl = document.getElementById("cos_error");
+  const resultEl = document.getElementById("cos_result");
+  const cardsEl = document.getElementById("cos_cards");
+  const tbodyEl = document.getElementById("cos_tbody");
+
+  if (!angleEl || !modeEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 12 });
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function toRadians(angle, mode) {
+    return mode === "deg" ? angle * Math.PI / 180 : angle;
+  }
+
+  function safeValue(x) {
+    return Math.abs(x) < 1e-12 ? 0 : x;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function knownLabel(angle, mode) {
+    if (mode !== "deg") return "General angle";
+    const normalized = ((angle % 360) + 360) % 360;
+    if (Math.abs(normalized - 0) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 45) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 60) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 90) < 1e-9) return "Known angle";
+    if (Math.abs(normalized - 180) < 1e-9) return "Known angle";
+    return "General angle";
+  }
+
+  function compute() {
+    clearOutput();
+
+    const angle = Number(String(angleEl.value || "").trim());
+    const mode = String(modeEl.value || "deg");
+
+    if (!Number.isFinite(angle)) {
+      showError("Please enter a valid angle.");
+      return;
+    }
+
+    const radians = toRadians(angle, mode);
+    const c = safeValue(Math.cos(radians));
+
+    resultEl.innerHTML =
+      "<strong>Cos result</strong><br/>" +
+      "<span class='cos-code'>cos(θ) = " + fmt(c, 12) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(mode === "deg" ? "Degree mode" : "Radian mode") +
+      badge(knownLabel(angle, mode)) +
+      badge("Radians = " + fmt(radians, 8)) +
+      "</div>";
+
+    fillTable([
+      ["Angle", fmt(angle, 10) + (mode === "deg" ? "°" : " rad")],
+      ["Radians", fmt(radians, 12)],
+      ["cos(θ)", fmt(c, 12)],
+    ]);
+  }
+
+  function fillDemo() {
+    modeEl.value = "deg";
+    angleEl.value = "60";
+    clearOutput();
+  }
+
+  function reset() {
+    angleEl.value = "";
+    modeEl.value = "deg";
+    clearOutput();
+    angleEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [angleEl, modeEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

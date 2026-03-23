@@ -1,0 +1,290 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Chi Square Calculator",
+  description:
+    "Calculate chi-square statistic for observed and expected values with validation, per-category contributions, and FAQ schema.",
+  href: "/math/chi-square-calculator/",
+  order: 374,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/chi-square-calculator/";
+
+const faqs = [
+  {
+    q: "What does this chi-square calculator compute?",
+    a: "It computes the chi-square statistic from observed and expected category values using the goodness-of-fit formula.",
+  },
+  {
+    q: "What is the chi-square formula?",
+    a: "Chi-square = Σ((observed − expected)² / expected).",
+  },
+  {
+    q: "Why must expected values be greater than 0?",
+    a: "Because the formula divides by expected values, so expected values must be positive.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Chi Square Calculator — ${SITE_NAME}`}
+  description="Calculate chi-square statistic from observed and expected values."
+  canonicalPath={CANONICAL_PATH}
+  h1="Chi Square Calculator"
+  intro="Calculate the chi-square statistic for observed and expected values using a goodness-of-fit style setup."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="chi-square-calculator">
+    <style is:inline>
+      .cs-wrap, .cs-wrap * { box-sizing: border-box; }
+      .cs-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+      }
+      .cs-grid textarea {
+        width:100%;
+        min-width:0;
+        resize:vertical;
+      }
+      .cs-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 760px) {
+        .cs-grid { grid-template-columns:1fr; }
+      }
+    </style>
+
+    <div class="form cs-wrap" role="form" aria-describedby="cs_help cs_privacy">
+      <div class="cs-grid">
+        <div class="field">
+          <label for="cs_observed">Observed values</label>
+          <textarea id="cs_observed" rows="6" placeholder="e.g., 18, 22, 20, 25" spellcheck="false"></textarea>
+        </div>
+        <div class="field">
+          <label for="cs_expected">Expected values</label>
+          <textarea id="cs_expected" rows="6" placeholder="e.g., 21.25, 21.25, 21.25, 21.25" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <p class="note" id="cs_help" style="margin-top:6px;">
+        Enter lists separated by commas, spaces, or line breaks.
+        <br />
+        <span class="cs-code">χ² = Σ((O − E)² / E)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="cs_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="cs_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="cs_clear">Clear</button>
+      </div>
+
+      <div class="result" id="cs_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="cs_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="cs_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="cs_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="cs_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool compares observed counts to expected counts and sums the contribution from each category.
+    </p>
+    <p class="note">
+      Degrees of freedom for a simple goodness-of-fit setup are often:
+      <br />
+      <strong>df = categories − 1</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Observed:</strong> 18, 22, 20, 25</li>
+      <li><strong>Expected:</strong> 21.25, 21.25, 21.25, 21.25</li>
+      <li>Each category contributes <strong>(O − E)² / E</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/t-test-calculator/">T Test Calculator</a></li>
+      <li><a href="/math/anova-calculator/">ANOVA Calculator</a></li>
+      <li><a href="/math/probability-calculator/">Probability Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const observedEl = document.getElementById("cs_observed");
+  const expectedEl = document.getElementById("cs_expected");
+  const calcBtn = document.getElementById("cs_calc");
+  const fillBtn = document.getElementById("cs_fill_demo");
+  const clearBtn = document.getElementById("cs_clear");
+  const errorEl = document.getElementById("cs_error");
+  const resultEl = document.getElementById("cs_result");
+  const cardsEl = document.getElementById("cs_cards");
+  const tbodyEl = document.getElementById("cs_tbody");
+
+  if (!observedEl || !expectedEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+  function parseList(raw, label) {
+    const s = String(raw || "").trim();
+    if (!s) throw new Error("Please enter " + label + ".");
+    const parts = s.split(/[\s,]+/).filter(Boolean);
+    if (!parts.length) throw new Error("Please enter " + label + ".");
+    return parts.map(function (p) {
+      const n = Number(p);
+      if (!Number.isFinite(n)) throw new Error("All entries in " + label + " must be valid numbers.");
+      return n;
+    });
+  }
+  function fmt(n, d) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(d) ? d : 8 });
+  }
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+  function compute() {
+    clearOutput();
+    try {
+      const observed = parseList(observedEl.value, "observed values");
+      const expected = parseList(expectedEl.value, "expected values");
+
+      if (observed.length !== expected.length) {
+        showError("Observed and expected lists must have the same number of values.");
+        return;
+      }
+      if (observed.length < 2) {
+        showError("Please enter at least 2 categories.");
+        return;
+      }
+
+      let chi = 0;
+      const contributions = [];
+
+      for (let i = 0; i < observed.length; i++) {
+        const o = observed[i];
+        const e = expected[i];
+        if (e <= 0) {
+          showError("All expected values must be greater than 0.");
+          return;
+        }
+        const c = Math.pow(o - e, 2) / e;
+        chi += c;
+        contributions.push(c);
+      }
+
+      const df = observed.length - 1;
+      const maxContribution = Math.max.apply(null, contributions);
+      const maxIndex = contributions.indexOf(maxContribution) + 1;
+
+      let label = "Small discrepancy";
+      if (chi >= 20) label = "Large discrepancy";
+      else if (chi >= 10) label = "Moderate discrepancy";
+
+      resultEl.innerHTML =
+        "<strong>Chi-square result</strong><br/>" +
+        "<span class='cs-code'>χ² = " + fmt(chi, 8) + "</span>" +
+        "<br/><span class='note'>df = " + df + "</span>";
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+        badge(label) +
+        badge("df = " + df) +
+        badge("Largest contribution: category " + maxIndex) +
+        "</div>";
+
+      const rows = [
+        ["Category count", String(observed.length)],
+        ["Degrees of freedom", String(df)],
+        ["Chi-square statistic", fmt(chi, 8)],
+      ];
+
+      for (let i = 0; i < observed.length; i++) {
+        rows.push([
+          "Category " + (i + 1),
+          "O=" + fmt(observed[i], 6) + ", E=" + fmt(expected[i], 6) + ", contrib=" + fmt(contributions[i], 8)
+        ]);
+      }
+
+      fillTable(rows);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Calculation failed.");
+    }
+  }
+  function fillDemo() {
+    observedEl.value = "18, 22, 20, 25";
+    expectedEl.value = "21.25, 21.25, 21.25, 21.25";
+    clearOutput();
+  }
+  function reset() {
+    observedEl.value = "";
+    expectedEl.value = "";
+    clearOutput();
+    observedEl.focus();
+  }
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+  [observedEl, expectedEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+    });
+  });
+  clearOutput();
+});
+</script>

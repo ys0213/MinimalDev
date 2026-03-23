@@ -1,0 +1,479 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "GIF Splitter",
+  description:
+    "Split animated GIF files into individual frame images locally in the browser with preview, per-frame download, validation, accessibility, and FAQ schema.",
+  href: "/utility/gif-splitter/",
+  order: 186,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/gif-splitter/";
+
+const faqs = [
+  {
+    q: "What does this GIF splitter do?",
+    a: "It decodes an animated GIF in your browser, extracts the frames, previews them, and lets you download each frame as a PNG image.",
+  },
+  {
+    q: "Does it upload my GIF?",
+    a: "No. GIF decoding runs locally in the browser and the selected file is not uploaded by this page.",
+  },
+  {
+    q: "What format are extracted frames downloaded as?",
+    a: "Frames are exported as PNG files so they can be saved individually after decoding.",
+  },
+  {
+    q: "Does it preserve frame timing information?",
+    a: "The tool shows decoded frame delays from the original GIF so you can inspect timing per frame.",
+  },
+  {
+    q: "Why does this page use a library?",
+    a: "Animated GIF frame decoding requires specialized binary parsing. This page uses gifuct-js from CDN for real browser-side GIF frame extraction.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+---
+
+<ToolLayout
+  title={`GIF Splitter — ${SITE_NAME}`}
+  description="Split animated GIF files into individual frame images locally in the browser with preview, frame metadata, download actions, validation, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="GIF Splitter"
+  intro="Upload an animated GIF, decode its frames locally in your browser, preview each frame, inspect timing, and download frames as PNG files."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="gif-splitter">
+    <style is:inline>
+      #gifs_file {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .gifs-frame-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .gifs-frame-item {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+
+      .gifs-frame-grid {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .gifs-canvas-wrap {
+        width: 100%;
+        overflow: hidden;
+        background: rgba(255,255,255,0.03);
+        border-radius: 10px;
+        padding: 8px;
+      }
+
+      .gifs-canvas-wrap canvas {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        background: white;
+      }
+
+      .gifs-actions,
+      .gifs-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .gifs-card-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+
+      .gifs-mini-card {
+        flex: 1 1 180px;
+        min-width: 0;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .gifs-mini-card .big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 760px) {
+        .gifs-frame-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="gifs_help gifs_privacy">
+      <div class="field">
+        <label for="gifs_file">Animated GIF file</label>
+        <input id="gifs_file" type="file" accept="image/gif,.gif" />
+        <p class="note" id="gifs_help" style="margin-top:6px;">
+          Select an animated GIF. This page uses <code>gifuct-js</code> from CDN to decode actual GIF frames in the browser.
+        </p>
+      </div>
+
+      <div class="gifs-actions" style="margin-top:8px;">
+        <button class="btn" type="button" id="gifs_split">Split Frames</button>
+        <button class="btn secondary" type="button" id="gifs_download_all" disabled>Download All Frames</button>
+        <button class="btn secondary" type="button" id="gifs_clear">Clear</button>
+      </div>
+
+      <div class="result" id="gifs_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="gifs_result" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="gifs_cards" style="display:none; margin-top:12px;"></div>
+
+      <div id="gifs_frames_wrap" style="display:none; margin-top:16px;">
+        <strong>Decoded frames</strong>
+        <div class="gifs-frame-list" id="gifs_frames_list" style="margin-top:12px;"></div>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="gifs_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="gifs_privacy" style="margin-top:10px;">
+        Privacy: GIF decoding runs locally in your browser. No GIF file is stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      The splitter decodes the selected animated GIF and reconstructs each frame as canvas-rendered image data:
+    </p>
+    <ul>
+      <li><strong>Read GIF binary:</strong> the file is parsed locally in the browser</li>
+      <li><strong>Decode frames:</strong> each frame patch is decompressed</li>
+      <li><strong>Render preview:</strong> every frame is drawn to canvas</li>
+      <li><strong>Export:</strong> each frame can be saved individually as PNG</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li>Extract a specific frame from a reaction GIF</li>
+      <li>Inspect the frame timing of an animated GIF</li>
+      <li>Convert a GIF into a sequence of still images</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/gif-maker/">GIF Maker</a></li>
+      <li><a href="/utility/exif-remover/">EXIF Remover</a></li>
+      <li><a href="/utility/image-metadata-viewer/">Image Metadata Viewer</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script type="module" is:inline>
+import { parseGIF, decompressFrames } from "https://esm.sh/gifuct-js@2.1.2";
+
+document.addEventListener("DOMContentLoaded", function () {
+  const fileEl = document.getElementById("gifs_file");
+  const splitBtn = document.getElementById("gifs_split");
+  const downloadAllBtn = document.getElementById("gifs_download_all");
+  const clearBtn = document.getElementById("gifs_clear");
+  const errEl = document.getElementById("gifs_error");
+  const resultEl = document.getElementById("gifs_result");
+  const cardsEl = document.getElementById("gifs_cards");
+  const framesWrap = document.getElementById("gifs_frames_wrap");
+  const framesListEl = document.getElementById("gifs_frames_list");
+  const tbodyEl = document.getElementById("gifs_tbody");
+
+  if (
+    !fileEl || !splitBtn || !downloadAllBtn || !clearBtn || !errEl || !resultEl ||
+    !cardsEl || !framesWrap || !framesListEl || !tbodyEl
+  ) return;
+
+  let renderedFrames = [];
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function bytesToHuman(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' +
+      border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, big, sub) {
+    return (
+      '<div class="gifs-mini-card">' +
+        "<strong>" + escapeHtml(title) + "</strong>" +
+        '<div class="big">' + escapeHtml(big) + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    framesWrap.style.display = "none";
+    framesListEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    downloadAllBtn.disabled = true;
+    renderedFrames = [];
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise(function (resolve) {
+      canvas.toBlob(function (blob) {
+        resolve(blob || null);
+      }, "image/png");
+    });
+  }
+
+  function downloadCanvas(canvas, filename) {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  async function downloadAllFrames() {
+    clearError();
+
+    if (!renderedFrames.length) {
+      showError("No decoded frames are available yet.");
+      return;
+    }
+
+    for (let i = 0; i < renderedFrames.length; i++) {
+      downloadCanvas(renderedFrames[i].canvas, "gif-frame-" + String(i + 1).padStart(3, "0") + ".png");
+      await new Promise(function (resolve) { setTimeout(resolve, 120); });
+    }
+  }
+
+  async function splitGif() {
+    resetOutput();
+
+    const file = fileEl.files && fileEl.files[0];
+    if (!file) {
+      showError("Please choose a GIF file first.");
+      return;
+    }
+
+    if (!(file.type === "image/gif" || /\.gif$/i.test(file.name))) {
+      showError("Please select a valid GIF file.");
+      return;
+    }
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const gif = parseGIF(arrayBuffer);
+      const frames = decompressFrames(gif, true);
+
+      if (!frames || !frames.length) {
+        showError("No frames could be decoded from the selected GIF.");
+        return;
+      }
+
+      const logicalWidth = gif && gif.lsd && gif.lsd.width ? gif.lsd.width : frames[0].dims.width;
+      const logicalHeight = gif && gif.lsd && gif.lsd.height ? gif.lsd.height : frames[0].dims.height;
+
+      renderedFrames = [];
+
+      frames.forEach(function (frame, index) {
+        const canvas = document.createElement("canvas");
+        canvas.width = logicalWidth;
+        canvas.height = logicalHeight;
+
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.createImageData(logicalWidth, logicalHeight);
+        imageData.data.set(frame.patch);
+        ctx.putImageData(imageData, frame.dims.left, frame.dims.top);
+
+        renderedFrames.push({
+          index: index,
+          delayMs: (frame.delay || 10) * 10,
+          dims: frame.dims,
+          canvas: canvas,
+        });
+      });
+
+      resultEl.innerHTML =
+        "<strong>GIF decoded successfully.</strong><br/>" +
+        '<span class="note">Preview the frames below and download any frame individually or all frames together.</span>';
+
+      cardsEl.style.display = "block";
+      cardsEl.innerHTML =
+        '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">' +
+          "<strong>Frame summary</strong>" +
+          '<div class="gifs-badges">' +
+            badge(renderedFrames.length + " frame(s)", "good") +
+            badge(logicalWidth + " × " + logicalHeight, "neutral") +
+            badge("PNG exports", "neutral") +
+          "</div>" +
+        "</div>" +
+        '<div class="gifs-card-grid">' +
+          card("Frame count", String(renderedFrames.length), "Decoded from GIF") +
+          card("Logical size", logicalWidth + " × " + logicalHeight, "GIF canvas size") +
+          card("Input size", bytesToHuman(file.size), "Selected GIF file") +
+          card("Total duration", frames.reduce(function (sum, f) { return sum + ((f.delay || 10) * 10); }, 0) + " ms", "Sum of frame delays") +
+        "</div>";
+
+      fillTable([
+        ["Filename", file.name],
+        ["Input file size", bytesToHuman(file.size)],
+        ["Frame count", String(renderedFrames.length)],
+        ["GIF logical width", String(logicalWidth) + " px"],
+        ["GIF logical height", String(logicalHeight) + " px"],
+        ["Estimated total duration", frames.reduce(function (sum, f) { return sum + ((f.delay || 10) * 10); }, 0) + " ms"],
+        ["Method", "gifuct-js browser-side GIF frame decoding"],
+      ]);
+
+      framesWrap.style.display = "block";
+      framesListEl.innerHTML = "";
+
+      renderedFrames.forEach(function (frameObj, index) {
+        const item = document.createElement("div");
+        item.className = "gifs-frame-item";
+
+        const canvasWrap = document.createElement("div");
+        canvasWrap.className = "gifs-canvas-wrap";
+        canvasWrap.appendChild(frameObj.canvas);
+
+        const metaCol = document.createElement("div");
+        metaCol.innerHTML =
+          "<strong>Frame " + (index + 1) + "</strong><br/>" +
+          '<span class="note">Delay: ' + escapeHtml(String(frameObj.delayMs)) + " ms</span><br/>" +
+          '<span class="note">Patch size: ' + escapeHtml(frameObj.dims.width + " × " + frameObj.dims.height) + "</span><br/>" +
+          '<span class="note">Offset: left ' + escapeHtml(String(frameObj.dims.left)) + ", top " + escapeHtml(String(frameObj.dims.top)) + "</span>";
+
+        const actions = document.createElement("div");
+        actions.className = "gifs-actions";
+        actions.style.marginTop = "10px";
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.type = "button";
+        downloadBtn.className = "btn secondary";
+        downloadBtn.textContent = "Download Frame PNG";
+        downloadBtn.addEventListener("click", function () {
+          downloadCanvas(frameObj.canvas, "gif-frame-" + String(index + 1).padStart(3, "0") + ".png");
+        });
+
+        actions.appendChild(downloadBtn);
+        metaCol.appendChild(actions);
+
+        const grid = document.createElement("div");
+        grid.className = "gifs-frame-grid";
+        grid.appendChild(canvasWrap);
+        grid.appendChild(metaCol);
+
+        item.appendChild(grid);
+        framesListEl.appendChild(item);
+      });
+
+      downloadAllBtn.disabled = false;
+    } catch (e) {
+      showError("The selected GIF could not be decoded in this browser.");
+    }
+  }
+
+  function clearAll() {
+    fileEl.value = "";
+    resetOutput();
+    fileEl.focus();
+  }
+
+  splitBtn.addEventListener("click", splitGif);
+  downloadAllBtn.addEventListener("click", downloadAllFrames);
+  clearBtn.addEventListener("click", clearAll);
+
+  resetOutput();
+});
+</script>

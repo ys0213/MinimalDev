@@ -1,0 +1,467 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Random Password Phrase Generator",
+  description:
+    "Generate random passphrases using multiple words, optional separators, capitalization, and numbers. Includes validation, result cards, accessibility, and FAQ schema.",
+  href: "/generators/random-password-phrase/",
+  order: 183,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/generators/random-password-phrase/";
+
+const faqs = [
+  {
+    q: "What is a password phrase?",
+    a: "A password phrase, or passphrase, is a password made from multiple words, often easier to remember than a short random string.",
+  },
+  {
+    q: "Is a longer passphrase more secure?",
+    a: "In general, longer and less predictable passphrases are stronger than shorter ones, especially when made from multiple random words.",
+  },
+  {
+    q: "Can this tool add separators and numbers?",
+    a: "Yes. You can include a separator, append digits, and optionally capitalize words.",
+  },
+  {
+    q: "Does this tool save generated passphrases?",
+    a: "No. Everything runs locally in your browser and generated phrases are not stored or transmitted.",
+  },
+  {
+    q: "Should I use these directly for sensitive accounts?",
+    a: "You may, but for highly sensitive accounts you should also consider using a password manager, unique credentials, and multi-factor authentication.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`Random Password Phrase Generator — ${SITE_NAME}`}
+  description="Generate random passphrases with configurable word count, separators, numbers, capitalization, result cards, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="Random Password Phrase Generator"
+  intro="Generate random password phrases made of multiple words for memorable credentials, testing, and security workflows."
+  faq={faqs}
+  categoryName="Generators"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="random-password-phrase">
+    <style is:inline>
+      .rpp-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .rpp-grid > * {
+        min-width: 0;
+      }
+      .rpp-cards-wrap {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .rpp-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        flex: 1 1 170px;
+        min-width: 0;
+      }
+      .rpp-output {
+        width: 100%;
+        min-width: 0;
+        word-break: break-word;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+      }
+      .rpp-inline {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .rpp-inline label {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+      @media (min-width: 780px) {
+        .rpp-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="rpp_help rpp_privacy">
+      <div class="rpp-grid">
+        <div class="field">
+          <label for="rpp_count">How many passphrases</label>
+          <input id="rpp_count" type="number" inputmode="numeric" min="1" max="50" value="5" />
+        </div>
+
+        <div class="field">
+          <label for="rpp_words">Words per phrase</label>
+          <input id="rpp_words" type="number" inputmode="numeric" min="2" max="12" value="4" />
+        </div>
+
+        <div class="field">
+          <label for="rpp_separator">Separator</label>
+          <select id="rpp_separator">
+            <option value="-" selected>Hyphen (-)</option>
+            <option value="_">Underscore (_)</option>
+            <option value=".">Dot (.)</option>
+            <option value="space">Space</option>
+            <option value="none">No separator</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="rpp_digits">Append digits</label>
+          <select id="rpp_digits">
+            <option value="0" selected>No digits</option>
+            <option value="2">2 digits</option>
+            <option value="4">4 digits</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rpp-inline" style="margin-top:6px;">
+        <div class="field">
+          <label for="rpp_capitalize">
+            <input id="rpp_capitalize" type="checkbox" checked />
+            Capitalize each word
+          </label>
+        </div>
+
+        <div class="field">
+          <label for="rpp_copy_single_line">
+            <input id="rpp_copy_single_line" type="checkbox" />
+            Copy only the first result
+          </label>
+        </div>
+      </div>
+
+      <p class="note" id="rpp_help" style="margin-top:6px;">
+        Generates random passphrases from a local word list. This tool estimates strength in a practical way, but real security depends on randomness, uniqueness, and account protection practices.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="rpp_generate">Generate</button>
+        <button class="btn secondary" type="button" id="rpp_copy">Copy</button>
+        <button class="btn secondary" type="button" id="rpp_clear">Clear</button>
+      </div>
+
+      <div class="result" id="rpp_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="rpp_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="rpp_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="rpp_output">Generated passphrases</label>
+        <textarea id="rpp_output" class="rpp-output" rows="12" readonly spellcheck="false" placeholder="Generated password phrases will appear here."></textarea>
+      </div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="rpp_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="rpp_privacy" style="margin-top:10px;">
+        Privacy: generation runs locally in your browser. No generated passphrases are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Pick how many phrases you want, choose the number of words per phrase, optionally capitalize words, and add separators or digits. Then copy the result for later use.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>River-Planet-Cedar-Mint</strong> for a memorable login</li>
+      <li><strong>bright_forest_spark_train42</strong> for a human-readable credential</li>
+      <li><strong>StoneLightCloudMoon</strong> with no separator</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/generators/random-password-list/">Random Password List</a></li>
+      <li><a href="/generators/random-username-generator/">Random Username Generator</a></li>
+      <li><a href="/utility/password-generator/">Password Generator</a></li>
+      <li><a href="/generators/">All Generators</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const countEl = document.getElementById("rpp_count");
+  const wordsEl = document.getElementById("rpp_words");
+  const separatorEl = document.getElementById("rpp_separator");
+  const digitsEl = document.getElementById("rpp_digits");
+  const capitalizeEl = document.getElementById("rpp_capitalize");
+  const copySingleEl = document.getElementById("rpp_copy_single_line");
+  const generateBtn = document.getElementById("rpp_generate");
+  const copyBtn = document.getElementById("rpp_copy");
+  const clearBtn = document.getElementById("rpp_clear");
+  const errorEl = document.getElementById("rpp_error");
+  const resultEl = document.getElementById("rpp_result");
+  const cardsEl = document.getElementById("rpp_cards");
+  const outputEl = document.getElementById("rpp_output");
+  const tbodyEl = document.getElementById("rpp_tbody");
+
+  if (!countEl || !wordsEl || !separatorEl || !digitsEl || !capitalizeEl || !copySingleEl || !generateBtn || !copyBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !outputEl || !tbodyEl) return;
+
+  const wordPool = [
+    "river","cedar","planet","mint","forest","glass","harbor","stone","ember","garden",
+    "sunset","meadow","lunar","pencil","silver","violet","rocket","branch","tunnel","echo",
+    "drift","copper","pearl","cloud","light","anchor","beacon","mango","thunder","maple",
+    "trail","velvet","willow","breeze","honey","signal","marble","flame","saffron","canyon",
+    "lantern","summit","ocean","crystal","prairie","comet","grove","sprout","feather","orbit",
+    "island","frozen","spring","autumn","cobalt","desert","mirror","valley","bridge","stellar",
+    "north","south","quiet","moss","birch","lotus","raven","azure","apricot","plaza",
+    "cipher","pocket","meadow","olive","shore","timber","fable","dawn","twilight","stream"
+  ];
+
+  let lastOutput = "";
+  let lastList = [];
+
+  function toInt(v) {
+    const n = Number(String(v || "").trim());
+    return Number.isInteger(n) ? n : NaN;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    outputEl.value = "";
+    tbodyEl.innerHTML = "";
+    lastOutput = "";
+    lastList = [];
+  }
+
+  function randItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function capitalizeWord(word) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }
+
+  function randomDigits(count) {
+    let out = "";
+    for (let i = 0; i < count; i++) out += String(Math.floor(Math.random() * 10));
+    return out;
+  }
+
+  function phraseStrength(wordsPerPhrase, digitCount, separatorMode) {
+    let score = 0;
+    if (wordsPerPhrase >= 2) score += 1;
+    if (wordsPerPhrase >= 4) score += 1;
+    if (wordsPerPhrase >= 6) score += 1;
+    if (digitCount >= 2) score += 1;
+    if (separatorMode !== "none") score += 1;
+
+    if (score <= 1) return "Basic";
+    if (score <= 3) return "Good";
+    return "Strong";
+  }
+
+  function badge(text) {
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);font-size:12px;font-weight:900;">' + escapeHtml(text) + "</span>";
+  }
+
+  function card(title, value, sub) {
+    return (
+      '<div class="rpp-card">' +
+      "<strong>" + escapeHtml(title) + "</strong>" +
+      '<div style="font-size:26px;font-weight:900;margin-top:6px;">' + escapeHtml(value) + "</div>" +
+      '<div class="note" style="margin-top:4px;">' + escapeHtml(sub) + '</div>' +
+      '</div>'
+    );
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function makePhrase(wordsPerPhrase, separatorMode, capitalize, digitCount) {
+    const words = [];
+    for (let i = 0; i < wordsPerPhrase; i++) {
+      let w = randItem(wordPool);
+      if (capitalize) w = capitalizeWord(w);
+      words.push(w);
+    }
+
+    let sep = "-";
+    if (separatorMode === "_") sep = "_";
+    else if (separatorMode === ".") sep = ".";
+    else if (separatorMode === "space") sep = " ";
+    else if (separatorMode === "none") sep = "";
+
+    let phrase = words.join(sep);
+    if (digitCount > 0) phrase += randomDigits(digitCount);
+    return phrase;
+  }
+
+  function generate() {
+    resetOutput();
+
+    const count = toInt(countEl.value);
+    const wordsPerPhrase = toInt(wordsEl.value);
+    const separatorMode = String(separatorEl.value || "-");
+    const digitCount = toInt(digitsEl.value);
+    const capitalize = !!capitalizeEl.checked;
+
+    if (!Number.isInteger(count) || count < 1 || count > 50) {
+      showError("Please enter a phrase count from 1 to 50.");
+      return;
+    }
+
+    if (!Number.isInteger(wordsPerPhrase) || wordsPerPhrase < 2 || wordsPerPhrase > 12) {
+      showError("Please enter a words-per-phrase value from 2 to 12.");
+      return;
+    }
+
+    if (![0, 2, 4].includes(digitCount)) {
+      showError("Invalid digit option selected.");
+      return;
+    }
+
+    const list = [];
+    for (let i = 0; i < count; i++) {
+      list.push(makePhrase(wordsPerPhrase, separatorMode, capitalize, digitCount));
+    }
+
+    lastList = list.slice();
+    lastOutput = list.join("\n");
+    outputEl.value = lastOutput;
+
+    const strength = phraseStrength(wordsPerPhrase, digitCount, separatorMode);
+    const avgLength = list.length
+      ? String(Math.round(list.reduce(function (sum, item) { return sum + item.length; }, 0) / list.length))
+      : "0";
+
+    resultEl.innerHTML =
+      "<strong>Password phrases generated.</strong><br/><span class='note'>Review uniqueness before using the same phrase across accounts.</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      '<div class="rpp-cards-wrap">' +
+      card("Count", String(count), "Generated phrases") +
+      card("Words", String(wordsPerPhrase), "Per phrase") +
+      card("Digits", String(digitCount), digitCount > 0 ? "Appended at the end" : "No digits added") +
+      card("Profile", strength, "Practical strength estimate") +
+      "</div>" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+      badge("Capitalization: " + (capitalize ? "On" : "Off")) +
+      badge("Separator: " + (separatorMode === "space" ? "Space" : separatorMode === "none" ? "None" : separatorMode)) +
+      badge("Avg length: " + avgLength + " chars") +
+      "</div>";
+
+    fillTable([
+      ["Generated count", String(count)],
+      ["Words per phrase", String(wordsPerPhrase)],
+      ["Separator", separatorMode],
+      ["Digits appended", String(digitCount)],
+      ["Capitalization", capitalize ? "Enabled" : "Disabled"],
+      ["Estimated profile", strength],
+      ["Average phrase length", avgLength],
+      ["Output length", String(lastOutput.length)],
+    ]);
+  }
+
+  async function copyResults() {
+    clearError();
+    if (!lastList.length) {
+      showError("No generated passphrases to copy yet.");
+      return;
+    }
+
+    const text = copySingleEl.checked ? lastList[0] : lastOutput;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      resultEl.innerHTML = "<strong>Copied passphrase output.</strong>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function clearAll() {
+    countEl.value = "5";
+    wordsEl.value = "4";
+    separatorEl.value = "-";
+    digitsEl.value = "0";
+    capitalizeEl.checked = true;
+    copySingleEl.checked = false;
+    resetOutput();
+    countEl.focus();
+  }
+
+  generateBtn.addEventListener("click", generate);
+  copyBtn.addEventListener("click", copyResults);
+  clearBtn.addEventListener("click", clearAll);
+
+  [countEl, wordsEl, separatorEl, digitsEl, capitalizeEl, copySingleEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") generate();
+    });
+  });
+
+  clearAll();
+});
+</script>

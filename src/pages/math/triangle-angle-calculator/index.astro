@@ -1,0 +1,309 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Triangle Angle Calculator",
+  description:
+    "Calculate triangle angles from three side lengths using the law of cosines and validate the triangle inequality.",
+  href: "/math/triangle-angle-calculator/",
+  order: 389,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/triangle-angle-calculator/";
+
+const faqs = [
+  {
+    q: "What does this triangle angle calculator compute?",
+    a: "It calculates the three interior angles of a triangle from the three side lengths using the law of cosines.",
+  },
+  {
+    q: "What formula is used?",
+    a: "This page uses the law of cosines, for example cos(A) = (b² + c² − a²) / (2bc), and similarly for the other angles.",
+  },
+  {
+    q: "Why does it validate the triangle inequality?",
+    a: "Because the given side lengths must form a valid triangle before any interior angles can be calculated.",
+  },
+  {
+    q: "Do the angles always add to 180°?",
+    a: "Yes, for a valid Euclidean triangle the interior angles sum to 180 degrees, aside from tiny rounding differences in display.",
+  },
+  {
+    q: "Are calculations stored?",
+    a: "No. Everything runs locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Triangle Angle Calculator — ${SITE_NAME}`}
+  description="Calculate triangle angles from side lengths using the law of cosines."
+  canonicalPath={CANONICAL_PATH}
+  h1="Triangle Angle Calculator"
+  intro="Calculate the three interior angles of a triangle from its three side lengths. This page validates the triangle and then uses the law of cosines to find angles A, B, and C."
+  faq={faqs}
+  categoryName="Math"
+>
+  <div slot="tool" data-tool="triangle-angle-calculator">
+    <style is:inline>
+      .ta-wrap, .ta-wrap * { box-sizing: border-box; }
+      .ta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .ta-grid input {
+        width: 100%;
+        min-width: 0;
+      }
+      .ta-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-word;
+      }
+      @media (max-width: 860px) {
+        .ta-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+
+    <div class="form ta-wrap" role="form" aria-describedby="ta_help ta_privacy">
+      <div class="ta-grid">
+        <div class="field">
+          <label for="ta_a">Side a</label>
+          <input id="ta_a" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 3" />
+        </div>
+
+        <div class="field">
+          <label for="ta_b">Side b</label>
+          <input id="ta_b" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 4" />
+        </div>
+
+        <div class="field">
+          <label for="ta_c">Side c</label>
+          <input id="ta_c" type="number" inputmode="decimal" step="any" min="0" placeholder="e.g., 5" />
+        </div>
+      </div>
+
+      <p class="note" id="ta_help" style="margin-top:6px;">
+        Formula example:
+        <br />
+        <span class="ta-code">cos(A) = (b² + c² − a²) / (2bc)</span>
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="ta_calc">Calculate</button>
+        <button class="btn secondary" type="button" id="ta_fill_demo">Fill demo</button>
+        <button class="btn secondary" type="button" id="ta_clear">Clear</button>
+      </div>
+
+      <div class="result" id="ta_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="ta_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="ta_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="ta_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="ta_privacy" style="margin-top:10px;">
+        Privacy: calculations run locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      After validating the triangle inequality, this calculator applies the law of cosines to compute each interior angle from the side lengths.
+    </p>
+    <p class="note">
+      The displayed angles are:
+      <br />
+      <strong>A</strong> opposite side <strong>a</strong>,
+      <strong>B</strong> opposite side <strong>b</strong>,
+      <strong>C</strong> opposite side <strong>c</strong>.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>3, 4, 5</strong> → angles are approximately <strong>36.87°</strong>, <strong>53.13°</strong>, and <strong>90°</strong></li>
+      <li><strong>5, 5, 5</strong> → all angles are <strong>60°</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/math/triangle-perimeter-calculator/">Triangle Perimeter Calculator</a></li>
+      <li><a href="/math/triangle-area-calculator/">Triangle Area Calculator</a></li>
+      <li><a href="/math/trigonometry-calculator/">Trigonometry Calculator</a></li>
+      <li><a href="/math/">All Math Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const aEl = document.getElementById("ta_a");
+  const bEl = document.getElementById("ta_b");
+  const cEl = document.getElementById("ta_c");
+  const calcBtn = document.getElementById("ta_calc");
+  const fillBtn = document.getElementById("ta_fill_demo");
+  const clearBtn = document.getElementById("ta_clear");
+  const errorEl = document.getElementById("ta_error");
+  const resultEl = document.getElementById("ta_result");
+  const cardsEl = document.getElementById("ta_cards");
+  const tbodyEl = document.getElementById("ta_tbody");
+
+  if (!aEl || !bEl || !cEl || !calcBtn || !fillBtn || !clearBtn || !errorEl || !resultEl || !cardsEl || !tbodyEl) return;
+
+  function fmt(n, digits) {
+    return n.toLocaleString(undefined, { maximumFractionDigits: Number.isFinite(digits) ? digits : 8 });
+  }
+
+  function fmtDeg(n, digits) {
+    return fmt(n, Number.isFinite(digits) ? digits : 6) + "°";
+  }
+
+  function badge(text) {
+    return "<span style='display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;'>" + text + "</span>";
+  }
+
+  function acosDeg(x) {
+    const clamped = Math.min(1, Math.max(-1, x));
+    return Math.acos(clamped) * 180 / Math.PI;
+  }
+
+  function clearError() {
+    errorEl.style.display = "none";
+    errorEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errorEl.style.display = "block";
+    errorEl.textContent = msg;
+  }
+
+  function clearOutput() {
+    clearError();
+    resultEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  function classify(a, b, c) {
+    if (a === b && b === c) return "Equilateral";
+    if (a === b || a === c || b === c) return "Isosceles";
+    return "Scalene";
+  }
+
+  function fillTable(rows) {
+    tbodyEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearOutput();
+
+    const a = Number(String(aEl.value || "").trim());
+    const b = Number(String(bEl.value || "").trim());
+    const c = Number(String(cEl.value || "").trim());
+
+    if (![a, b, c].every(Number.isFinite)) {
+      showError("Please enter valid numeric side lengths.");
+      return;
+    }
+
+    if (a <= 0 || b <= 0 || c <= 0) {
+      showError("All side lengths must be greater than 0.");
+      return;
+    }
+
+    const valid = a + b > c && a + c > b && b + c > a;
+    if (!valid) {
+      showError("These side lengths do not form a valid triangle because they fail the triangle inequality.");
+      return;
+    }
+
+    const A = acosDeg((b * b + c * c - a * a) / (2 * b * c));
+    const B = acosDeg((a * a + c * c - b * b) / (2 * a * c));
+    const C = 180 - A - B;
+
+    const type = classify(a, b, c);
+
+    let label = "Acute / general triangle";
+    const maxAngle = Math.max(A, B, C);
+    if (Math.abs(maxAngle - 90) < 1e-9) label = "Right triangle";
+    else if (maxAngle > 90) label = "Obtuse triangle";
+    else label = "Acute triangle";
+
+    resultEl.innerHTML =
+      "<strong>Triangle angle result</strong><br/>" +
+      "<span class='ta-code'>A = " + fmtDeg(A, 8) + ", B = " + fmtDeg(B, 8) + ", C = " + fmtDeg(C, 8) + "</span>" +
+      "<br/><span class='note'>Angle sum = " + fmtDeg(A + B + C, 8) + "</span>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div style='display:flex;gap:10px;flex-wrap:wrap;'>" +
+      badge(type) +
+      badge(label) +
+      badge("Max angle = " + fmtDeg(maxAngle, 4)) +
+      "</div>";
+
+    fillTable([
+      ["Side a", fmt(a, 8)],
+      ["Side b", fmt(b, 8)],
+      ["Side c", fmt(c, 8)],
+      ["Angle A (opposite a)", fmtDeg(A, 8)],
+      ["Angle B (opposite b)", fmtDeg(B, 8)],
+      ["Angle C (opposite c)", fmtDeg(C, 8)],
+      ["Angle sum", fmtDeg(A + B + C, 8)],
+      ["Triangle type by sides", type],
+      ["Triangle type by angles", label.replace(" / general triangle", "")],
+    ]);
+  }
+
+  function fillDemo() {
+    aEl.value = "3";
+    bEl.value = "4";
+    cEl.value = "5";
+    clearOutput();
+  }
+
+  function reset() {
+    aEl.value = "";
+    bEl.value = "";
+    cEl.value = "";
+    clearOutput();
+    aEl.focus();
+  }
+
+  calcBtn.addEventListener("click", compute);
+  fillBtn.addEventListener("click", fillDemo);
+  clearBtn.addEventListener("click", reset);
+
+  [aEl, bEl, cEl].forEach(function (el) {
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") compute();
+    });
+  });
+
+  clearOutput();
+});
+</script>

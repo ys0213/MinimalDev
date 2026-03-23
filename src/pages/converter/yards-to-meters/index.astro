@@ -1,0 +1,270 @@
+---
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "Yards to Meters",
+  description:
+    "Convert yards to meters instantly. Includes validation, reverse mode, result cards, and FAQ support.",
+  href: "/converter/yards-to-meters/",
+  order: 306,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/converter/yards-to-meters/";
+
+const faqs = [
+  {
+    q: "How do you convert yards to meters?",
+    a: "Multiply yards by 0.9144 to get meters.",
+  },
+  {
+    q: "Can I reverse the conversion?",
+    a: "Yes. Use the Reverse button to switch between yards to meters and meters to yards.",
+  },
+  {
+    q: "What is this useful for?",
+    a: "It is useful for sports fields, fabric, landscaping, construction, and everyday length conversions.",
+  },
+  {
+    q: "Are my inputs stored?",
+    a: "No. All calculations run locally in your browser.",
+  },
+];
+---
+
+<ToolLayout
+  title={`Yards to Meters Converter — ${SITE_NAME}`}
+  description="Convert yards to meters instantly with validation, reverse mode, result cards, and FAQ support."
+  canonicalPath={CANONICAL_PATH}
+  h1="Yards to Meters Converter"
+  intro="Convert length from yards to meters instantly. Useful for sports, fabric, construction, and general length comparisons."
+  faq={faqs}
+  categoryName="Converters"
+>
+  <div slot="tool" data-tool="yards-to-meters">
+    <div class="form" role="form" aria-describedby="y2m_hint y2m_privacy">
+      <div class="field">
+        <label for="y2m_input">Yards</label>
+        <input id="y2m_input" type="number" inputmode="decimal" placeholder="e.g., 10" />
+        <p class="note" id="y2m_hint" style="margin-top:6px;">
+          Enter a non-negative value. Useful for fabric, sports fields, and outdoor measurements.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="y2m_round">Rounding</label>
+        <select id="y2m_round">
+          <option value="2">2 decimals</option>
+          <option value="4" selected>4 decimals</option>
+          <option value="6">6 decimals</option>
+          <option value="auto">Smart</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" type="button" id="y2m_convert">Convert</button>
+        <button class="btn secondary" type="button" id="y2m_swap">Reverse (m → yd)</button>
+        <button class="btn secondary" type="button" id="y2m_clear">Clear</button>
+      </div>
+
+      <div class="result" id="y2m_error" role="alert" style="display:none; margin-top:12px;"></div>
+      <div class="result" id="y2m_result" role="status" style="margin-top:12px;">Result will appear here.</div>
+      <div class="result" id="y2m_cards" style="display:none; margin-top:12px;"></div>
+
+      <div style="margin-top:16px; overflow:auto;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="y2m_tbody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" id="y2m_privacy" style="margin-top:10px;">
+        Privacy: runs locally in your browser. No inputs are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      Uses the standard conversion: <strong>1 yard = 0.9144 meters</strong>.<br />
+      Formula: <strong>m = yd × 0.9144</strong>
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1 yd</strong> = <strong>0.9144 m</strong></li>
+      <li><strong>10 yd</strong> = <strong>9.144 m</strong></li>
+      <li><strong>100 yd</strong> = <strong>91.44 m</strong></li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/converter/length/">Length Converter</a></li>
+      <li><a href="/converter/meters-to-yards/">Meters to Yards</a></li>
+      <li><a href="/converter/feet-to-meters/">Feet to Meters</a></li>
+      <li><a href="/converter/">All Converters</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const inEl = document.getElementById("y2m_input");
+  const roundEl = document.getElementById("y2m_round");
+  const convertBtn = document.getElementById("y2m_convert");
+  const swapBtn = document.getElementById("y2m_swap");
+  const clearBtn = document.getElementById("y2m_clear");
+  const errEl = document.getElementById("y2m_error");
+  const outEl = document.getElementById("y2m_result");
+  const cardsEl = document.getElementById("y2m_cards");
+  const tbodyEl = document.getElementById("y2m_tbody");
+
+  if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
+
+  const YD_TO_M = 0.9144;
+  const M_TO_YD = 1 / YD_TO_M;
+  let mode = "yd-to-m";
+
+  function toNum(v) {
+    const x = parseFloat(String(v));
+    return Number.isFinite(x) ? x : NaN;
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function fmtSmart(x) {
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1) return (Math.round(x * 1e6) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    return (Math.round(x * 1e12) / 1e12).toString();
+  }
+
+  function fmt(x) {
+    if (!Number.isFinite(x)) return "—";
+    const r = String(roundEl.value);
+    if (r === "auto") return fmtSmart(x);
+    return x.toFixed(parseInt(r, 10));
+  }
+
+  function badge(text) {
+    return `<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">${text}</span>`;
+  }
+
+  function setLabels() {
+    const label = document.querySelector('label[for="y2m_input"]');
+    if (!label) return;
+
+    if (mode === "yd-to-m") {
+      label.textContent = "Yards";
+      inEl.placeholder = "e.g., 10";
+      swapBtn.textContent = "Reverse (m → yd)";
+    } else {
+      label.textContent = "Meters";
+      inEl.placeholder = "e.g., 9.5";
+      swapBtn.textContent = "Reverse (yd → m)";
+    }
+  }
+
+  function fillTable(input, output) {
+    tbodyEl.innerHTML = "";
+    const rows = mode === "yd-to-m"
+      ? [
+          ["Conversion factor", "1 yd = 0.9144 m"],
+          ["Reverse factor", "1 m ≈ " + fmtSmart(M_TO_YD) + " yd"],
+          ["Input", fmt(input) + " yd"],
+          ["Output", fmt(output) + " m"],
+        ]
+      : [
+          ["Conversion factor", "1 m ≈ " + fmtSmart(M_TO_YD) + " yd"],
+          ["Reverse factor", "1 yd = 0.9144 m"],
+          ["Input", fmt(input) + " m"],
+          ["Output", fmt(output) + " yd"],
+        ];
+
+    rows.forEach(function ([k, v]) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = k;
+      td2.textContent = v;
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function compute() {
+    clearError();
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+
+    const raw = toNum(inEl.value);
+    if (!Number.isFinite(raw)) {
+      outEl.textContent = "Please enter a valid number.";
+      return;
+    }
+    if (raw < 0) {
+      outEl.textContent = "Please enter a non-negative value.";
+      return;
+    }
+
+    const output = mode === "yd-to-m" ? raw * YD_TO_M : raw * M_TO_YD;
+
+    if (mode === "yd-to-m") {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} m<br/><span class="note">${fmt(raw)} yd = ${fmt(output)} m</span>`;
+    } else {
+      outEl.innerHTML = `<strong>Result:</strong> ${fmt(output)} yd<br/><span class="note">${fmt(raw)} m = ${fmt(output)} yd</span>`;
+    }
+
+    const meters = mode === "yd-to-m" ? output : raw;
+    let scale = "Typical";
+    if (meters < 1) scale = "Short length";
+    else if (meters >= 100) scale = "Long distance";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${badge(mode === "yd-to-m" ? "yd → m" : "m → yd")}
+      ${badge("Base ≈ " + fmtSmart(meters) + " m")}
+      ${badge(scale)}
+    </div>`;
+
+    fillTable(raw, output);
+  }
+
+  function reset() {
+    clearError();
+    inEl.value = "";
+    roundEl.value = "4";
+    outEl.textContent = "Result will appear here.";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+  }
+
+  convertBtn.addEventListener("click", compute);
+  swapBtn.addEventListener("click", function () {
+    mode = mode === "yd-to-m" ? "m-to-yd" : "yd-to-m";
+    setLabels();
+    if (String(inEl.value || "").trim()) compute();
+    else reset();
+  });
+  clearBtn.addEventListener("click", reset);
+  roundEl.addEventListener("change", function () {
+    if (String(inEl.value || "").trim()) compute();
+  });
+
+  setLabels();
+});
+</script>

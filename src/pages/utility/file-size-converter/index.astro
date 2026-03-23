@@ -1,0 +1,642 @@
+---
+// /src/pages/utility/file-size-converter/index.astro
+import ToolLayout from "../../../components/ToolLayout.astro";
+
+export const tool = {
+  title: "File Size Converter",
+  description:
+    "Convert file sizes between bytes, KB, MB, GB, TB and binary units like KiB, MiB, GiB. Includes validation, result cards, accessibility, and FAQ schema.",
+  href: "/utility/file-size-converter/",
+  order: 241,
+};
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/utility/file-size-converter/";
+
+const faqs = [
+  {
+    q: "What is the difference between MB and MiB?",
+    a: "MB usually means decimal megabytes based on powers of 1000, while MiB means binary mebibytes based on powers of 1024.",
+  },
+  {
+    q: "Should I use decimal or binary units?",
+    a: "Use decimal units when following storage manufacturer labeling and most network transfer discussions. Use binary units when matching operating systems, memory calculations, and technical binary-based measurements.",
+  },
+  {
+    q: "Can I convert from bytes to larger units?",
+    a: "Yes. Enter a size in any supported unit and convert it to any other supported unit, including bytes, KB, MB, GB, TB, KiB, MiB, GiB, and TiB.",
+  },
+  {
+    q: "Are my values uploaded anywhere?",
+    a: "No. The calculator runs locally in your browser. Values are not stored or transmitted.",
+  },
+  {
+    q: "Why do some numbers look different after conversion?",
+    a: "Different unit systems use different bases. Decimal units use 1000, while binary units use 1024, so the same byte count can display differently depending on the target unit.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+---
+
+<ToolLayout
+  title={`File Size Converter — ${SITE_NAME}`}
+  description="Convert file sizes across decimal and binary units with validation, result cards, detailed conversion tables, accessibility, and FAQ schema."
+  canonicalPath={CANONICAL_PATH}
+  h1="File Size Converter"
+  intro="Convert file sizes between decimal units like KB, MB, GB and binary units like KiB, MiB, GiB. Useful for storage, downloads, hosting, backups, and technical documentation."
+  faq={faqs}
+  categoryName="Utilities"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+  <div slot="tool" data-tool="file-size-converter">
+    <style is:inline>
+      #fsc_value,
+      #fsc_from,
+      #fsc_to,
+      #fsc_precision,
+      #fsc_mode {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .fsc-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .fsc-cards,
+      .fsc-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .fsc-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        padding: 14px;
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+
+      .fsc-big {
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.2;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        margin-top: 6px;
+      }
+
+      .fsc-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .fsc-scroll {
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      .fsc-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .fsc-table th,
+      .fsc-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        vertical-align: top;
+        text-align: left;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+      }
+
+      .fsc-note-list {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      @media (max-width: 720px) {
+        .fsc-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .fsc-big {
+          font-size: 22px;
+        }
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="fsc_help fsc_privacy">
+      <div class="fsc-grid">
+        <div class="field">
+          <label for="fsc_value">Value</label>
+          <input
+            id="fsc_value"
+            type="number"
+            inputmode="decimal"
+            placeholder="e.g. 1.5"
+            aria-describedby="fsc_help"
+          />
+        </div>
+
+        <div class="field">
+          <label for="fsc_mode">Unit system focus</label>
+          <select id="fsc_mode" aria-describedby="fsc_help">
+            <option value="all" selected>Show all units</option>
+            <option value="decimal">Prefer decimal (1000-based)</option>
+            <option value="binary">Prefer binary (1024-based)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fsc_from">From unit</label>
+          <select id="fsc_from">
+            <optgroup label="Decimal (1000-based)">
+              <option value="B">Bytes (B)</option>
+              <option value="KB">Kilobytes (KB)</option>
+              <option value="MB">Megabytes (MB)</option>
+              <option value="GB">Gigabytes (GB)</option>
+              <option value="TB">Terabytes (TB)</option>
+            </optgroup>
+            <optgroup label="Binary (1024-based)">
+              <option value="KiB">Kibibytes (KiB)</option>
+              <option value="MiB">Mebibytes (MiB)</option>
+              <option value="GiB">Gibibytes (GiB)</option>
+              <option value="TiB">Tebibytes (TiB)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fsc_to">To unit</label>
+          <select id="fsc_to">
+            <optgroup label="Decimal (1000-based)">
+              <option value="B">Bytes (B)</option>
+              <option value="KB">Kilobytes (KB)</option>
+              <option value="MB" selected>Megabytes (MB)</option>
+              <option value="GB">Gigabytes (GB)</option>
+              <option value="TB">Terabytes (TB)</option>
+            </optgroup>
+            <optgroup label="Binary (1024-based)">
+              <option value="KiB">Kibibytes (KiB)</option>
+              <option value="MiB">Mebibytes (MiB)</option>
+              <option value="GiB">Gibibytes (GiB)</option>
+              <option value="TiB">Tebibytes (TiB)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fsc_precision">Displayed decimals</label>
+          <select id="fsc_precision">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>
+            <input id="fsc_scientific" type="checkbox" />
+            Use scientific notation for very small or very large values
+          </label>
+          <p class="note" style="margin-top:6px;">
+            This only changes display formatting. The underlying conversion still uses raw byte values.
+          </p>
+        </div>
+      </div>
+
+      <p class="note" id="fsc_help" style="margin-top:8px;">
+        Decimal units use powers of 1000. Binary units use powers of 1024. Example: 1 MB = 1,000,000 bytes, while 1 MiB = 1,048,576 bytes.
+      </p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+        <button class="btn" type="button" id="fsc_convert">Convert</button>
+        <button class="btn secondary" type="button" id="fsc_swap">Swap Units</button>
+        <button class="btn secondary" type="button" id="fsc_copy">Copy Result</button>
+        <button class="btn secondary" type="button" id="fsc_clear">Clear</button>
+      </div>
+
+      <div class="result" id="fsc_error" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="fsc_summary" role="status" style="margin-top:12px;">
+        Result will appear here.
+      </div>
+
+      <div class="result" id="fsc_highlight" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" id="fsc_cards" style="display:none; margin-top:12px;"></div>
+
+      <div class="result" style="margin-top:12px;">
+        <strong>Equivalent values</strong>
+        <div class="fsc-scroll" style="margin-top:10px;">
+          <table class="fsc-table">
+            <thead>
+              <tr>
+                <th scope="col" style="width:28%;">Unit</th>
+                <th scope="col" style="width:20%;">System</th>
+                <th scope="col" style="width:52%;">Converted value</th>
+              </tr>
+            </thead>
+            <tbody id="fsc_tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="result" style="margin-top:12px;">
+        <strong>Calculation details</strong>
+        <div class="fsc-scroll" style="margin-top:10px;">
+          <table class="fsc-table">
+            <tbody id="fsc_details"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="note" id="fsc_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No values are stored or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This converter first transforms the input into bytes, then converts that byte value into the selected output unit and every other supported unit.
+    </p>
+    <ul class="fsc-note-list">
+      <li><strong>Decimal units:</strong> B, KB, MB, GB, TB use powers of 1000</li>
+      <li><strong>Binary units:</strong> KiB, MiB, GiB, TiB use powers of 1024</li>
+      <li><strong>Detailed output:</strong> shows the selected conversion plus a full cross-unit table</li>
+      <li><strong>Formatting options:</strong> control decimals and scientific notation display</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>1024 B</strong> → <strong>1.024 KB</strong> and <strong>1 KiB</strong></li>
+      <li><strong>1 GB</strong> → <strong>1000 MB</strong></li>
+      <li><strong>1 GiB</strong> → <strong>1024 MiB</strong></li>
+      <li><strong>500 MB</strong> → compare decimal and binary interpretations clearly</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/utility/file-size-calculator/">File Size Calculator</a></li>
+      <li><a href="/utility/base64/">Base64</a></li>
+      <li><a href="/utility/image-metadata-viewer/">Image Metadata Viewer</a></li>
+      <li><a href="/utility/">All Utility Tools</a></li>
+    </ul>
+  </div>
+</ToolLayout>
+
+<script is:inline>
+document.addEventListener("DOMContentLoaded", function () {
+  const valueEl = document.getElementById("fsc_value");
+  const fromEl = document.getElementById("fsc_from");
+  const toEl = document.getElementById("fsc_to");
+  const precisionEl = document.getElementById("fsc_precision");
+  const modeEl = document.getElementById("fsc_mode");
+  const scientificEl = document.getElementById("fsc_scientific");
+  const convertBtn = document.getElementById("fsc_convert");
+  const swapBtn = document.getElementById("fsc_swap");
+  const copyBtn = document.getElementById("fsc_copy");
+  const clearBtn = document.getElementById("fsc_clear");
+  const errEl = document.getElementById("fsc_error");
+  const summaryEl = document.getElementById("fsc_summary");
+  const highlightEl = document.getElementById("fsc_highlight");
+  const cardsEl = document.getElementById("fsc_cards");
+  const tbodyEl = document.getElementById("fsc_tbody");
+  const detailsEl = document.getElementById("fsc_details");
+
+  if (
+    !valueEl || !fromEl || !toEl || !precisionEl || !modeEl || !scientificEl ||
+    !convertBtn || !swapBtn || !copyBtn || !clearBtn ||
+    !errEl || !summaryEl || !highlightEl || !cardsEl || !tbodyEl || !detailsEl
+  ) return;
+
+  const UNITS = {
+    B:   { label: "Bytes (B)", system: "Decimal", factor: 1, type: "decimal" },
+    KB:  { label: "Kilobytes (KB)", system: "Decimal", factor: 1000, type: "decimal" },
+    MB:  { label: "Megabytes (MB)", system: "Decimal", factor: 1000 ** 2, type: "decimal" },
+    GB:  { label: "Gigabytes (GB)", system: "Decimal", factor: 1000 ** 3, type: "decimal" },
+    TB:  { label: "Terabytes (TB)", system: "Decimal", factor: 1000 ** 4, type: "decimal" },
+    KiB: { label: "Kibibytes (KiB)", system: "Binary", factor: 1024, type: "binary" },
+    MiB: { label: "Mebibytes (MiB)", system: "Binary", factor: 1024 ** 2, type: "binary" },
+    GiB: { label: "Gibibytes (GiB)", system: "Binary", factor: 1024 ** 3, type: "binary" },
+    TiB: { label: "Tebibytes (TiB)", system: "Binary", factor: 1024 ** 4, type: "binary" },
+  };
+
+  const ORDERED_UNITS = ["B", "KB", "MB", "GB", "TB", "KiB", "MiB", "GiB", "TiB"];
+  let lastCopiedResult = "";
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
+    clearError();
+    summaryEl.textContent = "Result will appear here.";
+    highlightEl.style.display = "none";
+    highlightEl.innerHTML = "";
+    cardsEl.style.display = "none";
+    cardsEl.innerHTML = "";
+    tbodyEl.innerHTML = "";
+    detailsEl.innerHTML = "";
+    lastCopiedResult = "";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,0.55)" :
+      kind === "warn" ? "rgba(251,146,60,0.55)" :
+      kind === "accent" ? "rgba(96,165,250,0.55)" :
+      "rgba(255,255,255,0.18)";
+    return '<span style="display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + escapeHtml(text) + '</span>';
+  }
+
+  function card(title, big, note) {
+    return (
+      '<div class="fsc-card">' +
+        '<strong>' + escapeHtml(title) + '</strong>' +
+        '<div class="fsc-big">' + escapeHtml(big) + '</div>' +
+        '<div class="note" style="margin-top:6px;">' + note + "</div>" +
+      "</div>"
+    );
+  }
+
+  function parseInputNumber(raw) {
+    if (raw === null || raw === undefined) return NaN;
+    const cleaned = String(raw).trim();
+    if (!cleaned) return NaN;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function formatNumber(value, decimals, scientific) {
+    if (!Number.isFinite(value)) return "—";
+    const abs = Math.abs(value);
+    if (scientific && value !== 0 && (abs >= 1e9 || abs < 1e-6)) {
+      return value.toExponential(Math.min(decimals, 6));
+    }
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    });
+  }
+
+  function classifyMagnitude(bytes) {
+    const abs = Math.abs(bytes);
+    if (abs === 0) return "Zero size";
+    if (abs < 1024) return "Very small";
+    if (abs < 1024 ** 2) return "Small";
+    if (abs < 1024 ** 3) return "Medium";
+    if (abs < 1024 ** 4) return "Large";
+    return "Very large";
+  }
+
+  function bestUnit(bytes, preferredType) {
+    const candidates = ORDERED_UNITS.filter(function (key) {
+      if (key === "B") return true;
+      if (preferredType === "decimal") return UNITS[key].type === "decimal";
+      if (preferredType === "binary") return UNITS[key].type === "binary";
+      return true;
+    });
+
+    let best = "B";
+    let bestScore = Infinity;
+    candidates.forEach(function (key) {
+      const converted = bytes / UNITS[key].factor;
+      const abs = Math.abs(converted);
+      const score = abs === 0 ? Infinity : Math.abs(Math.log10(abs) - Math.log10(1.5));
+      if (abs >= 1 && abs < 1000 && score < bestScore) {
+        best = key;
+        bestScore = score;
+      }
+    });
+    return best;
+  }
+
+  function fillTable(bytes, decimals, scientific, mode, selectedTo) {
+    tbodyEl.innerHTML = "";
+    ORDERED_UNITS.forEach(function (unitKey) {
+      if (mode === "decimal" && unitKey !== "B" && UNITS[unitKey].type !== "decimal") return;
+      if (mode === "binary" && unitKey !== "B" && UNITS[unitKey].type !== "binary") return;
+
+      const tr = document.createElement("tr");
+      const tdUnit = document.createElement("td");
+      const tdSystem = document.createElement("td");
+      const tdValue = document.createElement("td");
+
+      tdUnit.innerHTML =
+        "<strong>" + escapeHtml(unitKey) + "</strong><br><span class='note'>" + escapeHtml(UNITS[unitKey].label) + "</span>";
+
+      tdSystem.textContent = UNITS[unitKey].system;
+
+      const value = bytes / UNITS[unitKey].factor;
+      const formatted = formatNumber(value, decimals, scientific) + " " + unitKey;
+      tdValue.innerHTML =
+        unitKey === selectedTo
+          ? "<strong>" + escapeHtml(formatted) + "</strong>"
+          : escapeHtml(formatted);
+
+      tr.appendChild(tdUnit);
+      tr.appendChild(tdSystem);
+      tr.appendChild(tdValue);
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function fillDetails(rows) {
+    detailsEl.innerHTML = "";
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const th = document.createElement("th");
+      const td = document.createElement("td");
+      th.scope = "row";
+      th.style.width = "34%";
+      th.textContent = row[0];
+      td.innerHTML = row[1];
+      tr.appendChild(th);
+      tr.appendChild(td);
+      detailsEl.appendChild(tr);
+    });
+  }
+
+  function convert() {
+    resetOutput();
+
+    const rawValue = String(valueEl.value || "").trim();
+    const fromUnit = String(fromEl.value || "B");
+    const toUnit = String(toEl.value || "MB");
+    const decimals = parseInt(String(precisionEl.value || "2"), 10);
+    const mode = String(modeEl.value || "all");
+    const scientific = !!scientificEl.checked;
+
+    if (!rawValue) {
+      showError("Please enter a file size value.");
+      return;
+    }
+
+    const numericValue = parseInputNumber(rawValue);
+    if (!Number.isFinite(numericValue)) {
+      showError("Enter a valid numeric file size.");
+      return;
+    }
+
+    if (numericValue < 0) {
+      showError("File size cannot be negative.");
+      return;
+    }
+
+    if (!UNITS[fromUnit] || !UNITS[toUnit]) {
+      showError("Invalid unit selection.");
+      return;
+    }
+
+    const bytes = numericValue * UNITS[fromUnit].factor;
+    if (!Number.isFinite(bytes)) {
+      showError("The converted byte value is too large to process safely in this browser.");
+      return;
+    }
+
+    const resultValue = bytes / UNITS[toUnit].factor;
+    const resultText = formatNumber(resultValue, decimals, scientific) + " " + toUnit;
+    lastCopiedResult = resultText;
+
+    const bestForMode = bestUnit(bytes, mode === "all" ? UNITS[toUnit].type : mode);
+    const bestReadable = formatNumber(bytes / UNITS[bestForMode].factor, decimals, scientific) + " " + bestForMode;
+    const magnitude = classifyMagnitude(bytes);
+
+    summaryEl.innerHTML =
+      "<div style='display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;'>" +
+        "<strong>Converted successfully</strong>" +
+        "<div class='fsc-badges'>" +
+          badge("Result ready", "good") +
+          badge("Input in " + fromUnit, "accent") +
+          badge("Output in " + toUnit, "neutral") +
+        "</div>" +
+      "</div>" +
+      "<div class='note' style='margin-top:8px;'>The calculator first converts your value to bytes, then converts that byte value into the selected unit and all supported equivalents.</div>";
+
+    highlightEl.style.display = "block";
+    highlightEl.innerHTML =
+      "<div class='fsc-cards'>" +
+        card("Converted result", resultText, "Selected target unit") +
+        card("Exact byte value", formatNumber(bytes, 0, false) + " B", "Base value used for all conversions") +
+        card("Best readable unit", bestReadable, "Automatic size-friendly display") +
+      "</div>";
+
+    cardsEl.style.display = "block";
+    cardsEl.innerHTML =
+      "<div class='fsc-badges' style='margin-bottom:10px;'>" +
+        badge("Magnitude: " + magnitude, magnitude === "Very large" ? "warn" : "good") +
+        badge("From system: " + UNITS[fromUnit].system, "accent") +
+        badge("To system: " + UNITS[toUnit].system, "accent") +
+        badge(mode === "all" ? "Showing all units" : "Filtered to " + mode + " units", "neutral") +
+      "</div>" +
+      "<div class='fsc-cards'>" +
+        card("Decimal interpretation", formatNumber(bytes / 1000 ** 2, decimals, scientific) + " MB", "1000-based example display") +
+        card("Binary interpretation", formatNumber(bytes / 1024 ** 2, decimals, scientific) + " MiB", "1024-based example display") +
+      "</div>";
+
+    fillTable(bytes, decimals, scientific, mode, toUnit);
+
+    fillDetails([
+      ["Input", "<span class='fsc-mono'>" + escapeHtml(rawValue + " " + fromUnit) + "</span>"],
+      ["Input factor", "<span class='fsc-mono'>" + escapeHtml(fromUnit + " = " + UNITS[fromUnit].factor.toLocaleString() + " bytes") + "</span>"],
+      ["Bytes formula", "<span class='fsc-mono'>" + escapeHtml(rawValue + " × " + UNITS[fromUnit].factor.toLocaleString() + " = " + bytes.toLocaleString()) + "</span>"],
+      ["Target factor", "<span class='fsc-mono'>" + escapeHtml(toUnit + " = " + UNITS[toUnit].factor.toLocaleString() + " bytes") + "</span>"],
+      ["Target formula", "<span class='fsc-mono'>" + escapeHtml(bytes.toLocaleString() + " ÷ " + UNITS[toUnit].factor.toLocaleString() + " = " + resultValue) + "</span>"],
+      ["Rounding", "<span class='fsc-mono'>" + escapeHtml("Displayed with up to " + decimals + " decimal places") + "</span>"],
+      ["Unit-system note", UNITS[fromUnit].type === UNITS[toUnit].type
+        ? "Input and output use the same unit family."
+        : "Input and output use different unit families, so differences reflect the 1000 vs 1024 base conversion."],
+    ]);
+  }
+
+  async function copyResult() {
+    clearError();
+    if (!lastCopiedResult) {
+      showError("Convert a value first, then copy the result.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(lastCopiedResult);
+      summaryEl.innerHTML =
+        "<strong>Copied.</strong><div class='note' style='margin-top:6px;'>The converted result was copied to your clipboard.</div>";
+    } catch (_) {
+      showError("Clipboard copy failed in this browser.");
+    }
+  }
+
+  function swapUnits() {
+    const from = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = from;
+    if (String(valueEl.value || "").trim()) convert();
+  }
+
+  function clearAll() {
+    valueEl.value = "";
+    fromEl.value = "B";
+    toEl.value = "MB";
+    precisionEl.value = "2";
+    modeEl.value = "all";
+    scientificEl.checked = false;
+    resetOutput();
+    valueEl.focus();
+  }
+
+  convertBtn.addEventListener("click", convert);
+  swapBtn.addEventListener("click", swapUnits);
+  copyBtn.addEventListener("click", copyResult);
+  clearBtn.addEventListener("click", clearAll);
+
+  [valueEl, fromEl, toEl, precisionEl, modeEl, scientificEl].forEach(function (el) {
+    el.addEventListener("change", function () {
+      if (String(valueEl.value || "").trim()) convert();
+    });
+  });
+
+  valueEl.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") convert();
+  });
+
+  clearAll();
+});
+</script>
