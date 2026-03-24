@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Word Counter",
   description:
-    "Free word counter. Count words, characters, sentences, paragraphs, and estimate reading time. Runs locally with FAQ schema and accessibility.",
+    "Count words, characters, sentences, and reading time with practical usage explanations.",
   href: "/utility/word-counter/",
   order: 50,
 };
@@ -15,23 +15,31 @@ const CANONICAL_PATH = "/utility/word-counter/";
 const faqs = [
   {
     q: "What does this word counter measure?",
-    a: "It counts words, characters (with and without spaces), sentences, and paragraphs, and estimates reading time based on a words-per-minute rate.",
+    a: "It counts words, characters, sentences, paragraphs, and estimates reading time.",
   },
   {
     q: "How are words counted?",
-    a: "Words are counted by splitting on whitespace after trimming. Multiple spaces, tabs, and newlines are treated as separators.",
+    a: "Words are split by whitespace. Multiple spaces and line breaks are handled correctly.",
   },
   {
-    q: "How are sentences counted?",
-    a: "Sentences are estimated by counting sentence-ending punctuation (. ! ?) while avoiding obvious empty fragments. It’s a best-effort heuristic and may differ from grammar tools.",
+    q: "How accurate is sentence counting?",
+    a: "It uses punctuation heuristics and may differ slightly from grammar tools.",
   },
   {
     q: "How is reading time calculated?",
-    a: "Reading time is estimated from word count ÷ words-per-minute (WPM). You can adjust WPM to match your audience.",
+    a: "Reading time = word count ÷ WPM (words per minute).",
   },
   {
-    q: "Is my text stored or sent to a server?",
-    a: "No. Everything runs locally in your browser. Text is not stored or transmitted.",
+    q: "What is a typical reading speed?",
+    a: "Most adults read between 150–250 WPM depending on content difficulty.",
+  },
+  {
+    q: "When should I use this tool?",
+    a: "For writing, SEO optimization, content planning, and readability checks.",
+  },
+  {
+    q: "Is my text stored?",
+    a: "No. All processing happens locally in your browser.",
   },
 ];
 
@@ -48,10 +56,10 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Word Counter — ${SITE_NAME}`}
-  description="Count words, characters, sentences, paragraphs, and estimate reading time. Includes unit controls (WPM), validation, result cards, accessibility, and FAQ schema. Runs locally."
+  description="Count words and understand how to use the results for writing, SEO, and readability."
   canonicalPath={CANONICAL_PATH}
   h1="Word Counter"
-  intro="Paste or type text to count words, characters, sentences, and paragraphs. Also estimates reading time with an adjustable WPM setting."
+  intro="Analyze your text and understand how word count and reading time affect real-world writing and content performance."
   faq={faqs}
   categoryName="Utilities"
 >
@@ -111,21 +119,38 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      Counts are computed from the text you enter:
+      This tool analyzes your text and calculates multiple metrics.
     </p>
-    <ul>
-      <li><strong>Words:</strong> whitespace-separated tokens (strict mode filters punctuation-only tokens)</li>
-      <li><strong>Characters:</strong> with spaces and without spaces</li>
-      <li><strong>Sentences:</strong> heuristic based on punctuation (. ! ?)</li>
-      <li><strong>Paragraphs:</strong> groups separated by one or more blank lines</li>
-      <li><strong>Reading time:</strong> words ÷ WPM</li>
-    </ul>
+
+    <p class="note">
+      <strong>How it works:</strong><br/>
+      - Words: split by whitespace<br/>
+      - Characters: includes and excludes spaces<br/>
+      - Sentences: detected using punctuation (. ! ?)<br/>
+      - Paragraphs: separated by blank lines<br/>
+      - Reading time: words ÷ WPM
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Word count → content length<br/>
+      - Reading time → user engagement expectation<br/>
+      - Sentence count → writing complexity<br/>
+      - Paragraphs → readability structure
+    </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Great for essays, blog drafts, product descriptions, and SEO checks</li>
-      <li>Adjust WPM for different audiences (e.g., technical vs general)</li>
+      <li><strong>Blog writing:</strong> Aim for 1,000–2,000 words for SEO articles.</li>
+      <li><strong>Emails:</strong> Keep under 200 words for quick reading.</li>
+      <li><strong>Social media:</strong> Shorter content improves engagement.</li>
+    </ul>
+
+    <p class="note"><strong>Example:</strong></p>
+    <ul>
+      <li>500 words → about 2–3 minutes reading time</li>
+      <li>1500 words → about 6–8 minutes reading time</li>
     </ul>
   </div>
 

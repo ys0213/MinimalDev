@@ -3,41 +3,49 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Random Number Generator",
-  description: "Free random integer generator. Pick random numbers with custom min, max, and count instantly.",
+  description: "Generate random numbers with real-world usage explanations and result interpretation.",
   href: "/utility/random-number-generator/",
   order: 90,
 };
 
 const faqs = [
   {
-    q: "Is this cryptographically secure?",
-    a: "For general random picks it uses your browser’s random number generator. For security-sensitive use such as passwords or tokens, use a dedicated secure generator like the Password Generator or UUID Generator.",
+    q: "Is this random generator secure?",
+    a: "It uses crypto.getRandomValues for randomness, which is suitable for general use but not for cryptographic keys.",
   },
   {
     q: "Are min and max included?",
-    a: "Yes. The range is inclusive, so both min and max can appear.",
+    a: "Yes. The range is inclusive, meaning both min and max can appear.",
   },
   {
     q: "Can numbers repeat?",
-    a: "Yes by default. Enable unique numbers to prevent duplicates.",
+    a: "Yes by default. Enable unique mode to prevent duplicates.",
   },
   {
-    q: "What if min is greater than max?",
-    a: "Enter a valid range where min is less than or equal to max, or swap the values.",
+    q: "What is the difference between unique and non-unique?",
+    a: "Unique mode ensures no duplicates, while non-unique allows repeated values.",
   },
   {
-    q: "Does this work offline?",
-    a: "Once the page is loaded, it runs locally in your browser.",
+    q: "When should I use unique mode?",
+    a: "Use it for raffles, lotteries, or picking winners where duplicates are not allowed.",
+  },
+  {
+    q: "Is this tool suitable for security?",
+    a: "No. For passwords or tokens, use a dedicated secure generator.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. Everything runs locally in your browser.",
   },
 ];
 ---
 
 <ToolLayout
   title="Random Number Generator — MinimalDev"
-  description="Free random number generator (random integer generator). Set min, max, and count to pick random numbers instantly."
+  description="Generate random numbers and understand how to use them for real-world scenarios."
   canonicalPath="/utility/random-number-generator/"
   h1="Random Number Generator"
-  intro="Generate random integers quickly. Choose a minimum, maximum, and how many numbers you want (great for dice rolls, raffles, and quick picks)."
+  intro="Generate random numbers and learn how to use them in scenarios like games, selection, and simulations."
   faq={faqs}
   categoryName="Utilities"
 >
@@ -120,27 +128,34 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      This tool generates random integers within an <strong>inclusive</strong> range, from <code>min</code> to <code>max</code>.
-      If you request multiple numbers, it repeats the random draw for the selected count.
+      This tool generates random integers within a selected range.
     </p>
 
-    <ul>
-      <li><strong>Range:</strong> inclusive (min and max can both appear)</li>
-      <li><strong>Duplicates:</strong> allowed by default</li>
-      <li><strong>Optional:</strong> enable unique numbers to prevent duplicates</li>
-    </ul>
+    <p class="note">
+      <strong>How it works:</strong><br/>
+      - Select minimum and maximum values<br/>
+      - Choose how many numbers to generate<br/>
+      - Optionally prevent duplicates
+    </p>
 
     <p class="note">
-      For security-sensitive randomness such as passwords or tokens, use <a href="/utility/password-generator/">Password Generator</a> or
-      <a href="/utility/uuid-generator/">UUID Generator</a>.
+      <strong>How to interpret results:</strong><br/>
+      - Single value → random selection<br/>
+      - Multiple values → sampling from a range<br/>
+      - Unique mode → no repeated results
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>Dice roller:</strong> Min 1, Max 6, Count 10 → simulates dice rolls</li>
-      <li><strong>Pick a 3-digit number:</strong> Min 100, Max 999, Count 1</li>
-      <li><strong>Raffle pick:</strong> Min 1, Max 500, Count 3 → pick 3 winners</li>
+      <li><strong>Dice simulation:</strong> Min 1, Max 6, Count 5 → e.g. 3, 1, 6, 2, 4</li>
+      <li><strong>Raffle:</strong> Min 1, Max 100, Count 3 (unique) → pick winners</li>
+      <li><strong>Random test data:</strong> Min 1000, Max 9999 → generate sample numbers</li>
+    </ul>
+
+    <p class="note"><strong>Example:</strong></p>
+    <ul>
+      <li>Min 1, Max 10, Count 3 → 2, 7, 5</li>
     </ul>
   </div>
 

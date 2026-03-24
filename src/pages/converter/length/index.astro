@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Length Converter",
   description:
-    "Convert length units instantly (mm, cm, m, km, in, ft, yd, mi). Includes validation, unit UX, and FAQ schema.",
+    "Convert length units instantly (mm, cm, m, km, in, ft, yd, mi) with explanations and practical use cases.",
   href: "/converter/length/",
   order: 10,
 };
@@ -38,19 +38,27 @@ const TO_M = {
 const faqs = [
   {
     q: "Is this length converter accurate?",
-    a: "It uses fixed conversion factors (e.g., 1 in = 0.0254 m, 1 mi = 1609.344 m). Results are rounded for display.",
+    a: "Yes. It uses fixed conversion constants such as 1 inch = 0.0254 meters.",
   },
   {
-    q: "Does it support negative lengths?",
-    a: "You can enter negative values for math purposes, but real-world lengths are usually non-negative.",
+    q: "Why are results rounded?",
+    a: "Results are formatted for readability using significant digits and may hide trailing decimals.",
   },
   {
-    q: "Why do I see rounding differences?",
-    a: "The tool formats results with a limited number of significant digits and may trim trailing zeros.",
+    q: "Can I convert negative values?",
+    a: "Yes for calculation purposes, but real-world lengths are typically non-negative.",
   },
   {
-    q: "Are my inputs stored?",
-    a: "No. Conversions run locally in your browser and are not sent to a server.",
+    q: "What is the base unit?",
+    a: "All conversions are calculated through meters as the base unit.",
+  },
+  {
+    q: "Why do very large numbers look different?",
+    a: "Large or very small values may be shown in scientific notation to preserve precision.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All conversions run locally in your browser.",
   },
 ];
 
@@ -142,27 +150,48 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      Convert by using meters as a base unit:
-      <br />
-      <strong>value_in_m = value × (fromUnit → meters)</strong>
-      <br />
-      <strong>value_in_to = value_in_m ÷ (toUnit → meters)</strong>
+      This tool converts length by using meters as a base reference.
+    </p>
+
+    <p class="note">
+      <strong>Calculation:</strong><br/>
+      value in meters = input × conversion factor<br/>
+      result = meters ÷ target unit factor
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Small units (mm, cm): useful for precision measurements<br/>
+      - Medium units (m): used for general distances<br/>
+      - Large units (km, mi): used for travel and geography
+    </p>
+
+    <p class="note">
+      This helps you compare different measurement systems such as metric and imperial units.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>2.54 cm</strong> → <strong>1 in</strong></li>
-      <li><strong>1 mi</strong> → <strong>1,609.344 m</strong></li>
-      <li><strong>1 m</strong> → <strong>3.28084 ft</strong> (approx.)</li>
+      <li><strong>Construction:</strong> Convert cm to inches for material sizing.</li>
+      <li><strong>Travel:</strong> Convert kilometers to miles for distance understanding.</li>
+      <li><strong>Daily use:</strong> Convert height between cm and feet/inches.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>2.54 cm → 1 inch</li>
+      <li>1 meter → 3.28084 feet</li>
+      <li>5 km → 3.10686 miles</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/converter/cm-to-inches/">cm to inches</a></li>
+      <li><a href="/converter/inches-to-cm/">inches to cm</a></li>
       <li><a href="/converter/meters-to-feet/">meters to feet</a></li>
-      <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
+      <li><a href="/converter/feet-to-meters/">feet to meters</a></li>
       <li><a href="/converter/">All Converters</a></li>
     </ul>
   </div>

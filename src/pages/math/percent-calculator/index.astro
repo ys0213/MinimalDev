@@ -27,6 +27,10 @@ const faqs = [
     a: "No. Percent increase or decrease compares an old value to a new value. This tool only computes percent of a number.",
   },
   {
+    q: "When should I use this calculator?",
+    a: "Use it when you need a portion of a value, such as discounts, taxes, commissions, or tips.",
+  },
+  {
     q: "Does this store my inputs?",
     a: "No. Calculations run locally in your browser. Inputs are not stored or sent to a server.",
   },
@@ -102,20 +106,36 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      <strong>Formula:</strong> result = (percent ÷ 100) × number
+    This calculator finds a percentage of a number using a standard formula. Percent means “per 100”, so the calculation converts the percent into a decimal before multiplying.
     </p>
+
     <ul>
-      <li><strong>Example (discount):</strong> 15% of 200 = 30 → 200 − 30 = 170 (15% off)</li>
-      <li><strong>Example (tip):</strong> 10% of 50 = 5 → tip = 5</li>
-      <li><strong>Example (tax):</strong> 8% of 120 = 9.6 → total = 129.6</li>
+      <li><strong>Step 1:</strong> Convert percent to decimal → percent ÷ 100</li>
+      <li><strong>Step 2:</strong> Multiply by the number</li>
+      <li><strong>Formula:</strong> result = (percent ÷ 100) × number</li>
     </ul>
+
+    <p class="note">
+    <strong>Result interpretation:</strong><br>
+    The result represents a portion of the original value.  
+    For example, if the result is 30 from 200, it means 30 is the selected percentage of 200.
+    </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>15%</strong> of <strong>200</strong> = <strong>30</strong></li>
-      <li><strong>7.5%</strong> of <strong>80</strong> = <strong>6</strong></li>
-      <li><strong>20%</strong> of <strong>45</strong> = <strong>9</strong></li>
+      <li><strong>Discount:</strong> 15% of 200 = 30 → Final price = 200 − 30 = 170</li>
+      <li><strong>Tip:</strong> 10% of 50 = 5 → Tip = 5 → Total = 55</li>
+      <li><strong>Tax:</strong> 8% of 120 = 9.6 → Total = 129.6</li>
+      <li><strong>Commission:</strong> 5% of 1000 = 50 → Earnings = 50</li>
+    </ul>
+
+    <p class="note">
+    Example breakdown:
+    </p>
+    <ul>
+      <li>20% of 45 → (20 ÷ 100) × 45 = 9</li>
+      <li>7.5% of 80 → (7.5 ÷ 100) × 80 = 6</li>
     </ul>
   </div>
 

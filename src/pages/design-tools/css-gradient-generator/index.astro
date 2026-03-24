@@ -19,11 +19,15 @@ const faqs = [
   },
   {
     q: "Can I set stop positions?",
-    a: "Yes. You can define color stop percentages for each color stop.",
+    a: "Yes. You can define color stop percentages for each color stop to control exactly where colors appear.",
   },
   {
     q: "Does it support more than two colors?",
-    a: "Yes. This version supports three color stops.",
+    a: "Yes. This version supports three color stops, allowing more complex gradient transitions.",
+  },
+  {
+    q: "What does the angle mean?",
+    a: "The angle defines the direction of the gradient. For example, 90deg creates a vertical gradient, while 0deg creates a horizontal gradient.",
   },
   {
     q: "Is any design data stored?",
@@ -163,15 +167,39 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      Choose three colors, set stop positions and angle, preview the result, and copy the final CSS linear-gradient code.
+    This tool generates a CSS <code>linear-gradient()</code> value based on your selected colors, positions, and angle. It follows standard CSS syntax used in modern browsers.
+    </p>
+
+    <ul>
+    <li><strong>Angle:</strong> controls the direction of the gradient (0° = left → right, 90° = bottom → top).</li>
+    <li><strong>Color stops:</strong> define which colors appear in the gradient.</li>
+    <li><strong>Stop positions:</strong> control where each color starts and ends.</li>
+    <li><strong>Preview:</strong> shows the exact visual output before using the CSS.</li>
+    </ul>
+
+    <p class="note">
+    <strong>Result interpretation:</strong><br>
+    If colors blend too quickly, your stop positions are too close.  
+    If large areas show a single color, the stops are too far apart.  
+    For smooth gradients, use evenly spaced positions (e.g., 0%, 50%, 100%).
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Create a three-stop background gradient for UI sections</li>
-      <li>Control exactly where each color appears in the gradient</li>
-      <li>Copy the generated CSS directly into your stylesheet</li>
+      <li><strong>UI background:</strong> Create modern gradient backgrounds for hero sections or cards.</li>
+      <li><strong>Button styling:</strong> Apply gradients to buttons for visual emphasis.</li>
+      <li><strong>Brand design:</strong> Combine multiple brand colors into a single gradient.</li>
+      <li><strong>CSS experimentation:</strong> Test different stop positions and angles to learn gradient behavior.</li>
+    </ul>
+
+    <p class="note">
+    Example gradient:
+    </p>
+    <ul>
+      <li>Angle: 90deg</li>
+      <li>Stops: Purple (0%) → Cyan (50%) → Green (100%)</li>
+      <li>Result: smooth vertical gradient transitioning evenly across the element</li>
     </ul>
   </div>
 

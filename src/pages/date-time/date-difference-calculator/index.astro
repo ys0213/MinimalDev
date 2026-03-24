@@ -19,19 +19,23 @@ const faqs = [
   },
   {
     q: "Does the order of the dates matter?",
-    a: "No. The calculator can handle dates in either order and will still show the absolute difference.",
+    a: "No. In absolute mode, the result is always positive. In signed mode, the result shows direction (future or past).",
   },
   {
-    q: "How are months and years handled?",
-    a: "The calculator shows exact day difference and also provides approximate months and years based on calendar-style averages.",
+    q: "How are months and years calculated?",
+    a: "Days are exact. Months and years are approximated using average calendar values (30.4375 days/month, 365.25 days/year).",
   },
   {
-    q: "Are leap years included automatically?",
-    a: "Yes. Because the calculation uses real calendar dates, leap years are included automatically.",
+    q: "Are leap years included?",
+    a: "Yes. The calculation is based on real calendar timestamps, so leap years are automatically included.",
   },
   {
-    q: "Are my date inputs stored?",
-    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+    q: "When should I use signed mode?",
+    a: "Use signed mode when tracking deadlines, countdowns, or time remaining. Use absolute mode for simple comparisons.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations are done locally in your browser. No data is sent or stored.",
   },
 ];
 
@@ -112,16 +116,39 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      The calculator converts both dates into calendar timestamps at midnight and measures the difference in days.
-      It also converts that difference into approximate weeks, months, and years for easier interpretation.
+      This calculator converts both dates into timestamps and measures the difference in days.
+    </p>
+
+    <p class="note">
+      <strong>Core formula:</strong><br/>
+      Difference (days) = (end date − start date) ÷ 86,400,000
+    </p>
+
+    <p class="note">
+      <strong>How to interpret the result:</strong><br/>
+      - Days: exact difference between two dates<br/>
+      - Weeks: useful for planning short-term periods<br/>
+      - Months: approximate value for long-term planning<br/>
+      - Years: approximate duration across long spans
+    </p>
+
+    <p class="note">
+      Signed mode helps determine whether a date is in the past or future, which is useful for countdowns and deadlines.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>2026-01-01 to 2026-01-31 → 30 days</li>
-      <li>2024-02-28 to 2024-03-01 → leap-year aware result</li>
-      <li>Signed mode shows whether the end date is before or after the start date</li>
+      <li><strong>Project planning:</strong> Calculate duration between start and end dates.</li>
+      <li><strong>Countdown tracking:</strong> See how many days remain until an event.</li>
+      <li><strong>Age or duration check:</strong> Measure time between two life events.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>2026-01-01 → 2026-01-31 = 30 days (1 month)</li>
+      <li>2024-02-28 → 2024-03-01 = 2 days (leap year included)</li>
+      <li>Start after end date (signed mode) → negative value</li>
     </ul>
   </div>
 

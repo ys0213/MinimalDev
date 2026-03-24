@@ -11,24 +11,24 @@ export const tool = {
 
 const faqs = [
   {
-    q: "What does this salary calculator estimate?",
-    a: "It converts an annual salary into monthly, biweekly, weekly, daily, and hourly pay estimates based on your selected work schedule.",
+    q: "What does this calculator estimate?",
+    a: "It converts annual salary into monthly, biweekly, weekly, daily, and hourly gross pay.",
   },
   {
-    q: "Does this calculator account for taxes?",
-    a: "No. This tool estimates gross pay only. Use the Tax Calculator or Paycheck Calculator for after-tax estimates.",
+    q: "How should I interpret hourly pay?",
+    a: "Hourly pay is based on your work schedule and helps compare jobs or estimate freelance rates.",
   },
   {
-    q: "How is hourly pay calculated?",
-    a: "Hourly pay is estimated from annual salary divided by total hours worked per year, based on your hours per week and weeks per year inputs.",
+    q: "Why adjust weeks per year?",
+    a: "Reducing weeks per year accounts for unpaid leave, holidays, or part-time schedules.",
   },
   {
-    q: "Can I adjust work weeks and hours?",
-    a: "Yes. You can customize hours per week, days per week, and weeks worked per year.",
+    q: "Does this include taxes?",
+    a: "No. This tool shows gross salary only.",
   },
   {
-    q: "Are my salary inputs stored?",
-    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
   },
 ];
 ---
@@ -141,17 +141,42 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      This calculator starts with annual gross salary, then divides it across common pay periods:
-      monthly, biweekly, weekly, daily, and hourly. Hourly pay depends on the total hours you
-      work per year based on your schedule.
+      This calculator converts your annual salary into different time-based pay estimates.
+    </p>
+
+    <p class="note">
+      <strong>Core calculations:</strong><br/>
+      Monthly = annual ÷ 12<br/>
+      Weekly = annual ÷ weeks per year<br/>
+      Daily = weekly ÷ days per week<br/>
+      Hourly = annual ÷ (hours per week × weeks per year)
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Monthly: useful for budgeting and rent planning<br/>
+      - Weekly: useful for short-term income tracking<br/>
+      - Daily: useful for contract or per-day work<br/>
+      - Hourly: useful for comparing jobs or freelance rates
+    </p>
+
+    <p class="note">
+      Adjust your work schedule to reflect real conditions such as part-time work or unpaid leave.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>$60,000/year → about $5,000/month gross</li>
-      <li>$52,000/year with 40 hours/week → about $25/hour gross</li>
-      <li>Adjust weeks per year if you want unpaid leave or seasonal work reflected</li>
+      <li><strong>Budget planning:</strong> Convert salary to monthly income for expenses.</li>
+      <li><strong>Job comparison:</strong> Compare hourly pay across different roles.</li>
+      <li><strong>Freelance estimation:</strong> Use hourly rate for project pricing.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>$60,000/year → about $5,000/month</li>
+      <li>$52,000/year → about $25/hour (40h/week)</li>
+      <li>Reduce weeks/year → lower effective hourly rate</li>
     </ul>
   </div>
 

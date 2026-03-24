@@ -12,23 +12,27 @@ export const tool = {
 const faqs = [
   {
     q: "What does this tip calculator do?",
-    a: "It calculates the tip amount, total bill including tip, and optional split amount per person based on your bill and chosen tip percentage.",
+    a: "It calculates the tip amount, total bill including tip, and optional split per person.",
   },
   {
-    q: "Can I split the bill between multiple people?",
-    a: "Yes. Enter the number of people to see how much each person would pay.",
+    q: "When should I use different tip percentages?",
+    a: "10% is minimal service, 15–18% is standard, and 20%+ is used for excellent service in many regions.",
   },
   {
-    q: "Does this calculator include tax automatically?",
-    a: "No. Enter the bill amount you want to tip on. If you want to include tax, add it to the bill before calculating.",
+    q: "What is the best way to split a bill?",
+    a: "The calculator splits evenly. For unequal splits, adjust manually after calculation.",
   },
   {
-    q: "Can I round the total?",
-    a: "Yes. You can optionally round the total up to the nearest whole currency unit.",
+    q: "Should I tip before or after tax?",
+    a: "This depends on local custom. Some tip before tax, others after. Enter the amount you prefer.",
   },
   {
-    q: "Are my inputs stored?",
-    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+    q: "Is rounding useful?",
+    a: "Yes. Rounding helps simplify payments, especially when splitting bills.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
   },
 ];
 ---
@@ -126,17 +130,40 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      This calculator multiplies the bill by your chosen tip percentage to find the tip amount,
-      then adds it back to the bill to get the total. If you enter a number of people, it also
-      divides the final total evenly to estimate each person's share.
+      This calculator determines the tip based on your bill and selected percentage.
+    </p>
+
+    <p class="note">
+      <strong>Core formulas:</strong><br/>
+      Tip = bill × (percentage ÷ 100)<br/>
+      Total = bill + tip<br/>
+      Split per person = total ÷ number of people
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Tip amount: extra payment for service<br/>
+      - Total: final amount you will pay<br/>
+      - Per person: equal share when splitting
+    </p>
+
+    <p class="note">
+      Use rounding when you want clean payment values (e.g., avoiding coins or decimals).
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>$48.50 bill with 15% tip → $7.28 tip, $55.78 total</li>
-      <li>$80 bill with 20% tip split 4 ways → $24 per person</li>
-      <li>Use “Round total up” if you want a cleaner final payment amount</li>
+      <li><strong>Restaurant bill:</strong> Calculate tip after dining.</li>
+      <li><strong>Group payment:</strong> Split total among friends.</li>
+      <li><strong>Delivery tip:</strong> Quickly estimate appropriate tip amount.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>$48.50 with 15% → $7.28 tip → $55.78 total</li>
+      <li>$80 with 20% split 4 ways → $24 per person</li>
+      <li>Round total up → easier final payment</li>
     </ul>
   </div>
 

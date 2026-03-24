@@ -3,27 +3,35 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Temperature Converter",
-  description: "Convert Celsius, Fahrenheit, and Kelvin instantly (C to F, F to C, C to K).",
+  description: "Convert Celsius, Fahrenheit, and Kelvin with clear explanations and real-world examples.",
   href: "/converter/temperature-converter/",
   order: 20,
 };
 
 const faqs = [
   {
-    q: "Why is temperature conversion different from other unit converters?",
-    a: "Temperature scales include offsets (such as +32 or +273.15) in addition to ratios. Unlike length or weight, you cannot convert using multiplication alone.",
+    q: "Why is temperature conversion different?",
+    a: "Unlike other units, temperature includes both scaling and offsets (e.g., +32 or +273.15).",
   },
   {
-    q: "Can I enter negative values?",
-    a: "Yes. Negative temperatures such as −10°C or −40°F are handled correctly.",
+    q: "Can I use negative values?",
+    a: "Yes. Temperatures like −10°C or −40°F are valid and handled correctly.",
   },
   {
-    q: "Why do I sometimes see rounding?",
-    a: "Some conversions produce long repeating decimals. The tool rounds results for readability while still using standard formulas.",
+    q: "Why do results sometimes look rounded?",
+    a: "Some conversions produce long decimals, so values are formatted for readability.",
   },
   {
-    q: "Does this tool store or transmit my data?",
-    a: "No. All calculations run locally in your browser. No values are stored or sent to a server.",
+    q: "What is absolute zero?",
+    a: "Absolute zero is 0 K (−273.15°C), the lowest possible temperature.",
+  },
+  {
+    q: "Why is −40 the same in C and F?",
+    a: "At −40, both Celsius and Fahrenheit scales intersect.",
+  },
+  {
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
   },
 ];
 ---
@@ -77,35 +85,42 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      Temperature conversion differs from most unit converters because it involves both a scale and an offset.
-      For example, converting from Celsius to Fahrenheit requires multiplying and adding 32,
-      while converting to Kelvin requires adding 273.15.
+      Temperature conversion uses both scaling and offset adjustments.
     </p>
 
     <p class="note">
-      This tool converts values through Celsius internally when needed.
-      It supports exact formulas for C ↔ F and C ↔ K conversions,
-      ensuring mathematically correct results.
+      <strong>Formulas:</strong><br/>
+      C → F: (°C × 9/5) + 32<br/>
+      F → C: (°F − 32) × 5/9<br/>
+      C → K: °C + 273.15<br/>
+      K → C: K − 273.15
     </p>
 
-    <ul>
-      <li><strong>C → F:</strong> (°C × 9/5) + 32</li>
-      <li><strong>F → C:</strong> (°F − 32) × 5/9</li>
-      <li><strong>C → K:</strong> °C + 273.15</li>
-      <li><strong>K → C:</strong> K − 273.15</li>
-    </ul>
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Celsius: used in most countries and weather reports<br/>
+      - Fahrenheit: used mainly in the United States<br/>
+      - Kelvin: used in science and engineering
+    </p>
 
     <p class="note">
-      If a result contains many decimal places, it is rounded for display clarity.
+      Use this tool when comparing temperatures across regions or converting scientific values.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>0°C</strong> = <strong>32°F</strong> = <strong>273.15 K</strong></li>
-      <li><strong>100°C</strong> = <strong>212°F</strong> = <strong>373.15 K</strong></li>
-      <li><strong>98.6°F</strong> ≈ <strong>37°C</strong></li>
-      <li><strong>300 K</strong> ≈ <strong>26.85°C</strong></li>
+      <li><strong>Weather:</strong> Convert °F to °C when traveling internationally.</li>
+      <li><strong>Cooking:</strong> Convert oven temperatures between systems.</li>
+      <li><strong>Science:</strong> Convert °C to Kelvin for experiments.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>0°C = 32°F = 273.15 K</li>
+      <li>100°C = 212°F = 373.15 K</li>
+      <li>98.6°F ≈ 37°C (body temperature)</li>
+      <li>300 K ≈ 26.85°C</li>
     </ul>
   </div>
 
@@ -113,6 +128,8 @@ const faqs = [
     <ul>
       <li><a href="/converter/c-to-f/">C to F</a></li>
       <li><a href="/converter/f-to-c/">F to C</a></li>
+      <li><a href="/converter/kelvin-to-celsius/">Kelvin to Celsius</a></li>
+      <li><a href="/converter/length/">Length Converter</a></li>
       <li><a href="/converter/weight-converter/">Weight Converter</a></li>
       <li><a href="/converter/">All Converters</a></li>
     </ul>

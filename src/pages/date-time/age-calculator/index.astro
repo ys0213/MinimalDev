@@ -26,6 +26,10 @@ const faqs = [
     a: "No. It calculates using calendar dates only (not hours/minutes).",
   },
   {
+    q: "How is Feb 29 handled?",
+    a: "For leap day birthdays, non-leap years use Feb 28 as a consistent reference for birthday calculations.",
+  },
+  {
     q: "Is my birth date stored anywhere?",
     a: "No. All calculations run locally in your browser. No personal data is stored or sent to a server.",
   },
@@ -67,29 +71,42 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      This calculator finds an <strong>exact calendar breakdown</strong> by comparing the birth date to a reference date
-      and “borrowing” months/days when needed. This is closer to how people describe age in real life (years, months, days),
-      rather than approximating using a fixed number of days per month.
-    </p>
-
-    <p class="note">
-      Leap years are handled automatically because the calculation is based on real dates.
-      If you provide a reference date, you can calculate age at a specific moment (past or future).
-      If no reference date is provided, the tool uses <strong>today</strong>.
+    This calculator determines your age using real calendar differences between two dates. Instead of approximating using fixed day counts, it calculates exact years, months, and days.
     </p>
 
     <ul>
-      <li><strong>Exact breakdown:</strong> years + months + days</li>
-      <li><strong>Optional reference date:</strong> age at any date</li>
-      <li><strong>Extra insights:</strong> total days lived, next birthday countdown</li>
+      <li><strong>Step 1:</strong> Compare birth date and reference date</li>
+      <li><strong>Step 2:</strong> Subtract years, months, and days</li>
+      <li><strong>Step 3:</strong> Borrow days or months when needed (calendar-based adjustment)</li>
+      <li><strong>Step 4:</strong> Handle leap years automatically</li>
     </ul>
+
+    <p class="note">
+    <strong>Result interpretation:</strong><br>
+    The result shows how long you have lived in calendar terms.  
+    For example, "25 years, 2 months, 10 days" means exactly that duration since your birth date—not an approximation.
+    </p>
+
+    <p class="note">
+    The "total days" value is useful for analytics or tracking purposes, while the "next birthday" helps you understand upcoming milestones.
+    </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>DOB 2000-01-01</strong> → age depends on today (or chosen reference date).</li>
-      <li><strong>DOB 1995-10-10, reference 2026-02-24</strong> → 30 years, 4 months, 14 days (example).</li>
-      <li><strong>Born on Feb 29</strong> → leap years are handled correctly.</li>
+      <li><strong>Personal age:</strong> Enter your birth date to calculate your current age.</li>
+      <li><strong>Future age:</strong> Set a future reference date to see how old you will be at a specific time.</li>
+      <li><strong>Legal age checks:</strong> Determine age for eligibility (e.g., 18+, 21+).</li>
+      <li><strong>Event planning:</strong> Calculate age at a future event or milestone.</li>
+    </ul>
+
+    <p class="note">
+    Example breakdown:
+    </p>
+    <ul>
+      <li>DOB: 2000-01-01 → Today: depends on current date</li>
+      <li>DOB: 1995-10-10 → Ref: 2026-02-24 → 30 years, 4 months, 14 days</li>
+      <li>DOB: 2004-02-29 → Non-leap year → handled as Feb 28</li>
     </ul>
   </div>
 

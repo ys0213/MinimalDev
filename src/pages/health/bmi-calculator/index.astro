@@ -11,33 +11,37 @@ export const tool = {
 const faqs = [
   {
     q: "Is BMI accurate?",
-    a: "BMI is a screening tool based on height and weight. It does not directly measure body fat, muscle mass, or health risk.",
+    a: "BMI is a screening tool based on height and weight. It does not directly measure body fat, muscle mass, or individual health risk.",
   },
   {
     q: "Is this BMI calculator for adults only?",
-    a: "Yes. The BMI categories shown here are for adults. Children and teens use age- and sex-specific BMI percentiles.",
+    a: "Yes. The BMI categories shown here are for adults. Children and teens require age- and sex-specific BMI percentiles.",
   },
   {
     q: "Does BMI consider muscle?",
-    a: "No. People with high muscle mass can have a higher BMI even with low body fat.",
+    a: "No. Individuals with higher muscle mass may have a higher BMI without having excess body fat.",
   },
   {
     q: "Which BMI categories are used?",
     a: "Standard adult BMI categories: underweight (<18.5), normal (18.5–24.9), overweight (25–29.9), obesity (≥30).",
   },
   {
+    q: "What does my BMI result mean?",
+    a: "Your BMI category indicates general weight status. It should be interpreted alongside other health indicators such as waist circumference, body fat percentage, and medical advice.",
+  },
+  {
     q: "Is my data stored?",
-    a: "No. All calculations run locally in your browser and nothing is uploaded.",
+    a: "No. All calculations run locally in your browser and no personal data is uploaded or stored.",
   },
 ];
 ---
 
 <ToolLayout
   title="BMI Calculator — MinimalDev"
-  description="Free BMI calculator using metric or imperial units. Calculate Body Mass Index and view standard adult BMI categories."
+  description="Free BMI calculator using metric or imperial units. Calculate Body Mass Index and understand your BMI category."
   canonicalPath="/health/bmi-calculator/"
   h1="BMI Calculator"
-  intro="Calculate your Body Mass Index (BMI) using metric or imperial units. See your BMI value and category instantly."
+  intro="Calculate your Body Mass Index (BMI) using metric or imperial units. Understand your BMI category and what it means for general health."
   faq={faqs}
   categoryName="Health"
 >
@@ -79,33 +83,47 @@ const faqs = [
       </div>
 
       <p class="note" style="margin-top:10px;">
-        Informational only. BMI is not a diagnosis and does not replace medical advice.
+        This tool is for informational purposes only and does not replace professional medical advice.
       </p>
     </div>
   </div>
 
+  <!-- 강화된 How -->
   <div slot="how">
     <p class="note">
-      BMI (Body Mass Index) is a simple ratio of weight to height used as a general screening metric for adults.
-      It helps categorize weight status but does not directly measure body fat percentage.
+      BMI (Body Mass Index) is calculated by dividing weight by height squared. It is widely used as a simple screening tool to classify weight status in adults.
     </p>
 
     <p class="note">
-      <strong>Metric:</strong> BMI = weight (kg) ÷ height (m)²<br />
-      <strong>Imperial:</strong> BMI = (weight (lb) ÷ height (in)²) × 703
+      <strong>Metric formula:</strong> BMI = weight (kg) ÷ height (m)²<br/>
+      <strong>Imperial formula:</strong> BMI = (weight (lb) ÷ height (in)²) × 703
     </p>
 
     <p class="note">
-      Use BMI as a starting point. If you want a more complete picture, consider waist circumference,
-      body composition, and clinical guidance.
+      <strong>How to interpret results:</strong><br/>
+      - Underweight may indicate insufficient body weight<br/>
+      - Normal range is generally associated with lower health risk<br/>
+      - Overweight and obesity are associated with increased risk of certain conditions<br/>
+    </p>
+
+    <p class="note">
+      BMI does not measure body fat directly. It should be used together with other indicators such as waist circumference, lifestyle factors, and clinical evaluation.
     </p>
   </div>
 
+  <!-- 강화된 Examples -->
   <div slot="examples">
     <ul>
-      <li><strong>170 cm, 65 kg</strong> → BMI ≈ <strong>22.49</strong> (Normal range)</li>
-      <li><strong>180 cm, 90 kg</strong> → BMI ≈ <strong>27.78</strong> (Overweight)</li>
-      <li><strong>70 in, 160 lb</strong> → BMI ≈ <strong>22.96</strong> (Normal range)</li>
+      <li><strong>General health check:</strong> A person enters height and weight to quickly assess if they are within a normal BMI range.</li>
+      <li><strong>Fitness tracking:</strong> Monitor BMI changes over time when adjusting diet or exercise.</li>
+      <li><strong>Weight management planning:</strong> Identify whether weight loss or gain may be appropriate.</li>
+    </ul>
+
+    <p class="note"><strong>Example calculations:</strong></p>
+    <ul>
+      <li>170 cm, 65 kg → BMI = 65 ÷ (1.70²) = 22.49 (Normal)</li>
+      <li>180 cm, 90 kg → BMI = 90 ÷ (1.80²) = 27.78 (Overweight)</li>
+      <li>70 in, 160 lb → BMI = (160 ÷ 70²) × 703 = 22.96 (Normal)</li>
     </ul>
   </div>
 
@@ -179,10 +197,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let bmi = NaN;
 
     if (u === "imperial") {
-      // BMI = (lb / in^2) * 703
       bmi = (w / (h * h)) * 703;
     } else {
-      // BMI = kg / (m^2), input height in cm
       const m = h / 100;
       bmi = w / (m * m);
     }

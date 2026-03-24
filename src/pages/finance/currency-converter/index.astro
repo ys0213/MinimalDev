@@ -15,23 +15,23 @@ const CANONICAL_PATH = "/finance/currency-converter/";
 const faqs = [
   {
     q: "How does this currency converter work?",
-    a: "It converts an amount from one currency to another using the exchange rate that you enter manually.",
+    a: "It multiplies the input amount by the exchange rate you enter. The rate should represent how much 1 unit of the source currency equals in the target currency.",
   },
   {
     q: "Does this use live exchange rates?",
-    a: "No. This version does not fetch live market data. You enter the rate yourself, which keeps the tool fast and privacy-friendly.",
+    a: "No. This tool does not fetch live data. You manually enter the rate, which allows full control and works offline.",
   },
   {
-    q: "What exchange rate should I enter?",
-    a: "Enter the rate as: 1 unit of the 'from' currency equals how many units of the 'to' currency.",
+    q: "What does the reverse rate mean?",
+    a: "The reverse rate shows how much 1 unit of the target currency equals in the source currency. It is calculated as 1 divided by the exchange rate.",
   },
   {
-    q: "Can I reverse the currencies?",
-    a: "Yes. The tool includes a swap action and also shows the reverse exchange rate.",
+    q: "When should I use manual rates?",
+    a: "Manual rates are useful when working with fixed contracts, historical data, or custom pricing instead of live market rates.",
   },
   {
-    q: "Are my amounts or rates stored?",
-    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+    q: "Is my data stored?",
+    a: "No. All calculations are done locally in your browser. No values are stored or transmitted.",
   },
 ];
 
@@ -152,22 +152,36 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool uses a direct exchange rate that you enter manually. If the rate is entered as
-      <strong>1 From = X To</strong>, then the converted amount is:
-      <strong>amount × X</strong>.
+      Currency conversion is calculated using a simple multiplication formula:
     </p>
 
     <p class="note">
-      It also shows the reverse exchange rate so you can interpret the conversion in both directions.
-      This version is useful when you want full control over which rate is applied.
+      <strong>Converted amount = amount × exchange rate</strong>
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Converted amount: final value in the target currency<br/>
+      - Exchange rate: how much 1 unit of the source currency is worth<br/>
+      - Reverse rate: useful for understanding the opposite conversion
+    </p>
+
+    <p class="note">
+      This tool is especially useful when you want to apply a known or fixed exchange rate instead of relying on fluctuating live market data.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>100 USD at a rate of 1350 KRW per USD → 135,000 KRW</li>
-      <li>50 EUR at a rate of 1.08 USD per EUR → 54 USD</li>
-      <li>Use Swap if you want to reverse the conversion direction and enter the opposite rate</li>
+      <li><strong>Travel budgeting:</strong> Convert expenses using a known exchange rate.</li>
+      <li><strong>Business pricing:</strong> Apply a fixed internal exchange rate for billing.</li>
+      <li><strong>Historical comparison:</strong> Recalculate values using past exchange rates.</li>
+    </ul>
+
+    <p class="note"><strong>Example:</strong></p>
+    <ul>
+      <li>100 USD × 1350 = 135,000 KRW</li>
+      <li>50 EUR × 1.08 = 54 USD</li>
     </ul>
   </div>
 

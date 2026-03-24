@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Discount Calculator",
   description:
-    "Free discount calculator. Find final price, discount amount, and savings percentage instantly.",
+    "Free discount calculator. Find final price, discount amount, and savings percentage with clear explanations and real use cases.",
   href: "/math/discount-calculator/",
   order: 70,
 };
@@ -12,15 +12,23 @@ export const tool = {
 const faqs = [
   {
     q: "Can discount be over 100%?",
-    a: "No. A discount above 100% would make the final price negative.",
+    a: "No. A discount above 100% would result in a negative price, which is not valid in real transactions.",
   },
   {
-    q: "What about two discounts or stacked discounts?",
-    a: "Apply them sequentially. For example, 20% then 10% means price × (1−0.20) × (1−0.10).",
+    q: "How do multiple discounts work?",
+    a: "Apply discounts sequentially. For example, 20% then 10% becomes price × (1−0.20) × (1−0.10), not 30%.",
   },
   {
     q: "Does this include sales tax?",
-    a: "No. This calculator only applies the discount. Add sales tax afterward if needed.",
+    a: "No. This tool calculates the discount first. Sales tax should be applied afterward if needed.",
+  },
+  {
+    q: "What does 'You save' mean?",
+    a: "It shows the absolute amount reduced from the original price.",
+  },
+  {
+    q: "Why is the final price sometimes not exactly intuitive?",
+    a: "Because percentages apply proportionally, not linearly. Multiple discounts compound rather than add.",
   },
 ];
 ---
@@ -30,7 +38,7 @@ const faqs = [
   description="Enter original price and discount to get final price, discount amount, and savings."
   canonicalPath="/math/discount-calculator/"
   h1="Discount Calculator"
-  intro="Calculate discounted price and savings from an original price and discount percentage."
+  intro="Calculate discounted price and understand how much you actually save in real situations like shopping, pricing, and budgeting."
   faq={faqs}
   categoryName="Math"
 >
@@ -107,15 +115,39 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-      <strong>Discount amount</strong> = original price × (discount ÷ 100)<br />
-      <strong>Final price</strong> = original price − discount amount
+      This calculator determines how much you save and what you actually pay after a discount.
+    </p>
+
+    <p class="note">
+      <strong>Calculation method:</strong><br/>
+      Discount amount = price × (discount ÷ 100)<br/>
+      Final price = price − discount amount
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Final price: the actual amount you will pay<br/>
+      - You save: the exact money reduced from original price<br/>
+      - Discount %: helps compare deals across products
+    </p>
+
+    <p class="note">
+      Use this to evaluate whether a discount is meaningful or just marketing.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
+      <li><strong>Shopping:</strong> Check if a sale is actually worth buying.</li>
+      <li><strong>Price comparison:</strong> Compare discounts across multiple stores.</li>
+      <li><strong>Budget planning:</strong> Estimate spending during sales events.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
       <li>$120 with 25% off → save $30 → pay $90</li>
-      <li>$80 with 7.5% off → save $6 → pay $74</li>
+      <li>$200 with 50% off → save $100 → pay $100</li>
+      <li>$80 with 10% then 20% → pay $57.6 (not $56)</li>
     </ul>
   </div>
 
@@ -123,6 +155,7 @@ const faqs = [
     <ul>
       <li><a href="/math/sales-tax-calculator/">Sales Tax Calculator</a></li>
       <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
       <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
       <li><a href="/math/">All Math Tools</a></li>
     </ul>

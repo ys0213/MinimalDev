@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JSON Formatter",
   description:
-    "Free JSON formatter and validator. Pretty-print JSON, minify JSON, validate syntax, and copy results locally in your browser.",
+    "Format, validate, and minify JSON with real-world usage explanations and practical examples.",
   href: "/utility/json-formatter/",
   order: 70,
 };
@@ -15,23 +15,35 @@ const CANONICAL_PATH = "/utility/json-formatter/";
 const faqs = [
   {
     q: "What does this JSON formatter do?",
-    a: "It formats (pretty-prints) JSON with indentation, validates JSON syntax, and can also minify JSON by removing whitespace.",
+    a: "It formats JSON for readability, validates syntax, and can minify JSON to reduce size.",
   },
   {
-    q: "Is my JSON uploaded to a server?",
-    a: "No. Formatting and validation run locally in your browser. Nothing is sent to a server.",
+    q: "Is my JSON uploaded?",
+    a: "No. All processing happens locally in your browser.",
   },
   {
-    q: "Why does JSON.parse fail on my input?",
-    a: "Common issues are trailing commas, comments, single quotes, unquoted keys, or invalid numbers like NaN/Infinity. Standard JSON does not allow these.",
+    q: "Why is my JSON invalid?",
+    a: "Common issues include trailing commas, comments, missing quotes, or invalid values like NaN.",
   },
   {
-    q: "Does it preserve key order?",
-    a: "Most modern JS engines preserve insertion order for object keys, but the JSON standard does not guarantee ordering semantics. This tool does not intentionally reorder keys.",
+    q: "When should I use minify?",
+    a: "Minified JSON is useful for APIs and production environments to reduce file size.",
   },
   {
-    q: "Can it format JSON Lines (JSONL)?",
-    a: "This page focuses on a single JSON value. JSONL requires parsing line-by-line and may not validate as one JSON document.",
+    q: "When should I use pretty print?",
+    a: "Pretty format is ideal for debugging and reading JSON during development.",
+  },
+  {
+    q: "Does it reorder keys?",
+    a: "Only if you choose sorting. Otherwise original order is preserved.",
+  },
+  {
+    q: "What is JSON used for?",
+    a: "JSON is widely used for APIs, configuration files, and data exchange between systems.",
+  },
+  {
+    q: "Can I format large JSON?",
+    a: "Very large JSON may impact browser performance. This tool includes size limits for stability.",
   },
 ];
 
@@ -133,16 +145,36 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool uses the browser’s JSON parser (<code>JSON.parse</code>) to validate input.
-      For formatting, it uses <code>JSON.stringify</code> with your chosen indentation. Minify removes whitespace.
+      This tool uses JSON.parse to validate syntax and JSON.stringify to format or minify data.
+    </p>
+
+    <p class="note">
+      <strong>How it works:</strong><br/>
+      - Validate: checks if JSON is syntactically correct<br/>
+      - Pretty print: adds indentation for readability<br/>
+      - Minify: removes whitespace to reduce size
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Valid JSON → safe to use in APIs or configs<br/>
+      - Pretty JSON → easier debugging and editing<br/>
+      - Minified JSON → optimized for performance and transfer size
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Pretty print: add indentation and new lines for readability</li>
-      <li>Minify: remove whitespace to reduce size (useful for APIs)</li>
-      <li>Validate: check whether the JSON is syntactically valid</li>
+      <li><strong>API debugging:</strong> Format messy API responses to readable structure.</li>
+      <li><strong>Production optimization:</strong> Minify JSON before sending to reduce bandwidth.</li>
+      <li><strong>Validation:</strong> Check if JSON is valid before using in code.</li>
+    </ul>
+
+    <p class="note"><strong>Example:</strong></p>
+    <ul>
+      <li>Input: <code>&#123;"name":"app","users":[1,2]&#125;</code></li>
+      <li>Pretty → structured output with indentation</li>
+      <li>Minify → compact version without spaces</li>
     </ul>
   </div>
 
@@ -150,7 +182,7 @@ const faqJsonLd = {
     <ul>
       <li><a href="/utility/base64/">Base64 Encoder / Decoder</a></li>
       <li><a href="/utility/url-encoder-decoder/">URL Encoder / Decoder</a></li>
-      <li><a href="/utility/word-counter/">Word Counter</a></li>
+      <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
       <li><a href="/utility/">All Utility Tools</a></li>
     </ul>
   </div>

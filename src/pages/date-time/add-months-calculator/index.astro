@@ -153,17 +153,38 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      1) Compute the target month/year. 2) If the target month has fewer days than the start day, clamp to the last day of the target month.
-      3) If end-of-month alignment is enabled and the start date is the last day of its month, use the last day of the target month.
-      4) Optionally adjust the final date to the nearest business day.
+    This calculator adds or subtracts months using calendar-aware logic rather than simple day counting. Months are not equal in length (28–31 days), so correct handling is required to avoid invalid dates.
+    </p>
+
+    <ul>
+      <li><strong>Step 1 — Month shift:</strong> The tool shifts the year and month based on your input value.</li>
+      <li><strong>Step 2 — Day adjustment:</strong> If the target month has fewer days, the result is clamped to the last valid day (e.g., Jan 31 → Feb 28/29).</li>
+      <li><strong>Step 3 — End-of-month logic:</strong> If enabled, dates like Jan 31 always remain at the end of the month after shifting.</li>
+      <li><strong>Step 4 — Business-day adjustment (optional):</strong> The result is moved to the nearest working day based on weekends and holidays.</li>
+    </ul>
+
+    <p class="note">
+    <strong>Result interpretation:</strong>  
+    If the result date differs from the same day number (e.g., 31 → 28), it means the target month does not contain that day. This is expected calendar behavior, not an error.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>2026-01-15 + 2 months → 2026-03-15</li>
-      <li>2026-01-31 + 1 month → 2026-02-28 (or 02-29 in leap years)</li>
-      <li>2026-03-31 - 1 month → 2026-02-28/29</li>
+      <li><strong>Subscription billing:</strong> Add 1 month to a billing date while keeping end-of-month alignment for consistency.</li>
+      <li><strong>Contract duration:</strong> Calculate future or past dates for contracts (e.g., +6 months, -12 months).</li>
+      <li><strong>Payroll schedules:</strong> Adjust payment dates to the next business day if they fall on weekends.</li>
+      <li><strong>Project timelines:</strong> Estimate deadlines by adding months while respecting calendar rules.</li>
+    </ul>
+
+    <p class="note">
+    Example scenarios:
+    </p>
+    <ul>
+      <li>2026-01-31 + 1 month → 2026-02-28 (short month adjustment)</li>
+      <li>2026-01-31 + 1 month (EOM enabled) → 2026-02-28 (end-of-month preserved)</li>
+      <li>2026-03-31 - 1 month → 2026-02-28</li>
+      <li>2026-02-28 + 1 month → 2026-03-28</li>
     </ul>
   </div>
 

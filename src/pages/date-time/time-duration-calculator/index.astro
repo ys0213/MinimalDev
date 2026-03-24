@@ -15,23 +15,23 @@ const CANONICAL_PATH = "/date-time/time-duration-calculator/";
 const faqs = [
   {
     q: "What does this calculator do?",
-    a: "It calculates the duration between a start time and an end time, and shows the result in hours, minutes, seconds, total minutes, and total seconds.",
+    a: "It calculates the duration between a start time and an end time, showing results in hours, minutes, seconds, total hours, and total minutes.",
   },
   {
-    q: "Does it support overnight time ranges?",
-    a: "Yes. If the end time is earlier than the start time, the calculator can treat it as crossing midnight.",
+    q: "Does it support overnight durations?",
+    a: "Yes. If the end time is earlier than the start time, it can automatically treat it as the next day.",
   },
   {
-    q: "Can I enter seconds?",
-    a: "Yes. The calculator supports HH:MM and HH:MM:SS style input through the browser time field when seconds are enabled.",
+    q: "What is the difference between modes?",
+    a: "Auto detects overnight automatically. Same-day restricts to one day. Overnight forces the calculation across midnight.",
   },
   {
-    q: "Is the start time included?",
-    a: "The tool measures elapsed time from the start time to the end time. It does not count endpoints separately.",
+    q: "How should I interpret total hours?",
+    a: "Total hours include fractional values and are useful for billing, time tracking, or reporting.",
   },
   {
-    q: "Are my times stored?",
-    a: "No. All calculations run locally in your browser and are not stored or transmitted.",
+    q: "Is my data stored?",
+    a: "No. All calculations run locally in your browser.",
   },
 ];
 
@@ -117,16 +117,39 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      The calculator converts both times into seconds since midnight and subtracts the start from the end.
-      If overnight handling is enabled and the end time is earlier than the start time, it adds 24 hours.
+      This calculator converts both times into seconds from midnight and subtracts the start time from the end time.
+    </p>
+
+    <p class="note">
+      <strong>Core logic:</strong><br/>
+      Duration (seconds) = end time − start time<br/>
+      If overnight applies, 24 hours (86,400 seconds) is added.
+    </p>
+
+    <p class="note">
+      <strong>How to interpret results:</strong><br/>
+      - Hours/minutes/seconds: readable duration format<br/>
+      - Total hours: useful for billing or time tracking<br/>
+      - Total minutes: useful for scheduling or reporting
+    </p>
+
+    <p class="note">
+      Use overnight mode when shifts or events cross midnight (e.g., night work or late activities).
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>08:30 to 17:00 → 8 hours 30 minutes</li>
-      <li>22:15 to 01:45 with overnight handling → 3 hours 30 minutes</li>
-      <li>09:00 to 09:00 → 0 duration on the same day</li>
+      <li><strong>Work shift tracking:</strong> Calculate working hours including overnight shifts.</li>
+      <li><strong>Task duration:</strong> Measure how long an activity takes.</li>
+      <li><strong>Sleep tracking:</strong> Calculate total sleep time across midnight.</li>
+    </ul>
+
+    <p class="note"><strong>Examples:</strong></p>
+    <ul>
+      <li>08:30 → 17:00 = 8h 30m (standard workday)</li>
+      <li>22:15 → 01:45 = 3h 30m (overnight shift)</li>
+      <li>09:00 → 09:00 = 0h (same start and end)</li>
     </ul>
   </div>
 
