@@ -15,23 +15,27 @@ const CANONICAL_PATH = "/image-tools/image-size-calculator/";
 const faqs = [
   {
     q: "What does this image size calculator estimate?",
-    a: "It estimates raw uncompressed image size and approximate compressed sizes using width, height, color channels, bit depth, and a compression ratio assumption.",
+    a: "It estimates raw uncompressed image size and approximate compressed sizes using width, height, channels, and bit depth.",
   },
   {
     q: "Is this exact for JPEG, PNG, or WebP files?",
-    a: "No. Actual file size depends on image content, metadata, format internals, and encoder settings. This tool provides practical estimates, not exact final file sizes.",
+    a: "No. Real file sizes depend on compression algorithms, metadata, and image content.",
   },
   {
     q: "What is raw image size?",
-    a: "Raw size is the uncompressed number of bytes needed to store pixel data based only on dimensions, channel count, and bit depth.",
+    a: "Raw size is the total number of bytes required to store pixel data without compression.",
   },
   {
-    q: "Why do two images with the same dimensions have different file sizes?",
-    a: "Because compression efficiency depends heavily on image content such as noise, detail, gradients, transparency, and metadata.",
+    q: "Why do two images with the same dimensions have different sizes?",
+    a: "Because compression efficiency varies based on detail, noise, color variation, and metadata.",
   },
   {
-    q: "Can I use this for print or export planning?",
-    a: "Yes. It is useful for rough planning of storage, bandwidth, upload limits, and export expectations.",
+    q: "When should I use this calculator?",
+    a: "Use it when planning uploads, storage requirements, or estimating export sizes before generating images.",
+  },
+  {
+    q: "What compression ratio should I use?",
+    a: "Typical values: JPEG (5–15), PNG (1.5–3), WebP (4–10). Actual results vary.",
   },
 ];
 
@@ -48,13 +52,14 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image Size Calculator — ${SITE_NAME}`}
-  description="Estimate raw and approximate compressed image sizes using dimensions, channels, bit depth, and compression assumptions."
+  description="Estimate raw and compressed image sizes using dimensions, channels, bit depth, and compression assumptions."
   canonicalPath={CANONICAL_PATH}
   h1="Image Size Calculator"
-  intro="Estimate how large an image may be based on pixel dimensions, bit depth, color channels, and approximate compression ratio. Useful for planning storage, uploads, export settings, and delivery sizes."
+  intro="Estimate how large an image file may be before exporting. Useful for storage planning, upload limits, and optimizing image workflows."
   faq={faqs}
   categoryName="Image Tools"
 >
+
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="image-size-calculator">
@@ -193,37 +198,39 @@ const faqJsonLd = {
     </div>
   </div>
 
-  <div slot="how">
-    <p class="note">
-      Raw image size is estimated from this formula:
-      <strong> width × height × channels × bit depth ÷ 8 </strong>.
-      The compression estimate then divides that raw size by your assumed compression ratio.
-    </p>
-    <ul>
-      <li><strong>More pixels:</strong> larger file size</li>
-      <li><strong>More channels:</strong> larger file size</li>
-      <li><strong>Higher bit depth:</strong> larger file size</li>
-      <li><strong>Higher compression ratio:</strong> smaller estimated compressed file</li>
-    </ul>
-  </div>
+<div slot="how">
+  <p class="note">
+    This calculator estimates image size using a simple formula:
+    <strong> width × height × channels × bit depth ÷ 8 </strong>.
+  </p>
+  <ul>
+    <li><strong>Width × Height:</strong> total number of pixels</li>
+    <li><strong>Channels:</strong> grayscale (1), RGB (3), RGBA (4)</li>
+    <li><strong>Bit depth:</strong> color precision per channel</li>
+    <li><strong>Result interpretation:</strong> raw size shows memory usage, compressed estimate shows expected file size</li>
+  </ul>
+</div>
 
-  <div slot="examples">
-    <ul>
-      <li>4000 × 3000 RGB 8-bit → estimate raw pixel data before compression</li>
-      <li>RGBA 16-bit images → much larger memory footprint than RGB 8-bit</li>
-      <li>Compare approximate compressed size for the same image under different ratios</li>
-    </ul>
-  </div>
+<div slot="examples">
+  <ul>
+    <li><strong>4000×3000 RGB 8-bit:</strong> estimate photo storage size</li>
+    <li><strong>RGBA images:</strong> understand transparency cost</li>
+    <li><strong>Compression planning:</strong> test different ratios before exporting</li>
+    <li><strong>Web optimization:</strong> estimate upload size limits</li>
+    <li><strong>Print workflow:</strong> predict file sizes for high-resolution images</li>
+  </ul>
+</div>
 
-  <div slot="related">
-    <ul>
-      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
-      <li><a href="/image-tools/image-dpi-converter/">Image DPI Converter</a></li>
-      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
-      <li><a href="/image-tools/image-aspect-ratio-calculator/">Image Aspect Ratio Calculator</a></li>
-      <li><a href="/image-tools/">All Image Tools</a></li>
-    </ul>
-  </div>
+<div slot="related">
+  <ul>
+    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+    <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+    <li><a href="/image-tools/image-dpi-converter/">Image DPI Converter</a></li>
+    <li><a href="/image-tools/image-aspect-ratio-calculator/">Aspect Ratio Calculator</a></li>
+    <li><a href="/image-tools/">All Image Tools</a></li>
+  </ul>
+</div>
+
 </ToolLayout>
 
 <script is:inline>

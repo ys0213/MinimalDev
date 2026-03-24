@@ -15,23 +15,27 @@ const CANONICAL_PATH = "/image-tools/image-watermark-generator/";
 const faqs = [
   {
     q: "What does this watermark generator do?",
-    a: "It adds a text watermark to your uploaded image with controls for text, size, color, opacity, position, and margin.",
+    a: "It adds a text overlay directly onto your image using canvas rendering. The watermark becomes part of the final exported image.",
   },
   {
-    q: "Can I place the watermark in different corners or the center?",
-    a: "Yes. You can place the watermark in common positions such as top-left, top-right, center, bottom-left, and bottom-right.",
+    q: "How should I choose watermark opacity?",
+    a: "Use low opacity (0.2–0.4) for subtle branding. Use higher opacity (0.5–0.8) when you need stronger copyright protection or proof images.",
+  },
+  {
+    q: "Which position is best?",
+    a: "Corner positions are less intrusive for normal use. Center placement is more visible and is commonly used for proof images or previews.",
   },
   {
     q: "Does this upload my image?",
-    a: "No. Watermarking runs locally in your browser. Your image is not uploaded or stored.",
+    a: "No. All processing happens locally in your browser. No data is sent to any server.",
   },
   {
-    q: "Can I make the watermark semi-transparent?",
-    a: "Yes. The opacity control lets you apply a subtle or strong watermark.",
+    q: "Will watermarking reduce image quality?",
+    a: "The watermark itself does not reduce quality. However, exporting as JPEG or WebP may introduce compression depending on the selected quality setting.",
   },
   {
-    q: "What export formats are supported?",
-    a: "You can export the watermarked result as PNG, JPEG, or WebP depending on browser support.",
+    q: "Which format should I export?",
+    a: "Use PNG for lossless quality. Use JPEG or WebP for smaller file size with adjustable compression.",
   },
 ];
 
@@ -48,10 +52,10 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image Watermark Generator — ${SITE_NAME}`}
-  description="Add text watermarks to an image with size, color, position, opacity, and margin controls. Includes preview, export, and FAQ schema."
+  description="Add text watermarks with full control over position, opacity, and export format."
   canonicalPath={CANONICAL_PATH}
   h1="Image Watermark Generator"
-  intro="Upload an image and place a text watermark on it. Control text content, font size, opacity, position, and margin, then preview and export the watermarked result."
+  intro="Apply a customizable text watermark to your image. Control size, opacity, position, and export format with live preview."
   faq={faqs}
   categoryName="Image Tools"
 >
@@ -251,31 +255,34 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool draws your uploaded image onto a browser canvas, then paints a text overlay using the selected position,
-      font size, color, weight, and opacity settings. The result can then be exported in the chosen format.
+      This tool applies a text watermark directly onto your image using browser-based canvas rendering. 
+      The watermark is permanently embedded into the exported file.
     </p>
+
     <ul>
-      <li><strong>Low opacity:</strong> subtle branding or preview watermark</li>
-      <li><strong>High opacity:</strong> stronger ownership or proof watermark</li>
-      <li><strong>Center position:</strong> more visible across the image</li>
-      <li><strong>Corner positions:</strong> cleaner and less intrusive</li>
+      <li><strong>Font size:</strong> Larger values increase visibility, especially on high-resolution images</li>
+      <li><strong>Opacity:</strong> Controls transparency. Lower values are subtle, higher values are more visible</li>
+      <li><strong>Position:</strong> Corner placement is cleaner, center placement is stronger for protection</li>
+      <li><strong>Margin:</strong> Distance from edges. Useful for avoiding clipping</li>
+      <li><strong>Result interpretation:</strong> Export size depends on format and compression quality</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Add a copyright notice to portfolio images</li>
-      <li>Create proof images for client review</li>
-      <li>Apply a simple brand name watermark to shared assets</li>
+      <li><strong>Portfolio protection:</strong> Add a small bottom-right watermark to prevent unauthorized reuse</li>
+      <li><strong>Client preview:</strong> Place a large semi-transparent center watermark for draft sharing</li>
+      <li><strong>Branding:</strong> Add consistent corner watermark to social media images</li>
+      <li><strong>Proof images:</strong> Use high opacity and center placement for temporary previews</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/image-tools/image-border-adder/">Image Border Adder</a></li>
-      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
       <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
       <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+      <li><a href="/image-tools/image-flip/">Image Flip</a></li>
       <li><a href="/image-tools/">All Image Tools</a></li>
     </ul>
   </div>

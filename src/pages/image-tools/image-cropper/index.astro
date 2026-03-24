@@ -12,136 +12,460 @@ const SITE_NAME = "MinimalDev";
 const CANONICAL_PATH = "/image-tools/image-cropper/";
 
 const faqs = [
-  { q: "How do I crop?", a: "Drag on the image to select an area, then click crop." },
-  { q: "Is my image uploaded?", a: "No. Everything runs locally." },
-  { q: "Does it reduce quality?", a: "No. Cropping preserves original quality." },
+  {
+    q: "How do I crop an image?",
+    a: "Upload an image, drag on the preview to select an area, then click Crop Image. The selected region becomes the new cropped result.",
+  },
+  {
+    q: "Is my image uploaded?",
+    a: "No. Everything runs locally in your browser and the image is not uploaded by this tool.",
+  },
+  {
+    q: "Does cropping reduce image quality?",
+    a: "Cropping removes unwanted areas but does not automatically reduce image quality. The cropped result keeps the selected pixels from the original canvas.",
+  },
+  {
+    q: "Can I crop multiple times?",
+    a: "Yes. After cropping, you can continue selecting a new area and crop again, or reload the original image.",
+  },
+  {
+    q: "Why is my selection invalid?",
+    a: "Selections that are too small are rejected because they are usually accidental drags and do not produce a practical crop area.",
+  },
+  {
+    q: "What is this tool useful for?",
+    a: "It is useful for trimming screenshots, removing empty edges, focusing on a subject, preparing thumbnails, and cleaning up product or profile images.",
+  },
 ];
 
 const faqJsonLd = {
   "@context":"https://schema.org",
   "@type":"FAQPage",
-  mainEntity: faqs.map(f=>({
+  mainEntity: faqs.map((f) => ({
     "@type":"Question",
-    name:f.q,
-    acceptedAnswer:{ "@type":"Answer", text:f.a }
+    name: f.q,
+    acceptedAnswer: { "@type":"Answer", text: f.a }
   }))
 };
 ---
 
 <ToolLayout
   title={`Image Cropper — ${SITE_NAME}`}
-  description="Crop images visually using drag selection."
+  description="Crop images visually using drag selection with live preview, selection details, and download."
   canonicalPath={CANONICAL_PATH}
   h1="Image Cropper"
-  intro="Select an area by dragging and crop your image instantly."
+  intro="Upload an image, drag to select the area you want to keep, and crop it instantly. Useful for screenshots, product photos, thumbnails, and quick image cleanup."
   faq={faqs}
   categoryName="Image Tools"
 >
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<div slot="tool">
+<div slot="tool" data-tool="image-cropper">
 <style is:inline>
-.wrapper { position:relative; max-width:100%; }
-canvas { max-width:100%; border-radius:10px; }
+.wrapper {
+  position: relative;
+  max-width: 100%;
+  width: 100%;
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+  padding: 8px;
+  box-sizing: border-box;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  touch-action: none;
+  user-select: none;
+}
 #overlay {
-  position:absolute;
-  border:2px dashed #4ade80;
-  pointer-events:none;
+  position: absolute;
+  border: 2px dashed #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+  pointer-events: none;
+  display: none;
+  box-sizing: border-box;
+}
+.crop-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.crop-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.crop-card {
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px;
+  padding: 12px;
+}
+.crop-big {
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 6px;
+  word-break: break-word;
+}
+.crop-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+@media (min-width: 900px) {
+  .crop-grid {
+    grid-template-columns: 1fr 320px;
+    align-items: start;
+  }
 }
 </style>
 
-<div class="form">
-<input type="file" id="file" accept="image/*" />
+<div class="form" role="form" aria-describedby="crop_help crop_privacy">
+  <div class="field">
+    <label for="file">Image file</label>
+    <input type="file" id="file" accept="image/*" />
+  </div>
 
-<div class="wrapper">
-  <canvas id="canvas"></canvas>
-  <div id="overlay"></div>
+  <div class="crop-grid">
+    <div>
+      <div class="wrapper" id="wrapper">
+        <canvas id="canvas" aria-label="Image cropping canvas"></canvas>
+        <div id="overlay" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="crop-card-grid">
+        <div class="crop-card">
+          <strong>Selection</strong>
+          <div class="crop-big" id="selectionSize">—</div>
+          <div class="note" id="selectionNote" style="margin-top:4px;">Drag on the image to select an area.</div>
+        </div>
+
+        <div class="crop-card">
+          <strong>Current canvas</strong>
+          <div class="crop-big" id="canvasSize">—</div>
+          <div class="note" style="margin-top:4px;">Shows the current working image size.</div>
+        </div>
+      </div>
+
+      <p class="note" id="crop_help" style="margin-top:10px;">
+        Drag on the image to select the area you want to keep. Small accidental selections are ignored. After cropping, the canvas updates to the new size.
+      </p>
+
+      <div class="crop-row" style="margin-top:10px;">
+        <button class="btn" id="crop" type="button">Crop Image</button>
+        <button class="btn secondary" id="download" type="button">Download</button>
+        <button class="btn secondary" id="resetSelection" type="button">Reset Selection</button>
+        <button class="btn secondary" id="reloadOriginal" type="button">Reload Original</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="info" class="result" style="margin-top:12px;">Upload image to start.</div>
+
+  <p class="note" id="crop_privacy" style="margin-top:10px;">
+    Privacy: cropping runs locally in your browser. No image is uploaded, stored, or transmitted.
+  </p>
+</div>
 </div>
 
-<button class="btn" id="crop">Crop</button>
-<button class="btn secondary" id="download">Download</button>
+<div slot="how">
+  <p class="note">
+    This tool lets you visually select part of an image and keep only that region. After you drag a crop box, the selected rectangle is copied into a new canvas and becomes the current image. Cropping changes image dimensions because unused outer areas are removed.
+  </p>
+  <ul>
+    <li><strong>Selection:</strong> drag across the image to choose the area you want to keep</li>
+    <li><strong>Validation:</strong> very small selections are ignored to prevent accidental crops</li>
+    <li><strong>Result interpretation:</strong> the cropped size tells you how much of the original image remains after trimming</li>
+    <li><strong>Best use:</strong> cropping is ideal when you want to remove empty margins, isolate a subject, or prepare a cleaner image for sharing</li>
+  </ul>
+</div>
 
-<div id="info" class="result">Upload image to start.</div>
+<div slot="examples">
+  <ul>
+    <li><strong>Screenshot cleanup:</strong> remove browser chrome, blank edges, or unrelated interface elements</li>
+    <li><strong>Product image:</strong> crop tightly around an item to make the subject more prominent</li>
+    <li><strong>Thumbnail preparation:</strong> trim extra space so the main subject fills more of the frame</li>
+    <li><strong>Profile or avatar image:</strong> isolate the face or central subject before further editing</li>
+  </ul>
 </div>
+
+<div slot="related">
+  <ul>
+    <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+    <li><a href="/image-tools/image-border-adder/">Image Border Adder</a></li>
+    <li><a href="/image-tools/image-blur/">Image Blur</a></li>
+    <li><a href="/image-tools/">All Image Tools</a></li>
+  </ul>
 </div>
+
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  const file = document.getElementById("file");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const overlay = document.getElementById("overlay");
+  const info = document.getElementById("info");
+  const wrapper = document.getElementById("wrapper");
+  const selectionSize = document.getElementById("selectionSize");
+  const selectionNote = document.getElementById("selectionNote");
+  const canvasSize = document.getElementById("canvasSize");
 
-const file = document.getElementById("file");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const overlay = document.getElementById("overlay");
-const info = document.getElementById("info");
+  const cropBtn = document.getElementById("crop");
+  const downloadBtn = document.getElementById("download");
+  const resetSelectionBtn = document.getElementById("resetSelection");
+  const reloadOriginalBtn = document.getElementById("reloadOriginal");
 
-let img = new Image();
-let startX=0,startY=0,endX=0,endY=0,drag=false;
+  if (
+    !file || !canvas || !ctx || !overlay || !info || !wrapper ||
+    !selectionSize || !selectionNote || !canvasSize ||
+    !cropBtn || !downloadBtn || !resetSelectionBtn || !reloadOriginalBtn
+  ) return;
 
-file.onchange=e=>{
- const f=e.target.files[0];
- if(!f) return;
+  let img = new Image();
+  let originalSrc = "";
+  let startX = 0;
+  let startY = 0;
+  let endX = 0;
+  let endY = 0;
+  let drag = false;
+  let hasSelection = false;
+  let selection = null;
 
- const r=new FileReader();
- r.onload=ev=>{
-   img.onload=()=>{
-     canvas.width=img.width;
-     canvas.height=img.height;
-     ctx.drawImage(img,0,0);
-   };
-   img.src=ev.target.result;
- };
- r.readAsDataURL(f);
-};
+  function updateCanvasSizeLabel() {
+    if (canvas.width && canvas.height) {
+      canvasSize.textContent = canvas.width + " × " + canvas.height;
+    } else {
+      canvasSize.textContent = "—";
+    }
+  }
 
-canvas.onmousedown=e=>{
- drag=true;
- startX=e.offsetX;
- startY=e.offsetY;
-};
+  function resetSelectionUi() {
+    overlay.style.display = "none";
+    overlay.style.left = "0px";
+    overlay.style.top = "0px";
+    overlay.style.width = "0px";
+    overlay.style.height = "0px";
+    selectionSize.textContent = "—";
+    selectionNote.textContent = "Drag on the image to select an area.";
+    hasSelection = false;
+    selection = null;
+  }
 
-canvas.onmousemove=e=>{
- if(!drag) return;
- endX=e.offsetX;
- endY=e.offsetY;
+  function showSelection(x1, y1, x2, y2) {
+    const x = Math.min(x1, x2);
+    const y = Math.min(y1, y2);
+    const w = Math.abs(x2 - x1);
+    const h = Math.abs(y2 - y1);
 
- overlay.style.left=Math.min(startX,endX)+"px";
- overlay.style.top=Math.min(startY,endY)+"px";
- overlay.style.width=Math.abs(endX-startX)+"px";
- overlay.style.height=Math.abs(endY-startY)+"px";
-};
+    overlay.style.display = "block";
+    overlay.style.left = x + "px";
+    overlay.style.top = y + "px";
+    overlay.style.width = w + "px";
+    overlay.style.height = h + "px";
 
-canvas.onmouseup=()=>drag=false;
+    if (w >= 1 && h >= 1) {
+      selectionSize.textContent = w + " × " + h;
+      selectionNote.textContent = "Selected area on the current canvas.";
+    } else {
+      selectionSize.textContent = "—";
+      selectionNote.textContent = "Drag on the image to select an area.";
+    }
+  }
 
-document.getElementById("crop").onclick=()=>{
- const w=Math.abs(endX-startX);
- const h=Math.abs(endY-startY);
- if(w<5||h<5){
-   info.textContent="Invalid selection";
-   return;
- }
+  function pointerToCanvasCoords(event) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
- const x=Math.min(startX,endX);
- const y=Math.min(startY,endY);
+    const clientX = event.clientX;
+    const clientY = event.clientY;
 
- const temp=document.createElement("canvas");
- temp.width=w;
- temp.height=h;
- temp.getContext("2d").drawImage(canvas,x,y,w,h,0,0,w,h);
+    const x = Math.max(0, Math.min(canvas.width, (clientX - rect.left) * scaleX));
+    const y = Math.max(0, Math.min(canvas.height, (clientY - rect.top) * scaleY));
 
- canvas.width=w;
- canvas.height=h;
- ctx.drawImage(temp,0,0);
+    return { x, y };
+  }
 
- info.textContent=`Cropped: ${w} x ${h}`;
-};
+  function drawCurrentImage() {
+    if (!img.src) return;
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    updateCanvasSizeLabel();
+    resetSelectionUi();
+  }
 
-document.getElementById("download").onclick=()=>{
- const a=document.createElement("a");
- a.href=canvas.toDataURL();
- a.download="cropped.png";
- a.click();
-};
+  file.onchange = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
 
+    if (!f.type || !f.type.startsWith("image/")) {
+      info.textContent = "Please choose a valid image file.";
+      return;
+    }
+
+    const r = new FileReader();
+    r.onload = (ev) => {
+      img.onload = () => {
+        originalSrc = String(ev.target.result || "");
+        drawCurrentImage();
+        info.innerHTML =
+          "<strong>Image loaded.</strong><br>" +
+          "Drag on the image to choose the area you want to keep, then click Crop Image.";
+      };
+      img.src = String(ev.target.result || "");
+    };
+    r.onerror = () => {
+      info.textContent = "Could not load the selected file.";
+    };
+    r.readAsDataURL(f);
+  };
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (!canvas.width || !canvas.height) return;
+    const pt = pointerToCanvasCoords(e);
+    drag = true;
+    startX = pt.x;
+    startY = pt.y;
+    endX = pt.x;
+    endY = pt.y;
+    showSelection(startX, startY, endX, endY);
+    canvas.setPointerCapture(e.pointerId);
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const pt = pointerToCanvasCoords(e);
+    endX = pt.x;
+    endY = pt.y;
+    showSelection(startX, startY, endX, endY);
+  });
+
+  function finishSelection() {
+    if (!drag) return;
+    drag = false;
+
+    const w = Math.abs(endX - startX);
+    const h = Math.abs(endY - startY);
+    const x = Math.min(startX, endX);
+    const y = Math.min(startY, endY);
+
+    if (w < 5 || h < 5) {
+      resetSelectionUi();
+      info.textContent = "Selection is too small. Drag a larger area to crop.";
+      return;
+    }
+
+    selection = { x, y, w, h };
+    hasSelection = true;
+    selectionSize.textContent = Math.round(w) + " × " + Math.round(h);
+    selectionNote.textContent = "Ready to crop. Click Crop Image to keep this area.";
+    info.innerHTML =
+      "<strong>Selection ready.</strong><br>" +
+      "Crop size: " + Math.round(w) + " × " + Math.round(h) + ". Click Crop Image to keep only this region.";
+  }
+
+  canvas.addEventListener("pointerup", finishSelection);
+  canvas.addEventListener("pointercancel", finishSelection);
+  canvas.addEventListener("pointerleave", () => {
+    if (!drag) return;
+  });
+
+  cropBtn.onclick = () => {
+    if (!canvas.width || !canvas.height) {
+      info.textContent = "Upload image first.";
+      return;
+    }
+
+    if (!hasSelection || !selection) {
+      info.textContent = "Make a valid selection first.";
+      return;
+    }
+
+    const w = Math.round(selection.w);
+    const h = Math.round(selection.h);
+    const x = Math.round(selection.x);
+    const y = Math.round(selection.y);
+
+    if (w < 5 || h < 5) {
+      info.textContent = "Invalid selection.";
+      return;
+    }
+
+    const temp = document.createElement("canvas");
+    temp.width = w;
+    temp.height = h;
+    const tctx = temp.getContext("2d");
+    tctx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
+    canvas.width = w;
+    canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(temp, 0, 0);
+
+    const dataUrl = temp.toDataURL("image/png");
+    const nextImg = new Image();
+    nextImg.onload = () => {
+      img = nextImg;
+      updateCanvasSizeLabel();
+      resetSelectionUi();
+      info.innerHTML =
+        "<strong>Image cropped successfully.</strong><br>" +
+        "New image size: " + w + " × " + h + ". You can crop again, reload the original, or download the result.";
+    };
+    nextImg.src = dataUrl;
+  };
+
+  downloadBtn.onclick = () => {
+    if (!canvas.width || !canvas.height) {
+      info.textContent = "Nothing to download yet.";
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "cropped.png";
+    a.click();
+  };
+
+  resetSelectionBtn.onclick = () => {
+    resetSelectionUi();
+    if (canvas.width && canvas.height) {
+      info.textContent = "Selection cleared. Drag again to choose a new crop area.";
+    } else {
+      info.textContent = "Upload image to start.";
+    }
+  };
+
+  reloadOriginalBtn.onclick = () => {
+    if (!originalSrc) {
+      info.textContent = "No original image loaded yet.";
+      return;
+    }
+
+    const nextImg = new Image();
+    nextImg.onload = () => {
+      img = nextImg;
+      drawCurrentImage();
+      info.innerHTML =
+        "<strong>Original image restored.</strong><br>" +
+        "You can make a new crop selection from the original image.";
+    };
+    nextImg.src = originalSrc;
+  };
+
+  updateCanvasSizeLabel();
+  resetSelectionUi();
 });
 </script>

@@ -30,6 +30,10 @@ const faqs = [
     a: "Because both values can be divided by their greatest common divisor, which simplifies the ratio to 16:9.",
   },
   {
+    q: "Why should I use a simplified ratio?",
+    a: "Simplified ratios make it easier to compare dimensions, match common formats, and keep layouts consistent across devices and platforms.",
+  },
+  {
     q: "Is my image uploaded or stored?",
     a: "No. Image analysis runs locally in your browser and no file is uploaded, stored, or transmitted.",
   },
@@ -213,20 +217,22 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool reads width and height values, simplifies them into a ratio using the greatest common divisor, shows the decimal width-to-height value, and estimates proportional dimensions based on a target width or height.
+      This tool reads width and height values, simplifies them into the smallest whole-number ratio using the greatest common divisor, shows the decimal width-to-height value, and calculates proportional sizes from a target width or height.
     </p>
     <ul>
       <li><strong>Simplified ratio:</strong> the smallest whole-number ratio such as 16:9 or 4:3</li>
-      <li><strong>Decimal ratio:</strong> useful for calculations and comparisons</li>
-      <li><strong>Scaled size:</strong> helps preserve proportions when resizing layouts or images</li>
+      <li><strong>Decimal ratio:</strong> useful for numeric comparison and layout calculations</li>
+      <li><strong>Scaled size:</strong> helps preserve proportions when resizing images or design frames</li>
+      <li><strong>Result interpretation:</strong> common ratios such as 16:9, 4:3, and 1:1 usually fit standard layouts better, while unusual ratios may require cropping, padding, or custom placement</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>1920 × 1080 → 16:9 landscape ratio</li>
-      <li>1080 × 1350 → 4:5 portrait ratio often used in social posts</li>
-      <li>1200 target width for 4:3 → proportional height of 900</li>
+      <li><strong>1920 × 1080</strong> → 16:9 landscape ratio, commonly used for video and widescreen layouts</li>
+      <li><strong>1080 × 1350</strong> → 4:5 portrait ratio, often used in social media posts</li>
+      <li><strong>1200 target width for 4:3</strong> → proportional height of 900</li>
+      <li><strong>When to use this:</strong> useful for responsive layouts, social media assets, thumbnails, print planning, and resizing images without distortion</li>
     </ul>
   </div>
 

@@ -29,48 +29,115 @@ const tools: ToolMeta[] = modules
   canonicalPath="/date-time/"
 >
   <div class="container">
-    <h1 class="page-title">Date & Time Tools</h1>
-    <p class="lead">
-      Free date and time tools for age, countdowns, business days, timestamps, time zones, and duration calculations.
-      Use these tools to measure date differences, convert timestamps, and plan schedules more easily.
-      All date and time tools run instantly in your browser.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Date & Time Tools</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category brings together date and time tools for common planning, tracking, and scheduling tasks.
+        Use these pages when you need to measure date differences, calculate ages, count durations,
+        check business-day style ranges, or work with timestamps and time-related values.
+      </p>
+      <p class="lead" style="margin:0;">
+        Date and time questions often look simple but can become confusing once weeks, months, weekdays,
+        or exact time spans are involved. These tools help make those calculations faster and easier to read.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Planning and scheduling</h2>
+          <p>
+            Use date tools to measure the time between deadlines, appointments, trips, project dates,
+            billing cycles, and recurring events.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Personal tracking</h2>
+          <p>
+            Age, countdown, and duration tools are useful for birthdays, milestones, goals,
+            waiting periods, and long-term progress checks.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Work and record keeping</h2>
+          <p>
+            Timestamp and weekday-based calculations can help with logs, reports, planning windows,
+            and practical date comparisons in everyday work.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse date and time tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the type of calculation you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search date and time tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Date & Time</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
 
     <section class="section">
-      <h2>FAQ</h2>
-      <ul>
-        <li><strong>Do tools include time zones?</strong> Tools use your device locale unless stated otherwise.</li>
-        <li><strong>Are holidays excluded?</strong> Work days exclude weekends; holiday calendars may be added later.</li>
-      </ul>
+      <h2>How to choose the right tool</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If you want to know how many days separate two calendar dates, choose a date difference tool.
+          If you want to measure someone’s current age from a birth date, use an age calculator.
+          If you need to track time remaining until a future event, a countdown-style tool is usually the right choice.
+        </p>
+        <p style="margin-bottom:0;">
+          Keeping these tasks on separate pages makes results easier to understand and helps avoid confusion between
+          calendar differences, exact durations, and workday-style calculations.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why this category is separated from general calculators</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Date and time calculations are different from ordinary arithmetic because they depend on calendar structure,
+          weekdays, month lengths, and context. Grouping them in one category makes the site easier to browse
+          and helps visitors find the correct tool type without mixing time-related tasks with finance, math, or conversion pages.
+        </p>
+        <p style="margin-bottom:0;">
+          This category page works as an overview so you can move from a general need, such as “time between two dates,”
+          to the exact page that fits your task.
+        </p>
+      </div>
     </section>
   </div>
 </BaseLayout>

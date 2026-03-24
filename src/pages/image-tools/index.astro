@@ -25,42 +25,87 @@ const tools: ToolMeta[] = modules
   canonicalPath="/image-tools/"
 >
   <div class="container">
-    <h1 class="page-title">Image Tools</h1>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Image Tools</h1>
 
-    <p class="lead">
-      Resize, compress, crop, and convert images directly in your browser.
-      No uploads required. Fast, private, and mobile-friendly tools.
-    </p>
+      <p class="lead" style="margin:0 0 10px;">
+        This category provides browser-based tools for common image editing and processing tasks
+        such as resizing, compression, cropping, format conversion, and metadata handling.
+      </p>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
-        id="toolSearch"
-        type="search"
-        placeholder="Search image tools..."
-        style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
-        "
-      />
-    </div>
+      <p class="lead" style="margin:0;">
+        These tools are designed for quick adjustments and simple workflows where opening a full
+        image editor is unnecessary. You can make changes directly in your browser with immediate results.
+      </p>
+    </section>
 
-    {tools.length ? (
+    <section class="section">
+      <h2>What these tools are useful for</h2>
       <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <span class="badge">Tool</span>
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        <section class="card">
+          <h2>Quick editing tasks</h2>
+          <p>
+            Resize, crop, or convert images when preparing assets for websites, apps,
+            documents, or sharing platforms.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>File size optimization</h2>
+          <p>
+            Compression tools help reduce file size for faster loading,
+            smaller uploads, and better performance in web environments.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Format and metadata handling</h2>
+          <p>
+            Convert between formats or remove metadata such as EXIF data
+            when you need cleaner files or better compatibility.
+          </p>
+        </section>
       </div>
-    ) : (
-      <p class="note">No image tools available yet.</p>
-    )}
+    </section>
+
+    <section class="section">
+      <h2>Browse image tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the type of image task you want to perform.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
+          id="toolSearch"
+          type="search"
+          placeholder="Search image tools..."
+          aria-label="Search image tools"
+          style="
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
+          "
+        />
+      </div>
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No image tools available yet.</p>
+      )}
+    </section>
 
     <section class="section">
       <h2>What you can do</h2>

@@ -33,6 +33,14 @@ const faqs = [
     q: "Will transparency be preserved?",
     a: "Transparency is preserved in preview and PNG/WebP export. JPEG does not support transparency, so a background fill option is available.",
   },
+  {
+    q: "Does grayscale always reduce file size?",
+    a: "Not always. File size depends more on the export format and compression settings than on whether the image is in color or grayscale.",
+  },
+  {
+    q: "Why can the image look different even at partial grayscale intensity?",
+    a: "Grayscale changes the color balance into luminance values, so contrast and visual emphasis can feel different even when some original color remains.",
+  },
 ];
 
 const faqJsonLd = {
@@ -202,21 +210,24 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool reads the image into a browser canvas, calculates grayscale luminance from the original red, green, and blue values,
-      and then blends the grayscale result with the original image based on the selected intensity.
+      This tool reads the image into a browser canvas, calculates grayscale luminance from the original red, green, and blue values, and then blends the grayscale result with the original image based on the selected intensity. It does not resize the image, crop it, or upload it anywhere.
     </p>
     <ul>
       <li><strong>0% intensity:</strong> original image, no grayscale effect</li>
-      <li><strong>50% intensity:</strong> partial desaturation and muted color look</li>
-      <li><strong>100% intensity:</strong> full grayscale output</li>
+      <li><strong>50% intensity:</strong> partial desaturation and muted color appearance</li>
+      <li><strong>100% intensity:</strong> full grayscale output with all color removed</li>
+      <li><strong>Result interpretation:</strong> higher intensity removes color information and shifts attention toward brightness, contrast, and shape rather than hue</li>
+      <li><strong>Practical note:</strong> grayscale can make some UI screenshots, documents, or design previews easier to evaluate when color is not the main focus</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Create monochrome previews for UI or print layouts</li>
-      <li>Remove color distraction from documentation screenshots</li>
-      <li>Prepare images for black-and-white design mockups</li>
+      <li><strong>Design mockups:</strong> preview how a layout looks without color distraction before finalizing the composition</li>
+      <li><strong>Documentation screenshots:</strong> reduce color noise so text, spacing, and hierarchy are easier to review</li>
+      <li><strong>Print preparation:</strong> check how an image may feel in black-and-white or monochrome output</li>
+      <li><strong>Portfolio and presentation work:</strong> create a more neutral visual style for comparison slides or before-and-after examples</li>
+      <li><strong>Partial grayscale:</strong> use 30% to 70% intensity when you want a softer desaturated look instead of full black-and-white conversion</li>
     </ul>
   </div>
 

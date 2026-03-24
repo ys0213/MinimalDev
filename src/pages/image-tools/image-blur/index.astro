@@ -33,6 +33,14 @@ const faqs = [
     q: "Will blur reduce file size?",
     a: "Sometimes, but not always. File size depends on both image content and the selected output format and quality.",
   },
+  {
+    q: "When should I use image blur?",
+    a: "Use blur when hiding sensitive information, reducing background detail, or creating depth in layouts and mockups.",
+  },
+  {
+    q: "Can too much blur affect image quality?",
+    a: "Yes. Strong blur can remove important detail and make text, faces, or UI elements hard to recognize.",
+  },
 ];
 
 const faqJsonLd = {
@@ -48,7 +56,7 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image Blur — ${SITE_NAME}`}
-  description="Blur images in your browser with adjustable blur strength, output format, quality settings, result cards, and FAQ schema."
+  description="Blur images in your browser with adjustable blur strength, output format, quality settings, result preview, and download."
   canonicalPath={CANONICAL_PATH}
   h1="Image Blur"
   intro="Upload an image, adjust blur strength, preview the result, and download the blurred version. Useful for privacy masking, background effects, and quick visual edits."
@@ -210,21 +218,22 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool uses the browser canvas to render your image, then applies a blur filter to produce a softened result.
-      You can choose blur strength, output format, and quality. JPEG and WebP can often reduce file size more than PNG.
+      This tool uses the browser canvas to render your uploaded image, applies a blur filter based on the selected radius, and then exports the result in your chosen format. Blur strength changes the visual softness of the image, while format and quality affect final size and compression.
     </p>
     <ul>
       <li><strong>Blur radius:</strong> controls how strong the blur looks</li>
-      <li><strong>Format:</strong> affects both quality and final file size</li>
-      <li><strong>Quality:</strong> only matters for JPEG and WebP export</li>
+      <li><strong>Format:</strong> affects both appearance and file size; PNG is lossless, while JPEG and WebP are compressed</li>
+      <li><strong>Quality:</strong> only applies to JPEG and WebP and changes compression strength</li>
+      <li><strong>Result interpretation:</strong> light blur keeps shapes recognizable, while strong blur removes detail and is better for masking text, faces, or background elements</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Blur sensitive information in screenshots before sharing</li>
-      <li>Create soft backgrounds for design mockups</li>
-      <li>Reduce detail to focus attention on foreground elements</li>
+      <li><strong>Privacy masking:</strong> blur names, email addresses, license plates, or faces before sharing screenshots</li>
+      <li><strong>Background effect:</strong> blur a photo to create a soft backdrop behind text or UI mockups</li>
+      <li><strong>Focus control:</strong> reduce detail in secondary areas so attention stays on the main subject</li>
+      <li><strong>Quick edit workflow:</strong> useful when you need a fast browser-based blur without opening full image-editing software</li>
     </ul>
   </div>
 
@@ -233,6 +242,7 @@ const faqJsonLd = {
       <li><a href="/image-tools/image-palette-generator/">Image Palette Generator</a></li>
       <li><a href="/image-tools/image-color-extractor/">Image Color Extractor</a></li>
       <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
       <li><a href="/image-tools/">All Image Tools</a></li>
     </ul>
   </div>
@@ -482,6 +492,15 @@ document.addEventListener("DOMContentLoaded", function () {
         miniCard("Original size", formatBytes(originalBytes), "Uploaded file size") +
         miniCard("Blurred size", formatBytes(blob.size), "Current rendered result");
 
+      let interpretation = "";
+      if (renderMeta.radius <= 4) {
+        interpretation = "Subtle blur keeps most detail visible and works well for soft background effects.";
+      } else if (renderMeta.radius <= 12) {
+        interpretation = "Moderate blur reduces detail while keeping large shapes recognizable.";
+      } else {
+        interpretation = "Strong blur hides fine detail and is better for masking sensitive areas or heavily softening backgrounds.";
+      }
+
       summaryEl.innerHTML =
         '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">' +
           '<strong>Blur applied successfully.</strong>' +
@@ -495,7 +514,8 @@ document.addEventListener("DOMContentLoaded", function () {
           'Size change vs original: ' +
           (reduction >= 0 ? reduction.toFixed(1) + '% smaller' : Math.abs(reduction).toFixed(1) + '% larger') +
           '. Final size depends on both image content and output format.' +
-        '</div>';
+        '</div>' +
+        '<div class="note" style="margin-top:6px;">' + escapeHtml(interpretation) + '</div>';
     } catch (err) {
       showError(err && err.message ? err.message : "Could not render the blurred result.");
       summaryEl.textContent = "Blur result will appear here.";

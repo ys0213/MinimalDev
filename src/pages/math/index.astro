@@ -28,48 +28,113 @@ const tools: ToolMeta[] = modules
   canonicalPath="/math/"
 >
   <div class="container">
-    <h1 class="page-title">Math Tools</h1>
-    <p class="lead">
-      Free math tools for percentages, ratios, algebra, statistics, geometry, and everyday calculations.
-      Use these calculators to solve common problems such as discounts, averages, square roots, factorials, and formulas.
-      All math tools run instantly in your browser.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Math Tools</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category collects math calculators for common numeric problems such as percentages, ratios,
+        averages, algebra, geometry, and other everyday calculations.
+      </p>
+      <p class="lead" style="margin:0;">
+        These tools are useful when you want a quick result for a single task without building the formula manually.
+        They help with practical calculations used in school, work, shopping, planning, and general problem solving.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Everyday calculations</h2>
+          <p>
+            Use math tools for discounts, markups, percentages, averages, ratios,
+            simple comparisons, and other quick calculations that come up in daily life.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Study and practice</h2>
+          <p>
+            Some pages are useful for checking formulas, reviewing results,
+            and solving structured math problems more quickly while studying or practicing.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Work and planning</h2>
+          <p>
+            Math calculators can help with estimates, numeric checks, measurement-based planning,
+            and repeated business or project calculations where speed and consistency matter.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse math tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the type of calculation you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search math tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Math</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
 
     <section class="section">
-      <h2>FAQ</h2>
-      <ul>
-        <li><strong>Do I need an account?</strong> No. Tools run locally in your browser.</li>
-        <li><strong>Are results exact?</strong> Standard formulas are used.</li>
-      </ul>
+      <h2>How to choose the right calculator</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If your problem is about comparing parts of a number, start with percentage or ratio tools.
+          If it is about repeated values or summaries, use averages or statistics-related pages.
+          If the problem involves shapes or measurements, choose a geometry-oriented calculator.
+        </p>
+        <p style="margin-bottom:0;">
+          Splitting these tasks across focused tools makes results easier to read and avoids turning one page
+          into a large general-purpose calculator with too many unrelated inputs.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why this category is separate</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Math tools are different from converters, finance calculators, or general utilities because they are centered on
+          numeric relationships and formula-based problem solving rather than one fixed workflow.
+        </p>
+        <p style="margin-bottom:0;">
+          Grouping them in one category makes it easier to browse related calculators together and helps visitors move
+          from a general math task to the specific page that matches the formula or result they need.
+        </p>
+      </div>
     </section>
   </div>
 </BaseLayout>

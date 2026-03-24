@@ -30,6 +30,14 @@ const faqs = [
     a: "Because the same number of pixels is packed more densely per inch, which reduces the physical print dimensions.",
   },
   {
+    q: "What DPI should I use for print?",
+    a: "300 DPI is commonly used for high-quality print, 150 DPI is often acceptable for larger prints viewed from farther away, and lower values are usually more appropriate for screen-focused use.",
+  },
+  {
+    q: "What does reverse calculation mean?",
+    a: "It calculates the pixel dimensions you need when you already know the target print size and DPI.",
+  },
+  {
     q: "Is image upload required?",
     a: "No. Upload is optional. You can manually enter pixel dimensions or extract them from an image locally in your browser.",
   },
@@ -48,10 +56,10 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image DPI Converter — ${SITE_NAME}`}
-  description="Convert between pixels and physical size using DPI. Includes inch/cm calculations, alternative DPI comparisons, and FAQ schema."
+  description="Convert between pixels and physical size using DPI. Includes inch/cm calculations, alternative DPI comparisons, reverse pixel requirements, and FAQ schema."
   canonicalPath={CANONICAL_PATH}
   h1="Image DPI Converter"
-  intro="Enter pixel dimensions and DPI to estimate physical print size in inches or centimeters, or enter physical size and DPI to estimate required pixel dimensions. Useful for print planning, export specs, and image preparation."
+  intro="Enter pixel dimensions and DPI to estimate physical print size in inches or centimeters, or enter physical size and DPI to estimate required pixel dimensions. Useful for print planning, export specs, poster design, and image preparation."
   faq={faqs}
   categoryName="Image Tools"
 >
@@ -200,20 +208,22 @@ const faqJsonLd = {
   <div slot="how">
     <p class="note">
       This tool uses the standard relationship between pixels and physical size:
-      <strong> inches = pixels ÷ DPI </strong>. It also converts inches to centimeters and estimates reverse pixel requirements when you enter a target physical size.
+      <strong> inches = pixels ÷ DPI </strong>. It also converts inches to centimeters and estimates reverse pixel requirements when you enter a target physical size. The same image can produce very different print sizes depending on the DPI you choose.
     </p>
     <ul>
-      <li><strong>Higher DPI:</strong> smaller physical size from the same pixels</li>
-      <li><strong>Lower DPI:</strong> larger physical size from the same pixels</li>
-      <li><strong>Reverse calculation:</strong> helps plan export dimensions for print</li>
+      <li><strong>Higher DPI:</strong> smaller physical size from the same pixels, usually with finer printed detail</li>
+      <li><strong>Lower DPI:</strong> larger physical size from the same pixels, usually with less detail per inch</li>
+      <li><strong>Reverse calculation:</strong> helps plan export dimensions for print before you create or resize an image</li>
+      <li><strong>Result interpretation:</strong> DPI affects print density, not the underlying pixel count of the original image file</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>2400 × 3000 at 300 DPI → 8 × 10 inches</li>
-      <li>1800 × 1200 at 300 DPI → 6 × 4 inches</li>
-      <li>Need 5 × 7 inches at 300 DPI → 1500 × 2100 pixels</li>
+      <li><strong>Print photo:</strong> 2400 × 3000 at 300 DPI → 8 × 10 inches, which is a common high-quality print size</li>
+      <li><strong>Larger print:</strong> the same 2400 × 3000 image at 150 DPI prints larger, but with lower density</li>
+      <li><strong>Poster planning:</strong> use reverse calculation to estimate how many pixels are needed before exporting artwork</li>
+      <li><strong>Web vs print:</strong> DPI matters for physical print size, but screen display usually depends more on CSS layout and device rendering than on print DPI metadata</li>
     </ul>
   </div>
 
@@ -323,6 +333,28 @@ document.addEventListener("DOMContentLoaded", function () {
     return value / 2.54;
   }
 
+  function getDensityLabel(dpi) {
+    if (dpi >= 300) return "High print density";
+    if (dpi >= 150) return "Medium print density";
+    return "Low print density";
+  }
+
+  function getInterpretation(dpi, hasPixels, hasReverse) {
+    if (hasPixels && dpi >= 300) {
+      return "This DPI is commonly used for high-quality print output where fine detail matters.";
+    }
+    if (hasPixels && dpi >= 150) {
+      return "This DPI is often acceptable for medium-quality or larger prints viewed from farther away.";
+    }
+    if (hasPixels) {
+      return "This DPI produces a larger print size from the same pixels, but printed detail may appear softer.";
+    }
+    if (hasReverse) {
+      return "These reverse results estimate how many pixels you need to hit the target physical size at the chosen DPI.";
+    }
+    return "Use either pixel dimensions or physical size inputs to perform a conversion.";
+  }
+
   async function handleFile(file) {
     if (!file || !file.type.startsWith("image/")) {
       showError("Please choose a valid image file.");
@@ -392,9 +424,12 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    const interpretation = getInterpretation(dpi, !!(pxWidth && pxHeight), !!(reversePxW || reversePxH));
+
     resultEl.innerHTML =
       "<strong>DPI conversion calculated.</strong>" +
-      '<div class="note" style="margin-top:6px;">Review physical size estimates and reverse pixel requirements below.</div>';
+      '<div class="note" style="margin-top:6px;">Review physical size estimates and reverse pixel requirements below.</div>' +
+      '<div class="note" style="margin-top:6px;">' + interpretation + '</div>';
 
     cardsEl.style.display = "block";
     cardsEl.innerHTML =
@@ -409,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
         badge("DPI " + dpi, "good") +
         badge(pxWidth && pxHeight ? "Pixel to print conversion" : "Reverse calculation mode", "good") +
-        badge(dpi >= 300 ? "High print density" : dpi >= 150 ? "Medium density" : "Low density", dpi >= 300 ? "good" : dpi >= 150 ? "neutral" : "warn") +
+        badge(getDensityLabel(dpi), dpi >= 300 ? "good" : dpi >= 150 ? "neutral" : "warn") +
       '</div>';
 
     if (pxWidth && pxHeight && altDpi) {

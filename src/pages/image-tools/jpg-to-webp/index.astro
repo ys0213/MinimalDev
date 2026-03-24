@@ -10,31 +10,134 @@ export const tool = {
 
 const SITE_NAME="MinimalDev";
 const CANONICAL_PATH="/image-tools/jpg-to-webp/";
+
+const faqs = [
+  {
+    q: "What does this tool do?",
+    a: "It converts a JPG image into WebP format using browser-based encoding with adjustable compression quality."
+  },
+  {
+    q: "Will WebP always be smaller than JPG?",
+    a: "Often yes, but not always. File size depends on image content and selected quality settings."
+  },
+  {
+    q: "What quality should I use?",
+    a: "0.7–0.9 is a good balance for most images. Lower values reduce size more but may reduce visual quality."
+  },
+  {
+    q: "Does this upload my image?",
+    a: "No. All processing happens locally in your browser."
+  },
+  {
+    q: "When should I use WebP?",
+    a: "WebP is ideal for web usage where smaller file sizes improve loading speed while maintaining good visual quality."
+  }
+];
+
+const faqJsonLd = {
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  mainEntity:faqs.map(f=>({
+    "@type":"Question",
+    name:f.q,
+    acceptedAnswer:{ "@type":"Answer", text:f.a }
+  }))
+};
 ---
 
 <ToolLayout
 title={`JPG to WebP — ${SITE_NAME}`}
-description="Convert JPG to WebP with better compression."
+description="Convert JPG to WebP with adjustable compression and preview."
 canonicalPath={CANONICAL_PATH}
 h1="JPG to WebP Converter"
-intro="Convert JPG images into efficient WebP format."
+intro="Convert JPG images into WebP format with adjustable quality. Preview file size changes before downloading."
+faq={faqs}
 categoryName="Image Tools"
 >
+
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
 <div slot="tool">
+<style is:inline>
+canvas{
+  max-width:100%;
+  border-radius:10px;
+}
+.jtw-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+.jtw-card{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  padding:12px;
+}
+.jtw-big{
+  font-size:22px;
+  font-weight:900;
+}
+</style>
+
 <div class="form">
 <input type="file" id="file" accept="image/jpeg"/>
 
 <label>Quality</label>
 <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.8"/>
+<div class="note" id="qualityVal">0.8</div>
 
 <canvas id="canvas"></canvas>
 
-<div id="info" class="result">Upload JPG image.</div>
+<div class="jtw-grid">
+  <div class="jtw-card">
+    <strong>Conversion Info</strong>
+    <div id="info" class="result">Upload JPG image.</div>
+  </div>
+</div>
 
+<div style="display:flex;gap:10px;flex-wrap:wrap;">
 <button class="btn" id="convert">Convert</button>
 <button class="btn secondary" id="download">Download WebP</button>
+<button class="btn secondary" id="clear">Clear</button>
+</div>
+
+<p class="note">
+WebP usually provides better compression than JPG. Lower quality values reduce file size more but may affect visual clarity.
+</p>
+
 </div>
 </div>
+
+<div slot="how">
+<p class="note">
+This tool converts a JPG image into WebP using browser-based canvas encoding. The quality slider controls compression level.
+</p>
+<ul>
+<li><strong>High quality (0.8–1.0):</strong> better visual quality, larger file size</li>
+<li><strong>Medium quality (0.5–0.7):</strong> balanced size and quality</li>
+<li><strong>Low quality (&lt;0.5):</strong> smaller size but visible compression artifacts</li>
+<li><strong>Result interpretation:</strong> "Saved %" shows how much smaller the WebP file is compared to the original JPG</li>
+</ul>
+</div>
+
+<div slot="examples">
+<ul>
+<li><strong>Website optimization:</strong> convert images to WebP to reduce page load time</li>
+<li><strong>Blog images:</strong> reduce bandwidth usage while maintaining quality</li>
+<li><strong>App assets:</strong> smaller images improve performance</li>
+<li><strong>Testing compression:</strong> compare size differences at different quality levels</li>
+</ul>
+</div>
+
+<div slot="related">
+<ul>
+<li><a href="/image-tools/jpg-to-png/">JPG to PNG</a></li>
+<li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+<li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+<li><a href="/image-tools/">All Image Tools</a></li>
+</ul>
+</div>
+
 </ToolLayout>
 
 <script is:inline>
@@ -45,22 +148,39 @@ const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 const quality=document.getElementById("quality");
 const info=document.getElementById("info");
+const qualityVal=document.getElementById("qualityVal");
 
 let img=new Image();
 let originalSize=0;
+let loaded=false;
+let originalName="";
+
+quality.oninput=()=>{
+  qualityVal.textContent=quality.value;
+};
 
 file.onchange=e=>{
  const f=e.target.files[0];
  if(!f) return;
 
+ if(!f.type.startsWith("image/jpeg")){
+   info.textContent="Please upload a JPG image.";
+   return;
+ }
+
  originalSize=f.size;
+ originalName=f.name||"image";
 
  const r=new FileReader();
  r.onload=ev=>{
    img.onload=()=>{
+     loaded=true;
      canvas.width=img.width;
      canvas.height=img.height;
      ctx.drawImage(img,0,0);
+
+     info.innerHTML=
+     "<strong>Image loaded.</strong><br>Adjust quality and click Convert.";
    };
    img.src=ev.target.result;
  };
@@ -68,21 +188,56 @@ file.onchange=e=>{
 };
 
 document.getElementById("convert").onclick=()=>{
+ if(!loaded){
+   info.textContent="Upload JPG image first.";
+   return;
+ }
+
  canvas.toBlob(blob=>{
+   if(!blob){
+     info.textContent="Conversion failed.";
+     return;
+   }
+
+   const saved=(1-blob.size/originalSize)*100;
+
+   let interpretation="";
+   if(saved>0){
+     interpretation="File size reduced.";
+   }else{
+     interpretation="File size increased (possible depending on image).";
+   }
+
    info.innerHTML=
    `Original: ${(originalSize/1024).toFixed(1)} KB<br>
     WebP: ${(blob.size/1024).toFixed(1)} KB<br>
-    Saved: ${((1-blob.size/originalSize)*100).toFixed(1)}%`;
+    Saved: ${saved.toFixed(1)}%<br>
+    ${interpretation}`;
  },"image/webp",Number(quality.value));
 };
 
 document.getElementById("download").onclick=()=>{
+ if(!loaded){
+   info.textContent="Nothing to download.";
+   return;
+ }
+
  canvas.toBlob(blob=>{
    const a=document.createElement("a");
    a.href=URL.createObjectURL(blob);
-   a.download="converted.webp";
+   const base=originalName.replace(/\.[^.]+$/,"");
+   a.download=base+".webp";
    a.click();
  },"image/webp",Number(quality.value));
+};
+
+document.getElementById("clear").onclick=()=>{
+ file.value="";
+ canvas.width=0;
+ canvas.height=0;
+ info.textContent="Upload JPG image.";
+ loaded=false;
+ originalSize=0;
 };
 
 });

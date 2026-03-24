@@ -62,39 +62,159 @@ const categories = [
 
 <BaseLayout
   title="All Categories — MinimalDev"
-  description="Browse all tool categories on MinimalDev, including converters, math, finance, developer tools, generators, text tools, and design tools."
+  description="Browse all tool categories on MinimalDev, including converters, math, finance, health, utilities, developer tools, generators, image tools, text tools, and design tools."
   canonicalPath="/categories/"
 >
   <div class="container">
-    <h1 class="page-title">All Categories</h1>
-    <p class="lead">
-      Browse all tool categories available on MinimalDev. Choose a category to explore its tools.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">All Categories</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        Browse all tool categories available on MinimalDev. This page is the main starting point if you want to explore the site by task type instead of opening one tool directly.
+      </p>
+      <p class="lead" style="margin:0;">
+        Each category groups together tools with a similar purpose, such as conversions, calculations, formatting, generation, or image processing. If you are not sure which exact tool you need yet, starting from a category is usually the fastest way to find it.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
+    <section class="section">
+      <h2>How to use this page</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Choose the category that best matches your task first. For example, use <strong>Converters</strong> for unit changes, <strong>Math</strong> for percentages and formulas, <strong>Finance</strong> for money-related estimates, and <strong>Developer Tools</strong> for validation, formatting, and encoding tasks.
+        </p>
+        <p style="margin-bottom:0;">
+          If you already know the tool name or only remember part of it, use the search box below to narrow the visible category cards more quickly.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Find a category</h2>
+      <p class="lead" style="margin-top:0;">
+        Search by category name or description to narrow the list.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
         <input
-            id="toolSearch"
-            type="search"
-            placeholder="Search tools..."
-            style="
+          id="toolSearch"
+          type="search"
+          placeholder="Search categories..."
+          aria-label="Search categories"
+          style="
             width:100%;
             padding:10px 12px;
             border-radius:10px;
             border:1px solid rgba(0,0,0,0.15);
             font-size:14px;
-            "
+            box-sizing:border-box;
+          "
         />
-    </div>
+      </div>
 
-    <div class="grid">
-      {categories.map((c) => (
+      <div class="grid">
+        {categories.map((c) => (
+          <section class="card">
+            <span class="badge">Category</span>
+            <h2>{c.title}</h2>
+            <p>{c.description}</p>
+            <a class="btn" href={c.href}>Open</a>
+          </section>
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Category overview</h2>
+      <div class="grid">
         <section class="card">
-          <span class="badge">Category</span>
-          <h2>{c.title}</h2>
-          <p>{c.description}</p>
-          <a class="btn" href={c.href}>Open</a>
+          <h2>Converters</h2>
+          <p>
+            Best for switching values between units such as distance, weight, temperature, area, volume, time, and data size.
+          </p>
         </section>
-      ))}
-    </div>
+
+        <section class="card">
+          <h2>Math</h2>
+          <p>
+            Best for percentages, number relationships, formulas, and other general calculation tasks used in school, work, and daily life.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Finance</h2>
+          <p>
+            Best for payment planning, interest estimates, savings calculations, salary breakdowns, and basic budgeting tasks.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Date & Time</h2>
+          <p>
+            Best for date differences, age checks, working day calculations, timestamps, countdowns, and time interval questions.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Health</h2>
+          <p>
+            Best for body metrics, calorie-related estimates, hydration checks, sleep-related helpers, and other simple health calculations.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Utilities</h2>
+          <p>
+            Best for general-purpose helpers that do not fit one narrow subject area, including generators, counters, and quick tools.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Developer Tools</h2>
+          <p>
+            Best for programmers and technical users who need validators, parsers, encoders, decoders, and formatting helpers.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Text Tools</h2>
+          <p>
+            Best for cleaning, transforming, counting, comparing, or analyzing text content for writing and editing workflows.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Generators</h2>
+          <p>
+            Best for creating names, IDs, placeholders, slugs, passwords, random values, and other generated content.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Image Tools</h2>
+          <p>
+            Best for browser-based image resizing, conversion, cropping, compression, and other practical image editing tasks.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Design Tools</h2>
+          <p>
+            Best for visual helper tasks such as colors, gradients, spacing, sizing, and other design-related utilities.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why categories matter</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Category pages are useful because many visitors know the kind of task they need to complete, but not always the exact tool name. Organizing tools by subject makes the site easier to explore and reduces the time needed to find the right page.
+        </p>
+        <p style="margin-bottom:0;">
+          This also helps separate different workflows. A visitor looking for a loan estimate, for example, should not have to sift through text utilities or developer encoders to find the correct page.
+        </p>
+      </div>
+    </section>
   </div>
 </BaseLayout>

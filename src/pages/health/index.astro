@@ -28,48 +28,116 @@ const tools: ToolMeta[] = modules
   canonicalPath="/health/"
 >
   <div class="container">
-    <h1 class="page-title">Health Calculators</h1>
-    <p class="lead">
-      Free health calculators for BMI, BMR, calories, hydration, heart rate, pace, sleep, and body measurements.
-      Use these tools for quick wellness estimates, daily planning, and general fitness tracking support.
-      All health tools run directly in your browser for convenience and privacy.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Health Calculators</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category provides simple health-related calculators for everyday tracking and planning.
+        You can use these tools to estimate values such as body metrics, calorie needs, hydration,
+        activity pace, sleep timing, and other basic wellness indicators.
+      </p>
+      <p class="lead" style="margin:0;">
+        These tools are designed for quick reference and general awareness. They help you understand
+        approximate ranges and patterns, but they are not intended to replace professional evaluation
+        or personalized medical guidance.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Daily tracking</h2>
+          <p>
+            Use these calculators to monitor simple metrics such as BMI, calorie needs,
+            hydration targets, or sleep timing in a consistent and easy way.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Planning and awareness</h2>
+          <p>
+            These tools can help you estimate ranges and compare scenarios,
+            such as different activity levels, intake amounts, or timing adjustments.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Quick reference</h2>
+          <p>
+            Instead of manually calculating values, you can use these pages
+            to get fast results for common health-related formulas and approximations.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse health tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available health calculators below if you already know the metric or estimate you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search health calculators"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Health</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
 
     <section class="section">
-      <h2>FAQ</h2>
-      <ul>
-        <li><strong>Is this medical advice?</strong> No. Results are informational only.</li>
-        <li><strong>Which formula is used?</strong> Each tool explains formulas in the “How it works” section.</li>
-      </ul>
+      <h2>How to choose the right calculator</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If you are checking body-related metrics, use tools like BMI or body measurement calculators.
+          If your focus is nutrition or intake, choose calorie or hydration-related tools.
+          For activity and performance, select pace or heart-rate-related calculators.
+        </p>
+        <p style="margin-bottom:0;">
+          Each tool is designed for a single purpose so that results are easier to understand
+          and not mixed with unrelated assumptions.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Important limitations</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          These calculators provide general estimates based on common formulas.
+          Results may vary depending on individual health conditions, measurement accuracy,
+          and real-world factors that are not included in simple calculations.
+        </p>
+        <p style="margin-bottom:0;">
+          This content is for informational purposes only and should not be considered medical advice.
+          For diagnosis or treatment decisions, consult a qualified healthcare professional.
+        </p>
+      </div>
     </section>
   </div>
 </BaseLayout>

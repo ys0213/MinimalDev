@@ -8,30 +8,200 @@ export const tool = {
   order: 8,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/webp-to-jpg/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/webp-to-jpg/";
+
+const faqs = [
+  {
+    q: "What does this WebP to JPG converter do?",
+    a: "It reads a WebP image in your browser, redraws it on a canvas, and exports the result as a JPG file.",
+  },
+  {
+    q: "Why convert WebP to JPG?",
+    a: "JPG is still widely supported in older workflows, some editors, uploads, documents, and platforms that do not handle WebP well.",
+  },
+  {
+    q: "What happens to transparency?",
+    a: "JPG does not support transparency, so transparent areas from a WebP image are filled with a solid white background in this tool.",
+  },
+  {
+    q: "Will JPG always be smaller than WebP?",
+    a: "Not always. WebP is often very efficient, so converting to JPG can make the file larger depending on the image and quality setting.",
+  },
+  {
+    q: "Does this upload my image?",
+    a: "No. Conversion happens locally in your browser and the file is not uploaded or stored.",
+  },
+  {
+    q: "Does JPG conversion restore details from a heavily compressed WebP?",
+    a: "No. Converting formats does not recover details that were already lost in the source image.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 ---
 
 <ToolLayout
-title={`WebP to JPG — ${SITE_NAME}`}
-description="Convert WebP to JPG."
-canonicalPath={CANONICAL_PATH}
-h1="WebP to JPG Converter"
-intro="Convert WebP images into JPG."
-categoryName="Image Tools"
+  title={`WebP to JPG — ${SITE_NAME}`}
+  description="Convert WebP to JPG with preview, quality control, background handling, and file size comparison."
+  canonicalPath={CANONICAL_PATH}
+  h1="WebP to JPG Converter"
+  intro="Convert WebP images into JPG format with adjustable quality. Useful when you need broader compatibility for uploads, documents, editors, or sharing workflows that expect JPG files."
+  faq={faqs}
+  categoryName="Image Tools"
 >
-<div slot="tool">
-<div class="form">
-<input type="file" id="file" accept="image/webp"/>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<canvas id="canvas"></canvas>
+  <div slot="tool" data-tool="webp-to-jpg">
+    <style is:inline>
+      #file,
+      #quality {
+        width: 100%;
+        min-width: 0;
+      }
+      .wtj-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .wtj-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .wtj-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .wtj-big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .wtj-canvas-wrap {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        padding: 12px;
+        overflow: hidden;
+        background: rgba(255,255,255,.03);
+      }
+      #canvas {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        background: rgba(255,255,255,.02);
+      }
+      .wtj-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 900px) {
+        .wtj-grid {
+          grid-template-columns: 1fr 320px;
+          align-items: start;
+        }
+      }
+    </style>
 
-<div id="info" class="result">Upload WebP image.</div>
+    <div class="form" role="form" aria-describedby="wtj_help wtj_privacy">
+      <div class="field">
+        <label for="file">WebP file</label>
+        <input type="file" id="file" accept="image/webp,.webp" />
+      </div>
 
-<button class="btn" id="convert">Convert</button>
-<button class="btn secondary" id="download">Download JPG</button>
-</div>
-</div>
+      <div class="field">
+        <label for="quality">JPG quality</label>
+        <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.9" />
+        <p class="note" id="qualityVal" style="margin-top:6px;">Current quality: 0.9</p>
+      </div>
+
+      <div class="wtj-grid">
+        <div>
+          <div class="wtj-canvas-wrap">
+            <canvas id="canvas" aria-label="WebP to JPG preview canvas"></canvas>
+          </div>
+        </div>
+
+        <div>
+          <div class="wtj-card-grid">
+            <div class="wtj-card">
+              <strong>Target format</strong>
+              <div class="wtj-big">JPG</div>
+              <div class="note" style="margin-top:4px;">Current export type</div>
+            </div>
+
+            <div class="wtj-card">
+              <strong>Canvas size</strong>
+              <div class="wtj-big" id="canvasSize">—</div>
+              <div class="note" style="margin-top:4px;">Current preview dimensions</div>
+            </div>
+          </div>
+
+          <p class="note" id="wtj_help" style="margin-top:10px;">
+            WebP can include transparency, but JPG cannot. This converter fills transparent areas with white before exporting the final JPG.
+          </p>
+
+          <div class="wtj-row" style="margin-top:10px;">
+            <button class="btn" id="convert" type="button">Convert</button>
+            <button class="btn secondary" id="download" type="button">Download JPG</button>
+            <button class="btn secondary" id="clear" type="button">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="info" class="result" role="status" style="margin-top:12px;">Upload WebP image.</div>
+
+      <p class="note" id="wtj_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No image is uploaded, stored, or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool loads a WebP image into a browser canvas, fills the canvas background with white, and then exports the result as JPG. The width and height stay the same unless you resize the image elsewhere.
+    </p>
+    <ul>
+      <li><strong>WebP input:</strong> efficient modern format that may support transparency</li>
+      <li><strong>JPG output:</strong> widely compatible format for sharing, uploads, and older tools</li>
+      <li><strong>Transparency handling:</strong> transparent pixels are replaced with white because JPG does not support alpha transparency</li>
+      <li><strong>Result interpretation:</strong> changing format affects compression behavior, but it does not recover image detail that was already lost</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Compatibility workflow:</strong> convert WebP images before uploading them to platforms that only accept JPG</li>
+      <li><strong>Document use:</strong> save an image as JPG for word processors, slides, or PDFs that expect common legacy formats</li>
+      <li><strong>Photo sharing:</strong> create a JPG copy for people or tools that do not support WebP well</li>
+      <li><strong>Asset export:</strong> prepare simple JPG versions for editors, forms, or CMS systems with restricted file support</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/jpg-to-webp/">JPG to WebP</a></li>
+      <li><a href="/image-tools/png-to-jpg/">PNG to JPG</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
 </ToolLayout>
 
 <script is:inline>
@@ -40,32 +210,156 @@ document.addEventListener("DOMContentLoaded",()=>{
 const file=document.getElementById("file");
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
+const quality=document.getElementById("quality");
+const info=document.getElementById("info");
+const qualityVal=document.getElementById("qualityVal");
+const canvasSize=document.getElementById("canvasSize");
+const clearBtn=document.getElementById("clear");
 
 let img=new Image();
+let originalSize=0;
+let loaded=false;
+let originalName="";
+
+function updateCanvasInfo() {
+  if (canvas.width && canvas.height) {
+    canvasSize.textContent = canvas.width + " × " + canvas.height;
+  } else {
+    canvasSize.textContent = "—";
+  }
+}
+
+function drawImageOnCanvas() {
+  if (!loaded) return;
+  canvas.width=img.width;
+  canvas.height=img.height;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#fff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0);
+
+  updateCanvasInfo();
+}
+
+function resetAll() {
+  file.value="";
+  canvas.width=0;
+  canvas.height=0;
+  quality.value="0.9";
+  qualityVal.textContent="Current quality: 0.9";
+  info.textContent="Upload WebP image.";
+  loaded=false;
+  originalSize=0;
+  originalName="";
+  updateCanvasInfo();
+}
+
+quality.oninput=()=>{
+  qualityVal.textContent="Current quality: " + quality.value;
+  if (loaded) {
+    info.innerHTML =
+      "<strong>Quality updated.</strong><br>" +
+      "Click Convert again to refresh the JPG size estimate at the current quality setting.";
+  }
+};
 
 file.onchange=e=>{
+ const selected=e.target.files && e.target.files[0];
+ if(!selected) return;
+
+ if(!selected.type || !selected.type.includes("webp")){
+   info.textContent="Please upload a WebP image.";
+   return;
+ }
+
+ originalSize=selected.size;
+ originalName=selected.name || "image";
+
  const r=new FileReader();
  r.onload=ev=>{
    img.onload=()=>{
-     canvas.width=img.width;
-     canvas.height=img.height;
-
-     ctx.fillStyle="#fff";
-     ctx.fillRect(0,0,canvas.width,canvas.height);
-
-     ctx.drawImage(img,0,0);
+     loaded=true;
+     drawImageOnCanvas();
+     info.innerHTML=
+     "<strong>Image loaded.</strong><br>" +
+     "Click Convert to estimate JPG output size, then download the JPG file.";
+   };
+   img.onerror=()=>{
+     loaded=false;
+     info.textContent="Could not load the selected WebP image.";
    };
    img.src=ev.target.result;
  };
- r.readAsDataURL(e.target.files[0]);
+ r.onerror=()=>{
+   info.textContent="Could not read the selected file.";
+ };
+ r.readAsDataURL(selected);
+};
+
+document.getElementById("convert").onclick=()=>{
+ if(!loaded){
+   info.textContent="Upload WebP image first.";
+   return;
+ }
+
+ drawImageOnCanvas();
+
+ canvas.toBlob(blob=>{
+   if(!blob){
+     info.textContent="Conversion failed.";
+     return;
+   }
+
+   const newSize=blob.size;
+   const saved=((1-newSize/originalSize)*100);
+
+   let interpretation="";
+   if(saved > 0){
+     interpretation="The JPG file is smaller than the original WebP.";
+   }else if(saved < 0){
+     interpretation="The JPG file is larger than the original WebP. This can happen because WebP is often very efficient.";
+   }else{
+     interpretation="The JPG file size is very close to the original WebP size.";
+   }
+
+   info.innerHTML=
+   `Original WebP: ${(originalSize/1024).toFixed(1)} KB<br>
+    JPG: ${(newSize/1024).toFixed(1)} KB<br>
+    Saved: ${saved.toFixed(1)}%<br>
+    Quality: ${quality.value}<br>
+    ${interpretation}`;
+ },"image/jpeg",Number(quality.value));
 };
 
 document.getElementById("download").onclick=()=>{
- const a=document.createElement("a");
- a.href=canvas.toDataURL("image/jpeg",0.9);
- a.download="converted.jpg";
- a.click();
+ if(!loaded){
+   info.textContent="Nothing to download. Upload a WebP image first.";
+   return;
+ }
+
+ drawImageOnCanvas();
+
+ canvas.toBlob(blob=>{
+   if(!blob){
+     info.textContent="Download failed.";
+     return;
+   }
+
+   const a=document.createElement("a");
+   a.href=URL.createObjectURL(blob);
+   const base=originalName.replace(/\.[^.]+$/,"") || "converted";
+   a.download=base + ".jpg";
+   a.click();
+   URL.revokeObjectURL(a.href);
+ },"image/jpeg",Number(quality.value));
 };
+
+clearBtn.onclick=()=>{
+ resetAll();
+};
+
+updateCanvasInfo();
 
 });
 </script>

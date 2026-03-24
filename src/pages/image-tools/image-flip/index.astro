@@ -3,114 +3,363 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Image Flip",
-  description: "Flip images horizontally or vertically with preview and download.",
+  description: "Flip images horizontally or vertically with preview, status details, and download.",
   href: "/image-tools/image-flip/",
   order: 5,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/image-flip/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-flip/";
 
-const faqs=[
- {q:"What does flip mean?",a:"It mirrors the image."},
- {q:"Is it destructive?",a:"No original is kept."},
- {q:"Upload needed?",a:"No."}
+const faqs = [
+  {
+    q: "What does flip mean?",
+    a: "Flip means mirroring the image. Horizontal flip mirrors left and right, while vertical flip mirrors top and bottom.",
+  },
+  {
+    q: "Does flipping reduce image quality?",
+    a: "No. Flipping changes orientation only. It does not crop the image or reduce its dimensions.",
+  },
+  {
+    q: "Is the original image preserved?",
+    a: "Yes. The original uploaded image remains available in the browser session, and this tool only changes the preview canvas.",
+  },
+  {
+    q: "Do I need to upload my image to a server?",
+    a: "No. Everything runs locally in your browser.",
+  },
+  {
+    q: "When should I use horizontal flip?",
+    a: "Use horizontal flip when you want to mirror a selfie, reverse composition, or correct left-right orientation.",
+  },
+  {
+    q: "When should I use vertical flip?",
+    a: "Use vertical flip when an image appears upside down or when you need a top-bottom mirrored version for design or editing work.",
+  },
 ];
 
-const faqJsonLd={
- "@context":"https://schema.org",
- "@type":"FAQPage",
- mainEntity:faqs.map(f=>({
-   "@type":"Question",
-   name:f.q,
-   acceptedAnswer:{ "@type":"Answer", text:f.a }
- }))
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
 };
 ---
 
 <ToolLayout
-title={`Image Flip — ${SITE_NAME}`}
-description="Flip images horizontally or vertically."
-canonicalPath={CANONICAL_PATH}
-h1="Image Flip"
-intro="Mirror your image horizontally or vertically."
-faq={faqs}
-categoryName="Image Tools"
+  title={`Image Flip — ${SITE_NAME}`}
+  description="Flip images horizontally or vertically with browser-based preview, state tracking, and download."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Flip"
+  intro="Mirror your image horizontally or vertically, preview the result instantly, and download the flipped version. Useful for selfies, layout checks, and quick orientation corrections."
+  faq={faqs}
+  categoryName="Image Tools"
 >
-<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<div slot="tool">
-<div class="form">
-<input type="file" id="file" accept="image/*"/>
+  <div slot="tool" data-tool="image-flip">
+    <style is:inline>
+      #file {
+        width: 100%;
+        min-width: 0;
+      }
+      .flip-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .flip-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .flip-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .flip-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .flip-big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .flip-canvas-wrap {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        padding: 12px;
+        overflow: hidden;
+        background: rgba(255,255,255,.03);
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        background: rgba(255,255,255,.02);
+      }
+      @media (min-width: 900px) {
+        .flip-grid {
+          grid-template-columns: 1fr 320px;
+          align-items: start;
+        }
+      }
+    </style>
 
-<div style="display:flex;gap:10px;">
-<button class="btn" id="flipH">Flip Horizontal</button>
-<button class="btn" id="flipV">Flip Vertical</button>
-</div>
+    <div class="form" role="form" aria-describedby="flip_help flip_privacy">
+      <div class="field">
+        <label for="file">Image file</label>
+        <input type="file" id="file" accept="image/*" />
+      </div>
 
-<canvas id="canvas"></canvas>
+      <div class="flip-grid">
+        <div>
+          <div class="flip-canvas-wrap">
+            <canvas id="canvas" aria-label="Flipped image preview"></canvas>
+          </div>
+        </div>
 
-<button class="btn secondary" id="download">Download</button>
-</div>
-</div>
+        <div>
+          <div class="flip-card-grid">
+            <div class="flip-card">
+              <strong>Horizontal state</strong>
+              <div class="flip-big" id="flipHState">Off</div>
+              <div class="note" style="margin-top:4px;">Left-right mirror</div>
+            </div>
+
+            <div class="flip-card">
+              <strong>Vertical state</strong>
+              <div class="flip-big" id="flipVState">Off</div>
+              <div class="note" style="margin-top:4px;">Top-bottom mirror</div>
+            </div>
+
+            <div class="flip-card">
+              <strong>Canvas size</strong>
+              <div class="flip-big" id="canvasSize">—</div>
+              <div class="note" style="margin-top:4px;">Current image dimensions</div>
+            </div>
+          </div>
+
+          <p class="note" id="flip_help" style="margin-top:10px;">
+            Horizontal flip mirrors left and right. Vertical flip mirrors top and bottom. You can apply either one or both at the same time.
+          </p>
+
+          <div class="flip-row" style="margin-top:10px;">
+            <button class="btn" id="flipH" type="button">Flip Horizontal</button>
+            <button class="btn" id="flipV" type="button">Flip Vertical</button>
+            <button class="btn secondary" id="reset" type="button">Reset</button>
+            <button class="btn secondary" id="download" type="button">Download</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="info" class="result" role="status" style="margin-top:12px;">
+        Upload an image to start.
+      </div>
+
+      <p class="note" id="flip_privacy" style="margin-top:10px;">
+        Privacy: flipping runs locally in your browser. No image is uploaded, stored, or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool redraws your image on a canvas after applying a mirror transformation. A horizontal flip reverses left and right. A vertical flip reverses top and bottom. The image keeps the same width and height because the tool changes orientation only, not the pixel dimensions.
+    </p>
+    <ul>
+      <li><strong>Horizontal flip:</strong> useful for mirroring selfies, logos, or composition layouts</li>
+      <li><strong>Vertical flip:</strong> useful when an image appears upside down or needs top-bottom reversal</li>
+      <li><strong>Both flips together:</strong> produces a double mirror effect</li>
+      <li><strong>Result interpretation:</strong> flipping changes direction and orientation, but not image quality, crop area, or size</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Selfie correction:</strong> flip horizontally to compare mirrored and non-mirrored appearance</li>
+      <li><strong>Design review:</strong> flip a layout to check visual balance from the opposite direction</li>
+      <li><strong>Upside-down image:</strong> use vertical flip to fix orientation in certain exported or scanned images</li>
+      <li><strong>Creative editing:</strong> combine horizontal and vertical flips to create alternate compositions without resizing or cropping</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-rotate/">Image Rotate</a></li>
+      <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  const file = document.getElementById("file");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const info = document.getElementById("info");
+  const flipHBtn = document.getElementById("flipH");
+  const flipVBtn = document.getElementById("flipV");
+  const resetBtn = document.getElementById("reset");
+  const downloadBtn = document.getElementById("download");
+  const flipHState = document.getElementById("flipHState");
+  const flipVState = document.getElementById("flipVState");
+  const canvasSize = document.getElementById("canvasSize");
 
-const file=document.getElementById("file");
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+  if (
+    !file || !canvas || !ctx || !info ||
+    !flipHBtn || !flipVBtn || !resetBtn || !downloadBtn ||
+    !flipHState || !flipVState || !canvasSize
+  ) return;
 
-let img=new Image();
-let flipH=false, flipV=false;
+  let img = new Image();
+  let flipH = false;
+  let flipV = false;
+  let loaded = false;
+  let originalName = "";
 
-file.onchange=e=>{
- const r=new FileReader();
- r.onload=ev=>{
-   img.onload=draw;
-   img.src=ev.target.result;
- };
- r.readAsDataURL(e.target.files[0]);
-};
+  function updateStateUi() {
+    flipHState.textContent = flipH ? "On" : "Off";
+    flipVState.textContent = flipV ? "On" : "Off";
+    canvasSize.textContent = canvas.width && canvas.height ? (canvas.width + " × " + canvas.height) : "—";
+  }
 
-function draw(){
- canvas.width=img.width;
- canvas.height=img.height;
+  function draw() {
+    if (!loaded || !img.src) {
+      updateStateUi();
+      return;
+    }
 
- ctx.save();
- ctx.clearRect(0,0,canvas.width,canvas.height);
+    canvas.width = img.width;
+    canvas.height = img.height;
 
- ctx.translate(
-   flipH?canvas.width:0,
-   flipV?canvas.height:0
- );
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
- ctx.scale(
-   flipH?-1:1,
-   flipV?-1:1
- );
+    ctx.translate(
+      flipH ? canvas.width : 0,
+      flipV ? canvas.height : 0
+    );
 
- ctx.drawImage(img,0,0);
- ctx.restore();
-}
+    ctx.scale(
+      flipH ? -1 : 1,
+      flipV ? -1 : 1
+    );
 
-document.getElementById("flipH").onclick=()=>{
- flipH=!flipH;
- draw();
-};
+    ctx.drawImage(img, 0, 0);
+    ctx.restore();
 
-document.getElementById("flipV").onclick=()=>{
- flipV=!flipV;
- draw();
-};
+    updateStateUi();
 
-document.getElementById("download").onclick=()=>{
- const a=document.createElement("a");
- a.href=canvas.toDataURL();
- a.download="flipped.png";
- a.click();
-};
+    let stateText = "";
+    if (flipH && flipV) {
+      stateText = "Both horizontal and vertical flips are active.";
+    } else if (flipH) {
+      stateText = "Horizontal flip is active.";
+    } else if (flipV) {
+      stateText = "Vertical flip is active.";
+    } else {
+      stateText = "No flip is active. The preview matches the original orientation.";
+    }
 
+    info.innerHTML =
+      "<strong>Preview updated.</strong><br>" +
+      stateText + " The image size remains " + canvas.width + " × " + canvas.height + ".";
+  }
+
+  file.onchange = (e) => {
+    const selected = e.target.files && e.target.files[0];
+    if (!selected) return;
+
+    if (!selected.type || !selected.type.startsWith("image/")) {
+      info.textContent = "Please choose a valid image file.";
+      return;
+    }
+
+    originalName = selected.name || "image";
+    const reader = new FileReader();
+
+    reader.onload = (ev) => {
+      img.onload = () => {
+        loaded = true;
+        flipH = false;
+        flipV = false;
+        draw();
+        info.innerHTML =
+          "<strong>Image loaded.</strong><br>" +
+          "Use the flip buttons to mirror the image horizontally or vertically.";
+      };
+      img.onerror = () => {
+        loaded = false;
+        info.textContent = "Could not load the selected image.";
+      };
+      img.src = String(ev.target.result || "");
+    };
+
+    reader.onerror = () => {
+      info.textContent = "Could not read the selected file.";
+    };
+
+    reader.readAsDataURL(selected);
+  };
+
+  flipHBtn.onclick = () => {
+    if (!loaded) {
+      info.textContent = "Upload an image first.";
+      return;
+    }
+    flipH = !flipH;
+    draw();
+  };
+
+  flipVBtn.onclick = () => {
+    if (!loaded) {
+      info.textContent = "Upload an image first.";
+      return;
+    }
+    flipV = !flipV;
+    draw();
+  };
+
+  resetBtn.onclick = () => {
+    if (!loaded) {
+      info.textContent = "Upload an image first.";
+      return;
+    }
+    flipH = false;
+    flipV = false;
+    draw();
+    info.innerHTML =
+      "<strong>Flip state reset.</strong><br>" +
+      "The preview is back to the original orientation.";
+  };
+
+  downloadBtn.onclick = () => {
+    if (!loaded || !canvas.width || !canvas.height) {
+      info.textContent = "Nothing to download yet. Upload an image first.";
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    const base = originalName.replace(/\.[^.]+$/, "") || "image";
+    a.download = base + "-flipped.png";
+    a.click();
+  };
+
+  updateStateUi();
 });
 </script>

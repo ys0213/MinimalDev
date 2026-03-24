@@ -8,30 +8,193 @@ export const tool = {
   order: 7,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/jpg-to-png/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/jpg-to-png/";
+
+const faqs = [
+  {
+    q: "What does this JPG to PNG converter do?",
+    a: "It reads a JPG image in your browser, redraws it on a canvas, and exports the result as a PNG file.",
+  },
+  {
+    q: "Will the converted PNG be lossless?",
+    a: "PNG uses lossless compression, but converting from JPG does not recover detail that was already lost in the original JPG.",
+  },
+  {
+    q: "Will the PNG file always be smaller?",
+    a: "No. PNG files are often larger than JPG files for photos because JPG uses lossy compression that is usually more efficient for photographic images.",
+  },
+  {
+    q: "Does this upload my image?",
+    a: "No. The image is processed locally in your browser and is not uploaded or stored by this tool.",
+  },
+  {
+    q: "When should I convert JPG to PNG?",
+    a: "Use PNG when you want a lossless export format for editing workflows, screenshots, diagrams, or repeated re-saving without additional JPG compression.",
+  },
+  {
+    q: "Can this add transparency to a JPG?",
+    a: "No. A JPG image does not contain transparency information, so converting it to PNG does not automatically create transparent areas.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 ---
 
 <ToolLayout
-title={`JPG to PNG — ${SITE_NAME}`}
-description="Convert JPG to PNG."
-canonicalPath={CANONICAL_PATH}
-h1="JPG to PNG Converter"
-intro="Convert JPG images into PNG format."
-categoryName="Image Tools"
+  title={`JPG to PNG — ${SITE_NAME}`}
+  description="Convert JPG to PNG with browser-based preview, file size comparison, and download."
+  canonicalPath={CANONICAL_PATH}
+  h1="JPG to PNG Converter"
+  intro="Convert JPG images into PNG format with an instant browser preview. This is useful when you want a lossless PNG file for editing, archiving, screenshots, diagrams, or workflows where repeated JPG compression is not ideal."
+  faq={faqs}
+  categoryName="Image Tools"
 >
-<div slot="tool">
-<div class="form">
-<input type="file" id="file" accept="image/jpeg"/>
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<canvas id="canvas"></canvas>
+  <div slot="tool" data-tool="jpg-to-png">
+    <style is:inline>
+      #file {
+        width: 100%;
+        min-width: 0;
+      }
+      .jtp-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .jtp-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .jtp-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .jtp-big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .jtp-canvas-wrap {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        padding: 12px;
+        overflow: hidden;
+        background: rgba(255,255,255,.03);
+      }
+      #canvas {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 10px;
+        background: rgba(255,255,255,.02);
+      }
+      .jtp-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 900px) {
+        .jtp-grid {
+          grid-template-columns: 1fr 320px;
+          align-items: start;
+        }
+      }
+    </style>
 
-<div id="info" class="result">Upload JPG image.</div>
+    <div class="form" role="form" aria-describedby="jtp_help jtp_privacy">
+      <div class="field">
+        <label for="file">JPG file</label>
+        <input type="file" id="file" accept="image/jpeg,.jpg,.jpeg" />
+      </div>
 
-<button class="btn" id="convert">Convert</button>
-<button class="btn secondary" id="download">Download PNG</button>
-</div>
-</div>
+      <div class="jtp-grid">
+        <div>
+          <div class="jtp-canvas-wrap">
+            <canvas id="canvas" aria-label="JPG to PNG preview canvas"></canvas>
+          </div>
+        </div>
+
+        <div>
+          <div class="jtp-card-grid">
+            <div class="jtp-card">
+              <strong>Current format</strong>
+              <div class="jtp-big">PNG</div>
+              <div class="note" style="margin-top:4px;">Target export format</div>
+            </div>
+
+            <div class="jtp-card">
+              <strong>Canvas size</strong>
+              <div class="jtp-big" id="canvasSize">—</div>
+              <div class="note" style="margin-top:4px;">Current preview dimensions</div>
+            </div>
+          </div>
+
+          <p class="note" id="jtp_help" style="margin-top:10px;">
+            JPG is usually smaller for photos, while PNG is better when you want a lossless file format for editing or repeated export. This tool keeps the same pixel dimensions and only changes the output format.
+          </p>
+
+          <div class="jtp-row" style="margin-top:10px;">
+            <button class="btn" id="convert" type="button">Convert</button>
+            <button class="btn secondary" id="download" type="button">Download PNG</button>
+            <button class="btn secondary" id="clear" type="button">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="info" class="result" role="status" style="margin-top:12px;">Upload JPG image.</div>
+
+      <p class="note" id="jtp_privacy" style="margin-top:10px;">
+        Privacy: conversion runs locally in your browser. No image is uploaded, stored, or transmitted.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool loads a JPG image into a browser canvas and then exports the same pixel data as PNG. The image dimensions stay the same unless you resize it elsewhere. Converting to PNG changes the file format, but it does not restore details that were already removed by JPG compression.
+    </p>
+    <ul>
+      <li><strong>JPG input:</strong> usually smaller for photos because it uses lossy compression</li>
+      <li><strong>PNG output:</strong> lossless export format that is often better for screenshots, diagrams, and editing workflows</li>
+      <li><strong>Result interpretation:</strong> if the PNG is larger, that is normal for many photographic images</li>
+      <li><strong>Important note:</strong> JPG to PNG conversion changes the container format, not the original capture quality</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Editing workflow:</strong> convert a JPG to PNG before further edits so repeated exports do not add more JPG compression</li>
+      <li><strong>Documentation images:</strong> keep converted screenshots or UI images in a lossless format</li>
+      <li><strong>Archiving:</strong> save a working copy in PNG when you need a stable format for annotation or markup</li>
+      <li><strong>Asset preparation:</strong> convert reference images into PNG for design tools or presentation materials</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/png-to-jpg/">PNG to JPG</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
+  </div>
 </ToolLayout>
 
 <script is:inline>
@@ -41,42 +204,120 @@ const file=document.getElementById("file");
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 const info=document.getElementById("info");
+const canvasSize=document.getElementById("canvasSize");
+const clearBtn=document.getElementById("clear");
 
 let img=new Image();
 let originalSize=0;
+let loaded=false;
+let originalName="";
+
+function updateCanvasInfo() {
+  if (canvas.width && canvas.height) {
+    canvasSize.textContent = canvas.width + " × " + canvas.height;
+  } else {
+    canvasSize.textContent = "—";
+  }
+}
+
+function resetAll() {
+  file.value = "";
+  canvas.width = 0;
+  canvas.height = 0;
+  originalSize = 0;
+  loaded = false;
+  originalName = "";
+  info.textContent = "Upload JPG image.";
+  updateCanvasInfo();
+}
 
 file.onchange=e=>{
- const f=e.target.files[0];
- if(!f) return;
+  const f=e.target.files && e.target.files[0];
+  if(!f) return;
 
- originalSize=f.size;
+  if(!f.type || !f.type.startsWith("image/jpeg")) {
+    info.textContent = "Please choose a valid JPG image.";
+    return;
+  }
 
- const r=new FileReader();
- r.onload=ev=>{
-   img.onload=()=>{
-     canvas.width=img.width;
-     canvas.height=img.height;
-     ctx.drawImage(img,0,0);
-   };
-   img.src=ev.target.result;
- };
- r.readAsDataURL(f);
+  originalSize=f.size;
+  originalName=f.name || "image";
+
+  const r=new FileReader();
+  r.onload=ev=>{
+    img.onload=()=>{
+      loaded = true;
+      canvas.width=img.width;
+      canvas.height=img.height;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0);
+      updateCanvasInfo();
+      info.innerHTML =
+      "<strong>Image loaded.</strong><br>" +
+      "Click Convert to estimate the PNG file size, then download the PNG result if needed.";
+    };
+    img.onerror=()=>{
+      loaded = false;
+      info.textContent = "Could not load the selected JPG image.";
+    };
+    img.src=ev.target.result;
+  };
+  r.onerror=()=>{
+    info.textContent = "Could not read the selected file.";
+  };
+  r.readAsDataURL(f);
 };
 
 document.getElementById("convert").onclick=()=>{
- canvas.toBlob(blob=>{
-   info.innerHTML=
-   `Original: ${(originalSize/1024).toFixed(1)} KB<br>
-    PNG: ${(blob.size/1024).toFixed(1)} KB`;
- },"image/png");
+  if(!loaded || !canvas.width){
+    info.textContent = "Upload JPG image first.";
+    return;
+  }
+
+  canvas.toBlob(blob=>{
+    if(!blob){
+      info.textContent = "Could not generate PNG output.";
+      return;
+    }
+
+    const originalKb = (originalSize/1024).toFixed(1);
+    const pngKb = (blob.size/1024).toFixed(1);
+
+    let interpretation = "";
+    if (blob.size > originalSize) {
+      interpretation = "The PNG file is larger than the JPG. This is common for photo-like images because PNG is lossless.";
+    } else if (blob.size < originalSize) {
+      interpretation = "The PNG file is smaller than the JPG in this case. This can happen depending on image content.";
+    } else {
+      interpretation = "The PNG size is close to the original JPG size.";
+    }
+
+    info.innerHTML =
+      `Original JPG: ${originalKb} KB<br>
+       Converted PNG: ${pngKb} KB<br>
+       Dimensions: ${canvas.width} × ${canvas.height}<br>
+       ${interpretation}`;
+  },"image/png");
 };
 
 document.getElementById("download").onclick=()=>{
- const a=document.createElement("a");
- a.href=canvas.toDataURL("image/png");
- a.download="converted.png";
- a.click();
+  if(!loaded || !canvas.width){
+    info.textContent = "Nothing to download yet. Upload a JPG image first.";
+    return;
+  }
+
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  const base = originalName.replace(/\.[^.]+$/, "") || "converted";
+  a.download= base + ".png";
+  a.click();
 };
+
+clearBtn.onclick=()=>{
+  resetAll();
+};
+
+updateCanvasInfo();
 
 });
 </script>

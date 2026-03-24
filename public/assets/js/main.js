@@ -52,10 +52,27 @@ function initCardSearch() {
   const input = document.getElementById("toolSearch");
   if (!input) return;
 
-  const grid = document.querySelector(".grid");
+  // ✅ 우선 명시된 검색 대상 찾기
+  let grid = document.querySelector("[data-search-grid]");
+
+  // ✅ 없으면 fallback (기존 구조 대응)
+  if (!grid) {
+    const searchWrap = input.closest(".tool-search");
+    if (searchWrap) {
+      let next = searchWrap.nextElementSibling;
+      while (next) {
+        if (next.classList && next.classList.contains("grid")) {
+          grid = next;
+          break;
+        }
+        next = next.nextElementSibling;
+      }
+    }
+  }
+
   if (!grid) return;
 
-  const cards = Array.from(grid.querySelectorAll(".card"));
+  const cards = Array.from(grid.querySelectorAll(":scope > .card"));
 
   let emptyMsg = document.getElementById("searchEmpty");
 
@@ -74,12 +91,11 @@ function initCardSearch() {
     let visible = 0;
 
     cards.forEach((card) => {
-
       const title = card.querySelector("h2")?.innerText.toLowerCase() ?? "";
       const desc = card.querySelector("p")?.innerText.toLowerCase() ?? "";
-      const text = title + " " + desc;
+      const text = (title + " " + desc).trim();
 
-      if (text.includes(q)) {
+      if (!q || text.includes(q)) {
         card.style.display = "";
         visible++;
       } else {

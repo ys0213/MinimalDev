@@ -15,15 +15,19 @@ const CANONICAL_PATH = "/image-tools/image-brightness-adjuster/";
 const faqs = [
   {
     q: "What does brightness adjustment do?",
-    a: "It makes the whole image lighter or darker by shifting pixel intensity across the RGB channels.",
+    a: "It changes overall image brightness by shifting pixel intensity across the red, green, and blue channels.",
   },
   {
     q: "Will brightness adjustment preserve transparency?",
     a: "The preview preserves transparency. If you export as JPEG, transparent areas may need a background fill because JPEG does not support transparency.",
   },
   {
-    q: "Can I brighten a dark screenshot or document scan?",
-    a: "Yes. This tool is useful for brightening screenshots, scanned notes, forms, and other images that look too dark.",
+    q: "When should I use brightness adjustment?",
+    a: "Use it when an image looks too dark, too bright, or needs a simple overall visibility correction.",
+  },
+  {
+    q: "Can brightness adjustment fix overexposed images?",
+    a: "It can darken overly bright images, but it cannot fully restore detail that is already clipped to pure white.",
   },
   {
     q: "Is my image uploaded anywhere?",
@@ -109,6 +113,7 @@ const faqJsonLd = {
         font-weight: 900;
         margin-top: 6px;
         line-height: 1.1;
+        word-break: break-word;
       }
       .iba-row {
         display: flex;
@@ -199,21 +204,24 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool adjusts brightness by adding the same offset to the red, green, and blue channels of each pixel.
-      Positive values make the image brighter and negative values make it darker.
+      This tool adjusts brightness by adding the same offset value to the red, green, and blue channels of each pixel. Positive values make the whole image brighter, while negative values make it darker. This changes overall visibility, but it does not recover detail that is already clipped in very bright highlights or very dark shadows.
     </p>
     <ul>
-      <li><strong>Use small changes</strong> when you want to preserve detail</li>
-      <li><strong>Use larger positive changes</strong> for underexposed screenshots or scans</li>
-      <li><strong>Use negative changes</strong> when bright backgrounds look washed out</li>
+      <li><strong>0:</strong> no visible brightness change</li>
+      <li><strong>+10 to +40:</strong> useful for gently brightening dark screenshots, scans, and photos</li>
+      <li><strong>+50 or more:</strong> stronger brightening, but highlight detail may be lost</li>
+      <li><strong>-10 to -40:</strong> useful for reducing glare or over-bright backgrounds</li>
+      <li><strong>-50 or less:</strong> much darker output, with a higher risk of losing shadow detail</li>
+      <li><strong>Result interpretation:</strong> brightness changes global lightness, so it is best for overall correction rather than precise local retouching</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Brighten a dark scan so text is easier to read</li>
-      <li>Darken an overexposed screenshot before publishing it</li>
-      <li>Adjust a product image to look more balanced in a catalog</li>
+      <li><strong>Document scan:</strong> brighten a dark scan by +20 to +35 so text is easier to read</li>
+      <li><strong>UI screenshot:</strong> reduce brightness by -10 to -25 if the background looks washed out</li>
+      <li><strong>Product image:</strong> apply a small increase such as +10 to make the subject look clearer in a listing</li>
+      <li><strong>Night photo:</strong> increase brightness to reveal hidden objects, while keeping in mind that noise and clipping may become more visible</li>
     </ul>
   </div>
 
@@ -394,9 +402,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     outputCtx.putImageData(srcData, 0, 0);
 
+    let interpretation = "";
+    if (amount === 0) {
+      interpretation = "No brightness change is applied. The output should match the original image.";
+    } else if (amount > 0 && amount <= 25) {
+      interpretation = "This is a light brightening adjustment that usually improves visibility without strongly changing the image.";
+    } else if (amount > 25) {
+      interpretation = "This is a stronger brightening adjustment. It may help dark images, but highlight clipping and a washed-out look can become more noticeable.";
+    } else if (amount < 0 && amount >= -25) {
+      interpretation = "This is a light darkening adjustment that can reduce glare or improve readability in very bright images.";
+    } else {
+      interpretation = "This is a strong darkening adjustment. It may improve over-bright images, but shadow detail can become harder to see.";
+    }
+
     resultEl.innerHTML =
       "<strong>Brightness adjustment applied.</strong>" +
-      '<div class="note" style="margin-top:6px;">Review the preview and download the adjusted image if it looks right.</div>';
+      '<div class="note" style="margin-top:6px;">Review the preview and download the adjusted image if it looks right.</div>' +
+      '<div class="note" style="margin-top:6px;">' + interpretation + "</div>";
 
     try {
       const blob = await new Promise(function (resolve, reject) {
@@ -410,6 +432,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       lastBlob = blob;
+      const sizeDelta = originalFileSize > 0 ? ((blob.size - originalFileSize) / originalFileSize) * 100 : 0;
 
       cardsEl.style.display = "block";
       cardsEl.innerHTML =
@@ -422,6 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
         '<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">' +
           badge(amount === 0 ? "Neutral" : amount > 0 ? "Brightened" : "Darkened", amount === 0 ? "neutral" : "good") +
           badge(mime === "image/png" ? "Lossless container" : "Quality " + quality.toFixed(2), mime === "image/png" ? "neutral" : "good") +
+          badge(sizeDelta <= 0 ? Math.abs(sizeDelta).toFixed(1) + "% smaller" : sizeDelta.toFixed(1) + "% larger", sizeDelta <= 0 ? "good" : "warn") +
         "</div>";
     } catch (err) {
       showError(err && err.message ? err.message : "Could not create the export file.");

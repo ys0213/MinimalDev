@@ -26,41 +26,117 @@ const tools: ToolMeta[] = modules
   canonicalPath="/finance/"
 >
   <div class="container">
-    <h1 class="page-title">Finance Calculators</h1>
-    <p class="lead">
-      Free finance calculators for loans, mortgages, savings, investing, salary, taxes, and budgeting.
-      Use these tools to estimate payments, compare financial scenarios, and plan everyday money decisions.
-      All finance tools run directly in your browser with fast, simple inputs.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Finance Calculators</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category collects finance calculators for everyday money planning and comparison tasks.
+        Use these tools when you want to estimate payments, compare borrowing options, review savings growth,
+        check budgeting scenarios, or make quick financial calculations before making a decision.
+      </p>
+      <p class="lead" style="margin:0;">
+        Financial questions often involve trade-offs between interest, time, monthly cost, and total cost.
+        These pages are designed to make those comparisons easier by keeping each calculator focused on one clear task.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Borrowing and repayment</h2>
+          <p>
+            Use finance calculators to estimate loan or mortgage payments, compare repayment periods,
+            and understand how interest changes the total amount paid over time.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Savings and planning</h2>
+          <p>
+            Savings, budget, and investment-related tools help with planning future targets,
+            reviewing growth scenarios, and checking how regular contributions may add up.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Everyday money decisions</h2>
+          <p>
+            These pages are useful for practical checks such as salary breakdowns, tax estimates,
+            return comparisons, and other routine calculations that come up outside formal financial software.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse finance tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available finance calculators below if you already know the type of estimate or comparison you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search finance calculators"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No finance tools yet. Coming soon.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Finance</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No finance tools yet. Coming soon.</p>
+      )}
+    </section>
+
+    <section class="section">
+      <h2>How to choose the right calculator</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If your question is mainly about borrowing, start with a loan, mortgage, or payment calculator.
+          If your question is about building money over time, choose a savings or investment-related page.
+          If you want to compare outcomes, use the tool that matches the exact scenario you are evaluating,
+          such as monthly payment, total interest, return, or budget impact.
+        </p>
+        <p style="margin-bottom:0;">
+          Splitting these tasks across focused pages makes each result easier to read and helps avoid mixing
+          unrelated assumptions into one large general-purpose finance form.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why this category is separate</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Finance tools solve a different kind of problem from ordinary math or general utility pages.
+          They are usually used to estimate real-world scenarios involving money, time, rates, and trade-offs,
+          where the result needs to be practical rather than purely mathematical.
+        </p>
+        <p style="margin-bottom:0;">
+          Grouping them in one category makes it easier to browse related calculators and compare financial tasks
+          without mixing them with unrelated tools from other sections of the site.
+        </p>
+      </div>
+    </section>
 
     <section class="section">
       <h2>Disclaimer</h2>

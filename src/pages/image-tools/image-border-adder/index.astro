@@ -33,6 +33,14 @@ const faqs = [
     q: "What export formats are available?",
     a: "PNG, JPEG, and WebP export are available depending on your browser support.",
   },
+  {
+    q: "When should I use padding instead of a thicker border?",
+    a: "Use padding when you want breathing room between the image content and the border. Use a thicker border when you want a stronger visible frame.",
+  },
+  {
+    q: "Will adding a border change my final image size?",
+    a: "Yes. The final canvas becomes larger because border thickness and optional padding are added around the original image.",
+  },
 ];
 
 const faqJsonLd = {
@@ -107,12 +115,14 @@ const faqJsonLd = {
         border: 1px solid rgba(255,255,255,0.14);
         border-radius: 12px;
         padding: 12px;
+        min-width: 0;
       }
       .iba2-big {
         font-size: 26px;
         font-weight: 900;
         margin-top: 6px;
         line-height: 1.1;
+        word-break: break-word;
       }
       .iba2-row {
         display: flex;
@@ -185,6 +195,7 @@ const faqJsonLd = {
 
       <p class="note" id="iba2_help" style="margin-top:6px;">
         Border thickness adds an outer frame. Padding adds space between the image and the border edge.
+        PNG keeps transparency best, while JPEG and WebP may produce smaller files.
       </p>
 
       <div class="iba2-row">
@@ -217,21 +228,23 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool redraws your uploaded image onto a larger canvas. It first paints the border background, then optional padding,
-      and finally centers the original image inside the new frame.
+      This tool redraws your uploaded image onto a larger canvas. It first paints the outer border area, then fills the inner padding area, and finally places the original image in the center. The final export size becomes larger than the original because border thickness and optional padding are added around all sides.
     </p>
     <ul>
-      <li><strong>Border thickness:</strong> controls the outer frame width</li>
-      <li><strong>Padding:</strong> adds space inside the border</li>
-      <li><strong>Border color:</strong> controls the outer visible frame color</li>
+      <li><strong>Border thickness:</strong> controls the visible outer frame width</li>
+      <li><strong>Padding:</strong> adds inner breathing room between the image and the border edge</li>
+      <li><strong>Border color:</strong> controls the outer frame color</li>
+      <li><strong>Padding background color:</strong> fills the inner area around the image before the image is placed</li>
+      <li><strong>Result interpretation:</strong> a thin border gives a subtle clean edge, while a thick border creates a framed look more suitable for thumbnails, listings, and social graphics</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Add a white frame around product thumbnails</li>
-      <li>Create a clean avatar image with even spacing</li>
-      <li>Prepare consistent image cards for a gallery or catalog</li>
+      <li><strong>Product thumbnails:</strong> add an even white frame to make catalog images look cleaner and more consistent</li>
+      <li><strong>Profile or avatar images:</strong> use padding plus a border for a simple framed portrait style</li>
+      <li><strong>Marketplace listings:</strong> create consistent edges around screenshots or item photos</li>
+      <li><strong>Social graphics:</strong> add a visible frame so the image stands out against mixed backgrounds</li>
     </ul>
   </div>
 
@@ -408,9 +421,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     outputCtx.drawImage(sourceCanvas, border + padding, border + padding);
 
+    const addedPixelsW = outW - srcW;
+    const addedPixelsH = outH - srcH;
+    let styleInterpretation = "";
+    if (border === 0 && padding === 0) {
+      styleInterpretation = "No visible frame is being added yet. Increase border thickness or padding to create separation around the image.";
+    } else if (border <= 10 && padding <= 10) {
+      styleInterpretation = "This creates a subtle edge that works well for clean product images and simple thumbnails.";
+    } else if (border <= 30 && padding <= 30) {
+      styleInterpretation = "This creates a balanced framed look suitable for listings, profiles, and shareable image cards.";
+    } else {
+      styleInterpretation = "This creates a strong framed effect with more spacing, which is useful when you want the image to stand out clearly from its background.";
+    }
+
     resultEl.innerHTML =
       "<strong>Border added successfully.</strong>" +
-      '<div class="note" style="margin-top:6px;">Review the framed preview and download the bordered image when ready.</div>';
+      '<div class="note" style="margin-top:6px;">Final image size: ' + outW + " × " + outH + '. The frame adds ' + addedPixelsW + ' px horizontally and ' + addedPixelsH + ' px vertically.</div>' +
+      '<div class="note" style="margin-top:6px;">' + styleInterpretation + "</div>";
 
     try {
       const blob = await new Promise(function (resolve, reject) {
@@ -424,6 +451,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       lastBlob = blob;
+      const sizeChange = originalFileSize > 0 ? ((blob.size - originalFileSize) / originalFileSize) * 100 : 0;
 
       cardsEl.style.display = "block";
       cardsEl.innerHTML =
@@ -437,6 +465,7 @@ document.addEventListener("DOMContentLoaded", function () {
           badge(border > 0 ? "Border visible" : "No visible border", border > 0 ? "good" : "warn") +
           badge(padding > 0 ? "Padding included" : "No padding", padding > 0 ? "good" : "neutral") +
           badge(mime === "image/png" ? "Lossless container" : "Quality " + quality.toFixed(2), mime === "image/png" ? "neutral" : "good") +
+          badge(sizeChange <= 0 ? Math.abs(sizeChange).toFixed(1) + "% smaller" : sizeChange.toFixed(1) + "% larger", sizeChange <= 0 ? "good" : "warn") +
         "</div>";
     } catch (err) {
       showError(err && err.message ? err.message : "Could not create the export file.");

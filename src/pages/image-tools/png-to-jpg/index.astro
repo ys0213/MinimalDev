@@ -12,9 +12,26 @@ const SITE_NAME="MinimalDev";
 const CANONICAL_PATH="/image-tools/png-to-jpg/";
 
 const faqs=[
- {q:"Why convert PNG to JPG?",a:"JPG files are smaller and better for photos."},
- {q:"Transparency?",a:"Transparent areas become white."},
- {q:"Upload required?",a:"No, local processing."}
+ {
+  q:"Why convert PNG to JPG?",
+  a:"JPG files are usually smaller than PNG for photographic images. This helps reduce file size for websites, apps, and sharing."
+ },
+ {
+  q:"What happens to transparency?",
+  a:"PNG transparency is not supported in JPG. Transparent areas are filled with a solid background color (white in this tool)."
+ },
+ {
+  q:"Does quality setting affect size?",
+  a:"Yes. Lower quality reduces file size but may introduce visible compression artifacts. Higher quality keeps better detail but increases file size."
+ },
+ {
+  q:"Will JPG always be smaller?",
+  a:"Not always. It depends on the image. Photos usually compress well, but simple graphics may not benefit as much."
+ },
+ {
+  q:"Does this upload my image?",
+  a:"No. All processing happens locally in your browser."
+ }
 ];
 
 const faqJsonLd={
@@ -30,30 +47,83 @@ const faqJsonLd={
 
 <ToolLayout
 title={`PNG to JPG — ${SITE_NAME}`}
-description="Convert PNG to JPG with size comparison."
+description="Convert PNG to JPG with adjustable quality, background handling, and size comparison."
 canonicalPath={CANONICAL_PATH}
 h1="PNG to JPG Converter"
-intro="Convert PNG images into smaller JPG files."
+intro="Convert PNG images into JPG format with adjustable quality. Preview file size differences and understand compression impact before downloading."
 faq={faqs}
 categoryName="Image Tools"
 >
+
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
 <div slot="tool">
+<style is:inline>
+canvas{
+  max-width:100%;
+  border-radius:10px;
+}
+.ptj-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+</style>
+
 <div class="form">
 <input type="file" id="file" accept="image/png"/>
 
 <label>Quality</label>
 <input type="range" id="quality" min="0.1" max="1" step="0.1" value="0.9"/>
+<div class="note" id="qualityVal">0.9</div>
 
 <canvas id="canvas"></canvas>
 
 <div id="result" class="result">Upload PNG image.</div>
 
+<div class="ptj-row">
 <button class="btn" id="convert">Convert</button>
 <button class="btn secondary" id="download">Download JPG</button>
+<button class="btn secondary" id="clear">Clear</button>
+</div>
+
+<p class="note">
+PNG supports transparency and lossless data. JPG removes transparency and uses compression, which may reduce file size but also image quality.
+</p>
+
 </div>
 </div>
+
+<div slot="how">
+<p class="note">
+This tool converts PNG images into JPG using browser canvas rendering. Since JPG does not support transparency, transparent areas are replaced with a white background.
+</p>
+<ul>
+<li><strong>High quality (0.8–1.0):</strong> better visual quality, larger file size</li>
+<li><strong>Medium quality (0.5–0.7):</strong> balanced compression</li>
+<li><strong>Low quality (&lt;0.5):</strong> smaller size but visible artifacts</li>
+<li><strong>Result interpretation:</strong> "Saved %" shows how much smaller the JPG is compared to the original PNG</li>
+</ul>
+</div>
+
+<div slot="examples">
+<ul>
+<li><strong>Website optimization:</strong> reduce PNG file size for faster loading</li>
+<li><strong>Photo conversion:</strong> convert large PNG photos into smaller JPG files</li>
+<li><strong>Sharing images:</strong> smaller files are easier to upload or send</li>
+<li><strong>Testing compression:</strong> compare quality vs size trade-offs</li>
+</ul>
+</div>
+
+<div slot="related">
+<ul>
+<li><a href="/image-tools/jpg-to-png/">JPG to PNG</a></li>
+<li><a href="/image-tools/jpg-to-webp/">JPG to WebP</a></li>
+<li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+<li><a href="/image-tools/">All Image Tools</a></li>
+</ul>
+</div>
+
 </ToolLayout>
 
 <script is:inline>
@@ -64,16 +134,22 @@ const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 const quality=document.getElementById("quality");
 const result=document.getElementById("result");
+const qualityVal=document.getElementById("qualityVal");
 
 let img=new Image();
 let originalSize=0;
+let loaded=false;
+
+quality.oninput=()=>{
+ qualityVal.textContent=quality.value;
+};
 
 file.onchange=e=>{
  const f=e.target.files[0];
  if(!f) return;
 
  if(!f.type.includes("png")){
-   result.textContent="PNG only";
+   result.textContent="Please upload a PNG image.";
    return;
  }
 
@@ -82,6 +158,7 @@ file.onchange=e=>{
  const r=new FileReader();
  r.onload=ev=>{
    img.onload=()=>{
+     loaded=true;
      canvas.width=img.width;
      canvas.height=img.height;
 
@@ -89,6 +166,8 @@ file.onchange=e=>{
      ctx.fillRect(0,0,canvas.width,canvas.height);
 
      ctx.drawImage(img,0,0);
+
+     result.innerHTML="<strong>Image loaded.</strong><br>Adjust quality and click Convert.";
    };
    img.src=ev.target.result;
  };
@@ -96,22 +175,55 @@ file.onchange=e=>{
 };
 
 document.getElementById("convert").onclick=()=>{
+ if(!loaded){
+   result.textContent="Upload PNG image first.";
+   return;
+ }
+
  canvas.toBlob(blob=>{
-   const newSize=blob.size;
+   if(!blob){
+     result.textContent="Conversion failed.";
+     return;
+   }
+
+   const saved=(1-blob.size/originalSize)*100;
+
+   let interpretation="";
+   if(saved>0){
+     interpretation="File size reduced.";
+   }else{
+     interpretation="File size increased (depends on image content).";
+   }
+
    result.innerHTML=
    `Original: ${(originalSize/1024).toFixed(1)} KB<br>
-    JPG: ${(newSize/1024).toFixed(1)} KB<br>
-    Saved: ${((1-newSize/originalSize)*100).toFixed(1)}%`;
+    JPG: ${(blob.size/1024).toFixed(1)} KB<br>
+    Saved: ${saved.toFixed(1)}%<br>
+    ${interpretation}`;
  },"image/jpeg",Number(quality.value));
 };
 
 document.getElementById("download").onclick=()=>{
+ if(!loaded){
+   result.textContent="Nothing to download.";
+   return;
+ }
+
  canvas.toBlob(blob=>{
    const a=document.createElement("a");
    a.href=URL.createObjectURL(blob);
    a.download="converted.jpg";
    a.click();
  },"image/jpeg",Number(quality.value));
+};
+
+document.getElementById("clear").onclick=()=>{
+ file.value="";
+ canvas.width=0;
+ canvas.height=0;
+ result.textContent="Upload PNG image.";
+ loaded=false;
+ originalSize=0;
 };
 
 });

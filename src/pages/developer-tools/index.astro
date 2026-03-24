@@ -25,40 +25,116 @@ const tools: ToolMeta[] = modules
   canonicalPath="/developer-tools/"
 >
   <div class="container">
-    <h1 class="page-title">Developer Tools</h1>
-    <p class="lead">
-      Free developer tools for regex testing, JSON validation, hashing, JWT handling, parsing, and conversion tasks.
-      Use these tools to speed up debugging, formatting, validation, and common development workflows.
-      All developer tools run directly in your browser with no installation required.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Developer Tools</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category collects practical browser-based tools for common development tasks such as validation,
+        parsing, encoding, decoding, formatting, and quick data transformation.
+      </p>
+      <p class="lead" style="margin:0;">
+        These tools are designed for small repeat workflows that come up during coding, debugging, testing,
+        documentation, and API work. Instead of opening a full local environment for every minor check,
+        you can use focused pages to inspect or transform one value quickly.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Validation and debugging</h2>
+          <p>
+            Use developer tools to check whether input is valid, inspect encoded data,
+            test patterns, or confirm that structured content is in the expected format.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Formatting and transformation</h2>
+          <p>
+            Many development tasks involve converting one format into another,
+            cleaning structured data, or generating output that is easier to read and compare.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Quick workflow helpers</h2>
+          <p>
+            These pages are useful for routine tasks such as checking hashes, decoding tokens,
+            working with JSON or text formats, and solving small technical problems without extra setup.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse developer tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the type of technical task you need to handle.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search developer tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Developer Tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
+
+    <section class="section">
+      <h2>How to choose the right tool</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If your task is about checking whether data is correct, start with a validator or parser.
+          If your task is about changing one representation into another, choose an encoder, decoder,
+          formatter, or converter. If you need a quick test during implementation or debugging,
+          use the page that matches the exact data type you are currently handling.
+        </p>
+        <p style="margin-bottom:0;">
+          Keeping each tool focused on one technical job makes the result easier to understand
+          and reduces the noise that often appears in large all-in-one developer dashboards.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why these tools are grouped separately</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Developer tools solve a different kind of problem from general calculators or consumer utilities.
+          They are usually used while building, testing, inspecting, or debugging technical content such as JSON,
+          tokens, encoded strings, regular expressions, structured text, or configuration values.
+        </p>
+        <p style="margin-bottom:0;">
+          Grouping them in one category makes browsing easier for developers, technical writers,
+          testers, and API users who need focused helpers for small but frequent workflow tasks.
+        </p>
+      </div>
+    </section>
   </div>
 </BaseLayout>

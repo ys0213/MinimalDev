@@ -19,19 +19,23 @@ const faqs = [
   },
   {
     q: "Can sharpening restore a blurry photo perfectly?",
-    a: "No. Sharpening can improve perceived edge definition, but it cannot recover detail that is missing from the original image.",
+    a: "No. Sharpening improves perceived sharpness but cannot recover missing detail from heavily blurred images.",
   },
   {
     q: "Will sharpening increase noise or artifacts?",
-    a: "It can. Strong sharpening may exaggerate grain, halos, or compression artifacts, especially on already noisy images.",
+    a: "Yes. High strength values can exaggerate grain, compression artifacts, or halos around edges.",
+  },
+  {
+    q: "What strength value should I use?",
+    a: "Start with low values (0.8–1.5) for natural results. Use higher values only when the image is noticeably soft.",
   },
   {
     q: "Is my image uploaded or stored?",
-    a: "No. The tool processes your image locally in your browser and does not upload or store it.",
+    a: "No. Everything runs locally in your browser and no data is transmitted.",
   },
   {
     q: "Which formats can I export?",
-    a: "You can export the sharpened result as PNG, JPEG, or WebP depending on your browser support.",
+    a: "PNG, JPEG, and WebP are supported depending on your browser.",
   },
 ];
 
@@ -48,14 +52,15 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image Sharpen Tool — ${SITE_NAME}`}
-  description="Sharpen images with adjustable strength, preview the result, compare before and after, and download the processed file."
+  description="Sharpen images with adjustable strength, preview results, and download optimized files."
   canonicalPath={CANONICAL_PATH}
   h1="Image Sharpen Tool"
-  intro="Upload an image, adjust sharpening strength, preview the result side by side, and download the processed version. This tool is useful for product images, screenshots, scanned documents, and photos that need a little more edge definition."
+  intro="Upload an image, adjust sharpening strength, preview the result, and download the processed version. Useful for improving clarity in photos, screenshots, and scanned documents."
   faq={faqs}
   categoryName="Image Tools"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="image-sharpen">
     <style is:inline>
@@ -201,21 +206,23 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool loads your image into a browser canvas, applies a sharpening filter that increases local edge contrast,
-      and then lets you preview or download the result. The “strength” slider controls how aggressively the filter boosts detail.
+      This tool sharpens images by applying a convolution filter that increases local contrast along edges.
+      It enhances fine details without changing the overall size of the image.
     </p>
     <ul>
-      <li><strong>Low strength:</strong> mild crispness for photos and UI screenshots</li>
-      <li><strong>Medium strength:</strong> good general-purpose sharpening</li>
-      <li><strong>High strength:</strong> stronger edge emphasis, but may reveal halos or noise</li>
+      <li><strong>Low strength:</strong> subtle enhancement, suitable for natural photos</li>
+      <li><strong>Medium strength:</strong> balanced clarity improvement</li>
+      <li><strong>High strength:</strong> strong sharpening but may introduce artifacts</li>
+      <li><strong>Result interpretation:</strong> sharper edges improve readability and visual clarity, but overuse can reduce image quality</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Sharpen a screenshot before adding it to documentation</li>
-      <li>Improve the clarity of a scanned note or receipt</li>
-      <li>Add a little more crispness to a soft product image</li>
+      <li><strong>Product images:</strong> enhance details before uploading to e-commerce sites</li>
+      <li><strong>Screenshots:</strong> improve text clarity for documentation</li>
+      <li><strong>Scanned documents:</strong> make text easier to read</li>
+      <li><strong>Social media:</strong> sharpen images after resizing or compression</li>
     </ul>
   </div>
 

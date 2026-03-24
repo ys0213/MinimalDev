@@ -8,68 +8,205 @@ export const tool = {
   order: 10,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/image-to-base64/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-to-base64/";
 
-const faqs=[
- {q:"What is Base64?",a:"It encodes binary data into text format."},
- {q:"Is my image uploaded?",a:"No, everything runs locally."},
- {q:"Why use Base64?",a:"Useful for embedding images in HTML/CSS."}
+const faqs = [
+  {
+    q: "What is Base64?",
+    a: "Base64 is a text-based encoding format that converts binary file data into plain text characters. It is often used when binary files must be embedded inside text-based formats.",
+  },
+  {
+    q: "What is the difference between raw Base64 and a Data URL?",
+    a: "Raw Base64 contains only the encoded data. A Data URL adds a prefix such as data:image/png;base64, which makes it directly usable in HTML, CSS, and some APIs.",
+  },
+  {
+    q: "Is my image uploaded?",
+    a: "No. Everything runs locally in your browser and the image is not uploaded or stored by this tool.",
+  },
+  {
+    q: "Why would I use Base64?",
+    a: "Base64 is useful for embedding small images into HTML, CSS, JSON payloads, emails, test data, or prototypes where a text representation is more convenient than a separate file.",
+  },
+  {
+    q: "Does Base64 make files smaller?",
+    a: "No. Base64 usually makes data larger than the original binary file because it adds encoding overhead.",
+  },
+  {
+    q: "When should I include the Data URL prefix?",
+    a: "Include it when you want to paste the output directly into an img src, CSS url(), or another place that expects a self-contained image string.",
+  },
 ];
 
-const faqJsonLd={
- "@context":"https://schema.org",
- "@type":"FAQPage",
- mainEntity:faqs.map(f=>({
-   "@type":"Question",
-   name:f.q,
-   acceptedAnswer:{ "@type":"Answer", text:f.a }
- }))
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
 };
 ---
 
 <ToolLayout
-title={`Image to Base64 — ${SITE_NAME}`}
-description="Convert images to Base64 string or Data URL."
-canonicalPath={CANONICAL_PATH}
-h1="Image to Base64"
-intro="Convert images into Base64 encoding instantly."
-faq={faqs}
-categoryName="Image Tools"
+  title={`Image to Base64 — ${SITE_NAME}`}
+  description="Convert images to Base64 string or Data URL with preview, length details, copy support, and download."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image to Base64"
+  intro="Convert images into Base64 text instantly. You can generate either raw Base64 or a full Data URL, preview the uploaded image, copy the result, and download it as a text file."
+  faq={faqs}
+  categoryName="Image Tools"
 >
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<div slot="tool">
+<div slot="tool" data-tool="image-to-base64">
 
 <style is:inline>
-textarea { width:100%; min-height:140px; }
-img { max-width:100%; border-radius:10px; }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+  }
+  img {
+    max-width: 100%;
+    border-radius: 10px;
+    display: block;
+  }
+  .itb-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .itb-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .itb-card {
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 0;
+  }
+  .itb-big {
+    font-size: 24px;
+    font-weight: 900;
+    margin-top: 6px;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  .itb-preview-wrap {
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 14px;
+    padding: 12px;
+    background: rgba(255,255,255,.03);
+  }
+  .itb-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  @media (min-width: 900px) {
+    .itb-grid {
+      grid-template-columns: 1fr 320px;
+      align-items: start;
+    }
+  }
 </style>
 
-<div class="form">
+<div class="form" role="form" aria-describedby="itb_help itb_privacy">
+  <div class="field">
+    <label for="file">Image file</label>
+    <input type="file" id="file" accept="image/*"/>
+  </div>
 
-<input type="file" id="file" accept="image/*"/>
+  <div class="itb-grid">
+    <div>
+      <div class="itb-preview-wrap">
+        <strong>Image preview</strong>
+        <div id="preview" style="margin-top:10px;"></div>
+      </div>
+    </div>
 
-<label>
-<input type="checkbox" id="dataUrl" checked/>
-Include Data URL prefix
-</label>
+    <div>
+      <div class="itb-card-grid">
+        <div class="itb-card">
+          <strong>Output type</strong>
+          <div class="itb-big" id="outputType">Data URL</div>
+          <div class="note" style="margin-top:4px;">Current conversion mode</div>
+        </div>
 
-<div id="error" class="result" style="display:none;"></div>
+        <div class="itb-card">
+          <strong>Character length</strong>
+          <div class="itb-big" id="charLength">—</div>
+          <div class="note" style="margin-top:4px;">Result text length</div>
+        </div>
+      </div>
 
-<div id="preview" style="margin-top:10px;"></div>
+      <label style="display:block; margin-top:12px;">
+        <input type="checkbox" id="dataUrl" checked/>
+        Include Data URL prefix
+      </label>
 
-<textarea id="output" placeholder="Base64 result"></textarea>
+      <p class="note" id="itb_help" style="margin-top:8px;">
+        Enable the prefix when you want a self-contained string such as <code>data:image/png;base64,...</code>. Disable it when you need only the raw Base64 portion.
+      </p>
+    </div>
+  </div>
 
-<div style="display:flex;gap:10px;flex-wrap:wrap;">
-<button class="btn" id="convert">Convert</button>
-<button class="btn secondary" id="copy">Copy</button>
-<button class="btn secondary" id="download">Download TXT</button>
+  <div id="error" class="result" style="display:none; margin-top:12px;" role="alert"></div>
+
+  <div class="field" style="margin-top:12px;">
+    <label for="output">Base64 output</label>
+    <textarea id="output" placeholder="Base64 result"></textarea>
+  </div>
+
+  <div class="itb-row">
+    <button class="btn" id="convert" type="button">Convert</button>
+    <button class="btn secondary" id="copy" type="button">Copy</button>
+    <button class="btn secondary" id="download" type="button">Download TXT</button>
+    <button class="btn secondary" id="clear" type="button">Clear</button>
+  </div>
+
+  <div id="result" class="result" style="margin-top:12px;" role="status">
+    Upload an image to start.
+  </div>
+
+  <p class="note" id="itb_privacy" style="margin-top:10px;">
+    Privacy: conversion runs locally in your browser. No image data is uploaded, stored, or transmitted.
+  </p>
+</div>
 </div>
 
-<div id="result" class="result"></div>
-
+<div slot="how">
+  <p class="note">
+    This tool reads the uploaded image locally with the browser FileReader API and converts it into a Base64 string. You can output the full Data URL or strip the prefix to keep only the raw Base64 data.
+  </p>
+  <ul>
+    <li><strong>Raw Base64:</strong> useful when another system expects only the encoded content</li>
+    <li><strong>Data URL:</strong> useful when you want to paste the result directly into HTML or CSS</li>
+    <li><strong>Result interpretation:</strong> longer output means more text to store or transmit, and Base64 is usually larger than the original binary file</li>
+    <li><strong>Best use case:</strong> small images, prototypes, inline assets, test payloads, and quick conversions</li>
+  </ul>
 </div>
+
+<div slot="examples">
+  <ul>
+    <li><strong>HTML embedding:</strong> generate a Data URL and place it in an <code>img src</code> attribute</li>
+    <li><strong>CSS usage:</strong> use a Data URL inside <code>background-image: url(...)</code> for a very small asset</li>
+    <li><strong>API testing:</strong> send raw Base64 in a JSON request when testing upload endpoints</li>
+    <li><strong>Documentation:</strong> keep an example image inline inside sample payloads or technical notes</li>
+  </ul>
+</div>
+
+<div slot="related">
+  <ul>
+    <li><a href="/image-tools/base64-to-image/">Base64 to Image</a></li>
+    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+    <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+    <li><a href="/image-tools/image-palette-generator/">Image Palette Generator</a></li>
+    <li><a href="/image-tools/">All Image Tools</a></li>
+  </ul>
 </div>
 </ToolLayout>
 
@@ -82,78 +219,136 @@ const preview=document.getElementById("preview");
 const result=document.getElementById("result");
 const error=document.getElementById("error");
 const dataUrlCheckbox=document.getElementById("dataUrl");
+const outputType=document.getElementById("outputType");
+const charLength=document.getElementById("charLength");
+const clearBtn=document.getElementById("clear");
 
 let fileData=null;
+let currentFileName="";
 
 function showError(msg){
- error.style.display="block";
- error.textContent=msg;
+  error.style.display="block";
+  error.textContent=msg;
 }
 
 function clearError(){
- error.style.display="none";
- error.textContent="";
+  error.style.display="none";
+  error.textContent="";
+}
+
+function updateModeUi() {
+  outputType.textContent = dataUrlCheckbox.checked ? "Data URL" : "Raw Base64";
+}
+
+function resetAll() {
+  file.value = "";
+  output.value = "";
+  preview.innerHTML = "";
+  result.textContent = "Upload an image to start.";
+  fileData = null;
+  currentFileName = "";
+  charLength.textContent = "—";
+  updateModeUi();
+  clearError();
 }
 
 file.onchange=e=>{
- clearError();
- const f=e.target.files[0];
- if(!f) return;
+  clearError();
+  const f=e.target.files[0];
+  if(!f) return;
 
- if(!f.type.startsWith("image/")){
-   showError("Only image files allowed");
-   return;
- }
+  if(!f.type || !f.type.startsWith("image/")){
+    showError("Only image files are allowed.");
+    return;
+  }
 
- const reader=new FileReader();
- reader.onload=ev=>{
-   fileData=ev.target.result;
-   preview.innerHTML=`<img src="${fileData}" alt="preview"/>`;
- };
- reader.readAsDataURL(f);
+  currentFileName = f.name || "image";
+
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    fileData=ev.target.result;
+    preview.innerHTML=`<img src="${fileData}" alt="Uploaded image preview"/>`;
+    result.innerHTML =
+      "<strong>Image loaded.</strong><br>" +
+      "Choose whether to include the Data URL prefix, then click Convert.";
+  };
+  reader.onerror=()=>{
+    showError("Could not read the selected file.");
+  };
+  reader.readAsDataURL(f);
+};
+
+dataUrlCheckbox.onchange=()=>{
+  updateModeUi();
+  if(output.value){
+    result.innerHTML =
+      "<strong>Mode updated.</strong><br>" +
+      "Click Convert again if you want to regenerate the output in the newly selected format.";
+  }
 };
 
 document.getElementById("convert").onclick=()=>{
- clearError();
+  clearError();
 
- if(!fileData){
-   showError("Upload image first");
-   return;
- }
+  if(!fileData){
+    showError("Upload an image first.");
+    return;
+  }
 
- let base64=fileData;
+  let base64=fileData;
 
- if(!dataUrlCheckbox.checked){
-   base64=base64.split(",")[1];
- }
+  if(!dataUrlCheckbox.checked){
+    base64=base64.split(",")[1];
+  }
 
- output.value=base64;
+  output.value=base64;
+  charLength.textContent = base64.length.toLocaleString();
+  updateModeUi();
 
- result.innerHTML=
- `Length: ${base64.length.toLocaleString()} chars<br>
-  Type: ${dataUrlCheckbox.checked?"Data URL":"Raw Base64"}`;
+  result.innerHTML =
+  `Length: ${base64.length.toLocaleString()} characters<br>
+   Type: ${dataUrlCheckbox.checked ? "Data URL" : "Raw Base64"}<br>
+   Note: Base64 text is usually larger than the original binary file.`;
 };
 
 document.getElementById("copy").onclick=async()=>{
- if(!output.value) return;
+  clearError();
 
- try{
-   await navigator.clipboard.writeText(output.value);
-   result.innerHTML="<strong>Copied to clipboard</strong>";
- }catch{
-   showError("Clipboard failed");
- }
+  if(!output.value){
+    showError("Nothing to copy yet. Convert an image first.");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(output.value);
+    result.innerHTML="<strong>Copied to clipboard.</strong><br>The current Base64 output is now in your clipboard.";
+  }catch{
+    showError("Clipboard failed.");
+  }
 };
 
 document.getElementById("download").onclick=()=>{
- if(!output.value) return;
+  clearError();
 
- const blob=new Blob([output.value],{type:"text/plain"});
- const a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="base64.txt";
- a.click();
+  if(!output.value){
+    showError("Nothing to download yet. Convert an image first.");
+    return;
+  }
+
+  const blob=new Blob([output.value],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  const base = currentFileName ? currentFileName.replace(/\.[^.]+$/, "") : "base64";
+  a.download= base + "-base64.txt";
+  a.click();
+  URL.revokeObjectURL(a.href);
 };
+
+clearBtn.onclick=()=>{
+  resetAll();
+};
+
+updateModeUi();
 
 });
 </script>

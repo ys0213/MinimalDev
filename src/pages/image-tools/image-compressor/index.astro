@@ -14,16 +14,28 @@ const CANONICAL_PATH = "/image-tools/image-compressor/";
 
 const faqs = [
   {
-    q: "How does compression work?",
-    a: "It reduces image quality to lower file size using browser-based encoding.",
+    q: "How does image compression work?",
+    a: "This tool re-encodes your image in the browser using the selected output format and quality level. Lower quality usually creates a smaller file.",
   },
   {
     q: "Is the image uploaded?",
-    a: "No. Everything runs locally in your browser.",
+    a: "No. The selected image is processed locally in your browser and is not uploaded or stored by this tool.",
   },
   {
-    q: "Does it support all formats?",
-    a: "Most common formats like JPEG and PNG are supported.",
+    q: "Which formats are supported?",
+    a: "You can upload common image formats supported by your browser and export compressed results as JPEG, PNG, or WebP.",
+  },
+  {
+    q: "Will compression always reduce file size?",
+    a: "Not always. PNG may stay the same size or even become larger depending on the image. JPEG and WebP usually provide stronger size reduction for photos.",
+  },
+  {
+    q: "What quality value should I use?",
+    a: "A quality around 0.7 to 0.85 is a practical starting point for many photos. Lower values reduce file size more but may introduce visible artifacts.",
+  },
+  {
+    q: "Does compression change image dimensions?",
+    a: "No. This tool compresses the file without changing the pixel width and height of the image.",
   },
 ];
 
@@ -40,103 +52,461 @@ const faqJsonLd = {
 
 <ToolLayout
   title={`Image Compressor — ${SITE_NAME}`}
-  description="Compress images with adjustable quality and preview file size reduction."
+  description="Compress images with adjustable quality, output format selection, preview, and file size comparison."
   canonicalPath={CANONICAL_PATH}
   h1="Image Compressor"
-  intro="Reduce image file size by adjusting quality. Preview results before downloading."
+  intro="Upload an image, choose output format and quality, preview the result, and download a smaller file. Useful for website optimization, email attachments, and faster uploads."
   faq={faqs}
   categoryName="Image Tools"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-  <div slot="tool">
+  <div slot="tool" data-tool="image-compressor">
     <style is:inline>
-      canvas {
-        max-width:100%;
-        border-radius:10px;
+      #ic_file,
+      #ic_quality,
+      #ic_format {
+        width: 100%;
+        min-width: 0;
+      }
+      .ic-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .ic-grid > * {
+        min-width: 0;
+      }
+      .ic-preview-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .ic-panel {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 14px;
+        padding: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .ic-panel canvas {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.03);
+      }
+      .ic-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+      .ic-mini-card {
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+      .ic-big {
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+      .ic-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      @media (min-width: 960px) {
+        .ic-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .ic-preview-grid {
+          grid-template-columns: 1fr 1fr;
+        }
       }
     </style>
 
-    <div class="form">
-      <input type="file" id="ic_file" accept="image/*"/>
+    <div class="form" role="form" aria-describedby="ic_help ic_privacy">
+      <div class="field">
+        <label for="ic_file">Image file</label>
+        <input type="file" id="ic_file" accept="image/*" />
+      </div>
 
-      <label>Quality</label>
-      <input type="range" id="ic_quality" min="0.1" max="1" step="0.1" value="0.8"/>
-      <div id="ic_quality_val">0.8</div>
+      <div class="ic-grid">
+        <div class="field">
+          <label for="ic_quality">Quality</label>
+          <input type="range" id="ic_quality" min="0.1" max="1" step="0.05" value="0.8" />
+          <p class="note" id="ic_quality_val" style="margin-top:6px;">Current quality: 0.80</p>
+        </div>
 
-      <button class="btn" id="ic_compress">Compress</button>
-      <button class="btn secondary" id="ic_download">Download</button>
+        <div class="field">
+          <label for="ic_format">Output format</label>
+          <select id="ic_format">
+            <option value="image/jpeg" selected>JPEG</option>
+            <option value="image/webp">WebP</option>
+            <option value="image/png">PNG</option>
+          </select>
+        </div>
 
-      <div id="ic_info" class="result">Upload image to start.</div>
+        <div class="field">
+          <label>
+            <input type="checkbox" id="ic_live" checked />
+            Update automatically when settings change
+          </label>
+          <p class="note" style="margin-top:6px;">
+            PNG ignores quality in most browsers. JPEG and WebP usually provide stronger compression.
+          </p>
+        </div>
+      </div>
 
-      <canvas id="ic_canvas"></canvas>
+      <p class="note" id="ic_help" style="margin-top:6px;">
+        Lower quality usually means a smaller file, but visible compression artifacts may appear. This tool keeps the original image dimensions and only changes file encoding.
+      </p>
+
+      <div class="ic-row">
+        <button class="btn" type="button" id="ic_compress">Compress</button>
+        <button class="btn secondary" type="button" id="ic_download">Download</button>
+        <button class="btn secondary" type="button" id="ic_reset">Reset</button>
+        <button class="btn secondary" type="button" id="ic_clear">Clear</button>
+      </div>
+
+      <div id="ic_error" class="result" role="alert" style="display:none; margin-top:12px;"></div>
+      <div id="ic_info" class="result" role="status" style="margin-top:12px;">Upload an image to start.</div>
+      <div id="ic_cards" class="result" style="display:none; margin-top:12px;"></div>
+
+      <div class="ic-preview-grid">
+        <div class="ic-panel">
+          <strong>Original preview</strong>
+          <canvas id="ic_original_canvas" aria-label="Original image preview"></canvas>
+        </div>
+        <div class="ic-panel">
+          <strong>Compressed preview</strong>
+          <canvas id="ic_canvas" aria-label="Compressed image preview"></canvas>
+        </div>
+      </div>
+
+      <p class="note" id="ic_privacy" style="margin-top:10px;">
+        Privacy: image compression runs locally in your browser. No image is uploaded, stored, or transmitted.
+      </p>
     </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool draws your image to a browser canvas and then exports it again using the selected format and quality setting. Compression reduces file size by lowering image data complexity, especially in JPEG and WebP exports.
+    </p>
+    <ul>
+      <li><strong>JPEG:</strong> usually best for photos when you want strong file size reduction</li>
+      <li><strong>WebP:</strong> often provides good compression with better visual quality than JPEG in many cases</li>
+      <li><strong>PNG:</strong> useful for graphics and transparency, but file size may not shrink much</li>
+      <li><strong>Result interpretation:</strong> a higher reduction percentage means a smaller file, but very aggressive compression can soften detail or introduce artifacts</li>
+    </ul>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Website upload:</strong> compress a product photo before uploading it to improve page load speed</li>
+      <li><strong>Email attachment:</strong> reduce a large screenshot or photo so it is easier to send</li>
+      <li><strong>Portfolio image:</strong> export a visual asset at lower quality to keep file size manageable</li>
+      <li><strong>General use:</strong> compare JPEG and WebP to find a better balance between quality and size</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/image-brightness-adjuster/">Image Brightness Adjuster</a></li>
+      <li><a href="/image-tools/png-to-jpg/">PNG to JPG</a></li>
+      <li><a href="/image-tools/jpg-to-webp/">JPG to WebP</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
   </div>
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  const fileInput = document.getElementById("ic_file");
+  const originalCanvas = document.getElementById("ic_original_canvas");
+  const canvas = document.getElementById("ic_canvas");
+  const originalCtx = originalCanvas.getContext("2d");
+  const ctx = canvas.getContext("2d");
+  const qualityInput = document.getElementById("ic_quality");
+  const qualityVal = document.getElementById("ic_quality_val");
+  const formatInput = document.getElementById("ic_format");
+  const liveInput = document.getElementById("ic_live");
+  const info = document.getElementById("ic_info");
+  const error = document.getElementById("ic_error");
+  const cards = document.getElementById("ic_cards");
 
-const fileInput = document.getElementById("ic_file");
-const canvas = document.getElementById("ic_canvas");
-const ctx = canvas.getContext("2d");
-const qualityInput = document.getElementById("ic_quality");
-const qualityVal = document.getElementById("ic_quality_val");
-const info = document.getElementById("ic_info");
+  const compressBtn = document.getElementById("ic_compress");
+  const downloadBtn = document.getElementById("ic_download");
+  const resetBtn = document.getElementById("ic_reset");
+  const clearBtn = document.getElementById("ic_clear");
 
-let img = new Image();
-let originalSize = 0;
+  if (
+    !fileInput || !originalCanvas || !canvas || !originalCtx || !ctx ||
+    !qualityInput || !qualityVal || !formatInput || !liveInput ||
+    !info || !error || !cards || !compressBtn || !downloadBtn || !resetBtn || !clearBtn
+  ) return;
 
-qualityInput.oninput = ()=>{
-  qualityVal.textContent = qualityInput.value;
-};
+  let img = new Image();
+  let originalSize = 0;
+  let currentFileName = "";
+  let lastBlob = null;
+  let debounceTimer = null;
 
-fileInput.onchange = e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-
-  originalSize = file.size;
-
-  const reader = new FileReader();
-  reader.onload = ev=>{
-    img.onload = ()=>{
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img,0,0);
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-};
-
-document.getElementById("ic_compress").onclick = ()=>{
-  const q = Number(qualityInput.value);
-
-  if(!img.src){
-    info.textContent = "Upload image first";
-    return;
+  function clearError() {
+    error.style.display = "none";
+    error.textContent = "";
   }
 
-  canvas.toBlob(blob=>{
-    const newSize = blob.size;
+  function showError(msg) {
+    error.style.display = "block";
+    error.textContent = msg;
+  }
 
-    info.innerHTML =
-      `Original: ${(originalSize/1024).toFixed(1)} KB<br>` +
-      `Compressed: ${(newSize/1024).toFixed(1)} KB<br>` +
-      `Reduction: ${((1 - newSize/originalSize)*100).toFixed(1)}%`;
+  function resetMessages() {
+    clearError();
+    info.textContent = "Upload an image to start.";
+    cards.style.display = "none";
+    cards.innerHTML = "";
+  }
 
-  }, "image/jpeg", q);
-};
+  function updateQualityLabel() {
+    qualityVal.textContent = "Current quality: " + Number(qualityInput.value).toFixed(2);
+  }
 
-document.getElementById("ic_download").onclick = ()=>{
-  canvas.toBlob(blob=>{
-    const url = URL.createObjectURL(blob);
+  function formatBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+    return (n / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function badge(text, kind) {
+    const border =
+      kind === "good" ? "rgba(34,197,94,.55)" :
+      kind === "warn" ? "rgba(251,146,60,.55)" :
+      "rgba(255,255,255,.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + "</span>";
+  }
+
+  function miniCard(label, value, sub) {
+    return (
+      '<div class="ic-mini-card">' +
+        "<strong>" + label + "</strong>" +
+        '<div class="ic-big">' + value + "</div>" +
+        '<div class="note" style="margin-top:4px;">' + sub + "</div>" +
+      "</div>"
+    );
+  }
+
+  function extensionFromMime(mime) {
+    if (mime === "image/jpeg") return "jpg";
+    if (mime === "image/webp") return "webp";
+    if (mime === "image/png") return "png";
+    return "img";
+  }
+
+  function drawOriginalPreview() {
+    if (!img.src) return;
+    originalCanvas.width = img.width;
+    originalCanvas.height = img.height;
+    originalCtx.clearRect(0, 0, img.width, img.height);
+    originalCtx.drawImage(img, 0, 0);
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.clearRect(0, 0, img.width, img.height);
+    ctx.drawImage(img, 0, 0);
+  }
+
+  function renderInterpretation(mime, reductionPercent) {
+    if (mime === "image/png") {
+      return "PNG export keeps lossless structure, but file size may not decrease much compared with JPEG or WebP.";
+    }
+    if (reductionPercent >= 50) {
+      return "This is a strong size reduction. Check the preview carefully to make sure detail still looks acceptable.";
+    }
+    if (reductionPercent >= 20) {
+      return "This is a balanced reduction for many web and sharing use cases.";
+    }
+    if (reductionPercent >= 0) {
+      return "The file is smaller, but compression is relatively light. This is useful when you want to preserve more detail.";
+    }
+    return "The exported file is larger than the original. Try a different format or lower quality setting for better compression.";
+  }
+
+  async function compressImage() {
+    clearError();
+
+    if (!img.src) {
+      showError("Upload an image first.");
+      return;
+    }
+
+    const mime = String(formatInput.value || "image/jpeg");
+    const quality = Number(qualityInput.value || 0.8);
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.clearRect(0, 0, img.width, img.height);
+    ctx.drawImage(img, 0, 0);
+
+    try {
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (!b) {
+            reject(new Error("Could not compress the image in the selected format."));
+            return;
+          }
+          resolve(b);
+        }, mime, quality);
+      });
+
+      lastBlob = blob;
+      const newSize = blob.size;
+      const reductionPercent = originalSize > 0 ? ((1 - newSize / originalSize) * 100) : 0;
+      const deltaLabel = reductionPercent >= 0
+        ? reductionPercent.toFixed(1) + "% smaller"
+        : Math.abs(reductionPercent).toFixed(1) + "% larger";
+
+      info.innerHTML =
+        "<strong>Compression complete.</strong>" +
+        '<div class="note" style="margin-top:6px;">Original: ' + formatBytes(originalSize) + " · Compressed: " + formatBytes(newSize) + " · " + deltaLabel + "</div>" +
+        '<div class="note" style="margin-top:6px;">' + renderInterpretation(mime, reductionPercent) + "</div>";
+
+      cards.style.display = "block";
+      cards.innerHTML =
+        '<div class="ic-card-grid">' +
+          miniCard("Original size", formatBytes(originalSize), "Uploaded file size") +
+          miniCard("Compressed size", formatBytes(newSize), "Current export result") +
+          miniCard("Output format", mime.replace("image/", "").toUpperCase(), "Selected export type") +
+          miniCard("Quality", mime === "image/png" ? "N/A" : quality.toFixed(2), mime === "image/png" ? "PNG usually ignores quality" : "Selected encoder quality") +
+        "</div>" +
+        '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' +
+          badge(deltaLabel, reductionPercent >= 0 ? "good" : "warn") +
+          badge(mime === "image/png" ? "Lossless container" : "Lossy compression", mime === "image/png" ? "neutral" : "good") +
+          badge(img.width + " × " + img.height, "neutral") +
+        "</div>";
+    } catch (err) {
+      showError(err && err.message ? err.message : "Could not compress the image.");
+    }
+  }
+
+  async function downloadCompressed() {
+    clearError();
+
+    if (!img.src) {
+      showError("Upload and compress an image first.");
+      return;
+    }
+
+    if (!lastBlob) {
+      await compressImage();
+      if (!lastBlob) return;
+    }
+
+    const mime = String(formatInput.value || "image/jpeg");
+    const ext = extensionFromMime(mime);
+    const base = (currentFileName || "image").replace(/\.[^.]+$/, "");
+
+    const url = URL.createObjectURL(lastBlob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "compressed.jpg";
+    a.download = base + "-compressed." + ext;
     a.click();
-  }, "image/jpeg", Number(qualityInput.value));
-};
+    URL.revokeObjectURL(url);
+  }
 
+  function scheduleCompress() {
+    updateQualityLabel();
+    if (!liveInput.checked || !img.src) return;
+    if (debounceTimer) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => {
+      compressImage();
+    }, 120);
+  }
+
+  function resetControls() {
+    qualityInput.value = "0.8";
+    formatInput.value = "image/jpeg";
+    liveInput.checked = true;
+    updateQualityLabel();
+
+    if (img.src) {
+      compressImage();
+    } else {
+      resetMessages();
+    }
+  }
+
+  function clearAll() {
+    fileInput.value = "";
+    img = new Image();
+    originalSize = 0;
+    currentFileName = "";
+    lastBlob = null;
+    originalCanvas.width = 0;
+    originalCanvas.height = 0;
+    canvas.width = 0;
+    canvas.height = 0;
+    qualityInput.value = "0.8";
+    formatInput.value = "image/jpeg";
+    liveInput.checked = true;
+    updateQualityLabel();
+    resetMessages();
+    fileInput.focus();
+  }
+
+  qualityInput.addEventListener("input", scheduleCompress);
+  formatInput.addEventListener("change", scheduleCompress);
+  liveInput.addEventListener("change", scheduleCompress);
+
+  fileInput.addEventListener("change", (e) => {
+    resetMessages();
+
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      showError("Please choose a valid image file.");
+      return;
+    }
+
+    originalSize = file.size;
+    currentFileName = file.name || "image";
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img.onload = () => {
+        drawOriginalPreview();
+        info.innerHTML =
+          "<strong>Image loaded.</strong>" +
+          '<div class="note" style="margin-top:6px;">Adjust quality and format, then compress the image.</div>';
+        if (liveInput.checked) compressImage();
+      };
+      img.onerror = () => {
+        showError("Could not read the selected image.");
+      };
+      img.src = String(ev.target.result || "");
+    };
+    reader.onerror = () => {
+      showError("Could not load the selected file.");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  compressBtn.addEventListener("click", compressImage);
+  downloadBtn.addEventListener("click", downloadCompressed);
+  resetBtn.addEventListener("click", resetControls);
+  clearBtn.addEventListener("click", clearAll);
+
+  updateQualityLabel();
 });
 </script>

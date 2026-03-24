@@ -25,40 +25,114 @@ const tools: ToolMeta[] = modules
   canonicalPath="/text-tools/"
 >
   <div class="container">
-    <h1 class="page-title">Text Tools</h1>
-    <p class="lead">
-      Free text tools for cleaning, comparing, sorting, reversing, converting, counting, and analyzing text.
-      Use these tools to format content, remove duplicates, measure reading time, and handle everyday text editing tasks.
-      All text tools run directly in your browser.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Text Tools</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category provides tools for working with text data, including formatting, cleanup,
+        transformation, comparison, and simple analysis tasks.
+      </p>
+      <p class="lead" style="margin:0;">
+        These tools are useful when editing content, preparing data, or handling repeated text operations
+        that would otherwise require manual changes or scripting.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Text formatting and cleanup</h2>
+          <p>
+            Convert case styles, remove duplicates, normalize spacing,
+            and clean up text for documents, code, or content publishing.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Comparison and analysis</h2>
+          <p>
+            Compare text differences, count words or characters,
+            and measure properties such as reading time or length.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Data preparation</h2>
+          <p>
+            These tools can help prepare text for import, export,
+            structured input, or other workflows where consistent formatting is required.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse text tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the type of text operation you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search text tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Text Tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
+
+    <section class="section">
+      <h2>How to choose the right tool</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If your task is about cleaning or formatting text, choose a tool that modifies structure
+          such as case conversion or duplicate removal. If your task is about understanding text,
+          use counting or analysis tools. For comparing content, use difference or comparison tools.
+        </p>
+        <p style="margin-bottom:0;">
+          Keeping each tool focused on a single operation makes results easier to understand
+          and avoids combining unrelated text processing steps into one interface.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why this category is separate</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Text tools focus specifically on string-based operations rather than numeric calculations
+          or visual processing. They are commonly used in writing, development, data handling,
+          and content preparation workflows.
+        </p>
+        <p style="margin-bottom:0;">
+          Grouping them in one category makes it easier to find text-related utilities without mixing
+          them with unrelated tools from other sections.
+        </p>
+      </div>
+    </section>
   </div>
 </BaseLayout>

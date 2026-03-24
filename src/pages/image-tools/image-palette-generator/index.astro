@@ -15,24 +15,32 @@ const CANONICAL_PATH = "/image-tools/image-palette-generator/";
 const faqs = [
   {
     q: "How does this image palette generator work?",
-    a: "It samples pixels from your uploaded image, groups similar colors, ranks them, and then shows a compact palette with HEX codes.",
+    a: "It samples pixels from your uploaded image, groups similar colors, and ranks them to create a simplified palette with HEX values.",
   },
   {
     q: "Does this tool upload my image anywhere?",
-    a: "No. Everything runs locally in your browser. Your image is not uploaded or transmitted.",
+    a: "No. All processing happens locally in your browser. No image is uploaded or stored.",
   },
   {
-    q: "Why do extracted colors sometimes differ slightly from what I expect?",
-    a: "The tool reduces and groups similar pixel colors so the palette stays useful and readable. Very close shades may be merged together.",
+    q: "Why do extracted colors look different from the original image?",
+    a: "Similar colors are grouped together to create a cleaner and more usable palette, so exact pixel colors may be slightly adjusted.",
   },
   {
-    q: "Can I copy the HEX palette?",
-    a: "Yes. You can copy all HEX values at once or click individual palette swatches to copy one color.",
+    q: "What is the difference between frequency, brightness, and hue sorting?",
+    a: "Frequency shows most common colors, brightness sorts from dark to light, and hue arranges colors by spectrum.",
   },
   {
-    q: "What image types are supported?",
-    a: "Most common browser-supported image formats such as JPG, PNG, WebP, and GIF are supported for palette extraction.",
+    q: "What does sampling density affect?",
+    a: "Higher density analyzes more pixels for accuracy, while lower density speeds up processing with less precision.",
   },
+  {
+    q: "Why are some colors missing from my image?",
+    a: "The palette is limited to the selected size, so only the most dominant colors are included.",
+  },
+  {
+    q: "Can I use this palette for UI or branding?",
+    a: "Yes. The generated palette is optimized for practical use such as UI design, branding, and color inspiration.",
+  }
 ];
 
 const faqJsonLd = {
@@ -242,22 +250,26 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      This tool samples pixels from your image, reduces close shades into grouped colors, and returns a cleaner palette.
-      The result is designed to be practical rather than mathematically exhaustive, so it is better suited for design use,
-      quick inspiration, and dominant color identification.
+      This tool analyzes your image by sampling pixels and grouping similar colors into a smaller set of dominant colors.
+      Instead of returning every exact color, it simplifies the result into a clean palette that is easier to use in design work.
     </p>
     <ul>
-      <li><strong>Frequency:</strong> best for dominant color extraction</li>
-      <li><strong>Brightness:</strong> useful when you want a light-to-dark palette</li>
-      <li><strong>Hue:</strong> useful when you want a rainbow-like ordering</li>
+      <li><strong>Frequency mode:</strong> shows the most dominant colors in the image</li>
+      <li><strong>Brightness mode:</strong> arranges colors from dark to light</li>
+      <li><strong>Hue mode:</strong> sorts colors across the color spectrum</li>
+      <li><strong>Result interpretation:</strong> colors represent dominant visual areas, not exact pixel values</li>
+      <li><strong>Color grouping:</strong> similar shades are merged to reduce noise and improve usability</li>
     </ul>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Extract branding colors from a logo or hero image</li>
-      <li>Generate inspiration palettes from photographs</li>
-      <li>Find a quick set of HEX colors for UI mockups</li>
+      <li><strong>Branding:</strong> extract main colors from a logo or product image</li>
+      <li><strong>UI design:</strong> generate a color system from a reference image</li>
+      <li><strong>Web design:</strong> match a website color scheme to an image</li>
+      <li><strong>Mood boards:</strong> create palettes from photos for inspiration</li>
+      <li><strong>Content creation:</strong> maintain consistent color tones across visuals</li>
+      <li><strong>Quick analysis:</strong> understand dominant colors in any image</li>
     </ul>
   </div>
 

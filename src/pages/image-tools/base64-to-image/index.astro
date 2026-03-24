@@ -8,130 +8,276 @@ export const tool = {
   order: 11,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/base64-to-image/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/base64-to-image/";
 
-const faqs=[
- {q:"What input is supported?",a:"Base64 or full Data URL."},
- {q:"Does it validate input?",a:"Yes, invalid Base64 is rejected."},
- {q:"Upload required?",a:"No."}
+const faqs = [
+  { q: "What input is supported?", a: "You can paste either a raw Base64 string or a full Data URL such as data:image/png;base64,..." },
+  { q: "Does it validate input?", a: "Yes. The tool applies basic validation before trying to render the image." },
+  { q: "Is upload required?", a: "No. Everything runs locally in your browser." },
+  { q: "Why does my image not display?", a: "The Base64 string may be invalid, incomplete, or incorrectly formatted." },
+  { q: "What file format is used?", a: "If no MIME type is included, the tool assumes PNG by default." }
 ];
 
-const faqJsonLd={
- "@context":"https://schema.org",
- "@type":"FAQPage",
- mainEntity:faqs.map(f=>({
-   "@type":"Question",
-   name:f.q,
-   acceptedAnswer:{ "@type":"Answer", text:f.a }
- }))
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a
+    }
+  }))
 };
 ---
 
 <ToolLayout
-title={`Base64 to Image — ${SITE_NAME}`}
-description="Convert Base64 string into image."
-canonicalPath={CANONICAL_PATH}
-h1="Base64 to Image"
-intro="Decode Base64 into image instantly."
-faq={faqs}
-categoryName="Image Tools"
+  title={`Base64 to Image — ${SITE_NAME}`}
+  description="Convert Base64 string into an image with preview and download. Supports Data URL and raw Base64 input."
+  canonicalPath={CANONICAL_PATH}
+  h1="Base64 to Image"
+  intro="Decode Base64 or Data URL into an image with instant preview and download."
+  faq={faqs}
+  categoryName="Image Tools"
 >
-<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<div slot="tool">
+  <div slot="tool">
+    <style is:inline>
+      #b64img_input {
+        width: 100%;
+        min-height: 160px;
+        resize: vertical;
+      }
 
-<style is:inline>
-textarea { width:100%; min-height:140px; }
-img { max-width:100%; border-radius:10px; }
-</style>
+      .b64img-help {
+        font-size: 13px;
+        opacity: 0.85;
+        margin-top: 6px;
+      }
 
-<div class="form">
+      .b64img-preview-wrap {
+        margin-top: 14px;
+      }
 
-<textarea id="input" placeholder="Paste Base64 or Data URL"></textarea>
+      .b64img-preview-box {
+        border: 1px dashed rgba(255,255,255,0.18);
+        border-radius: 12px;
+        padding: 14px;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.02);
+      }
 
-<div style="display:flex;gap:10px;flex-wrap:wrap;">
-<button class="btn" id="convert">Convert</button>
-<button class="btn secondary" id="download">Download</button>
-<button class="btn secondary" id="clear">Clear</button>
-</div>
+      .b64img-preview-box img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+      }
 
-<div id="error" class="result" style="display:none;"></div>
+      .b64img-meta {
+        margin-top: 12px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
 
-<div id="preview" style="margin-top:10px;"></div>
+      .b64img-chip {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.18);
+        font-size: 12px;
+        font-weight: 700;
+      }
 
-<div id="result" class="result"></div>
+      .b64img-empty {
+        opacity: 0.8;
+        font-size: 14px;
+      }
 
-</div>
-</div>
+      .b64img-code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+    </style>
+
+    <div class="form" role="form" aria-describedby="b64img_help b64img_privacy">
+      <div class="field">
+        <label for="b64img_input">Base64 or Data URL input</label>
+        <textarea
+          id="b64img_input"
+          spellcheck="false"
+          placeholder="Paste Base64 string or Data URL (for example: data:image/png;base64,...)"
+          aria-describedby="b64img_help"
+        ></textarea>
+        <p id="b64img_help" class="b64img-help">
+          Supports raw Base64 strings and full Data URLs. Raw Base64 input is treated as PNG by default.
+        </p>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn" type="button" id="b64img_convert">Convert</button>
+        <button class="btn secondary" type="button" id="b64img_download">Download</button>
+        <button class="btn secondary" type="button" id="b64img_clear">Clear</button>
+      </div>
+
+      <div id="b64img_error" class="result" role="alert" style="display:none; margin-top:12px;"></div>
+
+      <div id="b64img_result" class="result" role="status" style="margin-top:12px;">
+        Paste Base64 or a Data URL, then convert it to preview the image.
+      </div>
+
+      <div class="b64img-preview-wrap">
+        <div id="b64img_preview" class="b64img-preview-box">
+          <div class="b64img-empty">Image preview will appear here.</div>
+        </div>
+      </div>
+
+      <div id="b64img_meta" class="b64img-meta" style="display:none;"></div>
+
+      <p id="b64img_privacy" class="note" style="margin-top:12px;">
+        Privacy: decoding runs locally in your browser. Your Base64 input is not uploaded by this tool.
+      </p>
+    </div>
+  </div>
+
+  <div slot="how">
+    <p class="note">
+      This tool checks whether your input is already a full Data URL or a raw Base64 string. If the input is raw Base64, it wraps the value in a valid image Data URL so the browser can render it directly. When the string is valid, the decoded image preview appears immediately and can be downloaded.
+    </p>
+  </div>
+
+  <div slot="examples">
+    <ul>
+      <li><strong>Raw Base64:</strong> <span class="b64img-code">iVBORw0KGgoAAAANSUhEUg...</span> → preview rendered as a PNG image</li>
+      <li><strong>Data URL:</strong> <span class="b64img-code">data:image/jpeg;base64,/9j/4AAQSkZJRg...</span> → preview rendered using the included MIME type</li>
+    </ul>
+  </div>
+
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/image-to-base64/">Image to Base64</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/jpg-to-webp/">JPG to WebP</a></li>
+    </ul>
+  </div>
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("b64img_input");
+  const preview = document.getElementById("b64img_preview");
+  const result = document.getElementById("b64img_result");
+  const error = document.getElementById("b64img_error");
+  const meta = document.getElementById("b64img_meta");
+  const convertBtn = document.getElementById("b64img_convert");
+  const downloadBtn = document.getElementById("b64img_download");
+  const clearBtn = document.getElementById("b64img_clear");
 
-const input=document.getElementById("input");
-const preview=document.getElementById("preview");
-const result=document.getElementById("result");
-const error=document.getElementById("error");
+  let currentSrc = null;
 
-let currentSrc=null;
+  function showError(msg) {
+    error.style.display = "block";
+    error.textContent = msg;
+    result.textContent = "";
+    preview.innerHTML = '<div class="b64img-empty">Image preview will appear here.</div>';
+    meta.style.display = "none";
+    meta.innerHTML = "";
+  }
 
-function showError(msg){
- error.style.display="block";
- error.textContent=msg;
-}
+  function clearError() {
+    error.style.display = "none";
+    error.textContent = "";
+  }
 
-function clearError(){
- error.style.display="none";
-}
+  function isValidBase64(str) {
+    try {
+      return btoa(atob(str)) === str;
+    } catch {
+      return false;
+    }
+  }
 
-function isValidBase64(str){
- try{
-   return btoa(atob(str))===str;
- }catch{
-   return false;
- }
-}
+  function detectMime(dataUrl) {
+    const match = dataUrl.match(/^data:(.*?);base64,/);
+    return match ? match[1] : "image/png";
+  }
 
-document.getElementById("convert").onclick=()=>{
- clearError();
+  function guessExtension(mime) {
+    const fallback = "png";
+    if (!mime || !mime.includes("/")) return fallback;
+    const ext = mime.split("/")[1].toLowerCase();
+    return ext || fallback;
+  }
 
- let val=input.value.trim();
+  function renderMeta(mime, rawLength) {
+    meta.style.display = "flex";
+    meta.innerHTML =
+      '<span class="b64img-chip">MIME: ' + mime + "</span>" +
+      '<span class="b64img-chip">Input length: ' + rawLength.toLocaleString() + "</span>";
+  }
 
- if(!val){
-   showError("Enter Base64");
-   return;
- }
+  convertBtn.addEventListener("click", () => {
+    clearError();
 
- if(!val.startsWith("data:")){
-   if(!isValidBase64(val)){
-     showError("Invalid Base64");
-     return;
-   }
-   val="data:image/png;base64,"+val;
- }
+    let val = String(input.value || "").trim();
 
- currentSrc=val;
+    if (!val) {
+      showError("Please enter a Base64 string or Data URL.");
+      return;
+    }
 
- preview.innerHTML=`<img src="${val}" alt="decoded"/>`;
+    if (!val.startsWith("data:")) {
+      if (!isValidBase64(val)) {
+        showError("Invalid Base64 string.");
+        return;
+      }
+      val = "data:image/png;base64," + val;
+    }
 
- result.innerHTML=`Decoded successfully`;
-};
+    currentSrc = val;
 
-document.getElementById("download").onclick=()=>{
- if(!currentSrc) return;
+    preview.innerHTML = '<img src="' + val + '" alt="Decoded image preview" />';
+    const mime = detectMime(val);
+    renderMeta(mime, val.length);
+    result.textContent = "Decoded successfully. Review the preview below or download the image.";
+  });
 
- const a=document.createElement("a");
- a.href=currentSrc;
- a.download="image.png";
- a.click();
-};
+  downloadBtn.addEventListener("click", () => {
+    clearError();
 
-document.getElementById("clear").onclick=()=>{
- input.value="";
- preview.innerHTML="";
- result.textContent="";
-};
+    if (!currentSrc) {
+      showError("Nothing to download yet. Convert a Base64 string first.");
+      return;
+    }
 
+    const mime = detectMime(currentSrc);
+    const ext = guessExtension(mime);
+
+    const a = document.createElement("a");
+    a.href = currentSrc;
+    a.download = "decoded-image." + ext;
+    a.click();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    currentSrc = null;
+    clearError();
+    result.textContent = "Paste Base64 or a Data URL, then convert it to preview the image.";
+    preview.innerHTML = '<div class="b64img-empty">Image preview will appear here.</div>';
+    meta.style.display = "none";
+    meta.innerHTML = "";
+    input.focus();
+  });
 });
 </script>

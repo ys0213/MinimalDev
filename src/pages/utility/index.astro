@@ -28,48 +28,113 @@ const tools: ToolMeta[] = modules
   canonicalPath="/utility/"
 >
   <div class="container">
-    <h1 class="page-title">Utility Tools</h1>
-    <p class="lead">
-      Free utility tools for everyday web tasks such as QR generation, Base64, character counting, password creation, JSON formatting, and more.
-      Use these tools for fast browser-based helpers without downloads or sign-ups.
-      All utility tools are simple, lightweight, and easy to use.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Utility Tools</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category collects general-purpose browser tools for common everyday tasks such as text formatting,
+        quick generation, encoding, counting, and other lightweight utility workflows.
+      </p>
+      <p class="lead" style="margin:0;">
+        Utility tools are useful when a task is too small to justify installing software but still benefits from a
+        focused page that gives a quick result with simple inputs.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What these tools are useful for</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Quick everyday helpers</h2>
+          <p>
+            Use these tools for simple browser-based tasks such as generating passwords,
+            creating QR codes, counting text, formatting JSON, or working with encoded content.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Small repeat workflows</h2>
+          <p>
+            Many utility pages solve tasks that come up repeatedly in study, work, content editing,
+            setup, and light technical use, where speed and convenience matter more than complexity.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>General browser convenience</h2>
+          <p>
+            This category exists for tools that are practical and useful but do not fit neatly into
+            one narrow subject area such as finance, health, math, or design.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse utility tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available tools below if you already know the kind of helper you need.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search utility tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
       />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Utility</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
 
     <section class="section">
-      <h2>FAQ</h2>
-      <ul>
-        <li><strong>Do tools store data?</strong> No. They run in your browser.</li>
-        <li><strong>Are results secure?</strong> Security tools use browser crypto APIs.</li>
-      </ul>
+      <h2>How to choose the right tool</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          If your task is about creating or generating something, start with a generator.
+          If it is about formatting or transforming content, choose a formatter or encoder/decoder.
+          If it is about quick checking or measurement, use counters, validators, or similar helper pages.
+        </p>
+        <p style="margin-bottom:0;">
+          Keeping these tasks on separate pages makes each result easier to understand and helps avoid turning one
+          utility page into an overloaded all-in-one toolbox.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Privacy and local use</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Most utility tools in this category are designed to run directly in your browser for speed and convenience.
+          Individual tool pages may explain their own behavior more specifically where needed.
+        </p>
+        <p style="margin-bottom:0;">
+          This category page is intended to help you quickly find the right helper without sign-ups, unnecessary steps,
+          or unrelated features.
+        </p>
+      </div>
     </section>
   </div>
 </BaseLayout>

@@ -11,9 +11,11 @@ const SITE_NAME="MinimalDev";
 const CANONICAL_PATH="/image-tools/image-color-extractor/";
 
 const faqs=[
- {q:"How are colors extracted?",a:"Uses pixel sampling + clustering approximation."},
- {q:"Is it accurate?",a:"Approximate but visually representative."},
- {q:"Is upload required?",a:"No, everything runs locally."}
+ {q:"How are colors extracted?",a:"Colors are extracted by sampling pixels and grouping similar values to approximate dominant colors."},
+ {q:"Is the result perfectly accurate?",a:"No. It is an approximation designed to represent visually dominant colors rather than exact color distribution."},
+ {q:"What affects accuracy?",a:"Image size, compression, gradients, and color complexity can affect results."},
+ {q:"Is upload required?",a:"No, everything runs locally in your browser."},
+ {q:"How many colors should I extract?",a:"Use fewer colors (3–5) for simple palettes and more (6–12) for detailed images."}
 ];
 
 const faqJsonLd={
@@ -29,10 +31,10 @@ const faqJsonLd={
 
 <ToolLayout
 title={`Image Color Extractor — ${SITE_NAME}`}
-description="Extract dominant colors from image with palette preview."
+description="Extract dominant colors from an image with palette preview and HEX export."
 canonicalPath={CANONICAL_PATH}
 h1="Image Color Extractor"
-intro="Upload an image and extract dominant colors with preview and export."
+intro="Upload an image and extract its dominant colors. Preview the palette and copy HEX values for design, UI, or branding use."
 faq={faqs}
 categoryName="Image Tools"
 >
@@ -56,6 +58,10 @@ canvas{max-width:100%}
 <label>Number of colors</label>
 <input type="range" id="count" min="3" max="12" value="6"/>
 
+<p class="note">
+Lower values give a simpler palette. Higher values capture more detail but may include similar shades.
+</p>
+
 <canvas id="canvas"></canvas>
 
 <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -71,13 +77,46 @@ canvas{max-width:100%}
 
 <textarea id="hexOutput" placeholder="HEX list"></textarea>
 
+<p class="note">
+Tip: Use these colors for UI themes, branding palettes, or quick design references.
+</p>
+
 </div>
+</div>
+
+<div slot="how">
+<p class="note">
+This tool samples pixels from the image and groups similar RGB values to identify dominant colors.
+Instead of analyzing every pixel, it skips pixels at intervals to improve performance.
+</p>
+
+<ul>
+<li><strong>Sampling:</strong> reduces processing time by skipping pixels</li>
+<li><strong>Grouping:</strong> similar colors are clustered together</li>
+<li><strong>Sorting:</strong> most frequent colors are selected</li>
+<li><strong>Result interpretation:</strong> extracted colors represent visual dominance, not exact percentages</li>
+</ul>
+
+<p class="note">
+Images with gradients or noise may produce similar shades. Reducing the color count can create a cleaner palette.
+</p>
+</div>
+
+<div slot="examples">
+<ul>
+<li><strong>UI design:</strong> extract main colors from a screenshot to build a consistent theme</li>
+<li><strong>Brand analysis:</strong> identify dominant colors from logos or marketing images</li>
+<li><strong>Photography:</strong> generate a palette from a photo for color grading reference</li>
+<li><strong>Inspiration:</strong> quickly explore color combinations from real-world images</li>
+</ul>
 </div>
 
 <div slot="related">
 <ul>
 <li><a href="/image-tools/image-palette-generator/">Palette Generator</a></li>
-<li><a href="/image-tools/image-blur/">Image Blur</a></li>
+<li><a href="/image-tools/image-color-extractor/">Image Color Extractor</a></li>
+<li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+<li><a href="/image-tools/">All Image Tools</a></li>
 </ul>
 </div>
 
@@ -115,6 +154,7 @@ file.onchange=e=>{
      canvas.width=img.width;
      canvas.height=img.height;
      ctx.drawImage(img,0,0);
+     summary.textContent="Image loaded. Click extract to generate palette.";
    };
    img.src=ev.target.result;
  };
@@ -122,7 +162,7 @@ file.onchange=e=>{
 };
 
 function rgbToHex(r,g,b){
- return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
+ return "#"+[r,g,b].map(v=>Number(v).toString(16).padStart(2,"0")).join("");
 }
 
 document.getElementById("extract").onclick=()=>{
@@ -158,13 +198,14 @@ document.getElementById("extract").onclick=()=>{
  });
 
  hexOutput.value=hexList.join(", ");
- summary.innerHTML=`Extracted ${hexList.length} colors`;
+ summary.innerHTML=`Extracted ${hexList.length} dominant colors.`;
+
 };
 
 document.getElementById("copy").onclick=async()=>{
  if(!hexOutput.value)return;
  await navigator.clipboard.writeText(hexOutput.value);
- summary.innerHTML="<strong>Copied</strong>";
+ summary.innerHTML="<strong>HEX values copied</strong>";
 };
 
 document.getElementById("clear").onclick=()=>{

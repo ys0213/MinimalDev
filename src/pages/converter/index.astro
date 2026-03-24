@@ -26,40 +26,117 @@ const tools: ToolMeta[] = modules
   canonicalPath="/converter/"
 >
   <div class="container">
-    <h1 class="page-title">Converters</h1>
-    <p class="lead">
-      Free unit converters for length, weight, temperature, speed, storage, time, area, volume, and more.
-      Use these tools for quick everyday conversions with simple inputs and instant results.
-      All converter tools run directly in your browser.
-    </p>
+    <section class="card" style="padding:18px;">
+      <h1 class="page-title" style="margin:0 0 8px;">Converters</h1>
+      <p class="lead" style="margin:0 0 10px;">
+        This category collects unit conversion tools for common everyday and technical measurement tasks.
+        Use these pages when you need to change a value from one unit to another quickly and clearly.
+      </p>
+      <p class="lead" style="margin:0;">
+        Typical use cases include converting distances, temperatures, weights, storage sizes, time units,
+        speed values, area measurements, and volume units. Each converter page is built around one specific task
+        so you can get a result without unnecessary steps.
+      </p>
+    </section>
 
-    <div class="tool-search" style="margin-bottom:16px;">
-      <input
+    <section class="section">
+      <h2>What you can convert here</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Everyday measurements</h2>
+          <p>
+            Convert values such as centimeters and inches, kilograms and pounds, liters and gallons,
+            or Celsius and Fahrenheit for shopping, travel, cooking, study, and daily reference.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Work and study tasks</h2>
+          <p>
+            Use converters for assignments, reports, specifications, and practical checks when measurements are given
+            in a unit system different from the one you normally use.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Technical values</h2>
+          <p>
+            Some converters are useful for storage units, time intervals, and other structured values where accuracy
+            matters more than rough estimation.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Browse converter tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Search the available converter pages below. If you already know the type of value you want to convert,
+        the search box can help narrow the list quickly.
+      </p>
+
+      <div class="tool-search" style="margin-bottom:16px;">
+        <input
           id="toolSearch"
           type="search"
           placeholder="Search tools..."
+          aria-label="Search converter tools"
           style="
-          width:100%;
-          padding:10px 12px;
-          border-radius:10px;
-          border:1px solid rgba(0,0,0,0.15);
-          font-size:14px;
+            width:100%;
+            padding:10px 12px;
+            border-radius:10px;
+            border:1px solid rgba(0,0,0,0.15);
+            font-size:14px;
+            box-sizing:border-box;
           "
-      />
-    </div>
-
-    {tools.length ? (
-      <div class="grid">
-        {tools.map((t) => (
-          <section class="card">
-            <h2>{t.title}</h2>
-            <p>{t.description}</p>
-            <a class="btn" href={t.href}>Open</a>
-          </section>
-        ))}
+        />
       </div>
-    ) : (
-      <p class="note">No tools found in this category yet.</p>
-    )}
+
+      {tools.length ? (
+        <div class="grid" data-search-grid>
+          {tools.map((t) => (
+            <section class="card">
+              <span class="badge">Converter</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p class="note">No tools found in this category yet.</p>
+      )}
+    </section>
+
+    <section class="section">
+      <h2>How to choose the right converter</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          Start by identifying the type of measurement you have now and the unit you want to end with.
+          For example, if you want to convert body weight, choose a weight converter.
+          If you need to compare travel distance, choose a length or distance converter.
+          If the value changes depending on formulas rather than fixed ratios, such as temperature,
+          use the exact converter built for that type.
+        </p>
+        <p style="margin-bottom:0;">
+          Keeping converters separated by task makes the result easier to understand and reduces mistakes
+          that can happen when too many unrelated conversions are combined into one page.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why this category is organized this way</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          A broad converter page is useful as an index, but most users still need one specific tool in the end.
+          This category page is designed to help you move from the general task type to the exact converter page
+          that matches your input and output units.
+        </p>
+        <p style="margin-bottom:0;">
+          That makes the category easier to scan, easier to bookmark, and more practical for repeat use.
+        </p>
+      </div>
+    </section>
   </div>
 </BaseLayout>

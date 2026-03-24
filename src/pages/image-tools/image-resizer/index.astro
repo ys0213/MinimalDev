@@ -15,15 +15,27 @@ const CANONICAL_PATH = "/image-tools/image-resizer/";
 const faqs = [
   {
     q: "What does this image resizer do?",
-    a: "It resizes images to custom dimensions using browser-based processing.",
+    a: "It resizes images to custom width and height directly in your browser and provides a preview before download.",
   },
   {
     q: "Does it keep aspect ratio?",
-    a: "Yes. You can lock aspect ratio to scale proportionally.",
+    a: "Yes. When the aspect ratio lock is enabled, width and height scale proportionally to prevent distortion.",
   },
   {
-    q: "Is my image uploaded?",
-    a: "No. Everything runs locally in your browser.",
+    q: "Is my image uploaded to a server?",
+    a: "No. All processing is done locally in your browser. Your image is never uploaded or stored.",
+  },
+  {
+    q: "What happens if I enter incorrect dimensions?",
+    a: "If width or height is invalid (zero or negative), the tool shows an error and prevents resizing.",
+  },
+  {
+    q: "Will resizing reduce image quality?",
+    a: "Resizing may reduce quality when enlarging images. Reducing size generally keeps visual quality stable.",
+  },
+  {
+    q: "What image formats are supported?",
+    a: "Most common formats such as JPG, PNG, WebP, and GIF are supported by your browser.",
   },
 ];
 
@@ -47,54 +59,90 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Image Tools"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-  <div slot="tool">
-    <style is:inline>
-      #ir_canvas {
-        max-width:100%;
-        border:1px solid rgba(255,255,255,0.1);
-        border-radius:10px;
-      }
-      .ir-grid {
-        display:grid;
-        gap:10px;
-      }
-      @media(min-width:768px){
-        .ir-grid { grid-template-columns:1fr 1fr; }
-      }
-    </style>
+<div slot="tool">
+<style is:inline>
+#ir_canvas {
+  max-width:100%;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;
+}
+.ir-grid {
+  display:grid;
+  gap:10px;
+}
+@media(min-width:768px){
+  .ir-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
 
-    <div class="form">
-      <div class="field">
-        <label>Select image</label>
-        <input type="file" id="ir_file" accept="image/*" />
-      </div>
+<div class="form">
+  <div class="field">
+    <label>Select image</label>
+    <input type="file" id="ir_file" accept="image/*" />
+  </div>
 
-      <div class="ir-grid">
-        <div class="field">
-          <label>Width</label>
-          <input type="number" id="ir_width" />
-        </div>
-        <div class="field">
-          <label>Height</label>
-          <input type="number" id="ir_height" />
-        </div>
-      </div>
-
-      <label><input type="checkbox" id="ir_lock" checked/> Lock aspect ratio</label>
-
-      <div style="margin-top:10px;">
-        <button class="btn" id="ir_resize">Resize</button>
-        <button class="btn secondary" id="ir_download">Download</button>
-      </div>
-
-      <div id="ir_error" class="result" style="display:none;"></div>
-      <div id="ir_info" class="result">Preview will appear here.</div>
-
-      <canvas id="ir_canvas"></canvas>
+  <div class="ir-grid">
+    <div class="field">
+      <label>Width</label>
+      <input type="number" id="ir_width" />
+    </div>
+    <div class="field">
+      <label>Height</label>
+      <input type="number" id="ir_height" />
     </div>
   </div>
+
+  <label><input type="checkbox" id="ir_lock" checked/> Lock aspect ratio</label>
+
+  <div style="margin-top:10px;">
+    <button class="btn" id="ir_resize">Resize</button>
+    <button class="btn secondary" id="ir_download">Download</button>
+  </div>
+
+  <div id="ir_error" class="result" style="display:none;"></div>
+  <div id="ir_info" class="result">Preview will appear here.</div>
+
+  <canvas id="ir_canvas"></canvas>
+</div>
+</div>
+
+<!-- ✅ How (기능 + 결과 해석) -->
+<div slot="how">
+  <p class="note">
+    This tool resizes images by redrawing them on a canvas with new dimensions.
+    It allows precise control over width and height while optionally preserving the original aspect ratio.
+  </p>
+  <ul>
+    <li><strong>Aspect ratio lock:</strong> keeps proportions to avoid stretching</li>
+    <li><strong>Manual resize:</strong> allows custom width and height</li>
+    <li><strong>Result interpretation:</strong> resized image reflects new pixel dimensions, not visual scaling only</li>
+    <li><strong>Upscaling vs downscaling:</strong> enlarging may reduce quality, reducing size keeps clarity</li>
+  </ul>
+</div>
+
+<!-- ✅ Examples (사용 상황 + 실제 케이스) -->
+<div slot="examples">
+  <ul>
+    <li><strong>Web upload:</strong> resize images to meet file size or dimension limits</li>
+    <li><strong>Profile images:</strong> create square or fixed-size avatars</li>
+    <li><strong>UI design:</strong> prepare images for specific layout sizes</li>
+    <li><strong>Performance optimization:</strong> reduce image dimensions for faster loading</li>
+    <li><strong>Social media:</strong> match platform-specific size requirements</li>
+  </ul>
+</div>
+
+<!-- ✅ Related (내부 링크 강화) -->
+<div slot="related">
+  <ul>
+    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+    <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+    <li><a href="/image-tools/image-to-base64/">Image to Base64</a></li>
+    <li><a href="/image-tools/">All Image Tools</a></li>
+  </ul>
+</div>
+
 </ToolLayout>
 
 <script is:inline>

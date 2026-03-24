@@ -7,7 +7,7 @@ const domain = "gmail.com";
 
 <BaseLayout
   title="Contact — MinimalDev"
-  description="Contact MinimalDev for feedback, bug reports, or tool suggestions."
+  description="Contact MinimalDev for feedback, bug reports, tool suggestions, or general questions about the site."
   canonicalPath="/legal/contact/"
 >
   <div class="container">
@@ -15,31 +15,88 @@ const domain = "gmail.com";
 
     <section class="section">
       <p class="lead">
-        If you have suggestions, feature requests, or found a bug, feel free to reach out.
+        Use this page to contact MinimalDev about bug reports, tool suggestions, usability issues,
+        correction requests, or general feedback about the site.
+      </p>
+      <p class="note" style="margin-top:10px;">
+        Clear feedback helps improve tool accuracy, usability, and overall site quality.
       </p>
     </section>
 
-    <section class="section card">
+    <section class="section card" style="padding:18px;">
       <h2>Email</h2>
 
-      <p id="emailText" class="note"></p>
-
-      <button class="btn secondary" type="button" id="copyEmail">
-        Copy email address
-      </button>
-
-      <p class="note" style="margin-top:8px;">
-        We aim to respond within a few business days.
+      <p class="note" style="margin-top:0;">
+        You can reach the site using the email address below.
       </p>
+
+      <p
+        id="emailText"
+        class="note"
+        style="
+          font-size:16px;
+          font-weight:700;
+          word-break:break-word;
+          margin:10px 0 12px;
+        "
+      ></p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn secondary" type="button" id="copyEmail">
+          Copy email address
+        </button>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        We aim to respond within a few business days, but response time may vary depending on message volume.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Good reasons to contact us</h2>
+      <div class="grid">
+        <section class="card">
+          <h2>Bug reports</h2>
+          <p>
+            Report calculation errors, broken layouts, unexpected behavior, or issues affecting mobile or desktop use.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Tool suggestions</h2>
+          <p>
+            Suggest new tools, missing features, or improvements that would make existing pages more useful.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Content corrections</h2>
+          <p>
+            Let us know if a page description, explanation, or result presentation appears unclear or misleading.
+          </p>
+        </section>
+      </div>
     </section>
 
     <section class="section">
       <h2>Please include</h2>
       <ul>
         <li>The tool name and page URL</li>
-        <li>A short description of the issue or suggestion</li>
-        <li>Your browser and device (if reporting a bug)</li>
+        <li>A short description of the issue, request, or suggestion</li>
+        <li>Your browser and device, if you are reporting a bug</li>
+        <li>Steps to reproduce the problem, if the issue is technical</li>
       </ul>
+    </section>
+
+    <section class="section">
+      <h2>Scope of support</h2>
+      <p>
+        This contact page is intended for site-related feedback and operational questions. It is the best place to report
+        broken tools, request corrections, or suggest improvements to the user experience.
+      </p>
+      <p class="note" style="margin-bottom:0;">
+        Messages unrelated to the site, spam, or requests that do not include enough detail may not receive a reply.
+      </p>
     </section>
   </div>
 
@@ -53,12 +110,20 @@ const domain = "gmail.com";
 
     const btn = document.getElementById("copyEmail");
     if (btn) {
-      btn.addEventListener("click", () => {
-        navigator.clipboard.writeText(email);
-        btn.textContent = "Copied!";
-        setTimeout(() => {
-          btn.textContent = "Copy email address";
-        }, 2000);
+      btn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(email);
+          const original = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 2000);
+        } catch (_) {
+          btn.textContent = "Copy failed";
+          setTimeout(() => {
+            btn.textContent = "Copy email address";
+          }, 2000);
+        }
       });
     }
   </script>

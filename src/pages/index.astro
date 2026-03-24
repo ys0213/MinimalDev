@@ -4,16 +4,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="MinimalDev — Free Online Utility Tools"
-  description="Fast, free online calculators and utility tools. Mobile-first and easy to use."
+  description="Free online calculators, converters, and utility tools for everyday tasks. Simple, fast, and mobile-friendly."
   canonicalPath="/"
 >
   <div class="container">
+
+    <!-- HERO -->
     <section class="card" style="padding:18px;">
       <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-        <div style="min-width:220px;">
-          <h1 class="page-title" style="margin:0 0 6px;">Free Online Utility Tools</h1>
+        <div style="min-width:240px; max-width:720px;">
+          <h1 class="page-title" style="margin:0 0 8px;">
+            Free Online Utility Tools
+          </h1>
+
+          <p class="lead" style="margin:0 0 8px;">
+            MinimalDev provides simple online calculators and converters for everyday use.
+            Each tool focuses on a single task so you can get results quickly without unnecessary steps.
+          </p>
+
           <p class="lead" style="margin:0;">
-            Fast calculators and converters. One tool per page, mobile-first, easy to bookmark.
+            Use it for quick math, unit conversions, date calculations, financial estimates,
+            and other small tasks you don’t want to overcomplicate.
           </p>
         </div>
       </div>
@@ -26,99 +37,148 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </div>
     </section>
 
+    <!-- POPULAR TOOLS -->
     <section class="section">
-      <h2>Start here</h2>
+      <h2>Popular tools</h2>
+      <p class="lead" style="margin-top:0;">
+        Start with commonly used tools for calculations, conversions, and quick checks.
+      </p>
 
       <div class="grid">
         <section class="card">
           <span class="badge">Math</span>
           <h2>Percent Calculator</h2>
-          <p>Percent of a number, increase/decrease, and percentage change.</p>
+          <p>
+            Calculate percentages, increases, decreases, and percentage change for everyday use.
+          </p>
           <a class="btn" href="/math/percent-calculator/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Date-Time</span>
           <h2>Days Between Dates</h2>
-          <p>Calculate the number of days between two dates.</p>
+          <p>
+            Find the number of days between two dates for schedules, plans, or tracking.
+          </p>
           <a class="btn" href="/date-time/days-between-dates/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Converter</span>
           <h2>Length Converter</h2>
-          <p>Convert mm, cm, m, km, inches, feet, yards, miles.</p>
+          <p>
+            Convert between metric and imperial units such as cm, m, km, inches, and miles.
+          </p>
           <a class="btn" href="/converter/length/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Finance</span>
           <h2>Loan Calculator</h2>
-          <p>Estimate monthly payments, total interest, and payoff timeline.</p>
+          <p>
+            Estimate monthly payments, total interest, and repayment duration.
+          </p>
           <a class="btn" href="/finance/loan-calculator/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Health</span>
           <h2>BMI Calculator</h2>
-          <p>Calculate BMI quickly and see the category range.</p>
+          <p>
+            Calculate BMI and quickly check the corresponding category range.
+          </p>
           <a class="btn" href="/health/bmi-calculator/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Utility</span>
           <h2>Password Generator</h2>
-          <p>Create strong passwords instantly with offline-friendly generation.</p>
+          <p>
+            Generate strong passwords for accounts and general security needs.
+          </p>
           <a class="btn" href="/utility/password-generator/">Open</a>
         </section>
       </div>
     </section>
 
+    <!-- CATEGORY -->
     <section class="section">
       <h2>Browse by category</h2>
+      <p class="lead" style="margin-top:0;">
+        Explore tools by category to quickly find what you need.
+      </p>
+
       <div class="grid">
         <section class="card">
           <span class="badge">Category</span>
           <h2>Converters</h2>
-          <p>Unit converters for length, weight, temperature, time, data, and more.</p>
+          <p>
+            Convert units such as length, weight, temperature, time, and more.
+          </p>
           <a class="btn" href="/converter/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Category</span>
           <h2>Math</h2>
-          <p>Calculators for percentages, algebra, geometry, roots, ratios, and more.</p>
+          <p>
+            Solve percentage problems and other common numeric calculations.
+          </p>
           <a class="btn" href="/math/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Category</span>
           <h2>Finance</h2>
-          <p>Loan, interest, savings, salary, budget, tax, and investment calculators.</p>
+          <p>
+            Tools for loans, interest calculations, and financial planning.
+          </p>
           <a class="btn" href="/finance/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Category</span>
           <h2>Date-Time</h2>
-          <p>Date difference, working days, age, timestamps, countdowns, and more.</p>
+          <p>
+            Work with dates, durations, age calculations, and time differences.
+          </p>
           <a class="btn" href="/date-time/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Category</span>
           <h2>Health</h2>
-          <p>BMI, BMR, calories, hydration, sleep, pace, and body calculators.</p>
+          <p>
+            Basic calculators for body metrics and health-related estimates.
+          </p>
           <a class="btn" href="/health/">Open</a>
         </section>
 
         <section class="card">
           <span class="badge">Category</span>
           <h2>All Categories</h2>
-          <p>See every category including Utility, Developer Tools, Generators, Text Tools, and Design Tools.</p>
+          <p>
+            View all available tools including utility, generators, and more.
+          </p>
           <a class="btn" href="/categories/">Open</a>
         </section>
       </div>
     </section>
+
+    <!-- SIMPLE DESCRIPTION (핵심 보완용, 과하지 않게) -->
+    <section class="section">
+      <h2>About MinimalDev</h2>
+      <div class="card" style="padding:18px;">
+        <p style="margin-top:0;">
+          MinimalDev is built for quick access to simple tools that solve everyday problems.
+          Instead of combining multiple functions into one page, each tool is designed to do one job clearly.
+        </p>
+        <p style="margin-bottom:0;">
+          This approach keeps the interface easy to use, reduces unnecessary steps,
+          and makes it easier to return to the same tool when needed.
+        </p>
+      </div>
+    </section>
+
   </div>
 </BaseLayout>

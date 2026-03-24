@@ -8,107 +8,349 @@ export const tool = {
   order: 4,
 };
 
-const SITE_NAME="MinimalDev";
-const CANONICAL_PATH="/image-tools/image-rotate/";
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/image-tools/image-rotate/";
 
-const faqs=[
- {q:"How rotation works?",a:"Canvas rotates image using transform."},
- {q:"Quality loss?",a:"No significant loss."},
- {q:"Upload required?",a:"No, local only."}
+const faqs = [
+  {
+    q: "How does image rotation work?",
+    a: "The tool redraws your image on a browser canvas after applying a rotation transform. It changes the orientation of the preview and exported result without uploading the file.",
+  },
+  {
+    q: "Does rotation reduce image quality?",
+    a: "Normal 90°, 180°, and 270° rotations do not usually cause noticeable quality loss in preview. The exported file is generated from the browser canvas.",
+  },
+  {
+    q: "Is image upload required?",
+    a: "No. The image is processed locally in your browser and is not uploaded to a server.",
+  },
+  {
+    q: "Why do width and height swap after a 90° or 270° rotation?",
+    a: "When an image is turned sideways, the original width becomes the new height and the original height becomes the new width.",
+  },
+  {
+    q: "When should I rotate an image?",
+    a: "Rotation is useful when phone photos have the wrong orientation, screenshots need to be turned for presentation, or layout assets must match a specific direction.",
+  },
+  {
+    q: "Can I rotate multiple times?",
+    a: "Yes. Each button adds another rotation step, so you can continue rotating until the preview matches the orientation you want.",
+  },
 ];
 
-const faqJsonLd={
- "@context":"https://schema.org",
- "@type":"FAQPage",
- mainEntity:faqs.map(f=>({
-   "@type":"Question",
-   name:f.q,
-   acceptedAnswer:{ "@type":"Answer", text:f.a }
- }))
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a }
+  }))
 };
 ---
 
 <ToolLayout
-title={`Image Rotate — ${SITE_NAME}`}
-description="Rotate images easily with preview."
-canonicalPath={CANONICAL_PATH}
-h1="Image Rotate"
-intro="Rotate images with instant preview."
-faq={faqs}
-categoryName="Image Tools"
+  title={`Image Rotate — ${SITE_NAME}`}
+  description="Rotate images by 90°, 180°, or 270° with instant preview, orientation details, and download."
+  canonicalPath={CANONICAL_PATH}
+  h1="Image Rotate"
+  intro="Rotate images with instant preview. Useful for fixing incorrect orientation, preparing screenshots, and adjusting visuals before sharing or exporting."
+  faq={faqs}
+  categoryName="Image Tools"
 >
 <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
-<div slot="tool">
-<div class="form">
-<input type="file" id="file" accept="image/*"/>
+<div slot="tool" data-tool="image-rotate">
+  <style is:inline>
+    #file {
+      width: 100%;
+      min-width: 0;
+    }
+    .rotate-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .rotate-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .rotate-card {
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      padding: 12px;
+      min-width: 0;
+    }
+    .rotate-big {
+      font-size: 24px;
+      font-weight: 900;
+      margin-top: 6px;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+    .rotate-canvas-wrap {
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      padding: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+    #canvas {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      background: rgba(255,255,255,.02);
+    }
+    .rotate-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 900px) {
+      .rotate-grid {
+        grid-template-columns: 1fr 320px;
+        align-items: start;
+      }
+    }
+  </style>
 
-<div style="display:flex;gap:10px;">
-<button class="btn" data-angle="90">90°</button>
-<button class="btn" data-angle="180">180°</button>
-<button class="btn" data-angle="270">270°</button>
+  <div class="form" role="form" aria-describedby="rotate_help rotate_privacy">
+    <div class="field">
+      <label for="file">Image file</label>
+      <input type="file" id="file" accept="image/*" />
+    </div>
+
+    <div class="rotate-grid">
+      <div>
+        <div class="rotate-canvas-wrap">
+          <canvas id="canvas" aria-label="Rotated image preview"></canvas>
+        </div>
+      </div>
+
+      <div>
+        <div class="rotate-card-grid">
+          <div class="rotate-card">
+            <strong>Current angle</strong>
+            <div class="rotate-big" id="angleState">0°</div>
+            <div class="note" style="margin-top:4px;">Rotation applied to the current preview</div>
+          </div>
+
+          <div class="rotate-card">
+            <strong>Canvas size</strong>
+            <div class="rotate-big" id="canvasSize">—</div>
+            <div class="note" style="margin-top:4px;">Current output dimensions</div>
+          </div>
+
+          <div class="rotate-card">
+            <strong>Orientation</strong>
+            <div class="rotate-big" id="orientationState">—</div>
+            <div class="note" style="margin-top:4px;">Based on the current rotated preview</div>
+          </div>
+        </div>
+
+        <p class="note" id="rotate_help" style="margin-top:10px;">
+          90° and 270° swap width and height. 180° keeps the same dimensions but flips the image upside down. You can rotate multiple times before downloading.
+        </p>
+
+        <div class="rotate-row" style="margin-top:10px;">
+          <button class="btn" type="button" data-angle="90">Rotate 90°</button>
+          <button class="btn" type="button" data-angle="180">Rotate 180°</button>
+          <button class="btn" type="button" data-angle="270">Rotate 270°</button>
+          <button class="btn secondary" type="button" id="reset">Reset</button>
+          <button class="btn secondary" type="button" id="download">Download</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="info" class="result" role="status" style="margin-top:12px;">
+      Upload an image to start.
+    </div>
+
+    <p class="note" id="rotate_privacy" style="margin-top:10px;">
+      Privacy: image rotation runs locally in your browser. No image file is uploaded, stored, or transmitted.
+    </p>
+  </div>
 </div>
 
-<canvas id="canvas"></canvas>
-
-<button class="btn secondary" id="download">Download</button>
+<div slot="how">
+  <p class="note">
+    This tool rotates an image by redrawing it on a canvas after applying a rotation transform. The preview updates immediately so you can verify orientation before downloading. Rotation changes how the image is displayed, and 90° or 270° rotations also change the output width and height.
+  </p>
+  <ul>
+    <li><strong>90° rotation:</strong> turns the image sideways and swaps width and height</li>
+    <li><strong>180° rotation:</strong> turns the image upside down while keeping the same dimensions</li>
+    <li><strong>270° rotation:</strong> turns the image sideways in the opposite direction and swaps width and height</li>
+    <li><strong>Result interpretation:</strong> the preview angle shows the current orientation, not just the last button you clicked</li>
+  </ul>
 </div>
+
+<div slot="examples">
+  <ul>
+    <li><strong>Phone photo correction:</strong> rotate an image that was saved with the wrong orientation</li>
+    <li><strong>Screenshot preparation:</strong> turn a tall screenshot sideways for slides or documents</li>
+    <li><strong>Presentation assets:</strong> rotate diagrams or charts to better fit a layout</li>
+    <li><strong>Quick review workflow:</strong> test different orientations before saving the final image</li>
+  </ul>
+</div>
+
+<div slot="related">
+  <ul>
+    <li><a href="/image-tools/image-flip/">Image Flip</a></li>
+    <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+    <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+    <li><a href="/image-tools/">All Image Tools</a></li>
+  </ul>
 </div>
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-const file=document.getElementById("file");
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
+const file = document.getElementById("file");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const info = document.getElementById("info");
+const angleState = document.getElementById("angleState");
+const canvasSize = document.getElementById("canvasSize");
+const orientationState = document.getElementById("orientationState");
+const resetBtn = document.getElementById("reset");
 
-let img=new Image();
-let angle=0;
+let img = new Image();
+let angle = 0;
+let loaded = false;
+let originalName = "";
 
-file.onchange=e=>{
- const r=new FileReader();
- r.onload=ev=>{
-   img.onload=draw;
-   img.src=ev.target.result;
- };
- r.readAsDataURL(e.target.files[0]);
-};
-
-function draw(){
- const rad=angle*Math.PI/180;
-
- if(angle%180===0){
-   canvas.width=img.width;
-   canvas.height=img.height;
- }else{
-   canvas.width=img.height;
-   canvas.height=img.width;
- }
-
- ctx.save();
- ctx.clearRect(0,0,canvas.width,canvas.height);
-
- ctx.translate(canvas.width/2,canvas.height/2);
- ctx.rotate(rad);
- ctx.drawImage(img,-img.width/2,-img.height/2);
-
- ctx.restore();
+function updateUi() {
+  angleState.textContent = angle + "°";
+  if (canvas.width && canvas.height) {
+    canvasSize.textContent = canvas.width + " × " + canvas.height;
+    if (canvas.width > canvas.height) {
+      orientationState.textContent = "Landscape";
+    } else if (canvas.height > canvas.width) {
+      orientationState.textContent = "Portrait";
+    } else {
+      orientationState.textContent = "Square";
+    }
+  } else {
+    canvasSize.textContent = "—";
+    orientationState.textContent = "—";
+  }
 }
 
-document.querySelectorAll("[data-angle]").forEach(btn=>{
- btn.onclick=()=>{
-   angle=(angle+Number(btn.dataset.angle))%360;
-   draw();
- };
+file.onchange = e => {
+  const selected = e.target.files && e.target.files[0];
+  if (!selected) return;
+
+  if (!selected.type || !selected.type.startsWith("image/")) {
+    info.textContent = "Please choose a valid image file.";
+    return;
+  }
+
+  originalName = selected.name || "image";
+
+  const r = new FileReader();
+  r.onload = ev => {
+    img.onload = () => {
+      loaded = true;
+      angle = 0;
+      draw();
+      info.innerHTML =
+        "<strong>Image loaded.</strong><br>" +
+        "Use the rotation buttons to change orientation. The preview updates immediately.";
+    };
+    img.onerror = () => {
+      loaded = false;
+      info.textContent = "Could not load the selected image.";
+    };
+    img.src = ev.target.result;
+  };
+  r.onerror = () => {
+    info.textContent = "Could not read the selected file.";
+  };
+  r.readAsDataURL(selected);
+};
+
+function draw() {
+  if (!loaded || !img.src) {
+    updateUi();
+    return;
+  }
+
+  const rad = angle * Math.PI / 180;
+
+  if (angle % 180 === 0) {
+    canvas.width = img.width;
+    canvas.height = img.height;
+  } else {
+    canvas.width = img.height;
+    canvas.height = img.width;
+  }
+
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+  ctx.restore();
+
+  updateUi();
+
+  let message = "";
+  if (angle === 0) {
+    message = "The preview is in the original orientation.";
+  } else if (angle === 90 || angle === 270) {
+    message = "The image is rotated sideways, so width and height are swapped.";
+  } else if (angle === 180) {
+    message = "The image is upside down, but width and height remain the same.";
+  }
+
+  info.innerHTML =
+    "<strong>Rotation applied.</strong><br>" +
+    "Current angle: " + angle + "°. " + message;
+}
+
+document.querySelectorAll("[data-angle]").forEach(btn => {
+  btn.onclick = () => {
+    if (!loaded) {
+      info.textContent = "Upload an image first.";
+      return;
+    }
+    angle = (angle + Number(btn.dataset.angle)) % 360;
+    draw();
+  };
 });
 
-document.getElementById("download").onclick=()=>{
- const a=document.createElement("a");
- a.href=canvas.toDataURL();
- a.download="rotated.png";
- a.click();
+resetBtn.onclick = () => {
+  if (!loaded) {
+    info.textContent = "Upload an image first.";
+    return;
+  }
+  angle = 0;
+  draw();
+  info.innerHTML =
+    "<strong>Rotation reset.</strong><br>" +
+    "The preview is back to the original orientation.";
 };
+
+document.getElementById("download").onclick = () => {
+  if (!loaded || !canvas.width) {
+    info.textContent = "Nothing to download yet. Upload an image first.";
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  const base = originalName.replace(/\.[^.]+$/, "") || "image";
+  a.download = base + "-rotated.png";
+  a.click();
+};
+
+updateUi();
 
 });
 </script>
