@@ -9,14 +9,8 @@ type Props = {
   canonicalPath: string;
   h1: string;
   intro: string;
-
-  // ✅ 새로 추가: FAQ 데이터를 넘기면 ToolLayout이 자동 렌더 + FAQ schema 생성
   faq?: FAQItem[];
-
-  // ✅ 선택: 통화(기본 USD) - 나중에 KRW로 바꾸고 싶을 때 대비
   priceCurrency?: string;
-
-  // ✅ 선택: AdSense 승인 후 광고 슬롯을 켤 때
   showAds?: boolean;
   categoryName?: string;
 };
@@ -110,58 +104,26 @@ const breadcrumbSchema =
         ],
       }
     : null;
-
-// ✅ Ad slot들은 “승인 전에는 렌더만 해두고(빈 div)”, 승인 후에만 실제 스크립트/광고가 채워지게 운용하는 방식 권장
-//    (정책/UX 안전: 승인 전부터 과도한 광고 코드 삽입 X)
 ---
 
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath}>
-  {/* WebApplication schema */}
-  <script
-    slot="head"
-    type="application/ld+json"
-    set:html={JSON.stringify(webAppSchema)}
-  ></script>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(webAppSchema)}></script>
 
-  {/* FAQ schema (FAQ 데이터가 있을 때만) */}
   {hasFaq && (
-    <script
-      slot="head"
-      type="application/ld+json"
-      set:html={JSON.stringify(faqSchema)}
-    ></script>
+    <script slot="head" type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
   )}
 
   {breadcrumbSchema && (
-    <script
-      slot="head"
-      type="application/ld+json"
-      set:html={JSON.stringify(breadcrumbSchema)}
-    ></script>
+    <script slot="head" type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
   )}
 
   <div class="container">
     <h1 class="page-title">{h1}</h1>
     <p class="lead">{intro}</p>
 
-    {/* ✅ 광고 슬롯 (본문 상단) - 승인 후 showAds=true로 켜서 사용 */}
-    {showAds && (
-      <div class="ad-slot ad-slot--top" aria-label="Advertisement" role="complementary">
-        {/* AdSense 승인 후에만 실제 광고 코드/컴포넌트를 삽입 */}
-      </div>
-    )}
-
-    {/* Tool UI */}
     <section class="card">
       <slot name="tool" />
     </section>
-
-    {/* ✅ 광고 슬롯 (툴/표 아래) */}
-    {showAds && (
-      <div class="ad-slot ad-slot--mid" aria-label="Advertisement" role="complementary">
-        {/* AdSense 승인 후 */}
-      </div>
-    )}
 
     <section class="section">
       <h2>How it works</h2>
@@ -173,28 +135,45 @@ const breadcrumbSchema =
       <slot name="examples" />
     </section>
 
-    {/* ✅ FAQ: 이제 툴 페이지에서 slot으로 HTML 넣지 말고 faq 데이터로만 넘기면 됨 */}
+    {/* ✅ 핵심 추가 (사이트 전체 품질 레이어) */}
+    <section class="section">
+      <h2>When to use this tool</h2>
+      <p class="note">
+        This tool is designed for quick, practical tasks such as everyday calculations, data formatting, or simple conversions.
+        It is best used when you need fast results without installing software or using complex tools.
+      </p>
+
+      <h3 style="margin-top:12px;">When to use</h3>
+      <ul>
+        <li>Quick checks or one-time calculations</li>
+        <li>Validating or converting data before using it elsewhere</li>
+        <li>Simple tasks that do not require advanced software</li>
+      </ul>
+
+      <h3 style="margin-top:12px;">When not to use</h3>
+      <ul>
+        <li>Critical financial, legal, or medical decisions</li>
+        <li>Large-scale or automated processing</li>
+        <li>Situations requiring guaranteed precision beyond basic validation</li>
+      </ul>
+
+      <p class="note" style="margin-top:10px;">
+        Always review results before using them in important contexts.
+      </p>
+    </section>
+
     {hasFaq && (
       <section class="section">
         <h2>FAQ</h2>
-        <div class="faq">
-          <ul class="faq-list">
-            {faq.map((item) => (
-              <li class="faq-item">
-                <strong class="faq-q">{item.q}</strong>
-                <p class="faq-a">{item.a}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul>
+          {faq.map((item) => (
+            <li>
+              <strong>{item.q}</strong>
+              <p>{item.a}</p>
+            </li>
+          ))}
+        </ul>
       </section>
-    )}
-
-    {/* ✅ 광고 슬롯 (FAQ 위/아래) - 보통 FAQ 위가 성과가 좋아서 여기 배치 */}
-    {showAds && (
-      <div class="ad-slot ad-slot--faq" aria-label="Advertisement" role="complementary">
-        {/* AdSense 승인 후 */}
-      </div>
     )}
 
     <section class="section">
