@@ -104,6 +104,58 @@ const breadcrumbSchema =
         ],
       }
     : null;
+
+function getToolExplanation(path: string | undefined) {
+  if (!path) return null;
+
+  if (path.includes("password")) {
+    return {
+      desc: "evaluate password strength and identify weak patterns",
+      use: "creating secure passwords for accounts or checking existing ones",
+      result: "an estimate of strength based on entropy and resistance to guessing attacks",
+    };
+  }
+
+  if (path.includes("uuid")) {
+    return {
+      desc: "generate unique identifiers for systems and databases",
+      use: "creating IDs for records, sessions, or API requests",
+      result: "a randomly generated UUID with extremely low collision probability",
+    };
+  }
+
+  if (path.includes("json")) {
+    return {
+      desc: "format and validate JSON data for readability and debugging",
+      use: "working with APIs or cleaning up structured data",
+      result: "a properly formatted JSON structure or validation feedback",
+    };
+  }
+
+  if (path.includes("url-encoder")) {
+    return {
+      desc: "encode and decode URL components safely",
+      use: "handling query parameters or special characters in URLs",
+      result: "a correctly encoded or decoded URL string",
+    };
+  }
+
+  if (path.includes("image")) {
+    return {
+      desc: "process and convert images directly in your browser",
+      use: "optimizing images for web use or changing formats",
+      result: "a modified image with updated format, size, or quality",
+    };
+  }
+
+  return {
+    desc: "perform quick utility operations directly in your browser",
+    use: "handling simple tasks without installing additional software",
+    result: "a processed output based on your input data",
+  };
+}
+
+const toolExplanation = getToolExplanation(canonicalPath);
 ---
 
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath}>
@@ -161,6 +213,21 @@ const breadcrumbSchema =
         Always review results before using them in important contexts.
       </p>
     </section>
+
+    {toolExplanation && (
+      <section class="section">
+        <h2>About this tool</h2>
+        <p>
+          This tool helps you {toolExplanation.desc}.
+          It runs entirely in your browser without sending data to a server.
+        </p>
+
+        <p>
+          You can use this tool when {toolExplanation.use}.
+          The results should be interpreted as {toolExplanation.result}.
+        </p>
+      </section>
+    )}
 
     {hasFaq && (
       <section class="section">

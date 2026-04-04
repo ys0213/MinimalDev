@@ -1,0 +1,87 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Does resizing reduce quality?",
+    a: "Not always, but repeated resizing and re-encoding can reduce sharpness and clarity over time.",
+  },
+  {
+    q: "Should I resize before compressing?",
+    a: "Yes. Reducing dimensions first usually improves total optimization more effectively than compression alone.",
+  },
+  {
+    q: "What is aspect ratio?",
+    a: "Aspect ratio is the relationship between width and height. Keeping it prevents stretching and distortion.",
+  },
+  {
+    q: "What happens if I ignore aspect ratio?",
+    a: "The image may look stretched, squashed, or visually wrong even if the file still loads correctly.",
+  },
+];
+---
+
+<BaseLayout
+  title="Image Resize Guide — MinimalDev"
+  description="Learn how to resize images correctly for web, social media, and performance optimization."
+  canonicalPath="/guides/image-resize-guide/"
+>
+  <div class="container">
+    <h1 class="page-title">Image Resize Guide</h1>
+    <p class="lead">
+      Resizing images is one of the most practical ways to improve performance and presentation. Oversized images waste bandwidth, slow page loading, and send many more pixels than the user actually needs to see.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        Resizing changes the dimensions of an image by reducing or increasing the number of pixels. This is different from compression. Compression changes how the image data is encoded, while resizing changes how many pixels exist in the first place. In many web workflows, resizing should happen before compression because unnecessary pixels create unnecessary weight.
+      </p>
+      <p>
+        The most important rule is to preserve aspect ratio. If width and height are changed independently without maintaining the original proportion, the image becomes distorted. A good resizing workflow starts by asking how large the image will actually appear in its final layout, then exporting close to that size instead of keeping a huge original.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>Resize:</strong> reduces dimensions and pixel count</li>
+        <li><strong>Compress:</strong> reduces encoded file size</li>
+        <li><strong>Resize first:</strong> best for removing unnecessary image weight</li>
+        <li><strong>Compress only:</strong> less effective when the image is still oversized</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Resize large phone photos before uploading them to a blog or CMS</li>
+        <li>Prepare social media visuals with dimensions that match the platform</li>
+        <li>Optimize hero banners so they fit the actual page layout instead of overshooting it</li>
+        <li>Reduce screenshot sizes before documentation, support, or sharing workflows</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/guides/how-to-crop-image/">How to Crop an Image Properly</a></li>
+        <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

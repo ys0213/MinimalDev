@@ -239,19 +239,35 @@ const faqJsonLd = {
         Privacy: QR generation runs locally in your browser. No inputs are stored or transmitted.
       </p>
     </div>
+
+    <section class="section">
+      <h2>Common use cases</h2>
+      <ul>
+        <li>Sharing website links quickly</li>
+        <li>Providing contact information</li>
+        <li>Connecting to Wi-Fi networks</li>
+      </ul>
+
+      <p class="note">
+        Higher error correction improves scan reliability but increases code density.
+      </p>
+    </section>
   </div>
 
   <div slot="how">
     <p class="note">
-      This tool builds a QR “payload” string and renders it as a QR code. Supported payload formats:
+      This tool generates QR codes from text, URLs, or other input data.
     </p>
+
     <ul>
-      <li><strong>URL/Text:</strong> raw text</li>
-      <li><strong>Wi-Fi:</strong> <code>WIFI:T:WPA;S:SSID;P:password;H:false;;</code></li>
-      <li><strong>Email:</strong> <code>mailto:address?subject=...&amp;body=...</code></li>
-      <li><strong>Phone:</strong> <code>tel:+15551234567</code></li>
-      <li><strong>SMS:</strong> <code>SMSTO:+15551234567:message</code></li>
+      <li><strong>Input:</strong> Text or URL</li>
+      <li><strong>Encoding:</strong> Data is converted into QR format</li>
+      <li><strong>Output:</strong> Scannable QR image</li>
     </ul>
+
+    <p class="note">
+      <strong>How to interpret:</strong> The QR code represents the exact input data and can be scanned by mobile devices.
+    </p>
   </div>
 
   <div slot="examples">

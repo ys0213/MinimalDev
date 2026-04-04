@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Why is WebP useful for websites?",
+    a: "WebP often reduces image file size while keeping similar visual quality, which helps pages load faster.",
+  },
+  {
+    q: "Is WebP always smaller than JPG?",
+    a: "Not always, but in many practical web cases WebP is more efficient than JPG at comparable quality.",
+  },
+  {
+    q: "Does WebP support transparency?",
+    a: "Yes. WebP supports transparency, unlike JPG, which makes it useful for more types of web assets.",
+  },
+  {
+    q: "Should I replace every image with WebP?",
+    a: "Not automatically. The best format still depends on the type of image, compatibility needs, and workflow.",
+  },
+];
+---
+
+<BaseLayout
+  title="Why Use WebP? — MinimalDev"
+  description="Learn why WebP is useful for websites, including speed improvements and practical file size advantages."
+  canonicalPath="/guides/why-use-webp/"
+>
+  <div class="container">
+    <h1 class="page-title">Why Use WebP?</h1>
+    <p class="lead">
+      WebP is popular because it often creates smaller image files without a major visual penalty. For many websites, that means faster loading, lower transfer size, and a better experience on mobile and slower connections.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        WebP was designed for web delivery. Unlike older workflows that mostly separate JPG for photos and PNG for graphics, WebP can cover both lossy and lossless scenarios while also supporting transparency. This flexibility is one reason it has become a practical format for modern websites. When images become lighter, browsers download less data and pages can feel faster even without other major changes.
+      </p>
+      <p>
+        The biggest reason to use WebP is performance efficiency. On many websites, images are the heaviest assets. If thumbnails, banners, product photos, or article visuals are served in a lighter format, the total page weight drops. That can improve page speed, reduce waiting time, and make scrolling and navigation feel more responsive.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>WebP vs JPG:</strong> WebP is often smaller at similar visible quality</li>
+        <li><strong>WebP vs PNG:</strong> WebP can be much smaller while still supporting transparency</li>
+        <li><strong>Main advantage:</strong> strong size-to-quality balance for websites</li>
+      </ul>
+      <p class="note">
+        In practical terms, a web image that is a few hundred kilobytes as JPG may become noticeably smaller as WebP while still looking almost the same to a normal user.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Convert article thumbnails to WebP to reduce total blog page weight</li>
+        <li>Use WebP for e-commerce product grids where many images load at once</li>
+        <li>Replace large hero JPGs with WebP for faster mobile rendering</li>
+        <li>Use transparent WebP assets in places where JPG cannot work</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/guides/image-optimization-for-web/">Image Optimization for Web</a></li>
+        <li><a href="/guides/jpg-vs-png/">JPG vs PNG</a></li>
+        <li><a href="/image-tools/jpg-to-webp/">JPG to WebP Converter</a></li>
+        <li><a href="/image-tools/webp-to-jpg/">WebP to JPG Converter</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

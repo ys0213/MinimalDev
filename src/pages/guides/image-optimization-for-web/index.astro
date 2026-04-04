@@ -1,0 +1,93 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Why do images affect page speed so much?",
+    a: "Images are often the largest assets on a page, so reducing their size directly improves load speed.",
+  },
+  {
+    q: "Is compression alone enough?",
+    a: "Not always. Good optimization usually combines proper dimensions, correct format choice, and balanced compression.",
+  },
+  {
+    q: "What format is usually best for the web?",
+    a: "WebP is often the strongest general option for web delivery, but JPG and PNG still matter depending on the image type.",
+  },
+  {
+    q: "Should I resize images before uploading?",
+    a: "Yes. Uploading oversized images wastes bandwidth even if the layout displays them at a smaller size.",
+  },
+];
+---
+
+<BaseLayout
+  title="Image Optimization for Web — MinimalDev"
+  description="Learn how image optimization improves website speed through resizing, compression, and better format choices."
+  canonicalPath="/guides/image-optimization-for-web/"
+>
+  <div class="container">
+    <h1 class="page-title">Image Optimization for Web</h1>
+    <p class="lead">
+      Image optimization is one of the highest-impact ways to improve website speed. Large images slow down loading, increase page weight, and make browsing feel slower, especially for users on mobile networks or slower connections.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        On many websites, images make up the largest part of total transferred bytes. This means image decisions directly affect page performance. If a page includes several oversized banners, thumbnails, screenshots, or product photos, the browser has to download much more data than necessary. That creates slower loading and weaker user experience.
+      </p>
+      <p>
+        Good image optimization combines three decisions: choosing dimensions that match actual layout size, choosing the right format, and applying sensible compression. Resizing removes unnecessary pixels. Compression reduces stored data. Format choice determines how efficiently the file is encoded and whether features such as transparency are supported.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>Resize:</strong> reduces dimensions and unnecessary pixel count</li>
+        <li><strong>Compress:</strong> reduces file size through encoding choices</li>
+        <li><strong>Format choice:</strong> changes both efficiency and compatibility</li>
+        <li><strong>Best workflow:</strong> resize first, choose the format, then compress</li>
+      </ul>
+      <p class="note">
+        A large image that is only compressed may still be too heavy. A resized image in the wrong format may still be inefficient. The best results come from using all three methods together.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Optimize article images so blog posts load faster on mobile devices</li>
+        <li>Convert product photos to WebP for grids and listing pages</li>
+        <li>Resize banner images before uploading them to a landing page</li>
+        <li>Compress screenshots and graphics before publishing support or marketing content</li>
+        <li>Reduce page weight when a site relies heavily on thumbnails or media previews</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/guides/why-use-webp/">Why Use WebP</a></li>
+        <li><a href="/guides/image-resize-guide/">Image Resize Guide</a></li>
+        <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+        <li><a href="/image-tools/jpg-to-webp/">JPG to WebP Converter</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

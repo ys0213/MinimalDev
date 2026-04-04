@@ -1,0 +1,92 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "What is the difference between cropping and resizing?",
+    a: "Cropping removes part of an image, while resizing changes the dimensions of the full image.",
+  },
+  {
+    q: "Should I crop before compressing?",
+    a: "Usually yes. Cropping removes unnecessary areas first, which can reduce the amount of image data before final compression.",
+  },
+  {
+    q: "Can cropping improve composition?",
+    a: "Yes. Cropping can remove distractions and make the main subject more prominent.",
+  },
+  {
+    q: "Does cropping reduce image quality?",
+    a: "Cropping itself does not lower quality, but exporting the cropped image with lossy compression can.",
+  },
+];
+---
+
+<BaseLayout
+  title="How to Crop an Image Properly — MinimalDev"
+  description="Learn how to crop images properly for better composition, cleaner framing, and more practical image use."
+  canonicalPath="/guides/how-to-crop-image/"
+>
+  <div class="container">
+    <h1 class="page-title">How to Crop an Image Properly</h1>
+    <p class="lead">
+      Cropping is one of the simplest image edits, but it has a major effect on composition, focus, and presentation. A good crop removes distractions, improves balance, and helps an image fit the place where it will actually be used.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        Cropping means removing part of the original frame so only the most useful area remains. This is different from resizing, which changes the dimensions of the entire image. A crop is often used to remove empty background, distracting edges, unwanted objects, or excess space around the subject. It is also a practical way to match aspect ratio requirements for websites, social media, thumbnails, and profile images.
+      </p>
+      <p>
+        The most important goal of cropping is not simply making the image smaller. It is choosing a frame that improves clarity. A strong crop helps the viewer focus on the subject, while a poor crop can cut off important details or make the image feel awkward. Good cropping depends on both composition and final placement.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>Crop:</strong> changes framing by removing outer parts of the image</li>
+        <li><strong>Resize:</strong> keeps the whole image but changes dimensions</li>
+        <li><strong>Crop first:</strong> best when the composition is weak or the frame is cluttered</li>
+        <li><strong>Resize first:</strong> less useful if the original framing is still wrong</li>
+      </ul>
+      <p class="note">
+        If the image includes too much background or visual noise, cropping usually matters more than resizing. If the composition is already good, resizing and compression may be more important.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Crop product images to reduce empty background and focus on the item</li>
+        <li>Prepare square avatars, thumbnails, or social media images</li>
+        <li>Remove distracting edges from screenshots before documentation or sharing</li>
+        <li>Refocus a banner or article image around the main subject</li>
+        <li>Adjust composition before resizing and compressing the final file</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/image-resize-guide/">Image Resize Guide</a></li>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+        <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

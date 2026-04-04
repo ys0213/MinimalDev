@@ -81,6 +81,28 @@ const faqs = [
         Generated entirely in your browser. No UUIDs are stored or transmitted.
       </p>
     </div>
+
+    <section class="section">
+      <h2>Common use cases</h2>
+      <ul>
+        <li>Database primary keys (avoiding sequential IDs)</li>
+        <li>Temporary identifiers for frontend apps</li>
+        <li>API request tracking and correlation IDs</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Why use UUIDs?</h2>
+      <ul>
+        <li>Avoid predictable sequential IDs</li>
+        <li>Ensure uniqueness across distributed systems</li>
+        <li>Safe for public exposure in APIs</li>
+      </ul>
+
+      <p class="note">
+        UUID v4 values are randomly generated and extremely unlikely to collide.
+      </p>
+    </section>
   </div>
 
   <div slot="how">
@@ -96,7 +118,15 @@ const faqs = [
     </ul>
 
     <p class="note">
-      No server-side generation is used.
+      Each UUID contains 122 random bits, making collisions extremely unlikely in real-world systems.
+    </p>
+
+    <p class="note">
+      <strong>How to interpret:</strong> UUIDs are not meaningful values. They are used as unique identifiers for database records, API tokens, and session IDs.
+    </p>
+
+    <p class="note">
+      No server-side generation is used. Everything runs locally in your browser.
     </p>
   </div>
 

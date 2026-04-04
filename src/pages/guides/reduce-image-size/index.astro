@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Which format usually gives the smallest file size?",
+    a: "WebP often produces smaller files than JPG at similar visual quality, while PNG is usually larger because it preserves more original image data.",
+  },
+  {
+    q: "Does compression always make images look worse?",
+    a: "Not always. Moderate compression can reduce size significantly with only small visible changes, especially for normal web viewing.",
+  },
+  {
+    q: "What is the best order for optimization?",
+    a: "In most cases, resize first, choose the right format second, and apply compression last.",
+  },
+  {
+    q: "Should I use PNG when my goal is smaller files?",
+    a: "Usually no for photos. PNG is often larger and is better reserved for transparency, UI assets, or lossless graphics.",
+  },
+];
+---
+
+<BaseLayout
+  title="How to Reduce Image Size — MinimalDev"
+  description="Learn how to reduce image file size using JPG and WebP compression while balancing quality and speed."
+  canonicalPath="/guides/reduce-image-size/"
+>
+  <div class="container">
+    <h1 class="page-title">How to Reduce Image Size</h1>
+    <p class="lead">
+      Reducing image size is one of the easiest ways to improve page speed, lower bandwidth use, and make uploads faster. A smaller file is useful only when the image still looks acceptable for the job, so the goal is always balance rather than compression alone.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        Image file size depends on three main factors: pixel dimensions, file format, and compression level. If an image is much larger than the space where it is displayed, it is already inefficient before any compression is applied. A 3000-pixel-wide image shown in a 600-pixel container wastes bytes even if the image looks fine. That is why resizing is often the first and most important step.
+      </p>
+      <p>
+        After dimensions are correct, format choice matters. JPG is a practical standard for photographs and general web images because it offers strong compression with broad compatibility. WebP often reduces size even more at similar visible quality, which makes it a strong choice for modern websites. PNG is lossless and useful when transparency or exact visual accuracy matters, but it is rarely the best option when small file size is the primary goal.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>JPG:</strong> good default for photos, smaller than PNG, widely supported</li>
+        <li><strong>WebP:</strong> often smaller than JPG at similar quality, strong for web delivery</li>
+        <li><strong>PNG:</strong> lossless and transparent, but often much larger</li>
+      </ul>
+      <p class="note">
+        The real trade-off is quality versus weight. Strong compression saves bandwidth, but can blur edges, reduce detail, and create visible artifacts. Moderate compression is usually the best practical choice.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Compress article images so blog pages load faster on mobile connections</li>
+        <li>Convert large JPG files to WebP before publishing a gallery or product page</li>
+        <li>Resize screenshots and exports before sharing them in documentation</li>
+        <li>Keep PNG only for logos, transparent overlays, or graphics that need sharp edges</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+      </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/why-use-webp/">Why Use WebP</a></li>
+        <li><a href="/guides/image-optimization-for-web/">Image Optimization for Web</a></li>
+        <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+        <li><a href="/image-tools/jpg-to-webp/">JPG to WebP Converter</a></li>
+        <li><a href="/image-tools/png-to-jpg/">PNG to JPG Converter</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

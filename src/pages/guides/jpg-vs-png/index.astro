@@ -1,0 +1,88 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Which format is better for photos?",
+    a: "JPG is usually better for photos because it keeps file size lower than PNG.",
+  },
+  {
+    q: "Which format supports transparency?",
+    a: "PNG supports transparency, while JPG does not.",
+  },
+  {
+    q: "Why is PNG often much larger?",
+    a: "PNG is lossless and preserves image data more exactly, which often results in larger files.",
+  },
+  {
+    q: "Should I always use PNG for better quality?",
+    a: "No. PNG can preserve more data, but it is not always the best choice for web delivery or photographic content.",
+  },
+];
+---
+
+<BaseLayout
+  title="JPG vs PNG — MinimalDev"
+  description="Compare JPG and PNG and learn when to use each for photos, graphics, transparency, and file size."
+  canonicalPath="/guides/jpg-vs-png/"
+>
+  <div class="container">
+    <h1 class="page-title">JPG vs PNG</h1>
+    <p class="lead">
+      JPG and PNG are both common image formats, but they are designed for different jobs. JPG is usually better for photos and smaller files, while PNG is better for graphics, transparency, and visual accuracy on sharp edges.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        JPG uses lossy compression, which means it reduces file size by discarding some image information. That makes it practical for photographs, banners, and other visual images where smaller size matters more than preserving every detail. PNG uses lossless compression, which means it preserves image data more exactly and is often a better choice for logos, screenshots, text-heavy graphics, and UI assets.
+      </p>
+      <p>
+        The choice should be based on purpose rather than on the simple idea that one format is always "better." A high-resolution PNG photo may look clean, but it can be unnecessarily heavy for a web page. On the other hand, a JPG logo may become blurry, show compression artifacts, and completely lose transparency.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>JPG:</strong> smaller files, ideal for photos, no transparency</li>
+        <li><strong>PNG:</strong> larger files, ideal for graphics, supports transparency</li>
+        <li><strong>JPG weakness:</strong> artifacts on sharp edges, text, and logos</li>
+        <li><strong>PNG weakness:</strong> often too large for image-heavy pages</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Use JPG for article photos, gallery images, and product photography</li>
+        <li>Use PNG for logos, icons, transparent overlays, and screenshots</li>
+        <li>Convert PNG to JPG when file size matters more than transparency</li>
+        <li>Keep PNG when edge clarity or transparent backgrounds are required</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/why-use-webp/">Why Use WebP</a></li>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/image-tools/png-to-jpg/">PNG to JPG Converter</a></li>
+        <li><a href="/image-tools/jpg-to-png/">JPG to PNG Converter</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

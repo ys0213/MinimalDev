@@ -1,0 +1,88 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "Are online image tools safe?",
+    a: "Browser-based tools that process images locally can be safe, but tools that upload files to servers require more trust.",
+  },
+  {
+    q: "When are offline tools better?",
+    a: "Offline tools are better for large projects, advanced editing, and repeated batch workflows.",
+  },
+  {
+    q: "Which is faster for simple tasks?",
+    a: "Online tools are often faster for one-time tasks because they require no installation.",
+  },
+  {
+    q: "Do offline tools always give better quality?",
+    a: "Not always. Quality depends more on the workflow and settings than on whether the tool is online or offline.",
+  },
+];
+---
+
+<BaseLayout
+  title="Online vs Offline Image Tools — MinimalDev"
+  description="Compare online and offline image tools for convenience, privacy, editing depth, and real-world workflows."
+  canonicalPath="/guides/online-vs-offline-image-tools/"
+>
+  <div class="container">
+    <h1 class="page-title">Online vs Offline Image Tools</h1>
+    <p class="lead">
+      Online and offline image tools solve different problems. The best choice depends on whether you care most about convenience, privacy, setup time, editing depth, or repeated workflow efficiency.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        Online image tools are usually best for quick and focused tasks such as converting a format, compressing a file, or making a simple crop. They are convenient because there is nothing to install and you can often use them immediately across different devices. Offline image tools are stronger when you need larger editing sessions, advanced controls, multi-step workflows, or repeated batch processing.
+      </p>
+      <p>
+        Privacy also matters. Some online tools upload images to a server, while browser-based local tools process images directly on the device. Offline tools usually keep all files on your own system, which may be more suitable for sensitive or internal content.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>Online tools:</strong> fast access, no installation, simple workflow</li>
+        <li><strong>Offline tools:</strong> more advanced editing, stronger batch capability</li>
+        <li><strong>Online limitation:</strong> fewer professional editing features</li>
+        <li><strong>Offline limitation:</strong> setup time and heavier software requirements</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Use online tools for quick conversions like PNG to JPG before an upload</li>
+        <li>Use offline tools for full photo editing or large asset libraries</li>
+        <li>Use browser-based tools for small tasks when convenience matters most</li>
+        <li>Use offline tools for repeated production jobs or complex editing sessions</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/free-image-tools/">Free Image Tools</a></li>
+        <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+        <li><a href="/image-tools/image-cropper/">Image Cropper</a></li>
+        <li><a href="/image-tools/png-to-jpg/">PNG to JPG Converter</a></li>
+        <li><a href="/image-tools/">All Image Tools</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

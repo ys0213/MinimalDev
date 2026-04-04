@@ -153,12 +153,36 @@ const faqJsonLd = {
         Privacy: this checker runs entirely in your browser. Your password is not stored or transmitted.
       </p>
     </div>
+
+    <section class="section">
+      <h2>When should you use this tool?</h2>
+      <p>
+        Use this checker when creating new accounts, updating passwords, or auditing existing credentials. 
+        It helps you understand whether your password is resistant to common attacks such as brute force or pattern-based guessing.
+      </p>
+
+      <h3>How to interpret results</h3>
+      <ul>
+        <li><strong>Score:</strong> A general strength indicator (0–100). Higher is better.</li>
+        <li><strong>Entropy:</strong> Represents unpredictability. Above ~60 bits is typically considered strong.</li>
+        <li><strong>Crack time:</strong> A rough estimate. Real-world security depends on system protections.</li>
+      </ul>
+    </section>
   </div>
 
   <div slot="how">
     <p class="note">
-      This checker scores a password using length, character diversity, repeated characters, sequences, keyboard-style runs,
-      and common weak-password patterns. It also estimates search space and rough guessing time under simplified assumptions.
+      This tool analyzes password strength based on length, character variety, and entropy estimation.
+    </p>
+
+    <ul>
+      <li><strong>Length:</strong> Longer passwords are harder to brute-force</li>
+      <li><strong>Character types:</strong> Uppercase, lowercase, numbers, symbols</li>
+      <li><strong>Entropy:</strong> Measures unpredictability</li>
+    </ul>
+
+    <p class="note">
+      <strong>How to interpret:</strong> A higher score indicates stronger resistance against guessing and brute-force attacks.
     </p>
   </div>
 

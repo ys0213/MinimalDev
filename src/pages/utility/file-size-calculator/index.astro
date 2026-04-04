@@ -233,18 +233,43 @@ const faqJsonLd = {
         Privacy: calculations run locally in your browser. No file-size data is stored or transmitted.
       </p>
     </div>
+
+    <section class="section">
+      <h2>How to use this result</h2>
+      <p>
+        The calculated total helps estimate storage requirements, upload limits, and transfer times.
+      </p>
+
+      <ul>
+        <li><strong>Decimal vs Binary:</strong> Storage devices use decimal, operating systems often show binary.</li>
+        <li><strong>Best-fit unit:</strong> Displays the most readable format (e.g. GB instead of MB).</li>
+        <li><strong>Exact bytes:</strong> Useful for technical calculations or API limits.</li>
+      </ul>
+    </section>
+    <section class="section">
+      <h2>Use cases</h2>
+      <ul>
+        <li>Estimating storage requirements</li>
+        <li>Checking upload size limits</li>
+        <li>Comparing file sizes across formats</li>
+      </ul>
+    </section>
   </div>
 
   <div slot="how">
     <p class="note">
-      This tool converts every row to bytes, multiplies by quantity, sums all rows, and then expresses the final total in multiple unit systems.
+      This tool calculates total file size based on input values and converts between units.
     </p>
+
     <ul>
-      <li><strong>Mixed units supported:</strong> MB, GB, TB, KiB, MiB, GiB, TiB, and bytes</li>
-      <li><strong>Quantity support:</strong> repeat the same file size across many files</li>
-      <li><strong>Detailed total:</strong> includes exact bytes plus decimal and binary interpretations</li>
-      <li><strong>Readable output:</strong> automatically highlights a best-fit unit for the total</li>
+      <li><strong>Input size:</strong> Base file size</li>
+      <li><strong>Unit conversion:</strong> KB, MB, GB</li>
+      <li><strong>Total size:</strong> Aggregated result</li>
     </ul>
+
+    <p class="note">
+      <strong>How to interpret:</strong> Use the result to estimate storage usage or upload limits.
+    </p>
   </div>
 
   <div slot="examples">

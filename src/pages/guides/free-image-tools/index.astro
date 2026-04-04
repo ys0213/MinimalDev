@@ -1,0 +1,111 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "What kind of image tasks can free tools handle?",
+    a: "Free tools are usually enough for compression, cropping, format conversion, and other focused one-step tasks.",
+  },
+  {
+    q: "Do I always need advanced desktop software?",
+    a: "No. Many simple image tasks are faster to complete with lightweight browser-based tools.",
+  },
+  {
+    q: "What is the main benefit of dedicated tools?",
+    a: "They solve one problem quickly without requiring a full editing workflow.",
+  },
+  {
+    q: "When should I choose a converter instead of an editor?",
+    a: "Choose a converter when your goal is only to change format, reduce size, or prepare a file for upload.",
+  },
+];
+
+const tools = [
+  { name: "Image Compressor", href: "/image-tools/image-compressor/" },
+  { name: "Image Cropper", href: "/image-tools/image-cropper/" },
+  { name: "PNG to JPG Converter", href: "/image-tools/png-to-jpg/" },
+  { name: "JPG to PNG Converter", href: "/image-tools/jpg-to-png/" },
+  { name: "JPG to WebP Converter", href: "/image-tools/jpg-to-webp/" },
+  { name: "WebP to JPG Converter", href: "/image-tools/webp-to-jpg/" },
+  { name: "Image to Base64", href: "/image-tools/image-to-base64/" },
+  { name: "Base64 to Image", href: "/image-tools/base64-to-image/" },
+];
+---
+
+<BaseLayout
+  title="Free Image Tools — MinimalDev"
+  description="A practical guide to free image tools for compression, cropping, conversion, and other common image workflows."
+  canonicalPath="/guides/free-image-tools/"
+>
+  <div class="container">
+    <h1 class="page-title">Free Image Tools</h1>
+    <p class="lead">
+      Free image tools are most useful when they solve one task quickly. Instead of opening heavy software for every edit, focused browser-based tools can compress a file, crop a screenshot, convert a format, or prepare an image for the web in only a few steps.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        Many users do not need a full desktop editor for every image task. In practice, the most common needs are much simpler: reduce file size, change PNG to JPG, convert JPG to WebP, crop an image for a banner, or create a Base64 version for development use. When the task is clear, a focused tool is often faster than a full editing application.
+      </p>
+      <p>
+        The value of free image tools is speed and convenience. Instead of navigating a complex editor, users can choose the exact function they need and finish quickly. This is especially useful for web publishing, content editing, store management, documentation, and lightweight development work.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Comparison</h2>
+      <ul>
+        <li><strong>Compression tools:</strong> best when file size is the main problem</li>
+        <li><strong>Crop tools:</strong> best when framing or composition is wrong</li>
+        <li><strong>Format converters:</strong> best when compatibility or delivery format is the issue</li>
+        <li><strong>Base64 tools:</strong> useful for developer workflows and inline assets</li>
+      </ul>
+      <p class="note">
+        The best tool depends on the problem. A converter is not a replacement for a cropper, and a compressor is not the same as a format optimizer.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Compress product photos before uploading them to an e-commerce page</li>
+        <li>Convert PNG to JPG for forms or systems that reject transparent images</li>
+        <li>Convert JPG to WebP to improve page speed and reduce bandwidth</li>
+        <li>Crop screenshots before using them in support docs or articles</li>
+        <li>Create Base64 image strings for development and testing workflows</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Recommended tools</h2>
+      <ul>
+        {tools.map((tool) => (
+          <li><a href={tool.href}>{tool.name}</a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides</h2>
+      <ul>
+        <li><a href="/guides/image-format-comparison/">PNG vs JPG vs WebP</a></li>
+        <li><a href="/guides/reduce-image-size/">How to Reduce Image Size</a></li>
+        <li><a href="/guides/why-use-webp/">Why Use WebP</a></li>
+        <li><a href="/guides/image-optimization-for-web/">Image Optimization for Web</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
