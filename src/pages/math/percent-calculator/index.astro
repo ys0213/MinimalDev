@@ -4,10 +4,13 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Percent Calculator",
   description:
-    "Calculate percent of a number (percentage). Useful for discounts, tax, tips, and quick math.",
+    "Calculate percent of a number instantly. Useful for discounts, tax, tips, and quick math.",
   href: "/math/percent-calculator/",
   order: 10,
 };
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/math/percent-calculator/";
 
 const faqs = [
   {
@@ -35,17 +38,42 @@ const faqs = [
     a: "No. Calculations run locally in your browser. Inputs are not stored or sent to a server.",
   },
 ];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 ---
 
 <ToolLayout
-  title="Percent Calculator — MinimalDev"
+  title={`Percent Calculator — ${SITE_NAME}`}
   description="Free percent calculator to find the percentage of a number instantly. Useful for discounts, tax, tips, and everyday math."
-  canonicalPath="/math/percent-calculator/"
+  canonicalPath={CANONICAL_PATH}
   h1="Percent Calculator"
   intro="Calculate the percent (percentage) of a number instantly. Common uses include discounts, tax, tips, and quick mental-math checks."
   faq={faqs}
   categoryName="Math"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Percent Calculator",
+    "description": "Calculate percentage of a number instantly. Easy tool for discounts, tax, and tips.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
+
+  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+    <strong>🔒 Privacy First:</strong> Everything is processed locally in your browser. <strong>Your data is never sent to our servers.</strong>
+  </div>
+
   <div slot="tool" data-tool="percent-calculator">
     <div class="form">
       <div class="field">
@@ -91,48 +119,46 @@ const faqs = [
       >
         Result will appear here.
       </div>
-
-      <div
-        class="note"
-        id="pc_sr_summary"
-        style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
-      ></div>
-
-      <p class="note" id="pc_help" style="margin-top:10px;">
-        Privacy: calculations run locally in your browser. No inputs are stored or sent to a server.
-      </p>
     </div>
   </div>
 
   <div slot="how">
     <p class="note">
-    This calculator finds a percentage of a number using a standard formula. Percent means “per 100”, so the calculation converts the percent into a decimal before multiplying.
+      This calculator finds a percentage of a number using a standard formula. Percent means “per 100”, so the calculation converts the percent into a decimal before multiplying.
     </p>
-
     <ul>
       <li><strong>Step 1:</strong> Convert percent to decimal → percent ÷ 100</li>
       <li><strong>Step 2:</strong> Multiply by the number</li>
       <li><strong>Formula:</strong> result = (percent ÷ 100) × number</li>
     </ul>
-
-    <p class="note">
-    <strong>Result interpretation:</strong><br>
-    The result represents a portion of the original value.  
-    For example, if the result is 30 from 200, it means 30 is the selected percentage of 200.
-    </p>
   </div>
+  
+  <div class="prose" style="margin-top:24px;">
+      <h2>Why Percentage Calculation Matters</h2>
+      <p>Understanding percentages is a fundamental mathematical skill used in almost every aspect of daily life, from personal finance and business accounting to academic research and everyday shopping. Whether you are calculating the final price after a discount, determining the appropriate gratuity for service, or analyzing statistical data, percentages provide a standardized way to compare values and understand parts of a whole.</p>
+      
+      <h2>How to Calculate Percentages Manually</h2>
+      <p>At its core, a percentage is a fraction of 100. To calculate the percentage of a number manually, you can follow these simple steps:</p>
+      <ul>
+        <li><strong>Step 1:</strong> Convert the percentage to a decimal by dividing it by 100. For instance, 15% becomes 0.15.</li>
+        <li><strong>Step 2:</strong> Multiply this decimal by the total number. If you want 15% of 200, you multiply 0.15 by 200, which equals 30.</li>
+      </ul>
+
+      <h2>Practical Real-World Applications</h2>
+      <p>Our Percent Calculator is designed to handle these common scenarios effortlessly:</p>
+      <ul>
+        <li><strong>Retail & Discounts:</strong> Quickly see how much you save during seasonal sales by applying percentage discounts to original prices.</li>
+        <li><strong>Taxation:</strong> Easily add local sales tax to your subtotal to determine the final purchase price of items or services.</li>
+        <li><strong>Personal Finance:</strong> Accurately calculate interest rates on savings accounts or commission earnings for sales roles.</li>
+        <li><strong>Tipping:</strong> Determine service gratuity in restaurants or hotels without any mental strain or guesswork.</li>
+      </ul>
+
+      <h2>Limitations and Precision</h2>
+      <p>While this tool is highly accurate for general use, it is important to note that very complex financial calculations or scientific research might require specialized software. For everyday math needs, this calculator ensures precision by handling decimals and large numbers with high accuracy, saving you time and preventing errors caused by manual calculations.</p>
+    </div>
 
   <div slot="examples">
-    <ul>
-      <li><strong>Discount:</strong> 15% of 200 = 30 → Final price = 200 − 30 = 170</li>
-      <li><strong>Tip:</strong> 10% of 50 = 5 → Tip = 5 → Total = 55</li>
-      <li><strong>Tax:</strong> 8% of 120 = 9.6 → Total = 129.6</li>
-      <li><strong>Commission:</strong> 5% of 1000 = 50 → Earnings = 50</li>
-    </ul>
-
-    <p class="note">
-    Example breakdown:
-    </p>
+    <p><strong>Example breakdown:</strong></p>
     <ul>
       <li>20% of 45 → (20 ÷ 100) × 45 = 9</li>
       <li>7.5% of 80 → (7.5 ÷ 100) × 80 = 6</li>
@@ -143,7 +169,7 @@ const faqs = [
     <ul>
       <li><a href="/math/percent-increase-calculator/">Percent Increase Calculator</a></li>
       <li><a href="/math/percent-decrease-calculator/">Percent Decrease Calculator</a></li>
-      <li><a href="/math/percentage-change-calculator/">Percentage Change Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/math/">All Math Tools</a></li>
     </ul>
   </div>
@@ -157,29 +183,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const clearBtn = document.getElementById("pc_clear");
   const outEl = document.getElementById("pc_result");
   const errEl = document.getElementById("pc_error");
-  const srEl = document.getElementById("pc_sr_summary");
 
-  if (!percentEl || !numberEl || !calcBtn || !clearBtn || !outEl || !errEl || !srEl) return;
+  if (!percentEl || !numberEl || !calcBtn || !clearBtn || !outEl || !errEl) return;
 
   function toNum(v) {
     const x = parseFloat(String(v));
     return Number.isFinite(x) ? x : NaN;
-  }
-
-  function clearError() {
-    percentEl.removeAttribute("aria-invalid");
-    numberEl.removeAttribute("aria-invalid");
-    errEl.textContent = "";
-  }
-
-  function setError(msg, which) {
-    errEl.textContent = msg;
-    if (which === "percent") percentEl.setAttribute("aria-invalid", "true");
-    if (which === "number") numberEl.setAttribute("aria-invalid", "true");
-    if (which === "both") {
-      percentEl.setAttribute("aria-invalid", "true");
-      numberEl.setAttribute("aria-invalid", "true");
-    }
   }
 
   function fmt(n) {
@@ -187,107 +196,31 @@ document.addEventListener("DOMContentLoaded", function () {
     return n.toLocaleString(undefined, { maximumFractionDigits: 10 });
   }
 
-  function compute(showEmptyAsPlaceholder) {
-    clearError();
+  function compute() {
+    errEl.textContent = "";
+    const p = toNum(percentEl.value);
+    const num = toNum(numberEl.value);
 
-    const pRaw = String(percentEl.value || "").trim();
-    const nRaw = String(numberEl.value || "").trim();
-
-    if (!pRaw || !nRaw) {
-      if (showEmptyAsPlaceholder) {
-        outEl.textContent = "Result will appear here.";
-      }
-      srEl.textContent = "";
-      return null;
-    }
-
-    const p = toNum(pRaw);
-    const num = toNum(nRaw);
-
-    if (!Number.isFinite(p)) {
-      setError("Please enter a valid percent.", "percent");
-      outEl.textContent = "Please fix the input above.";
-      srEl.textContent = "";
-      return null;
-    }
-
-    if (!Number.isFinite(num)) {
-      setError("Please enter a valid number.", "number");
-      outEl.textContent = "Please fix the input above.";
-      srEl.textContent = "";
-      return null;
-    }
-
-    if (Math.abs(p) > 1000000) {
-      setError("Percent is too large. Please enter a smaller value.", "percent");
-      outEl.textContent = "Please fix the input above.";
-      srEl.textContent = "";
-      return null;
-    }
-
-    if (Math.abs(num) > 1e15) {
-      setError("Number is too large. Please enter a smaller value.", "number");
-      outEl.textContent = "Please fix the input above.";
-      srEl.textContent = "";
-      return null;
+    if (isNaN(p) || isNaN(num)) {
+      outEl.textContent = "Please enter valid numbers.";
+      return;
     }
 
     const result = (p / 100) * num;
-
-    const absP = Math.abs(p);
-    let tag = "Result";
-    if (absP === 0) tag = "No change";
-    else if (absP < 5) tag = "Small percent";
-    else if (absP >= 25) tag = "Large percent";
-
-    outEl.innerHTML =
-      "<div style='display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;'>" +
-        "<strong>Percent of a number</strong>" +
-        "<span class='note' style='margin:0;'>" + tag + "</span>" +
-      "</div>" +
-      "<div style='margin-top:6px; font-size:18px; font-weight:700;'>" +
-        fmt(p) + "% of " + fmt(num) + " = " + fmt(result) +
-      "</div>" +
-      "<div class='note' style='margin-top:6px;'>" +
-        "Computed as (" + fmt(p) + " ÷ 100) × " + fmt(num) +
-      "</div>";
-
-    srEl.textContent =
-      fmt(p) + " percent of " + fmt(num) + " equals " + fmt(result) + ".";
-
-    return { p: p, num: num, result: result };
+    outEl.innerHTML = `
+      <div style='font-size:16px;'>
+        <strong>${fmt(p)}% of ${fmt(num)} = ${fmt(result)}</strong>
+      </div>
+      <div class='note' style='margin-top:8px;'>
+        Formula: (${fmt(p)} ÷ 100) × ${fmt(num)} = ${fmt(result)}
+      </div>`;
   }
 
-  calcBtn.addEventListener("click", function () {
-    const r = compute(false);
-    if (!r) {
-      if (percentEl.getAttribute("aria-invalid") === "true") {
-        percentEl.focus();
-      } else if (numberEl.getAttribute("aria-invalid") === "true") {
-        numberEl.focus();
-      } else {
-        outEl.textContent = "Please enter values to calculate.";
-      }
-    }
-  });
-
-  clearBtn.addEventListener("click", function () {
+  calcBtn.addEventListener("click", compute);
+  clearBtn.addEventListener("click", () => {
     percentEl.value = "";
     numberEl.value = "";
-    clearError();
     outEl.textContent = "Result will appear here.";
-    srEl.textContent = "";
-    percentEl.focus();
   });
-
-  percentEl.addEventListener("input", function () {
-    compute(true);
-  });
-
-  numberEl.addEventListener("input", function () {
-    compute(true);
-  });
-
-  clearError();
 });
 </script>

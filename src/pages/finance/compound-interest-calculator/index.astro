@@ -4,145 +4,136 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Compound Interest Calculator",
   description:
-    "Calculate compound interest with optional monthly contributions. Estimate future value, total contributions, and total interest over time.",
+    "Calculate compound interest with optional monthly contributions. Estimate future value, total contributions, and interest growth over time.",
   href: "/finance/compound-interest-calculator/",
   order: 30,
 };
 
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/compound-interest-calculator/";
+
 const faqs = [
   {
-    q: "Does this assume monthly compounding?",
-    a: "Yes. This calculator compounds monthly and optionally adds a contribution at the end of each month.",
+    q: "How does this calculator work?",
+    a: "It uses the compound interest formula, applying interest monthly on your balance and adding monthly contributions at the end of each period.",
   },
   {
-    q: "When are contributions added?",
-    a: "Monthly contributions are added at the end of each month, after interest is applied.",
+    q: "Is my investment data secure?",
+    a: "Yes. All calculations are performed locally within your browser. No financial data is ever transmitted or stored on our servers.",
   },
   {
-    q: "What does the final value represent?",
-    a: "Final value is the total investment amount after compounding, including both your contributions and earned interest.",
+    q: "Why does compound interest matter?",
+    a: "It allows your money to grow exponentially. Over time, the interest you earn begins to earn its own interest, accelerating your wealth accumulation.",
   },
   {
-    q: "Why is long-term growth so large?",
-    a: "Because compound interest grows exponentially over time. The longer the period, the more interest earns additional interest.",
-  },
-  {
-    q: "Does this include inflation or taxes?",
-    a: "No. This is a simplified projection. Real-world returns may differ due to inflation, taxes, and fees.",
-  },
-  {
-    q: "Is my data stored?",
-    a: "No. All calculations run locally in your browser.",
-  },
+    q: "Does this account for taxes and inflation?",
+    a: "No. This tool provides a mathematical projection. Actual results will vary based on market conditions, tax laws, and inflation.",
+  }
 ];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 ---
 
 <ToolLayout
-  title="Compound Interest Calculator — MinimalDev"
+  title={`Compound Interest Calculator — ${SITE_NAME}`}
   description="Estimate compound interest growth with optional monthly contributions. See future value, total contributions, and interest breakdown."
-  canonicalPath="/finance/compound-interest-calculator/"
+  canonicalPath={CANONICAL_PATH}
   h1="Compound Interest Calculator"
-  intro="Estimate how your money grows over time using compound interest, with optional monthly contributions."
+  intro="Estimate how your money grows over time using compound interest, with optional monthly contributions for a clearer financial projection."
   faq={faqs}
   categoryName="Finance"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Compound Interest Calculator",
+    "description": "Financial tool to calculate compound interest growth and future value of investments.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
+
+  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-bottom: 24px;">
+    <strong>🔒 Privacy & Security:</strong> This calculator runs entirely locally in your browser. <strong>Your financial inputs are never stored or sent to our servers.</strong>
+  </div>
+
   <div slot="tool" data-tool="compound-interest-calculator">
     <div class="form">
       <div class="field">
-        <label for="ci_principal">Initial investment</label>
+        <label for="ci_principal">Initial Investment ($)</label>
         <input id="ci_principal" type="number" inputmode="decimal" placeholder="e.g., 10000" />
       </div>
-
       <div class="field">
-        <label for="ci_rate">Annual interest rate (%)</label>
+        <label for="ci_rate">Annual Interest Rate (%)</label>
         <input id="ci_rate" type="number" inputmode="decimal" placeholder="e.g., 7" />
-        <p class="note" style="margin-top:6px;">
-          Expected annual return. Compounded monthly.
-        </p>
       </div>
-
       <div class="field">
-        <label for="ci_years">Investment period (years)</label>
+        <label for="ci_years">Investment Period (Years)</label>
         <input id="ci_years" type="number" inputmode="numeric" placeholder="e.g., 10" />
       </div>
-
       <div class="field">
-        <label for="ci_monthly">Monthly contribution (optional)</label>
+        <label for="ci_monthly">Monthly Contribution ($)</label>
         <input id="ci_monthly" type="number" inputmode="decimal" placeholder="e.g., 200" />
-        <p class="note" style="margin-top:6px;">
-          Added at the end of each month.
-        </p>
       </div>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <div style="display:flex; gap:10px; margin-top:10px;">
         <button id="ci_calc" class="btn" type="button">Calculate</button>
         <button id="ci_clear" class="btn secondary" type="button">Clear</button>
       </div>
 
-      <div id="ci_summary" class="result" style="margin-top:12px;">Result will appear here.</div>
+      <div id="ci_summary" class="result" style="margin-top:20px; padding:15px; background:#f9fafb;">Result will appear here.</div>
 
-      <div style="margin-top:16px; overflow:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:14px;">
-          <thead>
+      <div style="margin-top:20px; overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:right;">
+          <thead style="border-bottom: 2px solid #e5e7eb;">
             <tr>
-              <th>Year</th>
-              <th>Total value</th>
-              <th>Total contributions</th>
-              <th>Total interest</th>
+              <th style="padding: 8px;">Year</th>
+              <th style="padding: 8px;">Total Value</th>
+              <th style="padding: 8px;">Contributions</th>
+              <th style="padding: 8px;">Interest</th>
             </tr>
           </thead>
           <tbody id="ci_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" style="margin-top:10px;">
-        Informational only. Estimates do not include inflation, taxes, or fees.
-      </p>
     </div>
   </div>
 
-  <!-- 강화된 How -->
-  <div slot="how">
-    <p class="note">
-      Compound interest means your investment earns interest not only on the original amount but also on previously earned interest.
-    </p>
-
-    <p class="note">
-      This tool simulates growth month by month using a monthly rate (annual rate ÷ 12) and optionally adds contributions at the end of each month.
-    </p>
-
-    <p class="note">
-      <strong>How to interpret results:</strong><br/>
-      - Final value: total accumulated amount<br/>
-      - Total contributions: how much you invested<br/>
-      - Total interest: growth generated by compounding
-    </p>
-
-    <p class="note">
-      Over time, interest becomes a larger portion of total growth. This is why long-term investing significantly increases returns.
-    </p>
-  </div>
-
-  <!-- 강화된 Examples -->
-  <div slot="examples">
+  <div class="prose" style="margin-top:40px;">
+    <h2>Understanding the Power of Compound Interest</h2>
+    <p>Compound interest is often referred to as the "eighth wonder of the world." Unlike simple interest, which is calculated only on the principal amount, compound interest is calculated on the principal <em>plus</em> any interest that has accumulated in previous periods. Over long time horizons, this leads to exponential growth, where your money effectively begins to work for you.</p>
+    
+    <h2>How We Calculate Your Projections</h2>
+    <p>Our tool uses a monthly compounding frequency, which is the industry standard for most savings and investment accounts. The process involves:</p>
     <ul>
-      <li><strong>Long-term investing:</strong> Compare 10 vs 30 years to see exponential growth.</li>
-      <li><strong>Monthly savings plan:</strong> Add a fixed monthly contribution to simulate regular investing.</li>
-      <li><strong>Goal planning:</strong> Estimate how much you need to invest to reach a target amount.</li>
+      <li><strong>Monthly Interest:</strong> Dividing your annual rate by 12 and applying it to your current balance each month.</li>
+      <li><strong>Periodic Contributions:</strong> If you add monthly contributions, they are added to your balance at the end of each month, immediately beginning to compound in the following cycle.</li>
     </ul>
 
-    <p class="note"><strong>Example:</strong></p>
+    <h2>Strategic Tips for Long-Term Wealth</h2>
     <ul>
-      <li>$10,000 at 7% for 10 years → grows to about $19,671</li>
-      <li>$10,000 + $200/month → significantly higher due to contributions</li>
+      <li><strong>Start Early:</strong> Time is your greatest asset. Even small amounts compounded over decades can grow significantly compared to larger amounts invested for a shorter period.</li>
+      <li><strong>Consistency Matters:</strong> Regular monthly contributions significantly alter the growth curve by increasing the principal base upon which interest is earned.</li>
+      <li><strong>Manage Expectations:</strong> While our calculator provides an optimistic mathematical projection, real-world investing involves volatility, fees, and taxes that are not included here. Always consult a financial advisor for personalized planning.</li>
     </ul>
   </div>
 
   <div slot="related">
+    <h3>Related Finance Calculators</h3>
     <ul>
       <li><a href="/finance/savings-calculator/">Savings Calculator</a></li>
       <li><a href="/finance/investment-calculator/">Investment Calculator</a></li>
       <li><a href="/finance/simple-interest-calculator/">Simple Interest Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>
@@ -159,90 +150,50 @@ document.addEventListener("DOMContentLoaded", function () {
   const summaryEl = document.getElementById("ci_summary");
   const tbodyEl = document.getElementById("ci_tbody");
 
-  if (!principalEl || !rateEl || !yearsEl || !monthlyEl || !calcBtn || !clearBtn || !summaryEl || !tbodyEl) return;
-
-  function toNum(v) {
-    const x = parseFloat(String(v));
-    return isFinite(x) ? x : NaN;
-  }
+  if (!principalEl || !rateEl || !yearsEl || !monthlyEl || !calcBtn) return;
 
   function money(v) {
-    if (!isFinite(v)) return "$0.00";
-    return v.toLocaleString(undefined, { style: "currency", currency: "USD" });
+    return v.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   }
 
   calcBtn.addEventListener("click", function () {
-    const P0 = toNum(principalEl.value);
-    const annualPct = toNum(rateEl.value);
-    const years = toNum(yearsEl.value);
-    const monthly = String(monthlyEl.value).trim() === "" ? 0 : toNum(monthlyEl.value);
+    const P = parseFloat(principalEl.value) || 0;
+    const annualRate = (parseFloat(rateEl.value) || 0) / 100;
+    const years = parseFloat(yearsEl.value) || 0;
+    const monthlyContrib = parseFloat(monthlyEl.value) || 0;
 
-    if (!isFinite(P0) || P0 < 0) {
-      summaryEl.textContent = "Please enter a valid initial investment (>= 0).";
-      tbodyEl.innerHTML = "";
-      return;
-    }
-    if (!isFinite(annualPct) || annualPct < 0) {
-      summaryEl.textContent = "Please enter a valid annual rate (>= 0).";
-      tbodyEl.innerHTML = "";
-      return;
-    }
-    if (!isFinite(years) || years <= 0) {
-      summaryEl.textContent = "Please enter a valid investment period in years (> 0).";
-      tbodyEl.innerHTML = "";
-      return;
-    }
-    if (!isFinite(monthly) || monthly < 0) {
-      summaryEl.textContent = "Please enter a valid monthly contribution (>= 0).";
-      tbodyEl.innerHTML = "";
-      return;
-    }
-
-    const totalMonths = Math.round(years * 12);
-    const r = (annualPct / 100) / 12;
-
-    let balance = P0;
-    let totalContrib = P0;
+    let balance = P;
+    let totalContrib = P;
     let totalInterest = 0;
+    let rows = "";
 
     tbodyEl.innerHTML = "";
-
-    for (let month = 1; month <= totalMonths; month++) {
-      if (r !== 0) balance = balance * (1 + r);
-
-      if (monthly > 0) {
-        balance += monthly;
-        totalContrib += monthly;
-      }
-
-      if (month % 12 === 0 || month === totalMonths) {
-        const year = Math.ceil(month / 12);
+    
+    for (let m = 1; m <= years * 12; m++) {
+      balance = balance * (1 + annualRate / 12) + monthlyContrib;
+      totalContrib += monthlyContrib;
+      
+      if (m % 12 === 0) {
         totalInterest = balance - totalContrib;
-
-        const row =
-          "<tr>" +
-            "<td>" + year + "</td>" +
-            "<td>" + money(balance) + "</td>" +
-            "<td>" + money(totalContrib) + "</td>" +
-            "<td>" + money(totalInterest) + "</td>" +
-          "</tr>";
-        tbodyEl.insertAdjacentHTML("beforeend", row);
+        rows += `<tr>
+          <td style="padding: 8px;">${m / 12}</td>
+          <td style="padding: 8px;">${money(balance)}</td>
+          <td style="padding: 8px;">${money(totalContrib)}</td>
+          <td style="padding: 8px;">${money(totalInterest)}</td>
+        </tr>`;
       }
     }
-
-    totalInterest = balance - totalContrib;
-
-    summaryEl.innerHTML =
-      "<strong>Final value:</strong> " + money(balance) + "<br/>" +
-      "<strong>Total contributions:</strong> " + money(totalContrib) + "<br/>" +
-      "<strong>Total interest earned:</strong> " + money(totalInterest);
+    
+    tbodyEl.innerHTML = rows;
+    summaryEl.innerHTML = `
+      <div style="font-size:1.1em;">
+        <strong>Final Balance:</strong> ${money(balance)}<br/>
+        <strong>Total Interest Earned:</strong> ${money(balance - totalContrib)}
+      </div>`;
   });
 
-  clearBtn.addEventListener("click", function () {
-    principalEl.value = "";
-    rateEl.value = "";
-    yearsEl.value = "";
-    monthlyEl.value = "";
+  clearBtn.addEventListener("click", () => {
+    [principalEl, rateEl, yearsEl, monthlyEl].forEach(el => el.value = "");
     summaryEl.textContent = "Result will appear here.";
     tbodyEl.innerHTML = "";
   });

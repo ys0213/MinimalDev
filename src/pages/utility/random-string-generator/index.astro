@@ -15,23 +15,35 @@ const CANONICAL_PATH = "/utility/random-string-generator/";
 const faqs = [
   {
     q: "Is this random string generator secure?",
-    a: "It uses your browser’s cryptographically secure random number generator (crypto.getRandomValues) when available, which is suitable for tokens and identifiers.",
+    a: "It uses your browser’s cryptographically secure random number generator, crypto.getRandomValues, when available. That makes it suitable for tokens, identifiers, and non-human-facing random strings.",
   },
   {
     q: "What is the difference between a random string and a password?",
-    a: "A random string is a general-purpose token/identifier. A password generator often adds UX like guaranteed character inclusion and may target human entry. Both can be strong if long and random.",
+    a: "A random string is a general-purpose token or identifier. A password generator usually includes human-usage rules such as guaranteed symbols or memorable patterns. Both can be strong if they are long and random enough.",
   },
   {
     q: "Can I generate URL-safe strings?",
-    a: "Yes. Use the URL-safe preset (A–Z, a–z, 0–9, - and _).",
+    a: "Yes. Use the URL-safe preset with letters, digits, hyphen, and underscore.",
   },
   {
     q: "Are duplicates possible?",
-    a: "Yes. Randomness means repeats can occur, especially with short lengths or small character sets.",
+    a: "Yes. Randomness means duplicates can happen, especially with short strings or small character sets.",
   },
   {
     q: "Is any data stored or sent to a server?",
     a: "No. Everything runs locally in your browser.",
+  },
+  {
+    q: "What length should I choose?",
+    a: "That depends on the purpose. Short values can work for temporary labels, but tokens and identifiers usually benefit from longer lengths and larger character sets.",
+  },
+  {
+    q: "Why would I use a custom character set?",
+    a: "Custom sets are useful when a system only allows certain characters, such as uppercase letters only, digits only, or a restricted token format.",
+  },
+  {
+    q: "Does URL-safe mean the same as Base64?",
+    a: "Not exactly. URL-safe strings may use a similar character set, but they are not automatically Base64 unless they are produced by a Base64 encoding process.",
   },
 ];
 
@@ -44,20 +56,40 @@ const faqJsonLd = {
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
 };
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Random String Generator",
+  description:
+    "Generate secure random strings online with configurable length, count, and character sets.",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
 ---
 
 <ToolLayout
   title={`Random String Generator — ${SITE_NAME}`}
-  description="Generate random strings locally using cryptographically secure randomness. Choose length, count, and character sets (URL-safe, base64-like, hex, custom). Includes validation, result cards, accessibility, and FAQ schema."
+  description="Generate random strings locally using cryptographically secure randomness. Choose length, count, and character sets including URL-safe, hex, digits, letters, and custom."
   canonicalPath={CANONICAL_PATH}
   h1="Random String Generator"
-  intro="Generate random strings for tokens, IDs, test data, and one-time codes. Choose length, count, and character sets (including URL-safe)."
+  intro="Generate random strings for tokens, IDs, test data, one-time codes, and URL-safe values. Choose length, count, and character presets or define your own set."
   faq={faqs}
   categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
 
   <div slot="tool" data-tool="random-string-generator">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> All generation happens locally in your browser.
+      <strong>Your inputs are never sent to our servers.</strong>
+    </div>
+
     <div class="form" role="form" aria-describedby="rs_privacy rs_help">
       <div class="field">
         <label for="rs_preset">Character preset</label>
@@ -71,7 +103,7 @@ const faqJsonLd = {
           <option value="custom">Custom</option>
         </select>
         <p class="note" id="rs_help" style="margin-top:6px;">
-          For query params and URLs, prefer the URL-safe preset.
+          For query parameters, signed links, and public URLs, prefer the URL-safe preset.
         </p>
       </div>
 
@@ -86,7 +118,7 @@ const faqJsonLd = {
           spellcheck="false"
         />
         <p class="note" style="margin-top:6px;">
-          Duplicate characters are removed automatically. At least 2 unique characters recommended.
+          Duplicate characters are removed automatically. At least 2 unique characters are recommended.
         </p>
       </div>
 
@@ -106,7 +138,7 @@ const faqJsonLd = {
           Try to avoid duplicates (best-effort)
         </label>
         <p class="note" style="margin-top:6px;">
-          Uniqueness is not guaranteed. Best-effort works well for small counts.
+          Uniqueness is not guaranteed. Best-effort works well for small counts and reasonable lengths.
         </p>
       </div>
 
@@ -143,17 +175,83 @@ const faqJsonLd = {
 
   <div slot="how">
     <ul>
-      <li>Select a character set (preset or custom).</li>
-      <li>Set length and count.</li>
-      <li>The generator draws random indices from the character set and builds each string.</li>
+      <li>Select a character set using a preset or your own custom list.</li>
+      <li>Choose the length and number of strings to generate.</li>
+      <li>The generator draws random indices from the chosen character set and builds each output string.</li>
     </ul>
+
+    <div class="prose" style="margin-top:20px;">
+      <h2>What a Random String Generator Is For</h2>
+      <p>
+        A random string generator creates strings from a chosen set of characters using random selection.
+        These strings are useful in many practical technical workflows, including token creation, short identifiers,
+        test data generation, temporary codes, and internal references.
+      </p>
+
+      <p>
+        The most important decision is not only the length, but also the character set.
+        A short string using only digits has far fewer possible combinations than a longer string using uppercase letters,
+        lowercase letters, numbers, and special characters. In other words, randomness quality depends on both length and variety.
+      </p>
+
+      <h2>Random String vs Password</h2>
+      <p>
+        People often confuse random strings with passwords. They overlap, but they are not always the same thing.
+        A password usually needs to be entered by a human and may require special UX rules such as at least one uppercase letter,
+        one number, or one symbol. A random string is more general. It is often used by systems rather than people, which means
+        readability is less important than unpredictability and format compatibility.
+      </p>
+
+      <h2>Why URL-Safe Output Matters</h2>
+      <p>
+        Some random strings are placed into URLs, query parameters, or public links. In those cases, characters such as
+        <code>+</code>, <code>/</code>, or spaces can create problems or require additional escaping.
+        That is why URL-safe strings are useful. They limit the character set to values that work cleanly in links,
+        usually letters, digits, hyphen, and underscore.
+      </p>
+
+      <h2>Real-World Use Cases</h2>
+      <ul>
+        <li><strong>Temporary tokens:</strong> Generate session-like values or invitation codes for internal tools</li>
+        <li><strong>Testing:</strong> Create random sample data for forms, mock APIs, or QA workflows</li>
+        <li><strong>Identifiers:</strong> Produce lightweight IDs where a UUID format is not necessary</li>
+        <li><strong>URL parameters:</strong> Create link-safe strings for public links and short-lived references</li>
+      </ul>
+
+      <h2>How to Interpret the Results</h2>
+      <p>
+        Longer strings and larger character sets usually provide more possible combinations.
+        That makes collisions less likely and guessing more difficult. Short outputs or very small character sets,
+        such as digits only, are useful for simple codes but not ideal when unpredictability is critical.
+      </p>
+
+      <p>
+        This is also why duplicates can still happen. Random generation does not guarantee uniqueness on its own.
+        If uniqueness matters, you should combine enough length with enough character variety and, if needed,
+        add server-side uniqueness checks in your own system.
+      </p>
+
+      <h2>Why Local Generation Is Useful</h2>
+      <p>
+        This tool runs entirely in your browser. That matters when you want to generate tokens or internal values
+        without sending data to an external server. For development, privacy-sensitive workflows, or quick one-off tasks,
+        local generation is often the safest and fastest option.
+      </p>
+    </div>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>URL-safe</strong>, length 32 → tokens for links and query params</li>
-      <li><strong>Hex</strong>, length 24 → IDs similar to some database object IDs</li>
-      <li><strong>Digits</strong>, length 6 → one-time codes (not SMS delivery)</li>
+      <li><strong>URL-safe</strong>, length 32 → tokens for links and query parameters</li>
+      <li><strong>Hex</strong>, length 24 → identifiers similar to compact hex-based IDs</li>
+      <li><strong>Digits</strong>, length 6 → simple one-time style numeric codes</li>
+    </ul>
+
+    <p class="note"><strong>Practical examples:</strong></p>
+    <ul>
+      <li>Generate multiple alphanumeric strings for seeded demo data</li>
+      <li>Create a custom restricted character set for systems that only allow certain characters</li>
+      <li>Use URL-safe output when a token will appear directly inside a link</li>
     </ul>
   </div>
 
@@ -161,7 +259,10 @@ const faqJsonLd = {
     <ul>
       <li><a href="/utility/password-generator/">Password Generator</a></li>
       <li><a href="/utility/uuid-generator/">UUID Generator</a></li>
-      <li><a href="/utility/random-number-generator/">Random Number Generator</a></li>
+      <li><a href="/utility/json-formatter/">JSON Formatter</a></li>
+      <li><a href="/utility/base64/">Base64 Encoder / Decoder</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/utility/">All Utility Tools</a></li>
     </ul>
   </div>
@@ -183,7 +284,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const cardsEl = document.getElementById("rs_cards");
   const outEl = document.getElementById("rs_out");
 
-  if (!presetEl || !customWrap || !customEl || !lenEl || !countEl || !uniqueEl || !genBtn || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl) return;
+  if (
+    !presetEl || !customWrap || !customEl || !lenEl || !countEl || !uniqueEl ||
+    !genBtn || !copyBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl
+  ) return;
 
   const PRESETS = {
     alnum: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -198,16 +302,19 @@ document.addEventListener("DOMContentLoaded", function () {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
+
   function showError(msg) {
     errEl.style.display = "block";
     errEl.textContent = msg;
   }
+
   function badge(text, kind) {
-    const border = kind === "warn"
-      ? "rgba(251,146,60,0.55)"
-      : kind === "good"
-      ? "rgba(34,197,94,0.55)"
-      : "rgba(255,255,255,0.2)";
+    const border =
+      kind === "warn"
+        ? "rgba(251,146,60,0.55)"
+        : kind === "good"
+        ? "rgba(34,197,94,0.55)"
+        : "rgba(255,255,255,0.2)";
     return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${text}</span>`;
   }
 
@@ -215,7 +322,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const seen = new Set();
     let out = "";
     for (const ch of String(s || "")) {
-      if (!seen.has(ch)) { seen.add(ch); out += ch; }
+      if (!seen.has(ch)) {
+        seen.add(ch);
+        out += ch;
+      }
     }
     return out;
   }
@@ -227,16 +337,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function secureRandomInt(maxExclusive) {
-    // maxExclusive must be <= 2^32
     if (!(maxExclusive > 0) || maxExclusive > 0x100000000) return NaN;
-    // Use rejection sampling to avoid modulo bias.
     const cryptoObj = globalThis.crypto;
     if (!cryptoObj || !cryptoObj.getRandomValues) return NaN;
 
-    const range = 0x100000000; // 2^32
+    const range = 0x100000000;
     const limit = range - (range % maxExclusive);
-
     const buf = new Uint32Array(1);
+
     while (true) {
       cryptoObj.getRandomValues(buf);
       const x = buf[0];
@@ -245,7 +353,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function pseudoRandomInt(maxExclusive) {
-    // Fallback: not cryptographically secure
     return Math.floor(Math.random() * maxExclusive);
   }
 
@@ -279,6 +386,7 @@ document.addEventListener("DOMContentLoaded", function () {
       summaryEl.textContent = "Result will appear here.";
       return;
     }
+
     if (!isFinite(count) || count < 1 || count > 50) {
       showError("Please enter a valid count (1–50).");
       summaryEl.textContent = "Result will appear here.";
@@ -292,7 +400,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Best-effort uniqueness: cap attempts so it doesn't hang with tiny char sets.
     const out = [];
     const seen = new Set();
     const maxAttempts = Math.max(2000, count * 200);
@@ -337,6 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function copyAll() {
     clearError();
     if (!outEl.value) return;
+
     try {
       await navigator.clipboard.writeText(outEl.value);
       summaryEl.innerHTML = "<strong>Copied.</strong>";
@@ -376,10 +484,10 @@ document.addEventListener("DOMContentLoaded", function () {
     clearAll();
   });
 
-  // Ctrl/Cmd+Enter to generate
   const keyHandler = function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generate();
   };
+
   document.getElementById("rs_out")?.addEventListener("keydown", keyHandler);
   document.getElementById("rs_custom")?.addEventListener("keydown", keyHandler);
   document.getElementById("rs_len")?.addEventListener("keydown", keyHandler);

@@ -68,7 +68,19 @@ const faqJsonLd = {
   categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "JSON Formatter",
+    "description": "Format, validate, and minify JSON online. Professional-grade JSON formatter for developers.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
 
+  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+    <strong>Privacy First:</strong> Everything is processed locally in your browser. <strong>Your data is never sent to our servers.</strong>
+  </div>
   <div slot="tool" data-tool="json-formatter">
     <div class="form" role="form" aria-describedby="jf_hint jf_privacy">
       <div class="field">
@@ -162,6 +174,71 @@ const faqJsonLd = {
       - Minified JSON → optimized for performance and transfer size
     </p>
   </div>
+  
+  <div class="prose" style="margin-top:16px;">
+    <h2>What is JSON and Why It Matters</h2>
+    <p>
+      JSON (JavaScript Object Notation) is a lightweight data format used for exchanging information between systems. It is widely used in APIs, web applications, configuration files, and modern backend services. Unlike XML, JSON is easier to read and write, making it the default format for most web-based data communication.
+    </p>
+
+    <p>
+      For developers, JSON is essential when working with REST APIs, frontend frameworks, or databases. However, raw JSON data is often difficult to read due to lack of formatting. This is where a JSON formatter becomes critical.
+    </p>
+
+    <h2>Pretty Print vs Minify: Key Differences</h2>
+    <p>
+      JSON data can be represented in two main ways depending on the use case: formatted (pretty) or minified.
+    </p>
+
+    <ul>
+      <li><strong>Pretty Print:</strong> Adds indentation and line breaks to improve readability. Ideal for debugging and development.</li>
+      <li><strong>Minify:</strong> Removes unnecessary whitespace to reduce file size. Best for production and network efficiency.</li>
+    </ul>
+
+    <p>
+      The trade-off is simple: readability versus performance. During development, readability is more important. In production, smaller payload size improves load speed and reduces bandwidth usage.
+    </p>
+
+    <h2>Real-World Use Cases</h2>
+    <p>
+      Developers frequently encounter unformatted JSON when working with APIs. For example, when calling an API endpoint, the response is often returned as a single-line JSON string. This makes debugging difficult.
+    </p>
+
+    <p>
+      Using a formatter allows you to quickly convert that raw response into a structured format, making it easier to identify fields, nested objects, and data inconsistencies.
+    </p>
+
+    <ul>
+      <li><strong>API debugging:</strong> Inspect responses and detect missing or incorrect fields</li>
+      <li><strong>Configuration editing:</strong> Validate JSON before saving config files</li>
+      <li><strong>Performance optimization:</strong> Minify JSON before sending it over the network</li>
+    </ul>
+
+    <h2>Common JSON Errors Explained</h2>
+    <p>
+      Many JSON validation errors come from small syntax mistakes. Understanding these can save significant debugging time.
+    </p>
+
+    <ul>
+      <li>Trailing commas (e.g., <code>&#123;"name":"John",&#125;</code>)</li>
+      <li>Missing double quotes around keys</li>
+      <li>Using comments (JSON does not support comments)</li>
+      <li>Invalid values such as NaN or undefined</li>
+    </ul>
+
+    <p>
+      This tool helps identify these issues by pointing to the approximate location of the error, allowing you to fix problems quickly.
+    </p>
+
+    <h2>Why Use a Local JSON Formatter</h2>
+    <p>
+      Many online tools send your data to a server for processing. This can be a concern when working with sensitive information. This tool runs entirely in your browser, ensuring that your data never leaves your device.
+    </p>
+
+    <p>
+      This makes it suitable for handling API keys, private configurations, and any confidential JSON data without security risks.
+    </p>
+  </div>
 
   <div slot="examples">
     <ul>
@@ -183,6 +260,8 @@ const faqJsonLd = {
       <li><a href="/utility/base64/">Base64 Encoder / Decoder</a></li>
       <li><a href="/utility/url-encoder-decoder/">URL Encoder / Decoder</a></li>
       <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/utility/">All Utility Tools</a></li>
     </ul>
   </div>

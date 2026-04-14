@@ -19,19 +19,31 @@ const faqs = [
   },
   {
     q: "What is Base64 used for?",
-    a: "Base64 converts binary data into text so it can be safely included in places that expect plain text (e.g., JSON, URLs, HTML).",
+    a: "Base64 converts binary data into text so it can be safely included in places that expect plain text, such as JSON, HTML, URLs, or API payloads.",
   },
   {
     q: "Does Base64 encrypt data?",
-    a: "No. Base64 is not encryption. It is an encoding and can be reversed.",
+    a: "No. Base64 is not encryption. It is only an encoding method and can be reversed easily.",
   },
   {
     q: "What is URL-safe Base64?",
-    a: "URL-safe Base64 replaces '+' with '-' and '/' with '_' and often omits '=' padding so it can be used in URLs without escaping.",
+    a: "URL-safe Base64 replaces '+' with '-' and '/' with '_' and often omits '=' padding so it can be used in URLs without extra escaping.",
   },
   {
     q: "Can I encode files?",
-    a: "Yes. You can encode a file to Base64 and decode Base64 back to a file for download (as long as the browser can handle the size).",
+    a: "Yes. You can encode a file to Base64 and decode Base64 back to a file for download, as long as the browser can handle the file size.",
+  },
+  {
+    q: "Why would I use Base64 instead of plain text?",
+    a: "Base64 is useful when a system only accepts text but you need to transfer binary data such as images, documents, or attachments.",
+  },
+  {
+    q: "Can I decode Base64 back to normal text?",
+    a: "Yes. If the original input was text, decoding can recover readable text again. If the original input was binary data, you may need to download it as a file.",
+  },
+  {
+    q: "Is padding always required?",
+    a: "No. Some systems require '=' padding, while others use unpadded Base64, especially in URL-safe contexts.",
   },
 ];
 
@@ -44,20 +56,40 @@ const faqJsonLd = {
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
 };
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Base64 Encoder/Decoder",
+  description:
+    "Encode and decode Base64 online with support for text, files, URL-safe Base64, and local browser processing.",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
 ---
 
 <ToolLayout
   title={`Base64 Encoder/Decoder — ${SITE_NAME}`}
-  description="Encode/decode Base64 locally. Supports text and files, URL-safe Base64, UTF-8, validation, result cards, downloads, and automatic FAQ schema. No data is sent to a server."
+  description="Encode or decode Base64 locally in your browser. Supports text and files, URL-safe Base64, UTF-8, validation, downloads, and privacy-first local processing."
   canonicalPath={CANONICAL_PATH}
   h1="Base64 Encoder/Decoder"
-  intro="Encode text or files to Base64, or decode Base64 back to text/files. Runs locally in your browser with validation, URL-safe mode, and download options."
+  intro="Encode text or files to Base64, or decode Base64 back to text and downloadable files. Supports URL-safe mode, UTF-8 text handling, validation, and private local processing."
   faq={faqs}
   categoryName="Utilities"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
 
   <div slot="tool" data-tool="base64">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> Everything is processed locally in your browser.
+      <strong>Your data is never sent to our servers.</strong>
+    </div>
+
     <div class="form" role="form" aria-describedby="b64_privacy b64_help">
       <div class="field">
         <label for="b64_mode">Mode</label>
@@ -103,7 +135,7 @@ const faqJsonLd = {
             URL-safe Base64 (- and _)
           </label>
           <p class="note" style="margin-top:6px;">
-            In URL-safe mode, '+'→'-' and '/'→'_'.
+            In URL-safe mode, '+' becomes '-' and '/' becomes '_'.
           </p>
         </div>
 
@@ -165,26 +197,86 @@ const faqJsonLd = {
     <p class="note">
       Base64 is an encoding that converts bytes into ASCII characters. It is reversible and not encryption.
     </p>
+
     <ul>
       <li><strong>Encode:</strong> bytes → Base64 text</li>
       <li><strong>Decode:</strong> Base64 text → bytes (or text if it was text originally)</li>
       <li><strong>URL-safe:</strong> uses '-' and '_' instead of '+' and '/'</li>
     </ul>
+
+    <div class="prose" style="margin-top:20px;">
+      <h2>What Base64 Is Used For</h2>
+      <p>
+        Base64 is used when binary data needs to travel through a system that expects plain text.
+        This happens often in web development, APIs, email systems, authentication tokens, and file transport.
+        For example, an image or PDF cannot be pasted directly into JSON as raw bytes, but it can be converted into a Base64 string and safely transferred as text.
+      </p>
+
+      <p>
+        That does not mean Base64 is always the best option. Encoding increases size because binary data becomes a longer text representation.
+        In many practical cases, the encoded result is around one-third larger than the original binary data.
+        Base64 is useful for compatibility, not for compression.
+      </p>
+
+      <h2>Base64 vs Encryption</h2>
+      <p>
+        One of the most common misunderstandings is treating Base64 as a security feature.
+        Base64 does not protect data. It does not hide meaning in a secure way, and anyone can reverse it using the same decoding process.
+        If you need confidentiality, you need encryption. If you need safe text transport, Base64 is the correct tool.
+      </p>
+
+      <h2>When URL-Safe Base64 Matters</h2>
+      <p>
+        Standard Base64 includes the characters <code>+</code> and <code>/</code>, which are not always convenient inside URLs or query parameters.
+        URL-safe Base64 replaces those characters with <code>-</code> and <code>_</code>. Some systems also remove the trailing <code>=</code> padding.
+        This is common in tokens, signed URLs, and some authentication flows.
+      </p>
+
+      <h2>Real-World Use Cases</h2>
+      <ul>
+        <li><strong>Embedding data:</strong> Convert small binary assets to text for transport in JSON or HTML</li>
+        <li><strong>API workflows:</strong> Send file contents through systems that only accept text payloads</li>
+        <li><strong>Debugging:</strong> Inspect whether a Base64 string decodes to readable text or binary data</li>
+        <li><strong>URL tokens:</strong> Use URL-safe Base64 for values placed inside links or query strings</li>
+      </ul>
+
+      <h2>How to Interpret Results</h2>
+      <p>
+        If you encode plain text, the output should be a Base64 string that can later be reversed to the same text.
+        If you decode Base64 and the output appears readable, the original data was likely text.
+        If the decoded output is not readable, it may represent a file or binary content instead.
+        In that case, downloading the decoded bytes as a file is usually the correct next step.
+      </p>
+
+      <p>
+        This tool is especially useful because it runs locally in the browser. That matters for privacy-sensitive data such as tokens,
+        configuration strings, private API samples, or internal files that should not be uploaded to a third-party server.
+      </p>
+    </div>
   </div>
 
   <div slot="examples">
     <ul>
       <li><strong>Encode:</strong> "hello" → aGVsbG8=</li>
       <li><strong>Decode:</strong> aGVsbG8= → "hello"</li>
-      <li><strong>URL-safe:</strong> replace '+'/'/' with '-'/'_' (and optionally remove '=')</li>
+      <li><strong>URL-safe:</strong> replace '+' and '/' with '-' and '_' (and optionally remove '=')</li>
+    </ul>
+
+    <p class="note"><strong>Practical examples:</strong></p>
+    <ul>
+      <li>Convert a short text sample into Base64 before placing it into a JSON field</li>
+      <li>Decode a token or payload you received from an API for debugging</li>
+      <li>Recover an uploaded file from a Base64 string and download it again as binary data</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/utility/url-encoder-decoder/">URL Encoder / Decoder</a></li>
       <li><a href="/utility/json-formatter/">JSON Formatter</a></li>
+      <li><a href="/utility/url-encoder-decoder/">URL Encoder / Decoder</a></li>
       <li><a href="/utility/random-string-generator/">Random String Generator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/utility/">All Utility Tools</a></li>
     </ul>
   </div>
@@ -210,21 +302,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const cardsEl = document.getElementById("b64_cards");
   const outEl = document.getElementById("b64_output");
 
-  if (!modeEl || !inputEl || !fileEl || !fileRowEl || !urlSafeEl || !paddingEl || !charsetEl ||
-      !runBtn || !copyBtn || !dlBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl) return;
+  if (
+    !modeEl || !inputEl || !fileEl || !fileRowEl || !urlSafeEl || !paddingEl || !charsetEl ||
+    !runBtn || !copyBtn || !dlBtn || !clearBtn || !errEl || !summaryEl || !cardsEl || !outEl
+  ) return;
 
-  let latestBytes = null; // Uint8Array
-  let latestFilename = null; // string
+  let latestBytes = null;
+  let latestFilename = null;
   let latestMime = "application/octet-stream";
 
   function clearError() {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
+
   function showError(msg) {
     errEl.style.display = "block";
     errEl.textContent = msg;
   }
+
   function escapeHtml(str) {
     return String(str)
       .replaceAll("&", "&amp;")
@@ -233,17 +329,19 @@ document.addEventListener("DOMContentLoaded", function () {
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
+
   function badge(text, kind) {
     const border =
-      kind === "good" ? "rgba(34,197,94,0.55)" :
-      kind === "warn" ? "rgba(251,146,60,0.55)" :
-      "rgba(255,255,255,0.2)";
+      kind === "good"
+        ? "rgba(34,197,94,0.55)"
+        : kind === "warn"
+        ? "rgba(251,146,60,0.55)"
+        : "rgba(255,255,255,0.2)";
     return `<span style="display:inline-block; padding:2px 10px; border-radius:999px; border:1px solid ${border}; font-size:12px; font-weight:900;">${escapeHtml(text)}</span>`;
   }
 
   function setModeUI() {
     const mode = String(modeEl.value);
-    // file input only meaningful in encode mode; still allow decode-to-file download without selecting file
     fileRowEl.style.display = mode === "encode" ? "block" : "none";
     dlBtn.disabled = mode !== "decode";
     dlBtn.setAttribute("aria-disabled", mode !== "decode" ? "true" : "false");
@@ -259,7 +357,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function bytesToBase64(bytes) {
-    // Convert bytes -> binary string in chunks to avoid call stack / argument limits.
     let bin = "";
     const chunk = 0x8000;
     for (let i = 0; i < bytes.length; i += chunk) {
@@ -284,7 +381,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function fromUrlSafe(b64) {
     let s = String(b64).replace(/-/g, "+").replace(/_/g, "/");
-    // pad to length multiple of 4
     const mod = s.length % 4;
     if (mod === 2) s += "==";
     else if (mod === 3) s += "=";
@@ -293,7 +389,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function normalizeB64Input(s) {
-    // Remove whitespace (newlines/spaces/tabs)
     return String(s ?? "").replace(/\s+/g, "").trim();
   }
 
@@ -303,17 +398,15 @@ document.addEventListener("DOMContentLoaded", function () {
       for (let i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
       return out;
     }
-    // UTF-8
+
     try {
       return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     } catch (e) {
-      // If invalid UTF-8, show a clear message.
       throw new Error("Decoded bytes are not valid UTF-8 text. Switch to Latin-1 or download as a file.");
     }
   }
 
   function guessMimeFromBytes(bytes) {
-    // minimal magic number sniff (best-effort)
     if (!bytes || bytes.length < 4) return "application/octet-stream";
     const b0 = bytes[0], b1 = bytes[1], b2 = bytes[2], b3 = bytes[3];
 
@@ -329,9 +422,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const { mode, inLen, outLen, urlSafe, keepPad, bytesLen, mimeHint, noteBadge } = opts;
 
     const safety =
-      bytesLen > 5_000_000 ? { t: "Large output", k: "warn" } :
-      bytesLen > 500_000 ? { t: "Medium output", k: "neutral" } :
-      { t: "Small output", k: "good" };
+      bytesLen > 5_000_000
+        ? { t: "Large output", k: "warn" }
+        : bytesLen > 500_000
+        ? { t: "Medium output", k: "neutral" }
+        : { t: "Small output", k: "good" };
 
     cardsEl.style.display = "block";
     cardsEl.innerHTML = `
@@ -389,6 +484,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let bytes;
         let srcLabel = "Text";
+
         if (file) {
           bytes = await readFileAsBytes(file);
           srcLabel = `File: ${file.name}`;
@@ -398,7 +494,6 @@ document.addEventListener("DOMContentLoaded", function () {
           bytes = new TextEncoder().encode(txt);
         }
 
-        // Convert to Base64
         let b64 = bytesToBase64(bytes);
         if (urlSafe) b64 = toUrlSafe(b64, keepPad);
         else if (!keepPad) b64 = b64.replace(/=+$/g, "");
@@ -423,34 +518,28 @@ document.addEventListener("DOMContentLoaded", function () {
           noteBadge: file ? { text: "Binary → Base64", kind: "neutral" } : { text: "UTF-8 text", kind: "neutral" }
         });
 
-        // no decoded file available in encode mode
         latestBytes = null;
         latestFilename = null;
         latestMime = "application/octet-stream";
         return;
       }
 
-      // decode
       const raw = normalizeB64Input(inputEl.value);
       if (!raw) throw new Error("Please paste Base64 input to decode.");
 
-      // Convert URL-safe to standard if needed (and also tolerate URL-safe even if checkbox is off)
       let b64 = raw;
       const maybeUrlSafe = /[-_]/.test(b64) && !/[+/]/.test(b64);
       const useUrlSafe = urlSafe || maybeUrlSafe;
 
       if (useUrlSafe) b64 = fromUrlSafe(b64);
 
-      // If padding unchecked, still allow: ensure padding exists
       if (!/={0,2}$/.test(b64)) {
-        // add padding if missing and needed
         const mod = b64.length % 4;
         if (mod === 2) b64 += "==";
         else if (mod === 3) b64 += "=";
         else if (mod === 1) throw new Error("Invalid Base64 length.");
       }
 
-      // Validate character set
       if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) {
         throw new Error("Invalid Base64 characters detected.");
       }
@@ -459,15 +548,14 @@ document.addEventListener("DOMContentLoaded", function () {
       latestBytes = bytes;
       latestMime = guessMimeFromBytes(bytes);
 
-      // Try to decode as text for display
       let textOut = "";
       let textBadge = null;
+
       try {
         textOut = decodeBytesToText(bytes, charset);
         outEl.value = textOut;
         textBadge = { text: charset === "latin1" ? "Latin-1 text" : "UTF-8 text", kind: "neutral" };
       } catch (e) {
-        // If not valid text, keep output empty but allow file download
         outEl.value = "";
         textBadge = { text: "Binary data", kind: "warn" };
         summaryEl.innerHTML = `
@@ -478,7 +566,6 @@ document.addEventListener("DOMContentLoaded", function () {
         `;
       }
 
-      // filename suggestion
       latestFilename = "decoded.bin";
       if (latestMime === "image/png") latestFilename = "decoded.png";
       else if (latestMime === "image/jpeg") latestFilename = "decoded.jpg";
@@ -515,7 +602,11 @@ document.addEventListener("DOMContentLoaded", function () {
   async function copyOutput() {
     clearError();
     const v = String(outEl.value ?? "");
-    if (!v) { showError("Nothing to copy."); return; }
+    if (!v) {
+      showError("Nothing to copy.");
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(v);
       summaryEl.innerHTML = "<strong>Copied.</strong> <span class='note'>Output copied to clipboard.</span>";
@@ -526,7 +617,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function downloadDecoded() {
     clearError();
-    if (!latestBytes || !latestBytes.length) { showError("Nothing to download. Decode Base64 first."); return; }
+    if (!latestBytes || !latestBytes.length) {
+      showError("Nothing to download. Decode Base64 first.");
+      return;
+    }
+
     const blob = new Blob([latestBytes], { type: latestMime || "application/octet-stream" });
     const a = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -550,7 +645,6 @@ document.addEventListener("DOMContentLoaded", function () {
     setModeUI();
   }
 
-  // Events
   modeEl.addEventListener("change", function () {
     setModeUI();
     clearError();
@@ -562,12 +656,10 @@ document.addEventListener("DOMContentLoaded", function () {
   dlBtn.addEventListener("click", downloadDecoded);
   clearBtn.addEventListener("click", clearAll);
 
-  // Keyboard accessibility: Ctrl/Cmd+Enter to run
   inputEl.addEventListener("keydown", function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run();
   });
 
-  // Initialize
   setModeUI();
   clearAll();
 });
