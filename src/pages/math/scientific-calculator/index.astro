@@ -40,6 +40,21 @@ const faqJsonLd = {
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
 };
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Scientific Calculator",
+  description:
+    "Free scientific calculator for arithmetic, powers, roots, trigonometric functions, logarithms, and constants.",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
 ---
 
 <ToolLayout
@@ -52,8 +67,16 @@ const faqJsonLd = {
   categoryName="Math"
 >
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
 
   <div slot="tool" data-tool="scientific-calculator">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> All calculations run locally in your browser.
+      <strong>Your expressions are never sent to any server.</strong>
+    </div>
     <div class="form" role="form" aria-describedby="sc_help sc_privacy">
       <div class="field">
         <label for="sc_expr">Expression</label>
@@ -148,11 +171,53 @@ const faqJsonLd = {
 
   <div slot="how">
     <p class="note">
-      Expressions are validated, converted into safe JavaScript math calls, and evaluated locally.
-      Trig functions use the selected angle mode. Example:
-      <br />
-      <strong>sin(30)</strong> in degree mode = <strong>0.5</strong>
+      This scientific calculator evaluates mathematical expressions locally in your browser. It supports arithmetic, parentheses, powers, roots, logarithms, trigonometric functions, absolute value, and constants such as pi and e.
     </p>
+
+    <p class="note">
+      Trigonometric functions depend on the selected angle mode:
+      <br />
+      <strong>Degrees:</strong> sin(30) = 0.5
+      <br />
+      <strong>Radians:</strong> sin(30) means 30 radians, which gives a different result
+    </p>
+
+    <div class="prose" style="margin-top:20px;">
+      <h2>What a Scientific Calculator Is Used For</h2>
+      <p>
+        A scientific calculator is designed for more advanced calculations than a basic calculator. Instead of only handling addition, subtraction, multiplication, and division, it also supports exponents, roots, logarithms, trigonometric functions, and grouped expressions with parentheses.
+      </p>
+
+      <p>
+        This makes it useful for algebra, geometry, trigonometry, engineering, finance, and general technical problem solving. It is especially helpful when an expression includes multiple operations that need to be evaluated in the correct mathematical order.
+      </p>
+
+      <h2>Why Expression Parsing Matters</h2>
+      <p>
+        Many scientific calculations are not single-step operations. For example, an expression such as <code>2^3 + sqrt(16)</code> combines exponentiation and roots in one line. A scientific calculator makes this easier by processing the expression as a whole rather than forcing users to calculate each step separately.
+      </p>
+
+      <p>
+        This also reduces manual mistakes. Parentheses, operator precedence, and function calls are handled in a more structured way, which makes the result more reliable than mental math or fragmented calculations.
+      </p>
+
+      <h2>Common Use Cases</h2>
+      <ul>
+        <li><strong>Math education:</strong> Evaluate expressions involving powers, roots, and logarithms</li>
+        <li><strong>Trigonometry:</strong> Calculate sin, cos, and tan in either degrees or radians</li>
+        <li><strong>Engineering and science:</strong> Work with constants such as pi and e in technical formulas</li>
+        <li><strong>Quick verification:</strong> Check homework, spreadsheet formulas, or manual calculations</li>
+      </ul>
+
+      <h2>How to Interpret the Result</h2>
+      <p>
+        The displayed result is the evaluated numeric output of the full expression. The angle mode matters for trigonometric functions, and the rounding setting controls how many decimal places are shown. If you are comparing results with another calculator, make sure both are using the same trig mode and rounding rules.
+      </p>
+
+      <p>
+        This tool is intended for general-purpose mathematical calculation. It is useful for quick analysis and education, but highly specialized scientific or statistical work may still require dedicated software.
+      </p>
+    </div>
   </div>
 
   <div slot="examples">
@@ -160,6 +225,14 @@ const faqJsonLd = {
       <li><strong>2^3 + sqrt(16)</strong> = <strong>12</strong></li>
       <li><strong>sin(30)</strong> in degrees = <strong>0.5</strong></li>
       <li><strong>ln(e)</strong> = <strong>1</strong></li>
+      <li><strong>abs(-12) + log(100)</strong> = <strong>14</strong></li>
+    </ul>
+
+    <p class="note"><strong>Practical examples:</strong></p>
+    <ul>
+      <li>Use degree mode for school-level trigonometry problems</li>
+      <li>Use powers and roots for algebra or engineering formulas</li>
+      <li>Use constants like pi and e in geometry or exponential expressions</li>
     </ul>
   </div>
 
@@ -168,6 +241,8 @@ const faqJsonLd = {
       <li><a href="/math/exponent-calculator/">Exponent Calculator</a></li>
       <li><a href="/math/log-calculator/">Log Calculator</a></li>
       <li><a href="/math/square-root-calculator/">Square Root Calculator</a></li>
+      <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+      <li><a href="/date-time/age-calculator/">Age Calculator</a></li>
       <li><a href="/math/">All Math Tools</a></li>
     </ul>
   </div>

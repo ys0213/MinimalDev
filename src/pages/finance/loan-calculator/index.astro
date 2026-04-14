@@ -35,18 +35,58 @@ const faqs = [
     a: "No. All calculations are performed locally in your browser. No data is stored or transmitted.",
   },
 ];
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/finance/loan-calculator/";
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Loan Calculator",
+  description:
+    "Free loan calculator with amortization schedule to estimate monthly payment, total interest, and loan cost.",
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
 ---
 
 <ToolLayout
-  title="Loan Calculator with Amortization Schedule — MinimalDev"
+  title={`Loan Calculator with Amortization Schedule — ${SITE_NAME}`}
   description="Free loan calculator with amortization schedule. Estimate monthly payment, total interest, and total loan cost."
-  canonicalPath="/finance/loan-calculator/"
+  canonicalPath={CANONICAL_PATH}
   h1="Loan Calculator"
   intro="Calculate monthly loan payments, total interest, and understand how your balance decreases over time."
   faq={faqs}
   categoryName="Finance"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
   <div slot="tool" data-tool="loan-calculator">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> All calculations run locally in your browser.
+      <strong>Your financial inputs are never sent to any server.</strong>
+    </div>
     <div class="form">
       <div class="field">
         <label for="loan_amount">Loan amount</label>
@@ -109,11 +149,9 @@ const faqs = [
     </div>
   </div>
 
-  <!-- 강화된 How -->
   <div slot="how">
     <p class="note">
-      This calculator assumes a fixed-rate amortizing loan where the same payment is made every month.
-      Each payment is split into interest and principal.
+      This loan calculator estimates payments using a standard fixed-rate amortization model. Each monthly payment includes both principal and interest, gradually reducing the loan balance over time.
     </p>
 
     <p class="note">
@@ -122,31 +160,64 @@ const faqs = [
     </p>
 
     <p class="note">
-      <strong>Result interpretation:</strong><br/>
-      - Monthly payment: the fixed amount you pay each month<br/>
-      - Total interest: the total cost of borrowing<br/>
-      - Total paid: loan amount + total interest<br/>
+      Where:<br/>
+      - P = loan amount<br/>
+      - r = monthly interest rate<br/>
+      - n = total number of payments
     </p>
 
-    <p class="note">
-      In early months, a larger portion of your payment goes toward interest.
-      Over time, more of each payment goes toward reducing the principal balance.
-    </p>
+    <div class="prose" style="margin-top:20px;">
+      <h2>How Loan Payments Work</h2>
+      <p>
+        A fixed-rate loan uses the same monthly payment throughout the entire term. However, the composition of that payment changes over time. In the early stages of a loan, a larger portion of each payment goes toward interest. As the balance decreases, more of each payment goes toward principal.
+      </p>
+
+      <p>
+        This process is called amortization. The amortization schedule shows exactly how much interest and principal you pay each month, along with the remaining balance after each payment.
+      </p>
+
+      <h2>Why Total Interest Matters</h2>
+      <p>
+        The total interest represents the real cost of borrowing. Even a small increase in interest rate or loan term can significantly increase the total amount paid over time. Longer loans reduce monthly payments but increase total interest.
+      </p>
+
+      <p>
+        For example, extending a loan from 5 years to 7 years may lower your monthly payment, but you will pay more in total interest. This trade-off is important when comparing loan options.
+      </p>
+
+      <h2>Common Use Cases</h2>
+      <ul>
+        <li><strong>Car loans:</strong> Estimate monthly payments before purchasing a vehicle</li>
+        <li><strong>Personal loans:</strong> Compare loan terms and interest rates</li>
+        <li><strong>Debt planning:</strong> Understand repayment structure and long-term cost</li>
+        <li><strong>Financial decisions:</strong> Evaluate affordability before committing to a loan</li>
+      </ul>
+
+      <h2>How to Interpret Results</h2>
+      <p>
+        The monthly payment shows your required fixed payment. The total interest shows the cost of borrowing. The amortization table provides a detailed breakdown for each payment, helping you understand how your balance decreases over time.
+      </p>
+    </div>
   </div>
 
-  <!-- 강화된 Examples -->
   <div slot="examples">
     <ul>
-      <li><strong>Car loan:</strong> Estimate monthly payment before buying a vehicle.</li>
-      <li><strong>Personal loan planning:</strong> Compare different loan terms to minimize interest.</li>
-      <li><strong>Mortgage preview:</strong> Understand how long-term loans accumulate interest.</li>
+      <li><strong>Car loan:</strong> Estimate monthly payment before buying a vehicle</li>
+      <li><strong>Personal loan planning:</strong> Compare loan terms to reduce interest</li>
+      <li><strong>Debt management:</strong> Understand long-term repayment structure</li>
     </ul>
 
     <p class="note"><strong>Example:</strong></p>
     <ul>
-      <li>$10,000 at 5% for 5 years → monthly ≈ $188.71</li>
-      <li>Total paid ≈ $11,322 → interest ≈ $1,322</li>
+      <li>$10,000 at 5% for 5 years</li>
+      <li>Monthly payment ≈ $188.71</li>
+      <li>Total paid ≈ $11,322</li>
+      <li>Total interest ≈ $1,322</li>
     </ul>
+
+    <p class="note">
+      These values are estimates and may vary depending on lender terms, fees, or compounding methods.
+    </p>
   </div>
 
   <div slot="related">
@@ -154,6 +225,8 @@ const faqs = [
       <li><a href="/finance/mortgage-calculator/">Mortgage Calculator</a></li>
       <li><a href="/finance/personal-loan-calculator/">Personal Loan Calculator</a></li>
       <li><a href="/finance/car-loan-calculator/">Car Loan Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/date-time/age-calculator/">Age Calculator</a></li>
       <li><a href="/finance/">All Finance Calculators</a></li>
     </ul>
   </div>

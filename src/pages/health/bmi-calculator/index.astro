@@ -3,10 +3,14 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "BMI Calculator",
-  description: "Free BMI calculator for adults. Calculate Body Mass Index and see BMI categories instantly.",
+  description:
+    "Free BMI calculator for adults. Calculate Body Mass Index, understand BMI categories, and interpret results with practical health context.",
   href: "/health/bmi-calculator/",
   order: 10,
 };
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/health/bmi-calculator/";
 
 const faqs = [
   {
@@ -33,19 +37,59 @@ const faqs = [
     q: "Is my data stored?",
     a: "No. All calculations run locally in your browser and no personal data is uploaded or stored.",
   },
+  {
+    q: "Can BMI diagnose health problems?",
+    a: "No. BMI is not a diagnosis. It is only a quick screening metric that may suggest whether a person should look more closely at weight-related health risks.",
+  },
+  {
+    q: "Why can two people with the same BMI look different?",
+    a: "Because BMI only uses height and weight. It does not distinguish between muscle, fat, bone density, or body shape.",
+  },
 ];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "BMI Calculator",
+  description:
+    "Free online BMI calculator for adults using metric or imperial units. Understand BMI categories and general health meaning.",
+  applicationCategory: "HealthApplication",
+  operatingSystem: "Web",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+};
 ---
 
 <ToolLayout
   title="BMI Calculator — MinimalDev"
   description="Free BMI calculator using metric or imperial units. Calculate Body Mass Index and understand your BMI category."
-  canonicalPath="/health/bmi-calculator/"
+  canonicalPath={CANONICAL_PATH}
   h1="BMI Calculator"
   intro="Calculate your Body Mass Index (BMI) using metric or imperial units. Understand your BMI category and what it means for general health."
   faq={faqs}
   categoryName="Health"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
+
   <div slot="tool" data-tool="bmi-calculator">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> Everything is processed locally in your browser.
+      <strong>Your data is never sent to our servers.</strong>
+    </div>
+
     <div class="form">
       <div class="field">
         <label for="bmi_unit">Units</label>
@@ -88,30 +132,87 @@ const faqs = [
     </div>
   </div>
 
-  <!-- 강화된 How -->
   <div slot="how">
     <p class="note">
       BMI (Body Mass Index) is calculated by dividing weight by height squared. It is widely used as a simple screening tool to classify weight status in adults.
     </p>
 
     <p class="note">
-      <strong>Metric formula:</strong> BMI = weight (kg) ÷ height (m)²<br/>
+      <strong>Metric formula:</strong> BMI = weight (kg) ÷ height (m)²<br />
       <strong>Imperial formula:</strong> BMI = (weight (lb) ÷ height (in)²) × 703
     </p>
 
     <p class="note">
-      <strong>How to interpret results:</strong><br/>
-      - Underweight may indicate insufficient body weight<br/>
-      - Normal range is generally associated with lower health risk<br/>
-      - Overweight and obesity are associated with increased risk of certain conditions<br/>
+      <strong>How to interpret results:</strong><br />
+      - Underweight may indicate insufficient body weight<br />
+      - Normal range is generally associated with lower health risk<br />
+      - Overweight and obesity are associated with increased risk of certain conditions
     </p>
 
     <p class="note">
       BMI does not measure body fat directly. It should be used together with other indicators such as waist circumference, lifestyle factors, and clinical evaluation.
     </p>
+
+    <div class="prose" style="margin-top:20px;">
+      <h2>What BMI Means</h2>
+      <p>
+        Body Mass Index is one of the most common screening tools used to evaluate whether an adult’s weight is generally appropriate for their height.
+        It is simple, fast, and widely used in public health, fitness, and everyday health monitoring. Because BMI only needs height and weight,
+        it provides an easy way to classify general weight status without requiring medical equipment.
+      </p>
+
+      <p>
+        That convenience is why BMI is commonly used in clinics, health checkups, workplace wellness programs, and personal fitness tracking.
+        It helps people quickly understand whether they fall into a broad category such as underweight, normal weight, overweight, or obesity.
+        These categories are not diagnoses, but they are useful starting points for understanding possible weight-related health risk.
+      </p>
+
+      <h2>Why BMI Is Useful</h2>
+      <p>
+        BMI is useful because it creates a standard reference point. Two people may have different body shapes, but BMI provides a simple mathematical way
+        to compare weight relative to height. In general, very low BMI may suggest undernutrition or other health concerns, while very high BMI may be associated
+        with increased risk for conditions such as type 2 diabetes, high blood pressure, and cardiovascular disease.
+      </p>
+
+      <p>
+        This does not mean BMI tells the whole story. Instead, it helps answer a narrow question:
+        “Based on height and weight alone, where does this person fall on a standard adult weight scale?”
+      </p>
+
+      <h2>Important Limitations</h2>
+      <p>
+        BMI is not the same as body fat percentage. It cannot distinguish between fat mass and muscle mass.
+        A muscular athlete may have a high BMI even though their body fat is relatively low. On the other hand,
+        someone may fall into a normal BMI range while still having health risks related to fat distribution or low muscle mass.
+      </p>
+
+      <p>
+        BMI also does not measure waist circumference, metabolic health, fitness level, age-related body composition changes, or medical history.
+        That is why BMI works best as a screening metric rather than a final judgment about health.
+      </p>
+
+      <h2>Real-World Use Cases</h2>
+      <ul>
+        <li><strong>General health check:</strong> Quickly see whether your height and weight place you in a common adult BMI category</li>
+        <li><strong>Weight trend tracking:</strong> Compare results over time while changing diet, exercise, or lifestyle habits</li>
+        <li><strong>Goal setting:</strong> Use BMI as one reference point when considering weight gain, weight loss, or maintenance</li>
+        <li><strong>Health education:</strong> Understand the difference between a quick screening tool and a full body composition assessment</li>
+      </ul>
+
+      <h2>How to Use BMI Responsibly</h2>
+      <p>
+        A BMI result should be interpreted together with other factors such as body fat percentage, waist circumference, blood test results,
+        physical activity, and advice from a healthcare professional. If your BMI is outside the normal range, it does not automatically mean
+        you are unhealthy. It simply means the result may be worth discussing in a broader health context.
+      </p>
+
+      <p>
+        In short, BMI is useful because it is simple and standardized. Its weakness is also that it is simple.
+        The best way to use it is as a starting point for understanding weight status, not as the only measure of health.
+      </p>
+    </div>
   </div>
 
-  <!-- 강화된 Examples -->
   <div slot="examples">
     <ul>
       <li><strong>General health check:</strong> A person enters height and weight to quickly assess if they are within a normal BMI range.</li>
@@ -132,6 +233,8 @@ const faqs = [
       <li><a href="/health/body-fat/">Body Fat Calculator</a></li>
       <li><a href="/health/ideal-weight/">Ideal Weight Calculator</a></li>
       <li><a href="/health/tdee-calculator/">TDEE Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/health/">All Health Calculators</a></li>
     </ul>
   </div>

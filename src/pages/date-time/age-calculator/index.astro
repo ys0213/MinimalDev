@@ -34,18 +34,58 @@ const faqs = [
     a: "No. All calculations run locally in your browser. No personal data is stored or sent to a server.",
   },
 ];
+
+const SITE_NAME = "MinimalDev";
+const CANONICAL_PATH = "/date-time/age-calculator/";
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
+
+const webAppJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Age Calculator",
+  description:
+    "Free online age calculator that calculates exact age in years, months, and days using calendar-based logic.",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
 ---
 
 <ToolLayout
-  title="Age Calculator — MinimalDev"
-  description="Free online age calculator. Find your exact age in years, months, and days from your date of birth."
-  canonicalPath="/date-time/age-calculator/"
+  title={`Age Calculator — ${SITE_NAME}`}
+  description="Free online age calculator. Find exact age in years, months, and days from your date of birth and understand how calendar-based age calculation works."
+  canonicalPath={CANONICAL_PATH}
   h1="Age Calculator"
   intro="Calculate your exact age in years, months, and days from your date of birth. Optionally choose a reference date to find age at a specific time."
   faq={faqs}
   categoryName="Date & Time"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
   <div slot="tool" data-tool="age-calculator">
+    <div
+      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
+      class="note"
+    >
+      <strong>Privacy First:</strong> Age calculations run entirely in your browser.
+      <strong>Your birth date is never sent to our servers.</strong>
+    </div>
     <div class="form">
       <div class="field">
         <label for="age_dob">Date of birth</label>
@@ -71,42 +111,78 @@ const faqs = [
 
   <div slot="how">
     <p class="note">
-    This calculator determines your age using real calendar differences between two dates. Instead of approximating using fixed day counts, it calculates exact years, months, and days.
+      This calculator determines age using real calendar differences between two dates. Instead of estimating with fixed day counts, it calculates exact years, months, and days based on actual month lengths and leap years.
     </p>
 
     <ul>
-      <li><strong>Step 1:</strong> Compare birth date and reference date</li>
-      <li><strong>Step 2:</strong> Subtract years, months, and days</li>
-      <li><strong>Step 3:</strong> Borrow days or months when needed (calendar-based adjustment)</li>
-      <li><strong>Step 4:</strong> Handle leap years automatically</li>
+      <li><strong>Step 1:</strong> Compare the date of birth and the reference date</li>
+      <li><strong>Step 2:</strong> Subtract years, months, and days separately</li>
+      <li><strong>Step 3:</strong> Borrow days or months when the calendar requires it</li>
+      <li><strong>Step 4:</strong> Handle leap years and Feb 29 birthdays automatically</li>
     </ul>
 
     <p class="note">
-    <strong>Result interpretation:</strong><br>
-    The result shows how long you have lived in calendar terms.  
-    For example, "25 years, 2 months, 10 days" means exactly that duration since your birth date—not an approximation.
+      <strong>Result interpretation:</strong><br />
+      The result shows an exact calendar age.  
+      For example, “25 years, 2 months, 10 days” means that exact amount of time has passed since the birth date, not a rounded estimate.
     </p>
 
     <p class="note">
-    The "total days" value is useful for analytics or tracking purposes, while the "next birthday" helps you understand upcoming milestones.
+      The total days value is useful for analytics, record-keeping, or milestone tracking, while the next birthday section helps with planning and countdown use cases.
     </p>
+
+    <div class="prose" style="margin-top:20px;">
+      <h2>What an Age Calculator Is Used For</h2>
+      <p>
+        An age calculator is useful whenever you need more than just a rough age in years. Many situations require an exact calendar breakdown, especially when months and days matter. Examples include school or sports eligibility, legal age checks, retirement planning, birthday countdowns, application forms, and personal milestone tracking.
+      </p>
+
+      <p>
+        Some age tools only estimate age by dividing the total number of days by 365. That can be convenient, but it is not exact because real calendars include months of different lengths and leap years. This tool avoids that problem by using calendar-based logic instead of approximation.
+      </p>
+
+      <h2>Why Calendar-Based Calculation Matters</h2>
+      <p>
+        A person is not simply “a certain number of days divided by 365” years old. Real-world age is normally expressed in years, months, and days. That is why a calendar-based result is more useful for everyday interpretation. It reflects how people actually describe age and how many official systems treat date differences.
+      </p>
+
+      <p>
+        This matters even more for leap years and for birthdays near the end of a month. If someone was born on February 29, or if the reference date falls before the day number in a given month, a correct result requires borrowing days or adjusting months using the actual calendar.
+      </p>
+
+      <h2>Common Use Cases</h2>
+      <ul>
+        <li><strong>Current age:</strong> Calculate how old someone is today in exact calendar terms</li>
+        <li><strong>Future age:</strong> Find age at a future event such as graduation, retirement, or a trip</li>
+        <li><strong>Past age:</strong> Check age on a historical date for records or documentation</li>
+        <li><strong>Eligibility checks:</strong> Verify whether someone was 18, 21, or another threshold on a given date</li>
+        <li><strong>Birthday planning:</strong> See the next birthday date and the remaining days until it arrives</li>
+      </ul>
+
+      <h2>How to Interpret the Output</h2>
+      <p>
+        The years, months, and days result is the most human-readable output. The total days figure is useful for systems, analytics, and numeric comparisons. The next birthday section is especially useful when planning reminders, celebrations, or age-based milestones.
+      </p>
+
+      <p>
+        If you enter a future reference date, the result answers the question “How old will this person be on that date?” If you enter a past reference date, it answers “How old was this person on that date?” This makes the tool useful for more than just checking current age.
+      </p>
+    </div>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>Personal age:</strong> Enter your birth date to calculate your current age.</li>
-      <li><strong>Future age:</strong> Set a future reference date to see how old you will be at a specific time.</li>
-      <li><strong>Legal age checks:</strong> Determine age for eligibility (e.g., 18+, 21+).</li>
-      <li><strong>Event planning:</strong> Calculate age at a future event or milestone.</li>
+      <li><strong>Personal age:</strong> Enter your birth date to calculate your exact age today.</li>
+      <li><strong>Future age:</strong> Set a future reference date to see how old you will be at a specific event.</li>
+      <li><strong>Legal age checks:</strong> Determine whether someone was 18+, 21+, or another threshold on a given date.</li>
+      <li><strong>Event planning:</strong> Calculate age at weddings, graduations, anniversaries, or retirement dates.</li>
     </ul>
 
-    <p class="note">
-    Example breakdown:
-    </p>
+    <p class="note"><strong>Example breakdown:</strong></p>
     <ul>
-      <li>DOB: 2000-01-01 → Today: depends on current date</li>
       <li>DOB: 1995-10-10 → Ref: 2026-02-24 → 30 years, 4 months, 14 days</li>
-      <li>DOB: 2004-02-29 → Non-leap year → handled as Feb 28</li>
+      <li>DOB: 2004-02-29 → Non-leap year → handled consistently for birthday calculation</li>
+      <li>DOB: 2000-01-01 → today or any chosen reference date → exact calendar age result</li>
     </ul>
   </div>
 
@@ -115,6 +191,8 @@ const faqs = [
       <li><a href="/date-time/birthday-countdown/">Birthday Countdown</a></li>
       <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
       <li><a href="/date-time/leap-year-calculator/">Leap Year Calculator</a></li>
+      <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
       <li><a href="/date-time/">All Date-Time Tools</a></li>
     </ul>
   </div>
