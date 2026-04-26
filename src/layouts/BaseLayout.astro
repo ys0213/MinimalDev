@@ -23,14 +23,10 @@ const isConverterDetail =
 const isGenerator =
   p.startsWith("/generators/");
 
-const isLowDevTool = [
-  "/developer-tools/base32-encoder/",
-  "/developer-tools/base32-decoder/",
-  "/developer-tools/base58-encoder/",
-  "/developer-tools/base58-decoder/",
-  "/developer-tools/base85-encoder/",
-  "/developer-tools/base85-decoder/",
-].includes(p);
+const isLowDevTool =
+  p.startsWith("/developer-tools/base32") ||
+  p.startsWith("/developer-tools/base58") ||
+  p.startsWith("/developer-tools/base85");
 
 const isNoindex =
   isConverterDetail ||
