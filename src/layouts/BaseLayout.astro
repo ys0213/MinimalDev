@@ -15,6 +15,28 @@ const normalizePath = (path: string) => {
 
 const canonical = `https://minimaldev.dev${normalizePath(canonicalPath)}`;
 
+const p = Astro.url.pathname;
+
+const isConverterDetail =
+  p.startsWith("/converter/") && p.includes("-to-");
+
+const isGenerator =
+  p.startsWith("/generators/");
+
+const isLowDevTool = [
+  "/developer-tools/base32-encoder/",
+  "/developer-tools/base32-decoder/",
+  "/developer-tools/base58-encoder/",
+  "/developer-tools/base58-decoder/",
+  "/developer-tools/base85-encoder/",
+  "/developer-tools/base85-decoder/",
+].includes(p);
+
+const isNoindex =
+  isConverterDetail ||
+  isGenerator ||
+  isLowDevTool;
+
 // ✅ base 경로 ("/MinimalDev/" 같은 값)
 const BASE: string = import.meta.env.BASE_URL;
 // ✅ "/assets/..." 같은 경로를 base 붙여서 만드는 헬퍼
@@ -33,7 +55,11 @@ const withBase = (p: string): string => {
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
-  <meta name="robots" content="index,follow" />
+  {isNoindex ? (
+    <meta name="robots" content="noindex,follow" />
+  ) : (
+    <meta name="robots" content="index,follow" />
+  )}
   <link rel="sitemap" href="/sitemap-index.xml" />
 
   <link rel="stylesheet" href={withBase("/assets/css/main.css")} />
