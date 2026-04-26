@@ -174,6 +174,8 @@ const webAppJsonLd = {
   </div>
 
   <div slot="how">
+    <h2>How Random String Generation Works</h2>
+
     <ul>
       <li>Select a character set using a preset or your own custom list.</li>
       <li>Choose the length and number of strings to generate.</li>
@@ -200,6 +202,16 @@ const webAppJsonLd = {
         A password usually needs to be entered by a human and may require special UX rules such as at least one uppercase letter,
         one number, or one symbol. A random string is more general. It is often used by systems rather than people, which means
         readability is less important than unpredictability and format compatibility.
+      </p>
+
+      <p>
+      If you need structured data processing, see our 
+      <a href="/utility/json-formatter/">JSON Formatter</a>.
+      </p>
+
+      <p>
+      If you need encoding for tokens, check 
+      <a href="/utility/base64/">Base64 Encoder</a>.
       </p>
 
       <h2>Why URL-Safe Output Matters</h2>
@@ -241,6 +253,13 @@ const webAppJsonLd = {
   </div>
 
   <div slot="examples">
+    <p class="note"><strong>Real example:</strong></p>
+    <ul>
+      <li><strong>Preset:</strong> URL-safe</li>
+      <li><strong>Length:</strong> 16</li>
+      <li><strong>Output:</strong> kF8aP2_x9LqT7mZd</li>
+    </ul>
+
     <ul>
       <li><strong>URL-safe</strong>, length 32 → tokens for links and query parameters</li>
       <li><strong>Hex</strong>, length 24 → identifiers similar to compact hex-based IDs</li>

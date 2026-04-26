@@ -194,6 +194,8 @@ const webAppJsonLd = {
   </div>
 
   <div slot="how">
+    <h2>How Base64 Encoding Works</h2>
+
     <p class="note">
       Base64 is an encoding that converts bytes into ASCII characters. It is reversible and not encryption.
     </p>
@@ -216,6 +218,11 @@ const webAppJsonLd = {
         That does not mean Base64 is always the best option. Encoding increases size because binary data becomes a longer text representation.
         In many practical cases, the encoded result is around one-third larger than the original binary data.
         Base64 is useful for compatibility, not for compression.
+      </p>
+
+      <p>
+      If you are working with structured data, you may also need to format JSON properly.
+      See our <a href="/utility/json-formatter/">JSON Formatter</a> for handling API responses.
       </p>
 
       <h2>Base64 vs Encryption</h2>
@@ -256,6 +263,13 @@ const webAppJsonLd = {
   </div>
 
   <div slot="examples">
+    <p class="note"><strong>Real example:</strong></p>
+    <ul>
+      <li><strong>Input:</strong> "MinimalDev"</li>
+      <li><strong>Encoded:</strong> TWluaW1hbERldg==</li>
+      <li><strong>Use case:</strong> Sending text safely inside a JSON API payload</li>
+    </ul>
+
     <ul>
       <li><strong>Encode:</strong> "hello" → aGVsbG8=</li>
       <li><strong>Decode:</strong> aGVsbG8= → "hello"</li>
