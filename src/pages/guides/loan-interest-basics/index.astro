@@ -1,0 +1,94 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "What affects loan interest the most?",
+    a: "Interest rate, loan term, and principal amount all directly affect total interest paid.",
+  },
+  {
+    q: "Why do longer loans cost more?",
+    a: "Because interest accumulates over a longer period, increasing total cost.",
+  },
+  {
+    q: "What is amortization?",
+    a: "It is the process of gradually paying off a loan through scheduled payments.",
+  },
+  {
+    q: "Is a lower monthly payment always better?",
+    a: "Not necessarily. Lower payments often mean higher total interest.",
+  },
+];
+---
+
+<BaseLayout
+  title="Loan and Interest Basics — MinimalDev"
+  description="Learn how loans, interest rates, and amortization work. Understand monthly payments and total borrowing cost."
+  canonicalPath="/guides/loan-interest-basics/"
+>
+  <div class="container">
+    <h1 class="page-title">Loan and Interest Basics</h1>
+
+    <p class="lead">
+      Understanding how loans and interest work helps you make better financial decisions and avoid unnecessary costs.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        A loan consists of a principal amount, an interest rate, and a repayment period. Each payment includes both principal and interest, with interest typically being higher in the early stages of the loan.
+      </p>
+
+      <p>
+        The longer the loan term, the lower the monthly payment—but the higher the total interest paid over time.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Key Factors</h2>
+      <ul>
+        <li><strong>Interest rate:</strong> determines cost of borrowing</li>
+        <li><strong>Loan term:</strong> affects total interest</li>
+        <li><strong>Principal:</strong> base amount borrowed</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Amortization</h2>
+      <p>
+        Loans are typically amortized, meaning each payment reduces the balance gradually. Early payments mostly cover interest, while later payments reduce principal more significantly.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Compare loan options before borrowing</li>
+        <li>Estimate monthly payments for cars or personal loans</li>
+        <li>Understand long-term cost of borrowing</li>
+        <li>Plan repayment strategy</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/finance/loan-calculator/">Loan Calculator</a></li>
+        <li><a href="/finance/compound-interest-calculator/">Compound Interest Calculator</a></li>
+        <li><a href="/math/percent-calculator/">Percent Calculator</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

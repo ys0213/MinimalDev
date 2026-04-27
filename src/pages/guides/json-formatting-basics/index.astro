@@ -1,0 +1,104 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const faqs = [
+  {
+    q: "What is JSON formatting?",
+    a: "JSON formatting organizes raw JSON into a readable structure using indentation and line breaks.",
+  },
+  {
+    q: "Why does JSON break?",
+    a: "Most errors come from missing commas, quotes, or incorrect nesting.",
+  },
+  {
+    q: "What is minified JSON?",
+    a: "Minified JSON removes spaces and line breaks to reduce file size.",
+  },
+  {
+    q: "Should I always format JSON?",
+    a: "Use formatted JSON for readability, but minified JSON for performance in production.",
+  },
+];
+---
+
+<BaseLayout
+  title="JSON Formatting Basics — MinimalDev"
+  description="Understand JSON formatting, validation, and common errors. Learn how to read, debug, and optimize JSON data."
+  canonicalPath="/guides/json-formatting-basics/"
+>
+  <div class="container">
+    <h1 class="page-title">JSON Formatting Basics</h1>
+
+    <p class="lead">
+      JSON is widely used for APIs, configuration files, and data exchange. Proper formatting makes JSON easier to read, debug, and maintain.
+    </p>
+
+    <section class="section">
+      <h2>Explanation</h2>
+      <p>
+        JSON (JavaScript Object Notation) represents structured data using key-value pairs. While machines can read compact JSON easily, humans benefit from formatted JSON with indentation and line breaks.
+      </p>
+
+      <p>
+        Formatting improves readability and helps identify structure errors quickly. Without formatting, large JSON objects become difficult to debug and maintain.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Common Errors</h2>
+      <ul>
+        <li>Missing commas between fields</li>
+        <li>Unquoted keys or strings</li>
+        <li>Trailing commas</li>
+        <li>Incorrect nesting of objects or arrays</li>
+      </ul>
+
+      <p class="note">
+        Even a small syntax mistake will make JSON invalid and unusable in applications.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Formatted vs Minified JSON</h2>
+      <ul>
+        <li><strong>Formatted:</strong> easier to read and debug</li>
+        <li><strong>Minified:</strong> smaller size, better for performance</li>
+      </ul>
+
+      <p>
+        Developers typically use formatted JSON during development and minified JSON in production environments.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Real-world use cases</h2>
+      <ul>
+        <li>Debug API responses</li>
+        <li>Validate configuration files</li>
+        <li>Inspect structured data in development</li>
+        <li>Optimize payload size for production</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>FAQ</h2>
+      <ul>
+        {faqs.map((item) => (
+          <li>
+            <strong>{item.q}</strong>
+            <p>{item.a}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Related guides and tools</h2>
+      <ul>
+        <li><a href="/guides/image-format-comparison/">Image Format Comparison</a></li>
+        <li><a href="/utility/json-formatter/">JSON Formatter Tool</a></li>
+        <li><a href="/utility/base64/">Base64 Encoder & Decoder</a></li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
