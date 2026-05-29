@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "MB to GB Converter",
   description:
-    "Convert megabytes (MB) to gigabytes (GB) with decimal (1 GB = 1000 MB) or binary (1 GiB = 1024 MiB) options. Includes validation, accessible UX, result cards, and FAQ schema.",
+    "Convert megabytes to gigabytes for storage and file size estimates.",
   href: "/converter/mb-to-gb/",
   order: 150,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`MB to GB Converter — ${SITE_NAME}`}
-  description="Convert MB to GB instantly. Choose decimal (1 GB = 1000 MB) or binary (MiB→GiB, 1 GiB = 1024 MiB). Includes validation, result cards, and FAQ schema."
+  description="Convert MB to GB to understand file sizes, storage usage, download sizes, and device capacity."
   canonicalPath={CANONICAL_PATH}
   h1="MB to GB Converter"
   intro="Convert megabytes (MB) to gigabytes (GB). Choose decimal or binary interpretation to match how storage is labeled or displayed."

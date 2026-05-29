@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Data Converter",
   description:
-    "Convert data sizes between bits, bytes, KB/MB/GB/TB (decimal) and KiB/MiB/GiB/TiB (binary). Includes validation, accessibility, result cards, and FAQ schema.",
+    "Convert between common data units for storage, transfer, and file size reference.",
   href: "/converter/data/",
   order: 180,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Data Converter — ${SITE_NAME}`}
-  description="Convert data units across bits/bytes and decimal (KB/MB/GB/TB) vs binary (KiB/MiB/GiB/TiB). Includes validation, accessible UX, result cards, and FAQ schema."
+  description="Convert digital data units such as bits, bytes, kilobytes, megabytes, and gigabytes for storage or transfer estimates."
   canonicalPath={CANONICAL_PATH}
   h1="Data Converter"
   intro="Convert data sizes between bits, bytes, and common decimal/binary units. Helpful for files, storage, and bandwidth math."
