@@ -70,15 +70,6 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -90,7 +81,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Converters"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="volume-converter">
     <div class="form" role="form" aria-describedby="vc_hint vc_privacy vc_note">

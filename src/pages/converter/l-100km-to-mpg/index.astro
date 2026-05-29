@@ -20,15 +20,6 @@ const faqs = [
   { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
 ];
 
-const faqJsonLd = {
-  "@context":"https://schema.org",
-  "@type":"FAQPage",
-  mainEntity: faqs.map((f)=>({
-    "@type":"Question",
-    name:f.q,
-    acceptedAnswer:{ "@type":"Answer", text:f.a }
-  }))
-};
 ---
 
 <ToolLayout
@@ -40,7 +31,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Converters"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <div slot="tool" data-tool="l100-to-mpg">
     <div class="form" role="form" aria-describedby="l2m_help l2m_privacy">
       <div class="field">

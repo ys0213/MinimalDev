@@ -18,15 +18,6 @@ const faqs=[
 {q:"Are inputs stored?",a:"No. Calculations run locally in your browser."}
 ];
 
-const faqJsonLd={
-"@context":"https://schema.org",
-"@type":"FAQPage",
-mainEntity:faqs.map(f=>({
-"@type":"Question",
-name:f.q,
-acceptedAnswer:{ "@type":"Answer", text:f.a }
-}))
-};
 ---
 
 <ToolLayout
@@ -38,8 +29,6 @@ intro="Perform arithmetic with binary numbers."
 faq={faqs}
 categoryName="Math"
 >
-
-<script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
 <div slot="tool">
 

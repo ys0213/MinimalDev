@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Area Converter",
   description:
-    "Convert area units (m², ft², yd², acres, hectares, km², mi²). Includes validation, accessible UX, result cards, and FAQ schema.",
+    "Convert area units including m², ft², yd², acres, hectares, km², and mi² with validation and clear result tables.",
   href: "/converter/area-converter/",
   order: 200,
 };
@@ -31,44 +31,26 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Area Converter",
-  description:
-    "Free area unit converter for square meters, feet, acres, hectares, and more. Convert instantly with accurate formulas.",
-  applicationCategory: "UtilitiesApplication",
-  operatingSystem: "Web",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-};
 ---
 
 <ToolLayout
   title={`Area Converter — ${SITE_NAME}`}
-  description="Convert area units (m², ft², yd², acres, hectares, km², mi²). Accessible, validated, with result cards and FAQ schema."
+  description="Convert area units including m², ft², yd², acres, hectares, km², and mi² with clear results and reference conversions."
   canonicalPath={CANONICAL_PATH}
   h1="Area Converter"
   intro="Convert between common area units such as square meters, square feet, acres, and hectares. Useful for land, floor plans, and quick comparisons."
   faq={faqs}
   categoryName="Converters"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
-
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Area Converter",
+    "description": "Convert between common area units such as square meters, square feet, acres, hectares, square kilometers, and square miles.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="area-converter">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"

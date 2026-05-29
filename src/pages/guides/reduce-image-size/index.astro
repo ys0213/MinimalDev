@@ -19,6 +19,34 @@ const faqs = [
     a: "Usually no for photos. PNG is often larger and is better reserved for transparency, UI assets, or lossless graphics.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/reduce-image-size/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Reduce Image Size",
+    "description": "Learn how to reduce image file size using JPG and WebP compression while balancing quality and speed.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Learn how to reduce image file size using JPG and WebP compression while balancing quality and speed."
   canonicalPath="/guides/reduce-image-size/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">How to Reduce Image Size</h1>
     <p class="lead">
@@ -74,7 +103,7 @@ const faqs = [
           </li>
         ))}
       </ul>
-      </section>
+    </section>
 
     <section class="section">
       <h2>Related guides and tools</h2>

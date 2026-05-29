@@ -46,27 +46,6 @@ const faqs = [
     a: "Not exactly. URL-safe strings may use a similar character set, but they are not automatically Base64 unless they are produced by a Base64 encoding process.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Random String Generator",
-  description:
-    "Generate secure random strings online with configurable length, count, and character sets.",
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "Web",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-};
 ---
 
 <ToolLayout
@@ -78,9 +57,15 @@ const webAppJsonLd = {
   faq={faqs}
   categoryName="Utilities"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
-
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Random String Generator",
+    "description": "Generate random strings locally in the browser with custom length, count, and character sets.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="random-string-generator">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
@@ -371,14 +356,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  function pseudoRandomInt(maxExclusive) {
-    return Math.floor(Math.random() * maxExclusive);
-  }
-
   function randIndex(maxExclusive) {
     const x = secureRandomInt(maxExclusive);
     if (isFinite(x)) return x;
-    return pseudoRandomInt(maxExclusive);
+    throw new Error("Secure random generation is not available in this browser.");
   }
 
   function buildOne(chars, length) {
@@ -443,8 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const preset = String(presetEl.value);
     const label = preset === "custom" ? "Custom" : preset.toUpperCase();
 
-    const secure = !!(globalThis.crypto && globalThis.crypto.getRandomValues);
-    const securityNote = secure ? "CSPRNG" : "Math.random fallback";
+    const securityNote = "CSPRNG";
 
     summaryEl.innerHTML = "<strong>Generated.</strong> " + out.length.toLocaleString() + " string(s).";
 
@@ -455,7 +435,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ${badge("Length " + len, "neutral")}
         ${badge("Count " + out.length, out.length === count ? "good" : "warn")}
         ${badge("Charset " + chars.length, "neutral")}
-        ${badge(securityNote, secure ? "good" : "warn")}
+        ${badge(securityNote, "good")}
       </div>
     `;
   }

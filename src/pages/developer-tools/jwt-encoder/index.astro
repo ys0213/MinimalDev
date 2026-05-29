@@ -30,19 +30,6 @@ const faqs = [
     a: "No. Encoding runs locally in your browser and is not stored or transmitted.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a,
-    },
-  })),
-};
 ---
 
 <ToolLayout
@@ -54,7 +41,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Developer Tools"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="jwt-encoder">
     <style is:inline>

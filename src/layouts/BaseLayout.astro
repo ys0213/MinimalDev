@@ -6,6 +6,7 @@ const {
   title = "MinimalDev — Free Online Utility Tools",
   description = "Fast, free online calculators and utility tools.",
   canonicalPath = "/",
+  robots = undefined,
 } = Astro.props;
 
 const normalizePath = (path: string) => {
@@ -133,6 +134,7 @@ const noindexPaths = new Set([
 ]);
 
 const isNoindex = noindexPaths.has(currentPath);
+const robotsContent = robots ?? (isNoindex ? "noindex,follow" : "index,follow");
 
 // ✅ base 경로 ("/MinimalDev/" 같은 값)
 const BASE: string = import.meta.env.BASE_URL;
@@ -152,11 +154,7 @@ const withBase = (p: string): string => {
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
-  {isNoindex ? (
-    <meta name="robots" content="noindex,follow" />
-  ) : (
-    <meta name="robots" content="index,follow" />
-  )}
+  <meta name="robots" content={robotsContent} />
   <link rel="sitemap" href="/sitemap-index.xml" />
 
   <link rel="stylesheet" href={withBase("/assets/css/main.css")} />

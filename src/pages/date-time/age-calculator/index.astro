@@ -38,33 +38,6 @@ const faqs = [
 const SITE_NAME = "MinimalDev";
 const CANONICAL_PATH = "/date-time/age-calculator/";
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a,
-    },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Age Calculator",
-  description:
-    "Free online age calculator that calculates exact age in years, months, and days using calendar-based logic.",
-  applicationCategory: "UtilitiesApplication",
-  operatingSystem: "Web",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-};
 ---
 
 <ToolLayout
@@ -76,8 +49,15 @@ const webAppJsonLd = {
   faq={faqs}
   categoryName="Date & Time"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Age Calculator",
+    "description": "Calculate exact age in years, months, and days using calendar-based date logic.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="age-calculator">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"

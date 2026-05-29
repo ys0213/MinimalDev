@@ -19,6 +19,34 @@ const faqs = [
     a: "No. PNG can preserve more data, but it is not always the best choice for web delivery or photographic content.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/jpg-vs-png/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "JPG vs PNG",
+    "description": "Compare JPG and PNG and learn when to use each for photos, graphics, transparency, and file size.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Compare JPG and PNG and learn when to use each for photos, graphics, transparency, and file size."
   canonicalPath="/guides/jpg-vs-png/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">JPG vs PNG</h1>
     <p class="lead">

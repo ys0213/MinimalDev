@@ -35,15 +35,6 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -55,8 +46,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Date & Time"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-
   <div slot="tool" data-tool="unix-time-to-date">
     <div class="form" role="form" aria-describedby="utd_help utd_privacy">
       <div class="field">

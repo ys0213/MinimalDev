@@ -39,33 +39,6 @@ const faqs = [
 const SITE_NAME = "MinimalDev";
 const CANONICAL_PATH = "/finance/loan-calculator/";
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a,
-    },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Loan Calculator",
-  description:
-    "Free loan calculator with amortization schedule to estimate monthly payment, total interest, and loan cost.",
-  applicationCategory: "FinanceApplication",
-  operatingSystem: "Web",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-};
 ---
 
 <ToolLayout
@@ -77,8 +50,15 @@ const webAppJsonLd = {
   faq={faqs}
   categoryName="Finance"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Loan Calculator",
+    "description": "Estimate fixed-rate loan payments, total interest, total paid, and amortization schedule.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="loan-calculator">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"

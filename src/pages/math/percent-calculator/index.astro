@@ -39,15 +39,6 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -59,7 +50,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Math"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -70,11 +60,11 @@ const faqJsonLd = {
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
 
-  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-    <strong>🔒 Privacy First:</strong> Everything is processed locally in your browser. <strong>Your data is never sent to our servers.</strong>
-  </div>
-
   <div slot="tool" data-tool="percent-calculator">
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+      <strong>Privacy First:</strong> Everything is processed locally in your browser.
+      <strong>Your data is never sent to our servers.</strong>
+    </div>
     <div class="form">
       <div class="field">
         <label for="pc_percent">Percent (%)</label>
@@ -102,6 +92,9 @@ const faqJsonLd = {
           step="0.01"
           aria-describedby="pc_help pc_error"
         />
+        <p id="pc_help" class="note" style="margin-top:6px;">
+          Enter a percent and a number to calculate the percentage amount.
+        </p>
         <div id="pc_error" class="note" style="margin-top:6px;" aria-live="polite"></div>
       </div>
 
@@ -133,40 +126,41 @@ const faqJsonLd = {
       <li><strong>Step 2:</strong> Multiply by the number</li>
       <li><strong>Formula:</strong> result = (percent ÷ 100) × number</li>
     </ul>
-  </div>
-  
-  <div class="prose" style="margin-top:24px;">
-    <h2>Why Percentage Calculation Matters</h2>
-    <p>Understanding percentages is a fundamental mathematical skill used in almost every aspect of daily life, from personal finance and business accounting to academic research and everyday shopping. Whether you are calculating the final price after a discount, determining the appropriate gratuity for service, or analyzing statistical data, percentages provide a standardized way to compare values and understand parts of a whole.</p>
-    
-    <h2>How to Calculate Percentages Manually</h2>
-    <p>At its core, a percentage is a fraction of 100. To calculate the percentage of a number manually, you can follow these simple steps:</p>
-    <ul>
-      <li><strong>Step 1:</strong> Convert the percentage to a decimal by dividing it by 100. For instance, 15% becomes 0.15.</li>
-      <li><strong>Step 2:</strong> Multiply this decimal by the total number. If you want 15% of 200, you multiply 0.15 by 200, which equals 30.</li>
-    </ul>
+    <div class="prose" style="margin-top:24px;">
+      <h2>Why Percentage Calculation Matters</h2>
+      <p>
+        Understanding percentages is a practical math skill used in many everyday situations, including shopping discounts, taxes, tips, commissions, and basic comparisons. A percentage gives a standard way to describe a part of a whole by comparing it to 100.
+      </p>
+      
+      <h2>How to Calculate Percentages Manually</h2>
+      <p>At its core, a percentage is a fraction of 100. To calculate the percentage of a number manually, you can follow these simple steps:</p>
+      <ul>
+        <li><strong>Step 1:</strong> Convert the percentage to a decimal by dividing it by 100. For instance, 15% becomes 0.15.</li>
+        <li><strong>Step 2:</strong> Multiply this decimal by the total number. If you want 15% of 200, you multiply 0.15 by 200, which equals 30.</li>
+      </ul>
 
-    <h2>Practical Real-World Applications</h2>
-    <p>Our Percent Calculator is designed to handle these common scenarios effortlessly:</p>
-    <ul>
-      <li><strong>Retail & Discounts:</strong> Quickly see how much you save during seasonal sales by applying percentage discounts to original prices.</li>
-      <li><strong>Taxation:</strong> Easily add local sales tax to your subtotal to determine the final purchase price of items or services.</li>
-      <li><strong>Personal Finance:</strong> Accurately calculate interest rates on savings accounts or commission earnings for sales roles.</li>
-      <li><strong>Tipping:</strong> Determine service gratuity in restaurants or hotels without any mental strain or guesswork.</li>
-    </ul>
+      <h2>Practical Real-World Applications</h2>
+      <p>Our Percent Calculator is designed to handle these common scenarios effortlessly:</p>
+      <ul>
+        <li><strong>Retail & Discounts:</strong> Quickly see how much you save during seasonal sales by applying percentage discounts to original prices.</li>
+        <li><strong>Taxation:</strong> Easily add local sales tax to your subtotal to determine the final purchase price of items or services.</li>
+        <li><strong>Personal Finance:</strong> Estimate commissions, simple fees, or percentage-based amounts from a known value.</li>
+        <li><strong>Tipping:</strong> Determine service gratuity in restaurants or hotels without any mental strain or guesswork.</li>
+      </ul>
 
-    <p>
-    If you are working with structured data, you can also use our 
-    <a href="/utility/json-formatter/">JSON Formatter</a>.
-    </p>
+      <p>
+      If you are working with structured data, you can also use our 
+      <a href="/utility/json-formatter/">JSON Formatter</a>.
+      </p>
 
-    <p>
-    For more advanced calculations, try the 
-    <a href="/math/scientific-calculator/">Scientific Calculator</a>.
-    </p>
+      <p>
+      For more advanced calculations, try the 
+      <a href="/math/scientific-calculator/">Scientific Calculator</a>.
+      </p>
 
-    <h2>Limitations and Precision</h2>
-    <p>While this tool is highly accurate for general use, it is important to note that very complex financial calculations or scientific research might require specialized software. For everyday math needs, this calculator ensures precision by handling decimals and large numbers with high accuracy, saving you time and preventing errors caused by manual calculations.</p>
+      <h2>Limitations and Precision</h2>
+      <p>While this tool is highly accurate for general use, it is important to note that very complex financial calculations or scientific research might require specialized software. For everyday math needs, this calculator ensures precision by handling decimals and large numbers with high accuracy, saving you time and preventing errors caused by manual calculations.</p>
+    </div>
   </div>
 
   <div slot="examples">

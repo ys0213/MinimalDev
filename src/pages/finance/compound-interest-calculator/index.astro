@@ -31,15 +31,6 @@ const faqs = [
   }
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -51,7 +42,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Finance"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -62,11 +52,12 @@ const faqJsonLd = {
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
 
-  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-bottom: 24px;">
-    <strong>🔒 Privacy & Security:</strong> This calculator runs entirely locally in your browser. <strong>Your financial inputs are never stored or sent to our servers.</strong>
-  </div>
+    <div slot="tool" data-tool="compound-interest-calculator">
+     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-bottom: 24px;">
+       <strong>Privacy First:</strong> This calculator runs entirely locally in your browser.
+       <strong>Your financial inputs are never stored or sent to our servers.</strong>
+     </div>
 
-  <div slot="tool" data-tool="compound-interest-calculator">
     <div class="form">
       <div class="field">
         <label for="ci_principal">Initial Investment ($)</label>
@@ -120,47 +111,52 @@ const faqJsonLd = {
       <li><strong>Step 1:</strong> Convert annual rate to monthly → rate ÷ 12</li>
       <li><strong>Step 2:</strong> Apply interest to current balance</li>
       <li><strong>Step 3:</strong> Add monthly contribution</li>
-      <li><strong>Formula:</strong> A = P(1 + r/n)^(nt) + contributions</li>
-    </ul>
-  </div>
-
-  <div class="prose" style="margin-top:40px;">
-    <h2>Understanding the Power of Compound Interest</h2>
-    <p>Compound interest is often referred to as the "eighth wonder of the world." Unlike simple interest, which is calculated only on the principal amount, compound interest is calculated on the principal <em>plus</em> any interest that has accumulated in previous periods. Over long time horizons, this leads to exponential growth, where your money effectively begins to work for you.</p>
-    
-    <h2>How We Calculate Your Projections</h2>
-    <p>Our tool uses a monthly compounding frequency, which is the industry standard for most savings and investment accounts. The process involves:</p>
-    <ul>
-      <li><strong>Monthly Interest:</strong> Dividing your annual rate by 12 and applying it to your current balance each month.</li>
-      <li><strong>Periodic Contributions:</strong> If you add monthly contributions, they are added to your balance at the end of each month, immediately beginning to compound in the following cycle.</li>
+      <li><strong>Formula:</strong> balance = previous balance × (1 + monthly rate) + monthly contribution</li>
     </ul>
 
-    <h2>Strategic Tips for Long-Term Wealth</h2>
-    <ul>
-      <li><strong>Start Early:</strong> Time is your greatest asset. Even small amounts compounded over decades can grow significantly compared to larger amounts invested for a shorter period.</li>
-      <li><strong>Consistency Matters:</strong> Regular monthly contributions significantly alter the growth curve by increasing the principal base upon which interest is earned.</li>
-      <li><strong>Manage Expectations:</strong> While our calculator provides an optimistic mathematical projection, real-world investing involves volatility, fees, and taxes that are not included here. Always consult a financial advisor for personalized planning.</li>
-    </ul>
+    <div class="prose" style="margin-top:40px;">
+      <h2>Understanding the Power of Compound Interest</h2>
+      <p>
+        Compound interest is different from simple interest because interest is calculated on both the original principal and previously accumulated interest. Over long time periods, this can create a compounding effect where growth accelerates as the balance becomes larger.
+      </p>
+      
+      <h2>How We Calculate Your Projections</h2>
+      <p>
+        This calculator uses monthly compounding as a practical default. Some accounts or investments may compound daily, monthly, quarterly, annually, or by another schedule, so actual results can differ.
+      </p>
+      <ul>
+        <li><strong>Monthly Interest:</strong> Dividing your annual rate by 12 and applying it to your current balance each month.</li>
+        <li><strong>Periodic Contributions:</strong> If you add monthly contributions, they are added to your balance at the end of each month, immediately beginning to compound in the following cycle.</li>
+      </ul>
 
-    <p>
-    To calculate simple percentages, you can use our 
-    <a href="/math/percent-calculator/">Percent Calculator</a>.
-    </p>
+      <h2>Strategic Tips for Long-Term Wealth</h2>
+      <ul>
+        <li><strong>Start Early:</strong> Time is your greatest asset. Even small amounts compounded over decades can grow significantly compared to larger amounts invested for a shorter period.</li>
+        <li><strong>Consistency Matters:</strong> Regular monthly contributions significantly alter the growth curve by increasing the principal base upon which interest is earned.</li>
+        <li><strong>Manage Expectations:</strong> While our calculator provides an optimistic mathematical projection, real-world investing involves volatility, fees, and taxes that are not included here. Always consult a financial advisor for personalized planning.</li>
+      </ul>
 
-    <p>
-    For loan-related projections, try our 
-    <a href="/finance/loan-calculator/">Loan Calculator</a>.
-    </p>
+      <p>
+      To calculate simple percentages, you can use our 
+      <a href="/math/percent-calculator/">Percent Calculator</a>.
+      </p>
+
+      <p>
+      For loan-related projections, try our 
+      <a href="/finance/loan-calculator/">Loan Calculator</a>.
+      </p>
+    </div>
+
   </div>
 
   <div slot="examples">
     <p><strong>Example:</strong></p>
     <ul>
       <li><strong>Initial:</strong> $10,000</li>
-      <li><strong>Rate:</strong> 7%</li>
+      <li><strong>Rate:</strong> 7% annually</li>
       <li><strong>Years:</strong> 10</li>
-      <li><strong>Monthly:</strong> $200</li>
-      <li><strong>Result:</strong> ~$47,000 after 10 years (approx)</li>
+      <li><strong>Monthly contribution:</strong> $200</li>
+      <li><strong>Estimated result:</strong> about $54,700 after 10 years, before taxes, fees, and inflation</li>
     </ul>
   </div>
 
@@ -193,10 +189,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   calcBtn.addEventListener("click", function () {
-    const P = parseFloat(principalEl.value) || 0;
-    const annualRate = (parseFloat(rateEl.value) || 0) / 100;
-    const years = parseFloat(yearsEl.value) || 0;
-    const monthlyContrib = parseFloat(monthlyEl.value) || 0;
+    const P = parseFloat(principalEl.value);
+    const annualRateInput = parseFloat(rateEl.value);
+    const years = parseFloat(yearsEl.value);
+    const monthlyContribInput = parseFloat(monthlyEl.value);
+
+    if (
+      !Number.isFinite(P) || P < 0 ||
+      !Number.isFinite(annualRateInput) || annualRateInput < 0 ||
+      !Number.isFinite(years) || years <= 0 ||
+      !Number.isFinite(monthlyContribInput) || monthlyContribInput < 0
+    ) {
+      summaryEl.textContent = "Please enter valid non-negative values. Investment period must be greater than 0.";
+      tbodyEl.innerHTML = "";
+      return;
+    }
+
+    const annualRate = annualRateInput / 100;
+    const monthlyContrib = monthlyContribInput;
 
     let balance = P;
     let totalContrib = P;

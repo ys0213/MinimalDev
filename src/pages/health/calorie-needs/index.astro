@@ -39,18 +39,6 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a,
-    },
-  })),
-};
 ---
 
 <ToolLayout
@@ -63,7 +51,6 @@ const faqJsonLd = {
   categoryName="Health"
 >
   {/* FAQ Schema (auto from faqs[]) */}
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="calorie-needs-calculator">
     <div class="form" role="form" aria-describedby="cn_privacy_note">

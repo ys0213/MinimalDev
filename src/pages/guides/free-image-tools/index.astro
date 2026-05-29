@@ -30,6 +30,34 @@ const tools = [
   { name: "Image to Base64", href: "/image-tools/image-to-base64/" },
   { name: "Base64 to Image", href: "/image-tools/base64-to-image/" },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/free-image-tools/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Free Image Tools",
+    "description": "A practical guide to free image tools for compression, cropping, conversion, and common image workflows.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -37,6 +65,7 @@ const tools = [
   description="A practical guide to free image tools for compression, cropping, conversion, and other common image workflows."
   canonicalPath="/guides/free-image-tools/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">Free Image Tools</h1>
     <p class="lead">
@@ -78,7 +107,7 @@ const tools = [
     </section>
 
     <section class="section">
-      <h2>Recommended tools</h2>
+      <h2>Which Tool to Use for Each Image Task</h2>
       <ul>
         {tools.map((tool) => (
           <li><a href={tool.href}>{tool.name}</a></li>

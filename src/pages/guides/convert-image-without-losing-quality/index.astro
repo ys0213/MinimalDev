@@ -19,15 +19,44 @@ const faqs = [
     a: "Keep a high-quality source file and export optimized copies only when needed.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/convert-image-without-losing-quality/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Convert Images With Minimal Quality Loss",
+    "description": "Learn how to convert images while preserving as much quality as possible with proper formats and workflow choices.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
-  title="Convert Images Without Losing Quality — MinimalDev"
+  title="Convert Images With Minimal Quality Loss — MinimalDev"
   description="Learn how to convert images while preserving as much quality as possible with proper formats and workflow choices."
   canonicalPath="/guides/convert-image-without-losing-quality/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
-    <h1 class="page-title">Convert Images Without Losing Quality</h1>
+    <h1 class="page-title">Convert Images With Minimal Quality Loss</h1>
     <p class="lead">
       Image conversion does not always mean visible quality loss, but preserving quality depends on the format you choose and the workflow you follow. The best results come from understanding when lossless preservation matters and when optimization is more important.
     </p>

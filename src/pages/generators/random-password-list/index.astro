@@ -30,19 +30,6 @@ const faqs = [
     a: "No. Passwords are generated locally in your browser and are not stored or transmitted.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a,
-    },
-  })),
-};
 ---
 
 <ToolLayout
@@ -54,7 +41,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Generators"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool" data-tool="random-password-list">
     <style is:inline>

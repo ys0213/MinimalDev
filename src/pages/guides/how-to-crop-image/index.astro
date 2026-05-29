@@ -19,6 +19,34 @@ const faqs = [
     a: "Cropping itself does not lower quality, but exporting the cropped image with lossy compression can.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/how-to-crop-image/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How to Crop an Image Properly",
+    "description": "Learn how to crop images properly for better composition, cleaner framing, and practical image use.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Learn how to crop images properly for better composition, cleaner framing, and more practical image use."
   canonicalPath="/guides/how-to-crop-image/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">How to Crop an Image Properly</h1>
     <p class="lead">

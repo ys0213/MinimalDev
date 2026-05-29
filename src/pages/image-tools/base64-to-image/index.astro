@@ -19,18 +19,6 @@ const faqs = [
   { q: "What file format is used?", a: "If no MIME type is included, the tool assumes PNG by default." }
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: f.a
-    }
-  }))
-};
 ---
 
 <ToolLayout
@@ -42,7 +30,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Image Tools"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
 
   <div slot="tool">
     <style is:inline>

@@ -19,6 +19,34 @@ const faqs = [
     a: "Not always. Quality depends more on the workflow and settings than on whether the tool is online or offline.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/online-vs-offline-image-tools/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Online vs Offline Image Tools",
+    "description": "Compare online and offline image tools for convenience, privacy, editing depth, and real-world workflows.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Compare online and offline image tools for convenience, privacy, editing depth, and real-world workflows."
   canonicalPath="/guides/online-vs-offline-image-tools/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">Online vs Offline Image Tools</h1>
     <p class="lead">

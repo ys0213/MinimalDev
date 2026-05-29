@@ -21,15 +21,6 @@ const faqs = [
   { q: "Is this the same as percentage?", a: "Not always. Proportions compare ratios. Percent is a ratio out of 100. You can convert a proportion to percent in some cases (e.g., part/whole)." },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -41,9 +32,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Math"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-
-  {/* ✅ 이 툴에만 적용되는 오버플로우/모바일 레이아웃 보정 */}
   <style>
     {`
       [data-tool="proportion-calculator"]{

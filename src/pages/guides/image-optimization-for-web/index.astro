@@ -19,6 +19,34 @@ const faqs = [
     a: "Yes. Uploading oversized images wastes bandwidth even if the layout displays them at a smaller size.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/image-optimization-for-web/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Image Optimization for Web",
+    "description": "Learn how image optimization improves website speed through resizing, compression, and better format choices.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Learn how image optimization improves website speed through resizing, compression, and better format choices."
   canonicalPath="/guides/image-optimization-for-web/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">Image Optimization for Web</h1>
     <p class="lead">

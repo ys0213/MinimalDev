@@ -19,15 +19,6 @@ const faqs = [
   { q: "Are my inputs stored?", a: "No. All calculations run locally in your browser." },
 ];
 
-const faqJsonLd = {
-  "@context":"https://schema.org",
-  "@type":"FAQPage",
-  mainEntity: faqs.map((f)=>({
-    "@type":"Question",
-    name:f.q,
-    acceptedAnswer:{ "@type":"Answer", text:f.a }
-  }))
-};
 ---
 
 <ToolLayout
@@ -39,7 +30,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Converters"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <div slot="tool" data-tool="fuel-consumption-converter">
     <div class="form" role="form" aria-describedby="fc_help fc_privacy">
       <div class="field">

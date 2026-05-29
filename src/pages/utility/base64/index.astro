@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Base64 Encoder/Decoder",
   description:
-    "Free Base64 tool to encode or decode text and files locally in your browser. Supports URL-safe Base64, UTF-8, and downloads. Private, accessible, with FAQ schema.",
+    "Free Base64 tool to encode or decode text and files locally in your browser. Supports URL-safe Base64, UTF-8 text, file encoding, and downloads.",
   href: "/utility/base64/",
   order: 40,
 };
@@ -46,27 +46,6 @@ const faqs = [
     a: "No. Some systems require '=' padding, while others use unpadded Base64, especially in URL-safe contexts.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Base64 Encoder/Decoder",
-  description:
-    "Encode and decode Base64 online with support for text, files, URL-safe Base64, and local browser processing.",
-  applicationCategory: "DeveloperApplication",
-  operatingSystem: "Web",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-};
 ---
 
 <ToolLayout
@@ -78,9 +57,15 @@ const webAppJsonLd = {
   faq={faqs}
   categoryName="Utilities"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
-
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Base64 Encoder/Decoder",
+    "description": "Encode and decode Base64 text and files locally in the browser. Supports URL-safe Base64 and file downloads.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="base64">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"

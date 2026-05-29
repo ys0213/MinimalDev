@@ -19,6 +19,34 @@ const faqs = [
     a: "PNG is lossless and preserves image data more exactly, which usually results in larger files.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/image-format-comparison/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "PNG vs JPG vs WebP",
+    "description": "Compare PNG, JPG, and WebP image formats and learn when to use each one for quality, transparency, and performance.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Compare PNG, JPG, and WebP image formats and learn when to use each one for quality, transparency, and performance."
   canonicalPath="/guides/image-format-comparison/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">PNG vs JPG vs WebP</h1>
     <p class="lead">

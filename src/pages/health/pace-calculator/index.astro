@@ -35,15 +35,6 @@ const faqs = [
   },
 ];
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
 ---
 
 <ToolLayout
@@ -55,9 +46,6 @@ const faqJsonLd = {
   faq={faqs}
   categoryName="Health"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-
-  {/* ✅ 이 툴에서만 모바일 오버플로우 방지 */}
   <style>
     {`
       [data-tool="pace-calculator"]{

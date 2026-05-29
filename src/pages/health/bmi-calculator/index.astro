@@ -46,27 +46,6 @@ const faqs = [
     a: "Because BMI only uses height and weight. It does not distinguish between muscle, fat, bone density, or body shape.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "BMI Calculator",
-  description:
-    "Free online BMI calculator for adults using metric or imperial units. Understand BMI categories and general health meaning.",
-  applicationCategory: "HealthApplication",
-  operatingSystem: "Web",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-};
 ---
 
 <ToolLayout
@@ -78,9 +57,15 @@ const webAppJsonLd = {
   faq={faqs}
   categoryName="Health"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
-
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BMI Calculator",
+    "description": "Calculate adult Body Mass Index using metric or imperial units and view general BMI categories.",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="bmi-calculator">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
@@ -127,7 +112,7 @@ const webAppJsonLd = {
       </div>
 
       <p class="note" style="margin-top:10px;">
-        This tool is for informational purposes only and does not replace professional medical advice.
+        This calculator is for general adult BMI screening only. It is not a diagnosis and does not replace advice from a qualified healthcare professional.
       </p>
     </div>
   </div>

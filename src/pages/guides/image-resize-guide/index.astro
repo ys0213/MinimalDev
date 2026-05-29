@@ -19,6 +19,34 @@ const faqs = [
     a: "The image may look stretched, squashed, or visually wrong even if the file still loads correctly.",
   },
 ];
+
+const pageUrl = "https://minimaldev.dev/guides/image-resize-guide/";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Image Resize Guide",
+    "description": "Learn how to resize images correctly for web, social media, and performance optimization.",
+    "url": pageUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": "MinimalDev"
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((item) => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.a
+      }
+    }))
+  }
+];
 ---
 
 <BaseLayout
@@ -26,6 +54,7 @@ const faqs = [
   description="Learn how to resize images correctly for web, social media, and performance optimization."
   canonicalPath="/guides/image-resize-guide/"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <div class="container">
     <h1 class="page-title">Image Resize Guide</h1>
     <p class="lead">

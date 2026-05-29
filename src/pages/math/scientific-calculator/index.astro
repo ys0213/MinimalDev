@@ -30,45 +30,26 @@ const faqs = [
     a: "No. All calculations run locally in your browser and are not transmitted to a server.",
   },
 ];
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
-const webAppJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Scientific Calculator",
-  description:
-    "Free scientific calculator for arithmetic, powers, roots, trigonometric functions, logarithms, and constants.",
-  applicationCategory: "UtilitiesApplication",
-  operatingSystem: "Web",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-};
 ---
 
 <ToolLayout
   title={`Scientific Calculator — ${SITE_NAME}`}
-  description="Scientific calculator with trig, logs, roots, powers, constants, keyboard input, validation, result cards, and FAQ schema."
+  description="Scientific calculator with trig, logs, roots, powers, constants, keyboard input, validation, and result cards."
   canonicalPath={CANONICAL_PATH}
   h1="Scientific Calculator"
   intro="Evaluate scientific expressions with arithmetic, powers, roots, trig functions, logs, parentheses, and constants. Choose degrees or radians for trig."
   faq={faqs}
   categoryName="Math"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(webAppJsonLd)} />
-
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Scientific Calculator",
+    "description": "Evaluate scientific expressions with arithmetic, powers, roots, trigonometric functions, logarithms, and constants.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  })} />
   <div slot="tool" data-tool="scientific-calculator">
     <div
       style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
