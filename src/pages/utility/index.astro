@@ -89,7 +89,7 @@ const tools: ToolMeta[] = modules
             font-size:14px;
             box-sizing:border-box;
           "
-      />
+        />
       </div>
 
       {tools.length ? (
@@ -137,4 +137,21 @@ const tools: ToolMeta[] = modules
       </div>
     </section>
   </div>
+  <script>
+    const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
+    const grid = document.querySelector("[data-search-grid]");
+
+    if (searchInput && grid) {
+      const cards = Array.from(grid.querySelectorAll(".card")) as HTMLElement[];
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+
+        cards.forEach((card) => {
+          const text = card.textContent?.toLowerCase() || "";
+          card.style.display = text.includes(query) ? "" : "none";
+        });
+      });
+    }
+  </script>
 </BaseLayout>

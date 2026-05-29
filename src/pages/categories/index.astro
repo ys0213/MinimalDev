@@ -83,7 +83,7 @@ const categories = [
           Choose the category that best matches your task first. For example, use <strong>Converters</strong> for unit changes, <strong>Math</strong> for percentages and formulas, <strong>Finance</strong> for money-related estimates, and <strong>Developer Tools</strong> for validation, formatting, and encoding tasks.
         </p>
         <p style="margin-bottom:0;">
-          If you already know the tool name or only remember part of it, use the search box below to narrow the visible category cards more quickly.
+          If you already know the category name or only remember part of it, use the search box below to narrow the visible category cards more quickly.
         </p>
       </div>
     </section>
@@ -217,4 +217,25 @@ const categories = [
       </div>
     </section>
   </div>
+  <script>
+    const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
+
+    if (searchInput) {
+      const cards = Array.from(document.querySelectorAll(".grid .card")) as HTMLElement[];
+
+      const categoryCards = cards.filter((card) => {
+        const badge = card.querySelector(".badge");
+        return badge && badge.textContent?.trim() === "Category";
+      });
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+
+        categoryCards.forEach((card) => {
+          const text = card.textContent?.toLowerCase() || "";
+          card.style.display = text.includes(query) ? "" : "none";
+        });
+      });
+    }
+  </script>
 </BaseLayout>

@@ -1,8 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const user = "minimaldev.contact";
-const domain = "gmail.com";
 ---
 
 <BaseLayout
@@ -30,7 +28,7 @@ const domain = "gmail.com";
         You can reach the site using the email address below.
       </p>
 
-      <p
+      <!-- <p
         id="emailText"
         class="note"
         style="
@@ -39,7 +37,11 @@ const domain = "gmail.com";
           word-break:break-word;
           margin:10px 0 12px;
         "
-      ></p>
+      ></p> -->
+      <p class="note">
+        Email:
+        <a href="mailto:minimaldev.contact@gmail.com">minimaldev.contact@gmail.com</a>
+      </p>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button class="btn secondary" type="button" id="copyEmail">
