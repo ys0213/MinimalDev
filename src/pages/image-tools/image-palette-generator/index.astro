@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Image Palette Generator",
   description:
-    "Generate a clean color palette from an image with dominant colors, HEX values, copy tools, sorting options, and FAQ schema.",
+    "Generate a color palette from an uploaded image.",
   href: "/image-tools/image-palette-generator/",
   order: 112,
 };
@@ -47,7 +47,7 @@ const faqs = [
 
 <ToolLayout
   title={`Image Palette Generator — ${SITE_NAME}`}
-  description="Extract dominant colors from an image, preview a palette, copy HEX codes, sort results, and export palette text. Runs locally with FAQ schema."
+  description="Generate image-based color palettes for design inspiration, branding ideas, UI themes, and visual reference."
   canonicalPath={CANONICAL_PATH}
   h1="Image Palette Generator"
   intro="Upload an image to extract dominant colors and generate a clean palette with HEX codes. Useful for UI design, branding, mood boards, and quick visual analysis."

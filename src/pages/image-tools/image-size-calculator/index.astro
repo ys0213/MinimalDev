@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Image Size Calculator",
   description:
-    "Estimate image file size from dimensions, bit depth, channels, and compression assumptions, with result cards, validation, and FAQ schema.",
+    "Estimate image size from dimensions, color depth, and format assumptions.",
   href: "/image-tools/image-size-calculator/",
   order: 152,
 };
@@ -43,7 +43,7 @@ const faqs = [
 
 <ToolLayout
   title={`Image Size Calculator — ${SITE_NAME}`}
-  description="Estimate raw and compressed image sizes using dimensions, channels, bit depth, and compression assumptions."
+  description="Calculate estimated image size from width, height, pixel count, color depth, and storage assumptions for planning or comparison."
   canonicalPath={CANONICAL_PATH}
   h1="Image Size Calculator"
   intro="Estimate how large an image file may be before exporting. Useful for storage planning, upload limits, and optimizing image workflows."

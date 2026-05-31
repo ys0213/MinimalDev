@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Image DPI Converter",
   description:
-    "Convert image dimensions between pixels, inches, and centimeters using DPI or PPI assumptions with validation, result cards, and FAQ schema.",
+    "Convert or estimate image DPI values for print and size reference.",
   href: "/image-tools/image-dpi-converter/",
   order: 151,
 };
@@ -47,7 +47,7 @@ const faqs = [
 
 <ToolLayout
   title={`Image DPI Converter — ${SITE_NAME}`}
-  description="Convert between pixels and physical size using DPI. Includes inch/cm calculations, alternative DPI comparisons, reverse pixel requirements, and FAQ schema."
+  description="Calculate or convert image DPI, pixel dimensions, and print size relationships for printing, scanning, and design preparation."
   canonicalPath={CANONICAL_PATH}
   h1="Image DPI Converter"
   intro="Enter pixel dimensions and DPI to estimate physical print size in inches or centimeters, or enter physical size and DPI to estimate required pixel dimensions. Useful for print planning, export specs, poster design, and image preparation."

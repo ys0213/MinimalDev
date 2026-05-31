@@ -3,7 +3,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Base64 to Image",
-  description: "Convert Base64 string into image with preview and download.",
+  description: "Convert Base64 image data back into a viewable image.",
   href: "/image-tools/base64-to-image/",
   order: 11,
 };
@@ -23,7 +23,7 @@ const faqs = [
 
 <ToolLayout
   title={`Base64 to Image — ${SITE_NAME}`}
-  description="Convert Base64 string into an image with preview and download. Supports Data URL and raw Base64 input."
+  description="Decode Base64 image strings into image previews or files for debugging, testing, embedded assets, and development tasks."
   canonicalPath={CANONICAL_PATH}
   h1="Base64 to Image"
   intro="Decode Base64 or Data URL into an image with instant preview and download."

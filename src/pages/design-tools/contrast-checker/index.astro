@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Contrast Checker",
   description:
-    "Check text and background color contrast ratios with WCAG guidance, live preview, and FAQ schema.",
+    "Check contrast between foreground and background colors.",
   href: "/design-tools/contrast-checker/",
   order: 90,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Contrast Checker — ${SITE_NAME}`}
-  description="Check foreground and background contrast ratio with live preview and WCAG-style guidance."
+  description="Check color contrast between text and background colors for readability, accessibility review, and interface design decisions."
   canonicalPath={CANONICAL_PATH}
   h1="Contrast Checker"
   intro="Choose text and background colors, preview them together, and check their contrast ratio."
