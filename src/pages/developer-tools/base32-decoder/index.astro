@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Base32 Decoder",
   description:
-    "Decode Base32 (RFC 4648) to UTF-8 text with validation, result cards, and FAQ schema.",
+    "Decode Base32 text into readable data.",
   href: "/developer-tools/base32-decoder/",
   order: 331,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Base32 Decoder — ${SITE_NAME}`}
-  description="Decode Base32 (RFC 4648) to UTF-8 text with validation, result cards, and FAQ schema."
+  description="Decode Base32-encoded strings into readable text or data for debugging, inspection, and development tasks."
   canonicalPath={CANONICAL_PATH}
   h1="Base32 Decoder"
   intro="Decode Base32 text back to UTF-8 content using the standard RFC 4648 alphabet."

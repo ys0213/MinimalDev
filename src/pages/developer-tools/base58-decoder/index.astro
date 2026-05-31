@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Base58 Decoder",
   description:
-    "Decode Base58 using the Bitcoin alphabet back to UTF-8 text, with validation, result cards, and FAQ schema.",
+    "Decode Base58 text into readable data.",
   href: "/developer-tools/base58-decoder/",
   order: 333,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Base58 Decoder — ${SITE_NAME}`}
-  description="Decode Base58 using the Bitcoin alphabet back to UTF-8 text, with validation and FAQ schema."
+  description="Decode Base58-encoded values for identifiers, encoded strings, debugging, and development inspection."
   canonicalPath={CANONICAL_PATH}
   h1="Base58 Decoder"
   intro="Decode Base58 text using the Bitcoin alphabet and convert the result to UTF-8 text."

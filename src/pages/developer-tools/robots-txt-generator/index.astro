@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "robots.txt Generator",
   description:
-    "Generate robots.txt rules with user-agent, allow, disallow, sitemap, and crawl-delay fields using validation, result cards, and FAQ schema.",
+    "Generate robots.txt rules for crawler access settings.",
   href: "/developer-tools/robots-txt-generator/",
   order: 182,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`robots.txt Generator — ${SITE_NAME}`}
-  description="Generate robots.txt rules with allow, disallow, crawl-delay, and sitemap directives."
+  description="Generate robots.txt content for allowing or blocking crawlers, defining sitemap locations, and controlling site crawling behavior."
   canonicalPath={CANONICAL_PATH}
   h1="robots.txt Generator"
   intro="Generate a robots.txt file for your site using common directives such as User-agent, Allow, Disallow, Crawl-delay, and Sitemap."

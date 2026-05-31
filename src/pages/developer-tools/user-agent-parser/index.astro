@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "User Agent Parser",
   description:
-    "Parse user agent strings into browser, engine, OS, device hints, and platform details with result cards and FAQ schema.",
+    "Parse user agent strings into browser, device, and platform details.",
   href: "/developer-tools/user-agent-parser/",
   order: 130,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`User Agent Parser — ${SITE_NAME}`}
-  description="Parse user agent strings into browser, engine, OS, and device hints with FAQ schema."
+  description="Parse user agent strings to inspect browser, operating system, device type, and platform information for debugging or analytics review."
   canonicalPath={CANONICAL_PATH}
   h1="User Agent Parser"
   intro="Parse a user agent string to inspect likely browser, engine, operating system, and device details."

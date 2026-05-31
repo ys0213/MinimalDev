@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Regex Tester",
   description:
-    "Test regular expressions with live pattern matching, flags, validation, result cards, and FAQ schema.",
+    "Test regular expressions against sample text and review matches.",
   href: "/developer-tools/regex-tester/",
   order: 10,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Regex Tester — ${SITE_NAME}`}
-  description="Test regular expressions with pattern validation, flags, match details, result cards, and FAQ schema."
+  description="Test regular expressions with sample input, match results, flags, and pattern behavior for debugging and text processing."
   canonicalPath={CANONICAL_PATH}
   h1="Regex Tester"
   intro="Test a regular expression pattern against sample text. Review matches, captured groups, and pattern errors."

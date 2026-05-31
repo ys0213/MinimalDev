@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Image Metadata Viewer",
   description:
-    "View image file metadata locally, including file type, size, dimensions, last modified date, and basic image information with result cards and FAQ schema.",
+    "View image metadata such as file details, dimensions, and available EXIF information.",
   href: "/utility/image-metadata-viewer/",
   order: 183,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Image Metadata Viewer — ${SITE_NAME}`}
-  description="Inspect image file metadata locally with preview, validation, result cards, accessibility, and FAQ schema."
+  description="Inspect image metadata, file information, dimensions, and available EXIF details directly in the browser."
   canonicalPath={CANONICAL_PATH}
   h1="Image Metadata Viewer"
   intro="Select an image file to inspect its basic metadata, preview it, and review file properties such as dimensions, type, size, and modification date."

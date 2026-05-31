@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Text Cleaner",
   description:
-    "Clean pasted text by trimming lines, normalizing spaces, removing blank lines, and fixing punctuation spacing, with FAQ schema.",
+    "Clean text by removing unwanted spacing, symbols, or formatting issues.",
   href: "/text-tools/text-cleaner/",
   order: 120,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Text Cleaner — ${SITE_NAME}`}
-  description="Clean pasted text with whitespace normalization, line cleanup, and punctuation spacing fixes."
+  description="Clean pasted text by removing unwanted formatting, extra spacing, repeated characters, or common text cleanup issues."
   canonicalPath={CANONICAL_PATH}
   h1="Text Cleaner"
   intro="Clean messy pasted text using common formatting fixes for spaces, lines, and punctuation."

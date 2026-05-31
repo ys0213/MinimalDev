@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Bcrypt Checker",
   description:
-    "Check bcrypt hash format, version, cost factor, and structure with result cards and FAQ schema.",
+    "Check whether text matches a bcrypt hash.",
   href: "/developer-tools/bcrypt-checker/",
   order: 310,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Bcrypt Checker — ${SITE_NAME}`}
-  description="Check bcrypt hash format, version, and cost factor with result cards and FAQ schema."
+  description="Compare plain text against a bcrypt hash for authentication testing, password verification workflows, and development checks."
   canonicalPath={CANONICAL_PATH}
   h1="Bcrypt Checker"
   intro="Validate bcrypt hash structure and inspect version and cost information."

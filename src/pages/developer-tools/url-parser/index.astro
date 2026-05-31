@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "URL Parser",
   description:
-    "Parse URLs into protocol, host, path, query, hash, and parameters with validation, result cards, and FAQ schema.",
+    "Parse URLs into protocol, host, path, query, and fragment parts.",
   href: "/developer-tools/url-parser/",
   order: 110,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`URL Parser — ${SITE_NAME}`}
-  description="Parse a URL into protocol, host, path, query, hash, and parameters with FAQ schema."
+  description="Parse URLs into components such as protocol, hostname, path, query parameters, and fragments for debugging and web development."
   canonicalPath={CANONICAL_PATH}
   h1="URL Parser"
   intro="Parse a URL into its main parts, inspect query parameters, and review decoded values."

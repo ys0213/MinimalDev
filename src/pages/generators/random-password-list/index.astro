@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Random Password List",
   description:
-    "Generate a list of random passwords with configurable length and character types, plus validation, result cards, and FAQ schema.",
+    "Generate a list of random passwords with selected options.",
   href: "/generators/random-password-list/",
   order: 50,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`Random Password List — ${SITE_NAME}`}
-  description="Generate multiple random passwords with configurable length and character types, plus FAQ schema."
+  description="Generate multiple random passwords at once with selected length and character options for testing, setup, and temporary use cases."
   canonicalPath={CANONICAL_PATH}
   h1="Random Password List"
   intro="Generate a batch of random passwords for testing, placeholder accounts, and workflow setup."

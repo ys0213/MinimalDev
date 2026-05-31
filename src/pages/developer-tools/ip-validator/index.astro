@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "IP Validator",
   description:
-    "Validate IPv4 addresses with format checks, private/public range hints, result cards, and FAQ schema.",
+    "Check whether an IP address is valid IPv4 or IPv6 format.",
   href: "/developer-tools/ip-validator/",
   order: 410,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`IP Validator — ${SITE_NAME}`}
-  description="Validate IPv4 addresses, inspect octets, and classify private/public and reserved ranges."
+  description="Validate IPv4 and IPv6 address formats for networking, configuration checks, logs, and development workflows."
   canonicalPath={CANONICAL_PATH}
   h1="IP Validator"
   intro="Validate an IPv4 address and check whether it belongs to common private, loopback, link-local, multicast, or public ranges."

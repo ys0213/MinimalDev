@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "HTTP Header Parser",
   description:
-    "Parse raw HTTP headers into name/value pairs with validation, duplicate detection, result cards, and FAQ schema.",
+    "Parse HTTP headers into readable key-value pairs.",
   href: "/developer-tools/http-header-parser/",
   order: 120,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`HTTP Header Parser — ${SITE_NAME}`}
-  description="Parse raw HTTP headers into structured key/value pairs with FAQ schema."
+  description="Parse HTTP request or response headers into readable fields for debugging, API inspection, and web development tasks."
   canonicalPath={CANONICAL_PATH}
   h1="HTTP Header Parser"
   intro="Paste raw HTTP headers and parse them into structured header fields."

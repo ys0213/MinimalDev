@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "IPv6 Expander",
   description:
-    "Expand IPv6 addresses to full 8-group notation with validation, result cards, and FAQ schema.",
+    "Expand compressed IPv6 addresses into full notation.",
   href: "/developer-tools/ipv6-expander/",
   order: 531,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`IPv6 Expander — ${SITE_NAME}`}
-  description="Expand IPv6 addresses to full notation with validation, result cards, and FAQ schema."
+  description="Expand IPv6 shorthand addresses into full notation for network configuration, debugging, and address comparison."
   canonicalPath={CANONICAL_PATH}
   h1="IPv6 Expander"
   intro="Expand a standard IPv6 address into full eight-group notation. Useful for normalization, auditing, and network documentation."

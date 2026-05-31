@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Sitemap Generator",
   description:
-    "Generate XML sitemap entries from a base URL and path list, with validation, result cards, and FAQ schema.",
+    "Generate sitemap XML entries from page URLs.",
   href: "/developer-tools/sitemap-generator/",
   order: 183,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Sitemap Generator — ${SITE_NAME}`}
-  description="Generate XML sitemap files from a base URL and path list."
+  description="Generate XML sitemap content from URLs to help organize indexable pages and support search engine discovery."
   canonicalPath={CANONICAL_PATH}
   h1="Sitemap Generator"
   intro="Generate a simple XML sitemap from a base URL and a list of page paths or full URLs. Optional fields include last modified date, change frequency, and priority."

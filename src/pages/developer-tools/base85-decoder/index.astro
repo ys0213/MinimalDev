@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Base85 Decoder",
   description:
-    "Decode Ascii85/Base85 back to UTF-8 text with validation, result cards, and FAQ schema.",
+    "Decode Base85 text into readable data.",
   href: "/developer-tools/base85-decoder/",
   order: 335,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Base85 Decoder — ${SITE_NAME}`}
-  description="Decode Ascii85/Base85 back to UTF-8 text with validation, result cards, and FAQ schema."
+  description="Decode Base85-encoded strings into readable text or data for inspection, debugging, and technical workflows."
   canonicalPath={CANONICAL_PATH}
   h1="Base85 Decoder"
   intro="Decode Ascii85/Base85 text back to UTF-8 text. Supports optional wrappers and the z shortcut."

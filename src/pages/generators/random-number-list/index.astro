@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Random Number List",
   description:
-    "Generate random number lists with min, max, count, uniqueness, and sorting options, plus FAQ schema.",
+    "Generate a list of random numbers within a selected range.",
   href: "/generators/random-number-list/",
   order: 130,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Random Number List — ${SITE_NAME}`}
-  description="Generate random number lists with range, uniqueness, sorting options, and FAQ schema."
+  description="Generate random number lists using selected range and count options for testing, examples, sampling, and practice data."
   canonicalPath={CANONICAL_PATH}
   h1="Random Number List"
   intro="Generate random integer lists for testing, sampling, mock data, and spreadsheet workflows."

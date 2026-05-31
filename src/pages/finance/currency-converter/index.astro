@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Currency Converter",
   description:
-    "Convert between currencies using a manually entered exchange rate. Includes validation, result cards, reverse rate, and FAQ schema.",
+    "Convert between currencies using entered exchange rates.",
   href: "/finance/currency-converter/",
   order: 145,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Currency Converter — ${SITE_NAME}`}
-  description="Convert between currencies using a manually entered exchange rate. Includes validation, reverse rate, result cards, and FAQ schema."
+  description="Convert currency amounts using a selected or entered exchange rate for travel, budgeting, invoices, and price comparisons."
   canonicalPath={CANONICAL_PATH}
   h1="Currency Converter"
   intro="Convert an amount from one currency to another using a manually entered exchange rate. Useful when you already know the rate you want to apply."

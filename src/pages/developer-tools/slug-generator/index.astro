@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Slug Generator",
   description:
-    "Generate clean URL slugs from text with lowercase, separator, and cleanup options using validation, result cards, and FAQ schema.",
+    "Generate clean URL slugs from titles or text.",
   href: "/developer-tools/slug-generator/",
   order: 187,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Slug Generator — ${SITE_NAME}`}
-  description="Generate URL-friendly slugs from text using lowercase and separator options."
+  description="Generate readable URL slugs from titles, headings, or text for articles, pages, products, and routing."
   canonicalPath={CANONICAL_PATH}
   h1="Slug Generator"
   intro="Generate clean URL slugs from page titles, article headlines, product names, and similar text."

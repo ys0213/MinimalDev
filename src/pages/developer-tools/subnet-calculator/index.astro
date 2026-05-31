@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Subnet Calculator",
   description:
-    "Calculate IPv4 subnet details from an IP address and subnet mask, including network, broadcast, wildcard, prefix, and usable host range.",
+    "Calculate subnet details from an IP address and mask.",
   href: "/developer-tools/subnet-calculator/",
   order: 414,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`Subnet Calculator — ${SITE_NAME}`}
-  description="Calculate IPv4 subnet details from a subnet mask and IP address."
+  description="Calculate subnet information including network address, broadcast address, usable range, and host count for IPv4 networks."
   canonicalPath={CANONICAL_PATH}
   h1="Subnet Calculator"
   intro="Enter an IPv4 address and dotted-decimal subnet mask to calculate network details."

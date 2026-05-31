@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Binomial Distribution Calculator",
   description:
-    "Calculate exact and cumulative binomial probabilities with validation, result cards, and FAQ schema.",
+    "Calculate binomial probability from trials, success probability, and outcomes.",
   href: "/math/binomial-distribution-calculator/",
   order: 366,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`Binomial Distribution Calculator — ${SITE_NAME}`}
-  description="Calculate exact and cumulative binomial probabilities."
+  description="Calculate binomial distribution probabilities for repeated trials with two possible outcomes and a fixed success probability."
   canonicalPath={CANONICAL_PATH}
   h1="Binomial Distribution Calculator"
   intro="Calculate exact probability P(X = k), cumulative probability P(X ≤ k), and upper-tail probability P(X ≥ k) for a binomial distribution."

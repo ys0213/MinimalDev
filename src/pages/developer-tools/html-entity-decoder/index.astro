@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "HTML Entity Decoder",
   description:
-    "Decode HTML entities into readable text with validation, result cards, output metrics, and FAQ schema.",
+    "Decode HTML entities back into readable text.",
   href: "/developer-tools/html-entity-decoder/",
   order: 391,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`HTML Entity Decoder — ${SITE_NAME}`}
-  description="Decode HTML entities into readable text with result cards, output metrics, and FAQ schema."
+  description="Decode HTML entities into normal characters for editing, debugging, content cleanup, and markup inspection."
   canonicalPath={CANONICAL_PATH}
   h1="HTML Entity Decoder"
   intro="Convert HTML entities back into normal text. Useful for copied markup, encoded snippets, and escaped content."

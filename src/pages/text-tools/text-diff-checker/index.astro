@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Text Diff Checker",
   description:
-    "Compare two text blocks and highlight whether they match, plus line and character difference summaries with FAQ schema.",
+    "Compare two text blocks and find differences.",
   href: "/text-tools/text-diff-checker/",
   order: 80,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Text Diff Checker — ${SITE_NAME}`}
-  description="Compare two text blocks with normalization options and summary diff reporting."
+  description="Compare two text blocks to find changes, missing lines, edits, and differences for writing, code, or document review."
   canonicalPath={CANONICAL_PATH}
   h1="Text Diff Checker"
   intro="Compare two text inputs to see whether they match and where summary-level differences appear."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "UUID Validator",
   description:
-    "Validate UUID strings, inspect version and variant, and review normalized output with result cards and FAQ schema.",
+    "Check whether a value is a valid UUID format.",
   href: "/developer-tools/uuid-validator/",
   order: 170,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`UUID Validator — ${SITE_NAME}`}
-  description="Validate UUID strings, inspect version and variant, and review normalized output with FAQ schema."
+  description="Validate UUID strings and inspect their format for identifiers, database records, API values, and development tasks."
   canonicalPath={CANONICAL_PATH}
   h1="UUID Validator"
   intro="Validate a UUID string, inspect its version and variant, and compare the normalized lowercase form."

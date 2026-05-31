@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JWT Validator",
   description:
-    "Validate JWT structure, decode header and payload, inspect standard claims, and review result cards with FAQ schema.",
+    "Validate JWT structure and inspect token fields.",
   href: "/developer-tools/jwt-validator/",
   order: 320,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`JWT Validator — ${SITE_NAME}`}
-  description="Validate JWT structure, decode header and payload, inspect claims, and review result cards with FAQ schema."
+  description="Validate JSON Web Token structure, inspect header and payload data, and review token format for API debugging."
   canonicalPath={CANONICAL_PATH}
   h1="JWT Validator"
   intro="Validate JWT format, decode its header and payload, and inspect common claims such as exp, nbf, and iat."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Interest Rate Calculator",
   description:
-    "Estimate annual interest rate from principal, final amount, and time. Supports simple and compound modes with validation and result cards.",
+    "Estimate interest rate from loan amount, payment, term, and repayment details.",
   href: "/finance/interest-rate-calculator/",
   order: 130,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Interest Rate Calculator — ${SITE_NAME}`}
-  description="Estimate annual interest rate from principal, ending value, and time using simple or compound mode."
+  description="Calculate an estimated interest rate from principal, payment amount, repayment term, and loan cost information."
   canonicalPath={CANONICAL_PATH}
   h1="Interest Rate Calculator"
   intro="Estimate the annual interest rate implied by a starting amount, ending amount, and time period."

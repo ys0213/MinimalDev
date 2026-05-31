@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Meta Tag Generator",
   description:
-    "Generate HTML meta tags for SEO, Open Graph, Twitter Cards, robots, and canonical URLs with validation, result cards, and FAQ schema.",
+    "Generate basic HTML meta tags for pages and previews.",
   href: "/developer-tools/meta-tag-generator/",
   order: 180,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Meta Tag Generator — ${SITE_NAME}`}
-  description="Generate SEO, Open Graph, Twitter Card, robots, and canonical meta tags."
+  description="Generate title, description, Open Graph, and related meta tags for web pages, previews, SEO, and sharing snippets."
   canonicalPath={CANONICAL_PATH}
   h1="Meta Tag Generator"
   intro="Generate common SEO and social-sharing meta tags for your HTML head. Includes title, description, canonical, robots, Open Graph, and Twitter Card fields."

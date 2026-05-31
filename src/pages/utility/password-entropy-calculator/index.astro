@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Password Entropy Calculator",
   description:
-    "Estimate password entropy from character set assumptions and length. Runs locally with result cards, accessibility, and FAQ schema.",
+    "Estimate password entropy from length and character set size.",
   href: "/utility/password-entropy-calculator/",
   order: 161,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Password Entropy Calculator — ${SITE_NAME}`}
-  description="Estimate password entropy, combinations, and rough crack time locally with result cards, accessibility, and FAQ schema."
+  description="Estimate password entropy and possible combinations from password length and character set assumptions for security reference."
   canonicalPath={CANONICAL_PATH}
   h1="Password Entropy Calculator"
   intro="Estimate password entropy from actual password content or from manual assumptions about length and character pool."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Cycling Calorie Calculator",
   description:
-    "Estimate calories burned while cycling from body weight and distance with validation, result cards, and FAQ schema.",
+    "Estimate calories burned while cycling from time, intensity, and body weight.",
   href: "/health/cycling-calorie-calculator/",
   order: 90,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Cycling Calorie Calculator — ${SITE_NAME}`}
-  description="Estimate calories burned while cycling from weight and distance."
+  description="Estimate cycling calories burned using body weight, duration, intensity, or speed for general workout tracking."
   canonicalPath={CANONICAL_PATH}
   h1="Cycling Calorie Calculator"
   intro="Estimate calories burned while cycling from body weight and distance. Informational only, not medical advice."

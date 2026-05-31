@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Bayes Theorem Calculator",
   description:
-    "Calculate posterior probability using Bayes' theorem from prior probability, sensitivity, and false positive rate.",
+    "Calculate conditional probability using Bayes’ theorem.",
   href: "/math/bayes-theorem-calculator/",
   order: 385,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Bayes Theorem Calculator — ${SITE_NAME}`}
-  description="Calculate posterior probability with Bayes' theorem from prior probability, true positive rate, and false positive rate."
+  description="Calculate Bayes’ theorem results for conditional probability, prior probability, likelihood, and updated probability estimates."
   canonicalPath={CANONICAL_PATH}
   h1="Bayes Theorem Calculator"
   intro="Calculate posterior probability using Bayes' theorem. Enter a prior probability, P(B|A), and P(B|not A) to get the updated probability after observing evidence."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "IP Range Calculator",
   description:
-    "Calculate the number of IPv4 addresses between two endpoints, validate order, and inspect range details with FAQ schema.",
+    "Calculate IP ranges from start, end, or network values.",
   href: "/developer-tools/ip-range-calculator/",
   order: 415,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`IP Range Calculator — ${SITE_NAME}`}
-  description="Calculate inclusive IPv4 range size between two addresses."
+  description="Calculate IP address ranges for network planning, subnet review, access rules, and infrastructure reference."
   canonicalPath={CANONICAL_PATH}
   h1="IP Range Calculator"
   intro="Enter a start IPv4 address and an end IPv4 address to calculate the inclusive size of the range."

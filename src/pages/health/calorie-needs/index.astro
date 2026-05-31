@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Calorie Needs Calculator",
   description:
-    "Estimate daily calorie needs (maintenance, weight loss, weight gain) using BMR and activity level. Free calculator with unit options.",
+    "Estimate daily calorie needs from body details and activity level.",
   href: "/health/calorie-needs/",
   order: 30,
 };
@@ -43,7 +43,7 @@ const faqs = [
 
 <ToolLayout
   title={`Calorie Needs Calculator — ${SITE_NAME}`}
-  description="Estimate daily calorie needs (maintenance, weight loss, weight gain) using BMR (Mifflin–St Jeor) and activity level. Units supported."
+  description="Estimate daily calorie needs based on age, height, weight, sex, and activity level for general planning."
   canonicalPath={CANONICAL_PATH}
   h1="Calorie Needs Calculator"
   intro="Estimate daily calorie needs using BMR (Mifflin–St Jeor) and an activity multiplier. Shows maintenance, weight loss, and weight gain targets."

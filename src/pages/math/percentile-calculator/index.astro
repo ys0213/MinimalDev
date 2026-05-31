@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Percentile Calculator",
   description:
-    "Calculate a percentile value from numeric data using linear interpolation on the sorted dataset.",
+    "Calculate percentile rank or percentile value from data.",
   href: "/math/percentile-calculator/",
   order: 382,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Percentile Calculator — ${SITE_NAME}`}
-  description="Calculate percentile values from numeric data using a sorted dataset and interpolation."
+  description="Calculate percentile values or percentile ranks for scores, measurements, distributions, and statistical comparison."
   canonicalPath={CANONICAL_PATH}
   h1="Percentile Calculator"
   intro="Calculate a percentile value from a dataset. Enter numeric values and choose a percentile from 0 to 100."

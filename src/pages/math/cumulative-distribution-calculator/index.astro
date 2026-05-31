@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Cumulative Distribution Calculator",
   description:
-    "Calculate the normal cumulative distribution value P(X ≤ x) from x, mean, and standard deviation.",
+    "Calculate cumulative probability for selected distributions.",
   href: "/math/cumulative-distribution-calculator/",
   order: 387,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Cumulative Distribution Calculator — ${SITE_NAME}`}
-  description="Calculate normal cumulative probability P(X ≤ x) from x, mean, and standard deviation."
+  description="Calculate cumulative distribution values to estimate probability up to a selected point in a probability distribution."
   canonicalPath={CANONICAL_PATH}
   h1="Cumulative Distribution Calculator"
   intro="Calculate the cumulative probability of a normal distribution at a chosen x value, using a mean and standard deviation."

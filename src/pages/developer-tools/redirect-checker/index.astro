@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Redirect Checker",
   description:
-    "Inspect redirect chains from pasted URL sequences, compare hops, and review redirect status manually with validation, result cards, and FAQ schema.",
+    "Check redirect targets and review URL forwarding behavior.",
   href: "/developer-tools/redirect-checker/",
   order: 189,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Redirect Checker — ${SITE_NAME}`}
-  description="Analyze pasted redirect chains, URL hops, and final destinations."
+  description="Check redirect chains, destination URLs, and status behavior for web pages, SEO checks, and debugging workflows."
   canonicalPath={CANONICAL_PATH}
   h1="Redirect Checker"
   intro="Paste a redirect chain or URL hop list to review chain length, repeated URLs, protocol changes, and final destination structure."

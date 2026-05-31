@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Dividend Calculator",
   description:
-    "Estimate annual, quarterly, monthly, and yield-based dividend income from shares and dividend per share.",
+    "Estimate dividend income from shares, dividend rate, and payment frequency.",
   href: "/finance/dividend-calculator/",
   order: 150,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Dividend Calculator — ${SITE_NAME}`}
-  description="Estimate dividend income from shares and dividend per share. Includes yield estimate, result cards, and FAQ schema."
+  description="Calculate dividend income using share count, dividend per share, yield, frequency, and investment assumptions."
   canonicalPath={CANONICAL_PATH}
   h1="Dividend Calculator"
   intro="Estimate dividend income from your share count, dividend per share, and optional share price."

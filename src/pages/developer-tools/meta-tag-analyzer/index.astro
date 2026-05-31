@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Meta Tag Analyzer",
   description:
-    "Analyze HTML head markup for title, meta description, canonical, robots, Open Graph, and Twitter tags with validation, result cards, and FAQ schema.",
+    "Analyze meta tags from page markup or entered HTML.",
   href: "/developer-tools/meta-tag-analyzer/",
   order: 181,
 };
@@ -38,7 +38,7 @@ const faqs = [
 
 <ToolLayout
   title={`Meta Tag Analyzer — ${SITE_NAME}`}
-  description="Analyze pasted HTML head markup for SEO, canonical, Open Graph, and Twitter tags."
+  description="Analyze meta title, description, Open Graph, and related tags to review page metadata and preview readiness."
   canonicalPath={CANONICAL_PATH}
   h1="Meta Tag Analyzer"
   intro="Paste HTML head markup or a full page to inspect common SEO and social-sharing tags such as title, description, canonical, robots, Open Graph, and Twitter Card tags."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Poisson Distribution Calculator",
   description:
-    "Calculate exact and cumulative Poisson probabilities with validation, result cards, and FAQ schema.",
+    "Calculate Poisson probabilities from an average event rate.",
   href: "/math/poisson-distribution-calculator/",
   order: 367,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`Poisson Distribution Calculator — ${SITE_NAME}`}
-  description="Calculate exact and cumulative Poisson probabilities."
+  description="Calculate Poisson distribution probabilities for event counts, arrival rates, rare events, and statistical modeling."
   canonicalPath={CANONICAL_PATH}
   h1="Poisson Distribution Calculator"
   intro="Calculate exact and cumulative Poisson probabilities using event rate λ and number of events k."

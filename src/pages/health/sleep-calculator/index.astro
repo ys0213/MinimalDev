@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Sleep Calculator",
   description:
-    "Estimate suggested bedtime or wake-up times based on 90-minute sleep cycles with validation, result cards, and FAQ schema.",
+    "Estimate sleep and wake times based on sleep cycle timing.",
   href: "/health/sleep-calculator/",
   order: 100,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Sleep Calculator — ${SITE_NAME}`}
-  description="Estimate suggested bedtime or wake-up times from 90-minute sleep cycles."
+  description="Calculate suggested sleep or wake times using sleep cycle timing for general rest planning and bedtime reference."
   canonicalPath={CANONICAL_PATH}
   h1="Sleep Calculator"
   intro="Estimate suggested bedtime or wake-up times using 90-minute sleep cycles. Informational only, not medical advice."

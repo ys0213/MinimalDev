@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JWT Encoder",
   description:
-    "Encode JWT header and payload locally into a token-like string for testing and development. Includes validation, result cards, and FAQ schema.",
+    "Create JWT strings from header, payload, and signing input.",
   href: "/developer-tools/jwt-encoder/",
   order: 60,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`JWT Encoder — ${SITE_NAME}`}
-  description="Encode JWT header and payload into a token-like string for local testing, with JSON validation and FAQ schema."
+  description="Generate JSON Web Tokens from header and payload data for development, testing, mock authentication, and API workflows."
   canonicalPath={CANONICAL_PATH}
   h1="JWT Encoder"
   intro="Encode JWT header and payload locally into a token-like string. Useful for testing format and structure."

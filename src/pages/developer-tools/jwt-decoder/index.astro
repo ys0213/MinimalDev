@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JWT Decoder",
   description:
-    "Decode JWT header and payload locally, inspect claims, expiration values, and structure with result cards and FAQ schema.",
+    "Decode JWT headers and payloads for inspection.",
   href: "/developer-tools/jwt-decoder/",
   order: 50,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`JWT Decoder — ${SITE_NAME}`}
-  description="Decode JWT header and payload locally, inspect claims, and review token structure with FAQ schema."
+  description="Decode JSON Web Tokens to inspect header and payload data for authentication debugging, API testing, and token review."
   canonicalPath={CANONICAL_PATH}
   h1="JWT Decoder"
   intro="Decode a JWT token locally to inspect its header, payload, and common time-based claims."

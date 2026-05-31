@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Stock Average Calculator",
   description:
-    "Calculate average share cost, total shares, total cost, and unrealized gain or loss after multiple stock purchases.",
+    "Calculate average stock purchase price across multiple buys.",
   href: "/finance/stock-average-calculator/",
   order: 160,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Stock Average Calculator — ${SITE_NAME}`}
-  description="Calculate weighted average share cost after multiple purchases, plus optional unrealized gain/loss."
+  description="Calculate average stock cost basis after multiple purchases using share quantities and purchase prices."
   canonicalPath={CANONICAL_PATH}
   h1="Stock Average Calculator"
   intro="Estimate your weighted average stock cost basis after up to four purchases. Optionally compare it with a current market price."

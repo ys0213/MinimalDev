@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Loan Payment Calculator",
   description:
-    "Calculate monthly loan payments, total paid, and total interest from loan amount, rate, and term.",
+    "Calculate loan payment amount from principal, interest rate, and term.",
   href: "/finance/loan-payment-calculator/",
   order: 140,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Loan Payment Calculator — ${SITE_NAME}`}
-  description="Estimate periodic loan payments, total paid, and total interest with fixed-rate loan assumptions."
+  description="Calculate regular loan payments and estimate total repayment cost using loan amount, rate, and repayment period."
   canonicalPath={CANONICAL_PATH}
   h1="Loan Payment Calculator"
   intro="Estimate loan payments from loan amount, annual interest rate, repayment term, and payment frequency."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Paycheck Calculator",
   description:
-    "Estimate gross paycheck, tax withholding, deductions, and take-home pay with custom pay frequency and display currency.",
+    "Estimate paycheck amount from salary, pay frequency, and deductions.",
   href: "/finance/paycheck-calculator/",
   order: 110,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Paycheck Calculator — ${SITE_NAME}`}
-  description="Estimate gross paycheck, taxes, deductions, and take-home pay with custom pay frequency and FAQ schema."
+  description="Estimate paycheck amounts using income, pay frequency, deductions, and basic withholding assumptions."
   canonicalPath={CANONICAL_PATH}
   h1="Paycheck Calculator"
   intro="Estimate your gross paycheck and take-home pay using annual salary, pay frequency, estimated tax rate, and optional paycheck deductions."

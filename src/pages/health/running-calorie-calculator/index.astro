@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Running Calorie Calculator",
   description:
-    "Estimate calories burned while running from body weight and distance, with optional duration and pace context.",
+    "Estimate calories burned while running from distance, weight, and pace.",
   href: "/health/running-calorie-calculator/",
   order: 80,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Running Calorie Calculator — ${SITE_NAME}`}
-  description="Estimate calories burned while running from body weight and distance."
+  description="Estimate running calories burned using body weight, distance, pace, or duration for general activity tracking."
   canonicalPath={CANONICAL_PATH}
   h1="Running Calorie Calculator"
   intro="Estimate calories burned while running from body weight and distance. Optional duration adds pace context."

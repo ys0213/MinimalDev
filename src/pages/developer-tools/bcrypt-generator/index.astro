@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Bcrypt Generator",
   description:
-    "Generate bcrypt hashes for text input with configurable cost, validation, copy support, and FAQ schema.",
+    "Generate bcrypt hashes from passwords or text input.",
   href: "/developer-tools/bcrypt-generator/",
   order: 100,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Bcrypt Generator — ${SITE_NAME}`}
-  description="Generate bcrypt hashes for text input with configurable cost and FAQ schema."
+  description="Generate bcrypt hashes from password-style input for authentication testing, development, and security-related workflows."
   canonicalPath={CANONICAL_PATH}
   h1="Bcrypt Generator"
   intro="Generate a bcrypt hash for text input. Useful for password-hashing style testing and development workflows."

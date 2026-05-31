@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Hash Comparator",
   description:
-    "Compare two hash strings, inspect likely algorithms, and review result cards with FAQ schema.",
+    "Compare hash values to check whether they match.",
   href: "/developer-tools/hash-comparator/",
   order: 300,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Hash Comparator — ${SITE_NAME}`}
-  description="Compare two hash strings, detect likely hash patterns, and inspect the result with FAQ schema."
+  description="Compare two hash strings to check equality for file verification, checksums, debugging, and integrity review."
   canonicalPath={CANONICAL_PATH}
   h1="Hash Comparator"
   intro="Compare two hash strings for an exact match and inspect likely hash format information."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Hash Generator",
   description:
-    "Generate hashes for text using SHA-1, SHA-256, SHA-384, and SHA-512 with encoding options, validation, and FAQ schema.",
+    "Generate hash values from text using common hash algorithms.",
   href: "/developer-tools/hash-generator/",
   order: 70,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Hash Generator — ${SITE_NAME}`}
-  description="Generate SHA hashes for text input using browser Web Crypto with result cards and FAQ schema."
+  description="Generate hash outputs from text using common algorithms for checksums, comparison, testing, and development reference."
   canonicalPath={CANONICAL_PATH}
   h1="Hash Generator"
   intro="Generate hash values for text using SHA-1, SHA-256, SHA-384, or SHA-512 directly in your browser."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Leap Year Calculator",
   description:
-    "Free leap year calculator. Check whether a year is a leap year and understand the rule (divisible by 4, 100, 400). Runs locally with FAQ schema.",
+    "Check whether a year is a leap year and understand the result.",
   href: "/date-time/leap-year-calculator/",
   order: 130,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Leap Year Calculator — ${SITE_NAME}`}
-  description="Check whether a year is a leap year using the standard Gregorian rules (4/100/400). Includes clear validation, result cards, accessibility, and FAQ schema. Runs locally."
+  description="Check if a selected year is a leap year and see whether it follows the standard leap year rules."
   canonicalPath={CANONICAL_PATH}
   h1="Leap Year Calculator"
   intro="Enter a year to check if it’s a leap year (366 days). Explains the 4/100/400 rule and shows why a year is or isn’t a leap year."

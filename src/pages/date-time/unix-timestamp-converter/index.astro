@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Unix Timestamp Converter",
   description:
-    "Convert Unix timestamps to human-readable dates and convert dates back to Unix time (seconds or milliseconds). Includes validation, timezone options, result cards, and FAQ schema.",
+    "Convert Unix timestamps into readable dates and times.",
   href: "/date-time/unix-timestamp-converter/",
   order: 140,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Unix Timestamp Converter — ${SITE_NAME}`}
-  description="Convert Unix timestamps to readable date/time, and convert a date/time back to Unix seconds or milliseconds. Supports UTC and local time with validation, result cards, and FAQ schema."
+  description="Convert Unix timestamps to readable date and time values, or convert dates into Unix time for development and logging workflows."
   canonicalPath={CANONICAL_PATH}
   h1="Unix Timestamp Converter"
   intro="Convert Unix time ↔ date/time. Paste a timestamp (seconds or milliseconds) to decode it, or enter a date/time to generate Unix seconds/ms."

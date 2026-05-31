@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Nonce Generator",
   description:
-    "Generate secure nonces in hex or base64url format with configurable byte length and count. Includes result cards and FAQ schema.",
+    "Generate random nonce values for one-time use cases.",
   href: "/developer-tools/nonce-generator/",
   order: 434,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Nonce Generator — ${SITE_NAME}`}
-  description="Generate secure nonces with configurable settings, result cards, and FAQ schema."
+  description="Generate random nonce strings for testing, security examples, request identifiers, CSP workflows, and development tasks."
   canonicalPath={CANONICAL_PATH}
   h1="Nonce Generator"
   intro="Generate secure one-time nonces for CSP, signatures, request validation, and other security workflows."

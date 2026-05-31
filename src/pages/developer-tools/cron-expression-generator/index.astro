@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Cron Expression Generator",
   description:
-    "Generate 5-field cron expressions for common schedules with validation, human-readable summaries, and FAQ schema.",
+    "Generate cron expressions from schedule options.",
   href: "/developer-tools/cron-expression-generator/",
   order: 140,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Cron Expression Generator — ${SITE_NAME}`}
-  description="Generate 5-field cron expressions with schedule presets and human-readable summaries."
+  description="Generate cron expressions for recurring jobs, scheduled tasks, automation, server scripts, and background workflows."
   canonicalPath={CANONICAL_PATH}
   h1="Cron Expression Generator"
   intro="Generate a 5-field cron expression for hourly, daily, weekly, monthly, or interval-based schedules."

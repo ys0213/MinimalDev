@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Time Duration Calculator",
   description:
-    "Free time duration calculator. Calculate the duration between two times with optional overnight handling, validation, result cards, and FAQ schema.",
+    "Calculate duration between start and end times.",
   href: "/date-time/time-duration-calculator/",
   order: 70,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`Time Duration Calculator — ${SITE_NAME}`}
-  description="Calculate the duration between two times with optional overnight handling. Includes validation, result cards, and FAQ schema."
+  description="Calculate time duration between two times for work logs, schedules, shifts, study sessions, and activity tracking."
   canonicalPath={CANONICAL_PATH}
   h1="Time Duration Calculator"
   intro="Calculate the duration between two times. Optionally treat the end time as the next day when it is earlier than the start time."

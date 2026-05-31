@@ -1,11 +1,10 @@
 ---
-// /src/pages/utility/file-size-converter/index.astro
 import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "File Size Converter",
   description:
-    "Convert file sizes between bytes, KB, MB, GB, TB and binary units like KiB, MiB, GiB. Includes validation, result cards, accessibility, and FAQ schema.",
+    "Convert file sizes between bytes, KB, MB, GB, and other units.",
   href: "/utility/file-size-converter/",
   order: 241,
 };
@@ -40,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`File Size Converter — ${SITE_NAME}`}
-  description="Convert file sizes across decimal and binary units with validation, result cards, detailed conversion tables, accessibility, and FAQ schema."
+  description="Convert file size units such as bytes, KB, MB, GB, and TB for storage, downloads, uploads, and transfer estimates."
   canonicalPath={CANONICAL_PATH}
   h1="File Size Converter"
   intro="Convert file sizes between decimal units like KB, MB, GB and binary units like KiB, MiB, GiB. Useful for storage, downloads, hosting, backups, and technical documentation."

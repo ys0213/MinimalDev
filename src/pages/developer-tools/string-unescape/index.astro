@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "String Unescape",
   description:
-    "Convert escaped string sequences back into readable text with validation, result cards, and FAQ schema.",
+    "Unescape encoded string characters into readable text.",
   href: "/developer-tools/string-unescape/",
   order: 395,
 };
@@ -34,7 +34,7 @@ const faqs = [
 
 <ToolLayout
   title={`String Unescape — ${SITE_NAME}`}
-  description="Convert escaped string sequences back into readable text with validation, result cards, and FAQ schema."
+  description="Convert escaped string sequences back into readable text for debugging, code review, and data cleanup."
   canonicalPath={CANONICAL_PATH}
   h1="String Unescape"
   intro="Convert escaped string-literal content such as \\n, \\t, \\\\, \\x41, and \\u0041 back into readable text."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "PIN Generator",
   description:
-    "Generate random PIN codes with custom length and count. Optional uniqueness. Runs locally in your browser.",
+    "Generate random PIN codes with selected length and format options.",
   href: "/utility/pin-generator/",
   order: 110,
 };
@@ -39,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`PIN Generator — ${SITE_NAME}`}
-  description="Generate random PIN codes locally in your browser. Choose PIN length, count, digits-only, optional prefix/suffix, and best-effort uniqueness. Includes validation, result cards, accessibility, and FAQ schema."
+  description="Generate random numeric PIN codes for testing, placeholders, temporary codes, or simple setup workflows."
   canonicalPath={CANONICAL_PATH}
   h1="PIN Generator"
   intro="Generate random numeric PIN codes (digits only). Choose length and how many PINs to generate. Copy results with one click."

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JSON Minifier",
   description:
-    "Minify valid JSON into compact output with validation, result cards, metrics, and FAQ schema.",
+    "Minify JSON data into compact single-line output.",
   href: "/developer-tools/json-minifier/",
   order: 398,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`JSON Minifier — ${SITE_NAME}`}
-  description="Minify valid JSON into compact output with validation, result cards, metrics, and FAQ schema."
+  description="Minify JSON by removing whitespace and line breaks for smaller payloads, production use, and compact data transfer.",
   canonicalPath={CANONICAL_PATH}
   h1="JSON Minifier"
   intro="Validate JSON and minify it into compact output for transport, storage, or embedding."

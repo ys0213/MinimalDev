@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Reading Time Calculator",
   description:
-    "Estimate reading time from text using configurable reading speed, plus word, sentence, and paragraph summaries with FAQ schema.",
+    "Estimate reading time from word count and reading speed.",
   href: "/text-tools/reading-time-calculator/",
   order: 100,
 };
@@ -35,7 +35,7 @@ const faqs = [
 
 <ToolLayout
   title={`Reading Time Calculator — ${SITE_NAME}`}
-  description="Estimate reading time from text using configurable reading speed and related writing metrics."
+  description="Estimate reading time for articles, posts, scripts, documents, and study material based on word count and reading speed."
   canonicalPath={CANONICAL_PATH}
   h1="Reading Time Calculator"
   intro="Estimate reading time based on word count and a configurable words-per-minute reading speed."

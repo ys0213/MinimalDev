@@ -1,11 +1,10 @@
 ---
-// /src/pages/utility/file-size-calculator/index.astro
 import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "File Size Calculator",
   description:
-    "Calculate total file sizes across multiple files, quantities, and unit types. Includes decimal/binary systems, validation, result cards, accessibility, and FAQ schema.",
+    "Estimate file size from bitrate, duration, dimensions, or related inputs.",
   href: "/utility/file-size-calculator/",
   order: 242,
 };
@@ -40,7 +39,7 @@ const faqs = [
 
 <ToolLayout
   title={`File Size Calculator — ${SITE_NAME}`}
-  description="Calculate total file size from multiple entries with quantities, decimal/binary output, result cards, validation, accessibility, and FAQ schema."
+  description="Calculate estimated file size for media, downloads, storage planning, and transfer checks using relevant size inputs."
   canonicalPath={CANONICAL_PATH}
   h1="File Size Calculator"
   intro="Add up multiple file sizes, mix units, apply quantities, and estimate total storage or transfer size. Useful for uploads, cloud backups, media libraries, and project packaging."

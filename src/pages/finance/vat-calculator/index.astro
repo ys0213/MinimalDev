@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "VAT Calculator",
   description:
-    "Free VAT calculator. Add VAT to a net price or remove VAT from a gross price. Shows net, VAT amount, and gross total.",
+    "Calculate VAT-inclusive or VAT-exclusive prices from a tax rate.",
   href: "/finance/vat-calculator/",
   order: 210,
 };
@@ -43,7 +43,7 @@ const faqs = [
 
 <ToolLayout
   title={`VAT Calculator — ${SITE_NAME}`}
-  description="VAT calculator to add or remove VAT. Compute net price, VAT amount, and gross total with clear breakdown and accessible results."
+  description="Calculate VAT amounts, net price, and gross price for invoices, purchases, pricing, and tax-inclusive totals."
   canonicalPath={CANONICAL_PATH}
   h1="VAT Calculator"
   intro="Add VAT to a net amount or remove VAT from a VAT-included price. Shows net, VAT amount, and gross total."
