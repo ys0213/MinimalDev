@@ -1,10 +1,19 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
+import { noindexPaths } from "./src/data/noindexPaths.js";
 
-// https://astro.build/config
+const noindexSet = new Set(noindexPaths);
+
 export default defineConfig({
-    site: "https://minimaldev.dev",
-    integrations: [sitemap()],
-    trailingSlash: 'always',
+  site: "https://minimaldev.dev",
+  trailingSlash: "always",
+  integrations: [
+    sitemap({
+      filter: (page) => {
+        const pathname = new URL(page).pathname;
+        return !noindexSet.has(pathname);
+      },
+    }),
+  ],
 });
