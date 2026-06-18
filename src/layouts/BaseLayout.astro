@@ -16,16 +16,15 @@ const normalizePath = (path: string) => {
 };
 
 const canonical = `https://minimaldev.dev${normalizePath(canonicalPath)}`;
-
 const currentPath = normalizePath(Astro.url.pathname);
 
-const noindexSet = new Set(noindexPaths);
+const noindexSet = new Set(noindexPaths.map(normalizePath));
 const isNoindex = noindexSet.has(currentPath);
-const robotsContent = robots ?? (isNoindex ? "noindex,follow" : "index,follow");
 
-// ✅ base 경로 ("/MinimalDev/" 같은 값)
+const robotsContent = robots ?? (isNoindex ? "noindex,follow" : undefined);
+
 const BASE: string = import.meta.env.BASE_URL;
-// ✅ "/assets/..." 같은 경로를 base 붙여서 만드는 헬퍼
+
 const withBase = (p: string): string => {
   const base = BASE.endsWith("/") ? BASE : `${BASE}/`;
   const path = String(p).replace(/^\//, "");
@@ -41,15 +40,11 @@ const withBase = (p: string): string => {
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href={canonical} />
-  <meta name="robots" content={robotsContent} />
+  {robotsContent && <meta name="robots" content={robotsContent} />}
   <link rel="sitemap" href="/sitemap-index.xml" />
 
   <link rel="stylesheet" href={withBase("/assets/css/main.css")} />
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4048726417977405"
-     crossorigin="anonymous"></script>
-
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BX1L8JRKYJ"></script>
 
   <script
