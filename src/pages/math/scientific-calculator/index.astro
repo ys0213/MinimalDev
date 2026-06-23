@@ -51,12 +51,9 @@ const faqs = [
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
   <div slot="tool" data-tool="scientific-calculator">
-    <div
-      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
-      class="note"
-    >
-      <strong>Privacy First:</strong> All calculations run locally in your browser.
-      <strong>Your expressions are never sent to any server.</strong>
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
     </div>
     <div class="form" role="form" aria-describedby="sc_help sc_privacy">
       <div class="field">
@@ -143,10 +140,6 @@ const faqs = [
       <div class="result" id="sc_error" role="alert" style="display:none; margin-top:12px;"></div>
       <div class="result" id="sc_result" role="status" style="margin-top:12px;">Result will appear here.</div>
       <div class="result" id="sc_cards" style="display:none; margin-top:12px;"></div>
-
-      <p class="note" id="sc_privacy" style="margin-top:10px;">
-        Privacy: calculations run locally in your browser. No expressions are stored or transmitted.
-      </p>
     </div>
   </div>
 

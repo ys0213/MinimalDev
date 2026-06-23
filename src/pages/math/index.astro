@@ -20,25 +20,125 @@ const tools: ToolMeta[] = modules
     (a, b) =>
       (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
   );
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/math/percent-calculator/",
+  "/math/percentage-change-calculator/",
+  "/math/average-calculator/",
+  "/math/fraction-calculator/",
+  "/math/pythagorean-theorem-calculator/",
+  "/math/standard-deviation-calculator/",
+  "/math/quadratic-equation-calculator/",
+  "/math/scientific-calculator/",
+]);
+
+const toolGroups = [
+  {
+    title: "Percentages and ratios",
+    description: "Use these tools for percent changes, discounts, comparisons, ratios, proportions, and everyday number relationships.",
+    tools: pickTools([
+      "/math/percent-calculator/",
+      "/math/percentage-change-calculator/",
+      "/math/percent-increase-calculator/",
+      "/math/percent-decrease-calculator/",
+      "/math/ratio-calculator/",
+      "/math/proportion-calculator/",
+    ]),
+  },
+  {
+    title: "Averages and statistics",
+    description: "Calculate summaries, spread, sample statistics, and common values used in school, reporting, and analysis.",
+    tools: pickTools([
+      "/math/average-calculator/",
+      "/math/mean-median-mode-calculator/",
+      "/math/standard-deviation-calculator/",
+      "/math/variance-population-calculator/",
+      "/math/variance-sample-calculator/",
+      "/math/z-score-calculator/",
+    ]),
+  },
+  {
+    title: "Algebra and equations",
+    description: "Solve equations, work with roots, exponents, logarithms, and common algebra-style problems.",
+    tools: pickTools([
+      "/math/equation-solver/",
+      "/math/linear-equation-solver/",
+      "/math/quadratic-equation-calculator/",
+      "/math/square-root-calculator/",
+      "/math/exponent-calculator/",
+      "/math/log-calculator/",
+    ]),
+  },
+  {
+    title: "Geometry and measurement",
+    description: "Use these calculators for shapes, distances, areas, volumes, and formula-based geometry checks.",
+    tools: pickTools([
+      "/math/pythagorean-theorem-calculator/",
+      "/math/triangle-area-calculator/",
+      "/math/circle-area-calculator/",
+      "/math/sphere-volume-calculator/",
+      "/math/distance-formula-calculator/",
+      "/math/slope-calculator/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Math Tools — MinimalDev"
-  description="Free math calculators for percentages, ratios, averages, algebra, geometry, statistics, and everyday calculations. Solve math problems quickly in your browser."
+  description="Free math calculators for percentages, ratios, averages, algebra, geometry, statistics, roots, equations, and everyday calculations."
   canonicalPath="/math/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Math Tools</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects math calculators for common numeric problems such as percentages, ratios,
-        averages, algebra, geometry, and other everyday calculations.
+        Solve common math tasks with focused calculators for percentages, ratios, averages,
+        algebra, geometry, statistics, roots, and formula-based problems.
       </p>
       <p class="lead" style="margin:0;">
-        These tools are useful when you want a quick result for a single task without building the formula manually.
-        They help with practical calculations used in school, work, shopping, planning, and general problem solving.
+        Start with a task group if you are not sure which calculator fits your problem,
+        or use the full list when you already know the exact calculation you need.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common math tools</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular math tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Math tools by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -54,25 +154,25 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Study and practice</h2>
           <p>
-            Some pages are useful for checking formulas, reviewing results,
-            and solving structured math problems more quickly while studying or practicing.
+            Check formulas, review intermediate results, and solve structured math problems
+            more quickly while studying or practicing.
           </p>
         </section>
 
         <section class="card">
           <h2>Work and planning</h2>
           <p>
-            Math calculators can help with estimates, numeric checks, measurement-based planning,
-            and repeated business or project calculations where speed and consistency matter.
+            Use calculators for estimates, numeric checks, measurement-based planning,
+            summaries, and repeated business or project calculations.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse math tools</h2>
+      <h2>Browse all math tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available tools below if you already know the type of calculation you need.
+        Search all available math calculators below if you already know the type of calculation you need.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -117,24 +217,28 @@ const tools: ToolMeta[] = modules
           If the problem involves shapes or measurements, choose a geometry-oriented calculator.
         </p>
         <p style="margin-bottom:0;">
-          Splitting these tasks across focused tools makes results easier to read and avoids turning one page
-          into a large general-purpose calculator with too many unrelated inputs.
-        </p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why this category is separate</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          Math tools are different from converters, finance calculators, or general utilities because they are centered on
-          numeric relationships and formula-based problem solving rather than one fixed workflow.
-        </p>
-        <p style="margin-bottom:0;">
-          Grouping them in one category makes it easier to browse related calculators together and helps visitors move
-          from a general math task to the specific page that matches the formula or result they need.
+          Focused calculators make results easier to check because each page is built around one main
+          calculation instead of mixing unrelated inputs into one large form.
         </p>
       </div>
     </section>
   </div>
+
+  <script>
+    const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
+    const grid = document.querySelector("[data-search-grid]");
+
+    if (searchInput && grid) {
+      const cards = Array.from(grid.querySelectorAll(".card")) as HTMLElement[];
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+
+        cards.forEach((card) => {
+          const text = card.textContent?.toLowerCase() || "";
+          card.style.display = text.includes(query) ? "" : "none";
+        });
+      });
+    }
+  </script>
 </BaseLayout>

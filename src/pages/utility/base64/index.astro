@@ -67,12 +67,9 @@ const faqs = [
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
   <div slot="tool" data-tool="base64">
-    <div
-      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
-      class="note"
-    >
-      <strong>Privacy First:</strong> Everything is processed locally in your browser.
-      <strong>Your data is never sent to our servers.</strong>
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
     </div>
 
     <div class="form" role="form" aria-describedby="b64_privacy b64_help">
@@ -171,10 +168,6 @@ const faqs = [
           spellcheck="false"
         ></textarea>
       </div>
-
-      <p class="note" id="b64_privacy" style="margin-top:10px;">
-        Privacy: all processing happens locally in your browser. No inputs or outputs are uploaded or stored.
-      </p>
     </div>
   </div>
 

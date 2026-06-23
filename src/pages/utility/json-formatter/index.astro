@@ -69,8 +69,9 @@ const faqs = [
   })} />
 
   <div slot="tool" data-tool="json-formatter">
-    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-      <strong>Privacy First:</strong> Everything is processed locally in your browser. <strong>Your data is never sent to our servers.</strong>
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
     </div>
     <div class="form" role="form" aria-describedby="jf_hint jf_privacy">
       <div class="field">
@@ -138,10 +139,6 @@ const faqs = [
           readonly
         ></textarea>
       </div>
-
-      <p class="note" id="jf_privacy" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No JSON is stored or transmitted.
-      </p>
     </div>
   </div>
 

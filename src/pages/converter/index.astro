@@ -10,34 +10,130 @@ type ToolMeta = {
 
 const CATEGORY = "/converter/";
 
-// pages 전체에서 tool export 있는 것만 모은 뒤, href로 카테고리 필터
 const modules = await Astro.glob("../**/*.astro");
 
 const tools: ToolMeta[] = modules
   .map((m) => (m as any).tool as ToolMeta | undefined)
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
-  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY) // 허브 자체 제외
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
   .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/converter/temperature-converter/",
+  "/converter/c-to-f/",
+  "/converter/f-to-c/",
+  "/converter/length/",
+  "/converter/miles-to-km/",
+  "/converter/km-to-miles/",
+  "/converter/digital-storage-converter/",
+  "/converter/mb-to-gb/",
+]);
+
+const toolGroups = [
+  {
+    title: "Temperature and weather",
+    description: "Use these when converting Celsius, Fahrenheit, or Kelvin for weather, recipes, study, or technical reference.",
+    tools: pickTools([
+      "/converter/temperature-converter/",
+      "/converter/c-to-f/",
+      "/converter/f-to-c/",
+      "/converter/celsius-to-kelvin/",
+      "/converter/kelvin-to-celsius/",
+    ]),
+  },
+  {
+    title: "Distance and travel",
+    description: "Convert common travel and distance units such as miles, kilometers, meters, feet, and yards.",
+    tools: pickTools([
+      "/converter/length/",
+      "/converter/miles-to-km/",
+      "/converter/km-to-miles/",
+      "/converter/feet-to-meters/",
+      "/converter/meters-to-feet/",
+    ]),
+  },
+  {
+    title: "File size and storage",
+    description: "Use these tools when comparing storage capacity, download sizes, data units, or file-size estimates.",
+    tools: pickTools([
+      "/converter/digital-storage-converter/",
+      "/converter/mb-to-gb/",
+      "/converter/gb-to-mb/",
+      "/converter/kb-to-mb/",
+      "/converter/bytes-converter/",
+    ]),
+  },
+  {
+    title: "Weight and volume",
+    description: "Convert everyday measurement units for shopping, cooking, shipping, and product specifications.",
+    tools: pickTools([
+      "/converter/weight-converter/",
+      "/converter/kg-to-pounds/",
+      "/converter/pounds-to-kg/",
+      "/converter/volume-converter/",
+      "/converter/liters-to-gallons/",
+      "/converter/gallons-to-liters/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Converters — MinimalDev"
-  description="Free unit converters for length, weight, temperature, speed, storage, time, area, volume, and more. Fast and simple conversions directly in your browser."
+  description="Free unit converters for length, weight, temperature, speed, storage, time, area, volume, and more. Find common conversion tools grouped by task."
   canonicalPath="/converter/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Converters</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects unit conversion tools for common everyday and technical measurement tasks.
-        Use these pages when you need to change a value from one unit to another quickly and clearly.
+        Convert common units for distance, temperature, weight, storage, time, speed, area, and volume.
+        This category is organized so you can start with a broad converter or jump directly to a specific
+        conversion such as Celsius to Fahrenheit, miles to kilometers, or megabytes to gigabytes.
       </p>
       <p class="lead" style="margin:0;">
-        Typical use cases include converting distances, temperatures, weights, storage sizes, time units,
-        speed values, area measurements, and volume units. Each converter page is built around one specific task
-        so you can get a result without unnecessary steps.
+        Use the grouped sections below when you are not sure which exact converter you need. Use the full tool list
+        when you already know the conversion name.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common converters</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular converter</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Converter groups by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What you can convert here</h2>
@@ -61,18 +157,18 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Technical values</h2>
           <p>
-            Some converters are useful for storage units, time intervals, and other structured values where accuracy
-            matters more than rough estimation.
+            Some converters are useful for storage units, time intervals, pressure, energy, power,
+            and other structured values where accuracy matters more than rough estimation.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse converter tools</h2>
+      <h2>Browse all converter tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available converter pages below. If you already know the type of value you want to convert,
-        the search box can help narrow the list quickly.
+        Search all available converter pages below. The list includes both broad converters and focused
+        one-direction conversion pages.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -96,7 +192,7 @@ const tools: ToolMeta[] = modules
         <div class="grid" data-search-grid>
           {tools.map((t) => (
             <section class="card">
-              <span class="badge">Converters</span>
+              <span class="badge">Converter</span>
               <h2>{t.title}</h2>
               <p>{t.description}</p>
               <a class="btn" href={t.href}>Open</a>
@@ -113,32 +209,17 @@ const tools: ToolMeta[] = modules
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
           Start by identifying the type of measurement you have now and the unit you want to end with.
-          For example, if you want to convert body weight, choose a weight converter.
-          If you need to compare travel distance, choose a length or distance converter.
-          If the value changes depending on formulas rather than fixed ratios, such as temperature,
-          use the exact converter built for that type.
+          For example, choose a temperature converter for Celsius or Fahrenheit, a length converter for miles
+          and kilometers, or a storage converter for MB and GB.
         </p>
         <p style="margin-bottom:0;">
-          Keeping converters separated by task makes the result easier to understand and reduces mistakes
-          that can happen when too many unrelated conversions are combined into one page.
-        </p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why this category is organized this way</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          A broad converter page is useful as an index, but most users still need one specific tool in the end.
-          This category page is designed to help you move from the general task type to the exact converter page
-          that matches your input and output units.
-        </p>
-        <p style="margin-bottom:0;">
-          That makes the category easier to scan, easier to bookmark, and more practical for repeat use.
+          Some conversions use fixed ratios, while others use formulas. Temperature conversion is formula-based,
+          while file-size and distance conversions usually follow fixed unit relationships.
         </p>
       </div>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

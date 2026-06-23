@@ -1,11 +1,31 @@
+---
+const BASE: string = import.meta.env.BASE_URL;
+
+const withBase = (p: string): string => {
+  const base = BASE.endsWith("/") ? BASE : `${BASE}/`;
+  const path = String(p).replace(/^\//, "");
+  return `${base}${path}`;
+};
+---
+
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-links">
-      <a href="/legal/privacy-policy/">Privacy</a>
-      <a href="/legal/terms/">Terms</a>
-      <a href="/legal/about/">About</a>
-      <a href="/legal/contact/">Contact</a>
+      <a href={withBase("/converter/")}>Converters</a>
+      <a href={withBase("/developer-tools/")}>Developer Tools</a>
+      <a href={withBase("/image-tools/")}>Image Tools</a>
+      <a href={withBase("/text-tools/")}>Text Tools</a>
+      <a href={withBase("/guides/")}>Guides</a>
+      <a href={withBase("/categories/")}>Categories</a>
     </div>
+
+    <div class="footer-links">
+      <a href={withBase("/legal/privacy-policy/")}>Privacy</a>
+      <a href={withBase("/legal/terms/")}>Terms</a>
+      <a href={withBase("/legal/about/")}>About</a>
+      <a href={withBase("/legal/contact/")}>Contact</a>
+    </div>
+
     <div>© {new Date().getFullYear()} MinimalDev</div>
   </div>
 </footer>

@@ -1,12 +1,37 @@
 ---
-const path: string = Astro.url.pathname;
-const isActive = (href: string): boolean => path === href || path.startsWith(href);
+const currentPath: string = Astro.url.pathname;
+
+const normalizePath = (href: string): string => {
+  if (href === "/") return "/";
+  return href.endsWith("/") ? href : `${href}/`;
+};
+
+const isActive = (href: string): boolean => {
+  const normalizedCurrentPath = normalizePath(currentPath);
+  const normalizedHref = normalizePath(href);
+
+  return normalizedCurrentPath === normalizedHref || normalizedCurrentPath.startsWith(normalizedHref);
+};
+
 const BASE: string = import.meta.env.BASE_URL;
+
 const withBase = (p: string): string => {
   const base = BASE.endsWith("/") ? BASE : `${BASE}/`;
   const path = String(p).replace(/^\//, "");
   return `${base}${path}`;
 };
+
+const navLinks = [
+  { href: "/converter/", label: "Converters" },
+  { href: "/developer-tools/", label: "Developer" },
+  { href: "/image-tools/", label: "Images" },
+  { href: "/text-tools/", label: "Text" },
+  { href: "/date-time/", label: "Date & Time" },
+  { href: "/math/", label: "Math" },
+  { href: "/finance/", label: "Finance" },
+  { href: "/guides/", label: "Guides" },
+  { href: "/categories/", label: "Categories" },
+];
 ---
 
 <header class="site-header">
@@ -17,7 +42,6 @@ const withBase = (p: string): string => {
         alt="MinimalDev"
         width="28"
         height="28"
-        style="border-radius:8px; display:block;"
       />
       <div>
         MinimalDev
@@ -25,13 +49,26 @@ const withBase = (p: string): string => {
       </div>
     </a>
 
+    <input
+      id="siteNavToggle"
+      class="nav-toggle-input"
+      type="checkbox"
+      aria-label="Toggle navigation menu"
+    />
+
+    <label class="nav-toggle" for="siteNavToggle">
+      Menu
+    </label>
+
     <nav class="nav" aria-label="Primary">
-      <a href={withBase("/converter/")} aria-current={isActive("/converter/") ? "page" : undefined}>Converters</a>
-      <a href={withBase("/math/")} aria-current={isActive("/math/") ? "page" : undefined}>Math</a>
-      <a href={withBase("/finance/")} aria-current={isActive("/finance/") ? "page" : undefined}>Finance</a>
-      <a href={withBase("/date-time/")} aria-current={isActive("/date-time/") ? "page" : undefined}>Date & Time</a>
-      <a href={withBase("/health/")} aria-current={isActive("/health/") ? "page" : undefined}>Health</a>
-      <a href={withBase("/categories/")} aria-current={isActive("/categories/") ? "page" : undefined}>Categories</a>
+      {navLinks.map((link) => (
+        <a
+          href={withBase(link.href)}
+          aria-current={isActive(link.href) ? "page" : undefined}
+        >
+          {link.label}
+        </a>
+      ))}
     </nav>
   </div>
 </header>

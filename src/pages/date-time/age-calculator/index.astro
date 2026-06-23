@@ -59,12 +59,9 @@ const CANONICAL_PATH = "/date-time/age-calculator/";
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
   <div slot="tool" data-tool="age-calculator">
-    <div
-      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
-      class="note"
-    >
-      <strong>Privacy First:</strong> Age calculations run entirely in your browser.
-      <strong>Your birth date is never sent to our servers.</strong>
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
     </div>
     <div class="form">
       <div class="field">
@@ -82,10 +79,6 @@ const CANONICAL_PATH = "/date-time/age-calculator/";
       </div>
 
       <div class="result" id="age_result">Result will appear here.</div>
-
-      <p class="note" style="margin-top:8px;">
-        Privacy: calculations run locally in your browser. No personal information is stored or transmitted.
-      </p>
     </div>
   </div>
 

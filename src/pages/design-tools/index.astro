@@ -17,27 +17,110 @@ const tools: ToolMeta[] = modules
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
   .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
   .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/design-tools/color-picker/",
+  "/design-tools/color-palette-generator/",
+  "/design-tools/contrast-checker/",
+  "/design-tools/rgb-to-hex/",
+  "/design-tools/hex-to-rgb/",
+  "/design-tools/css-gradient-generator/",
+  "/design-tools/box-shadow-generator/",
+  "/design-tools/border-radius-generator/",
+]);
+
+const toolGroups = [
+  {
+    title: "Color and contrast",
+    description: "Pick colors, convert color formats, build palettes, and check contrast for interface readability.",
+    tools: pickTools([
+      "/design-tools/color-picker/",
+      "/design-tools/color-palette-generator/",
+      "/design-tools/contrast-checker/",
+      "/design-tools/rgb-to-hex/",
+      "/design-tools/hex-to-rgb/",
+      "/design-tools/rgb-to-hsl/",
+      "/design-tools/hsl-to-rgb/",
+    ]),
+  },
+  {
+    title: "CSS style generation",
+    description: "Generate or inspect CSS values for gradients, shadows, border radius, layout, and common UI styling tasks.",
+    tools: pickTools([
+      "/design-tools/css-gradient-generator/",
+      "/design-tools/gradient-generator/",
+      "/design-tools/box-shadow-generator/",
+      "/design-tools/border-radius-generator/",
+      "/design-tools/flexbox-generator/",
+      "/design-tools/css-grid-generator/",
+    ]),
+  },
+  {
+    title: "UI asset helpers",
+    description: "Use focused helpers for small visual assets and front-end design support tasks.",
+    tools: pickTools([
+      "/design-tools/favicon-generator/",
+      "/design-tools/svg-to-css-generator/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Design Tools — MinimalDev"
-  description="Free design tools for colors, gradients, CSS generation, layout helpers, color palettes, contrast checking, and UI design utilities."
+  description="Free design tools for colors, contrast, palettes, CSS gradients, shadows, border radius, layout helpers, and UI styling tasks."
   canonicalPath="/design-tools/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Design Tools</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects browser-based design helper tools for everyday visual work.
-        Use these pages when you need quick support for colors, gradients, layout values, spacing,
-        contrast checks, or small CSS-related styling tasks.
+        Use browser-based design helpers for colors, palettes, contrast checks, CSS gradients,
+        shadows, border radius, layout values, and other small interface styling tasks.
       </p>
       <p class="lead" style="margin:0;">
-        These tools are meant to speed up routine design decisions and reduce repetitive manual work.
-        Instead of opening heavy design software for small tasks, you can use focused pages to inspect,
-        generate, compare, or convert visual values directly in the browser.
+        This category is grouped around practical design workflows so you can move from a visual problem
+        to a focused tool without scanning one long flat list.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common design tools</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular design tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Design tools by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -45,7 +128,7 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Color and contrast work</h2>
           <p>
-            Use design tools to explore color values, generate palettes, compare formats,
+            Explore color values, generate palettes, compare color formats,
             and check readability or visual balance in interface and content design.
           </p>
         </section>
@@ -53,25 +136,25 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>CSS and styling helpers</h2>
           <p>
-            Some tools are useful for quickly generating or checking CSS-related values such as gradients,
-            spacing, shadows, sizing, or other small style decisions used in UI work.
+            Generate or inspect CSS-related values such as gradients, spacing, shadows,
+            border radius, layout, or other small style decisions used in UI work.
           </p>
         </section>
 
         <section class="card">
           <h2>Fast visual reference</h2>
           <p>
-            These pages help with quick visual checks that come up repeatedly in design and front-end workflows,
-            especially when you only need one focused result instead of a full design application.
+            Use focused pages for quick visual checks that come up repeatedly in design
+            and front-end workflows.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse design tools</h2>
+      <h2>Browse all design tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available design tools below if you already know the kind of visual helper you need.
+        Search all available design tools below if you already know the kind of visual helper you need.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -108,34 +191,20 @@ const tools: ToolMeta[] = modules
     </section>
 
     <section class="section">
-      <h2>How to choose the right tool</h2>
+      <h2>How to choose the right design tool</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          If your task is mainly about colors, start with a color, palette, or contrast-related tool.
-          If your task is about interface styling, spacing, gradients, or CSS output, choose the page
-          that matches the exact style value you need to generate or inspect.
+          If your task is mainly about colors, start with a color, palette, contrast, or color-format tool.
+          If your task is about styling output, choose a CSS generator or layout helper that matches the exact
+          value you need.
         </p>
         <p style="margin-bottom:0;">
-          Keeping these tasks separated into focused pages makes each tool easier to understand and helps you
-          move from one visual problem to one direct result without unnecessary options.
-        </p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why this category is separate</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          Design tools solve a different kind of problem from calculators, converters, or general utilities.
-          They are usually about visual decisions, style output, and interface-related values rather than numeric formulas alone.
-        </p>
-        <p style="margin-bottom:0;">
-          Grouping them in one category makes browsing easier for designers, front-end developers,
-          and anyone working with color, layout, or styling details in small repeat tasks.
+          Keeping visual tasks separated into focused pages makes each result easier to inspect, copy, and reuse.
         </p>
       </div>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

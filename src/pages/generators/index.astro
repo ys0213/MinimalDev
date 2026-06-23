@@ -17,25 +17,109 @@ const tools: ToolMeta[] = modules
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
   .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
   .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/generators/fake-email-generator/",
+  "/generators/fake-phone-generator/",
+  "/generators/random-name-generator/",
+  "/generators/random-number-list/",
+  "/generators/random-domain-name/",
+  "/generators/random-company-name/",
+  "/generators/random-paragraph-generator/",
+  "/generators/random-sentence-generator/",
+]);
+
+const toolGroups = [
+  {
+    title: "Testing and mock data",
+    description: "Generate temporary values for forms, prototypes, QA checks, examples, and development workflows.",
+    tools: pickTools([
+      "/generators/fake-email-generator/",
+      "/generators/fake-phone-generator/",
+      "/generators/random-name-generator/",
+      "/generators/random-company-name/",
+      "/generators/random-domain-name/",
+    ]),
+  },
+  {
+    title: "Random values and lists",
+    description: "Create random numbers, names, labels, or values for sampling, lightweight testing, or repeat tasks.",
+    tools: pickTools([
+      "/generators/random-number-list/",
+      "/generators/random-city-generator/",
+      "/generators/random-country-generator/",
+      "/generators/random-language-generator/",
+      "/generators/random-license-plate/",
+    ]),
+  },
+  {
+    title: "Writing and placeholder content",
+    description: "Generate placeholder text, sentences, names, or simple content blocks for drafts and mock layouts.",
+    tools: pickTools([
+      "/generators/random-paragraph-generator/",
+      "/generators/random-sentence-generator/",
+      "/generators/random-team-name-generator/",
+      "/generators/random-hashtag-generator/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Generators — MinimalDev"
-  description="Free generators for names, usernames, colors, fake data, dates, passwords, random values, and quick testing data."
+  description="Free generators for fake email, sample phone numbers, names, random values, domains, placeholder text, mock data, and quick testing data."
   canonicalPath="/generators/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Generators</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects browser-based generators for names, usernames, random values, dates, passwords,
-        placeholder-style content, and other quick-use outputs.
+        Create quick values for testing, mock data, brainstorming, placeholder content, lightweight planning,
+        and repeat workflows. This category includes generators for names, emails, phone numbers, domains,
+        random values, text, and sample data.
       </p>
       <p class="lead" style="margin:0;">
-        These tools are useful when you need a fast result for testing, brainstorming, mock data, lightweight planning,
-        or repeat tasks where creating values manually would be slow or inconsistent.
+        Use the grouped sections below to choose a generator by purpose instead of scanning a flat list of random tools.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common generators</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular generator</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Generators by purpose</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -43,33 +127,33 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Testing and placeholders</h2>
           <p>
-            Generators are useful for mock values, temporary inputs, test cases, sample names,
-            passwords, identifiers, and lightweight development or QA workflows.
+            Generate mock values, temporary inputs, sample names, identifiers,
+            and lightweight test data for development or QA workflows.
           </p>
         </section>
 
         <section class="card">
           <h2>Brainstorming and idea generation</h2>
           <p>
-            Some generator pages are practical for naming ideas, creative prompts, random combinations,
-            or quick starting points when you want to explore options instead of deciding from scratch.
+            Some generators are useful for naming ideas, quick prompts, random combinations,
+            or starting points when you want to explore options.
           </p>
         </section>
 
         <section class="card">
           <h2>Fast repeat tasks</h2>
           <p>
-            This category is helpful for tasks you may do many times, such as generating usernames,
-            quick random values, simple placeholders, or one-off data used during setup and planning.
+            Use generators for repeat tasks such as creating usernames, random values,
+            sample domains, placeholder text, or simple mock content.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse generator tools</h2>
+      <h2>Browse all generator tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available generators below if you already know the kind of output you want to create.
+        Search all available generators below if you already know the kind of output you want to create.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -109,33 +193,17 @@ const tools: ToolMeta[] = modules
       <h2>How to choose the right generator</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          Start by identifying the kind of output you need. If you need secure credentials or login-related values,
-          choose a password or security-oriented generator. If you need names, labels, or quick ideas, choose a naming
-          or text-style generator. If you only need random values for testing, use the page that matches the exact
-          kind of value you want to produce.
+          Start by identifying the kind of output you need. For form testing, use fake contact or sample data tools.
+          For writing and mock layouts, use text-style generators. For development or QA, choose generators
+          that create the exact type of value your workflow requires.
         </p>
         <p style="margin-bottom:0;">
-          Keeping generator pages separated by task makes each one easier to understand and avoids mixing unrelated
-          outputs into one large all-purpose interface.
-        </p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why this category is separate</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          Generators solve a different problem from calculators or converters. Instead of transforming one input into
-          another, they create useful output values that can support planning, testing, writing, prototyping,
-          and small workflow tasks.
-        </p>
-        <p style="margin-bottom:0;">
-          Grouping them in one category makes it easier to browse output-focused tools together and helps users quickly
-          find the kind of generated result they need.
+          Generator pages are separated by output type so each result is easier to understand, copy, and reuse.
         </p>
       </div>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

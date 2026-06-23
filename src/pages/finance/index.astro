@@ -10,34 +10,132 @@ type ToolMeta = {
 
 const CATEGORY = "/finance/";
 
-// pages 전체에서 tool export 있는 것만 모은 뒤, href로 카테고리 필터
 const modules = await Astro.glob("../**/*.astro");
 
 const tools: ToolMeta[] = modules
   .map((m) => (m as any).tool as ToolMeta | undefined)
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
-  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY) // 허브 자체 제외
+  .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
   .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/finance/loan-calculator/",
+  "/finance/mortgage-calculator/",
+  "/finance/compound-interest-with-contributions/",
+  "/finance/budget-calculator/",
+  "/finance/currency-converter/",
+  "/finance/debt-payoff-calculator/",
+  "/finance/tax-calculator/",
+  "/finance/salary-calculator/",
+]);
+
+const toolGroups = [
+  {
+    title: "Loans and repayment",
+    description: "Estimate payments, repayment periods, interest costs, and borrowing scenarios before comparing options.",
+    tools: pickTools([
+      "/finance/loan-calculator/",
+      "/finance/loan-payment-calculator/",
+      "/finance/mortgage-calculator/",
+      "/finance/personal-loan-calculator/",
+      "/finance/car-loan-calculator/",
+      "/finance/debt-payoff-calculator/",
+    ]),
+  },
+  {
+    title: "Savings and investment planning",
+    description: "Use these calculators for growth estimates, contribution scenarios, returns, and future value checks.",
+    tools: pickTools([
+      "/finance/compound-interest-calculator/",
+      "/finance/compound-interest-with-contributions/",
+      "/finance/savings-calculator/",
+      "/finance/investment-calculator/",
+      "/finance/future-value-calculator/",
+      "/finance/roi-calculator/",
+    ]),
+  },
+  {
+    title: "Income, salary, and budget",
+    description: "Estimate income, compare salary breakdowns, plan budgets, and review everyday money decisions.",
+    tools: pickTools([
+      "/finance/budget-calculator/",
+      "/finance/salary-calculator/",
+      "/finance/hourly-to-salary-calculator/",
+      "/finance/salary-to-hourly-calculator/",
+      "/finance/paycheck-calculator/",
+      "/finance/tip-calculator/",
+    ]),
+  },
+  {
+    title: "Taxes, prices, and business checks",
+    description: "Use these tools for tax estimates, VAT, margins, markups, commissions, and simple business calculations.",
+    tools: pickTools([
+      "/finance/tax-calculator/",
+      "/finance/vat-calculator/",
+      "/finance/margin-calculator/",
+      "/finance/markup-calculator/",
+      "/finance/commission-calculator/",
+      "/finance/break-even-calculator/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Finance Calculators — MinimalDev"
-  description="Free finance calculators for loans, mortgages, investments, savings, salary, taxes, ROI, and budgeting. Estimate payments and plan finances easily."
+  description="Free finance calculators for loans, mortgages, interest, savings, salary, tax, budget, ROI, repayment, and everyday money planning."
   canonicalPath="/finance/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Finance Calculators</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects finance calculators for everyday money planning and comparison tasks.
-        Use these tools when you want to estimate payments, compare borrowing options, review savings growth,
-        check budgeting scenarios, or make quick financial calculations before making a decision.
+        Estimate payments, interest, savings growth, salary breakdowns, taxes, budgets,
+        returns, and other common money-related scenarios.
       </p>
       <p class="lead" style="margin:0;">
-        Financial questions often involve trade-offs between interest, time, monthly cost, and total cost.
-        These pages are designed to make those comparisons easier by keeping each calculator focused on one clear task.
+        Finance calculations often depend on assumptions such as rates, time periods, fees, and local rules.
+        These tools are meant for quick estimates and comparison, not final financial advice.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common finance calculators</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular finance tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Finance calculators by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -45,33 +143,33 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Borrowing and repayment</h2>
           <p>
-            Use finance calculators to estimate loan or mortgage payments, compare repayment periods,
-            and understand how interest changes the total amount paid over time.
+            Estimate loan or mortgage payments, compare repayment periods,
+            and understand how interest can change total cost over time.
           </p>
         </section>
 
         <section class="card">
           <h2>Savings and planning</h2>
           <p>
-            Savings, budget, and investment-related tools help with planning future targets,
-            reviewing growth scenarios, and checking how regular contributions may add up.
+            Review savings growth, investment scenarios, future values, and how regular
+            contributions may add up over time.
           </p>
         </section>
 
         <section class="card">
           <h2>Everyday money decisions</h2>
           <p>
-            These pages are useful for practical checks such as salary breakdowns, tax estimates,
-            return comparisons, and other routine calculations that come up outside formal financial software.
+            Use practical calculators for salary breakdowns, budgets, tax estimates,
+            returns, tips, margins, and other routine financial checks.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse finance tools</h2>
+      <h2>Browse all finance tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available finance calculators below if you already know the type of estimate or comparison you need.
+        Search all available finance calculators below if you already know the type of estimate or comparison you need.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -108,32 +206,16 @@ const tools: ToolMeta[] = modules
     </section>
 
     <section class="section">
-      <h2>How to choose the right calculator</h2>
+      <h2>How to choose the right finance calculator</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          If your question is mainly about borrowing, start with a loan, mortgage, or payment calculator.
-          If your question is about building money over time, choose a savings or investment-related page.
-          If you want to compare outcomes, use the tool that matches the exact scenario you are evaluating,
-          such as monthly payment, total interest, return, or budget impact.
+          If your question is about borrowing, start with a loan, mortgage, or payment calculator.
+          If your question is about building money over time, choose a savings, investment, or compound interest tool.
+          If your question is about income or spending, start with salary, paycheck, tax, or budget calculators.
         </p>
         <p style="margin-bottom:0;">
-          Splitting these tasks across focused pages makes each result easier to read and helps avoid mixing
-          unrelated assumptions into one large general-purpose finance form.
-        </p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why this category is separate</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          Finance tools solve a different kind of problem from ordinary math or general utility pages.
-          They are usually used to estimate real-world scenarios involving money, time, rates, and trade-offs,
-          where the result needs to be practical rather than purely mathematical.
-        </p>
-        <p style="margin-bottom:0;">
-          Grouping them in one category makes it easier to browse related calculators and compare financial tasks
-          without mixing them with unrelated tools from other sections of the site.
+          Focused finance calculators make assumptions easier to see because each page is built around one main
+          financial scenario instead of combining unrelated money questions into one form.
         </p>
       </div>
     </section>
@@ -142,10 +224,12 @@ const tools: ToolMeta[] = modules
       <h2>Disclaimer</h2>
       <p class="note">
         Results are estimates for informational purposes only. They may not reflect fees, taxes, lender-specific terms,
-        or country-specific regulations.
+        investment risk, exchange-rate changes, or country-specific regulations. Do not treat these calculators as
+        financial, tax, legal, or investment advice.
       </p>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

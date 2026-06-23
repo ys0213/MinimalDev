@@ -20,27 +20,122 @@ const tools: ToolMeta[] = modules
     (a, b) =>
       (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
   );
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/health/bmi-calculator/",
+  "/health/bmr-calculator/",
+  "/health/calorie-needs/",
+  "/health/tdee-calculator/",
+  "/health/water-intake-calculator/",
+  "/health/sleep-calculator/",
+  "/health/pace-calculator/",
+  "/health/target-heart-rate/",
+]);
+
+const toolGroups = [
+  {
+    title: "Body metrics",
+    description: "Estimate common body-related values such as BMI, BMR, body surface area, frame size, and body composition indicators.",
+    tools: pickTools([
+      "/health/bmi-calculator/",
+      "/health/bmr-calculator/",
+      "/health/body-fat/",
+      "/health/body-frame-size-calculator/",
+      "/health/body-surface-area/",
+      "/health/lean-body-mass-calculator/",
+    ]),
+  },
+  {
+    title: "Calories, hydration, and intake",
+    description: "Use these tools for general intake estimates, calorie needs, hydration targets, and nutrition-related planning.",
+    tools: pickTools([
+      "/health/calorie-needs/",
+      "/health/tdee-calculator/",
+      "/health/ideal-calorie-deficit/",
+      "/health/macro/",
+      "/health/protein-intake/",
+      "/health/water-intake-calculator/",
+      "/health/hydration-calculator/",
+    ]),
+  },
+  {
+    title: "Activity and performance",
+    description: "Estimate pace, activity calories, target heart rate, and simple movement-related values.",
+    tools: pickTools([
+      "/health/pace-calculator/",
+      "/health/heart-rate/",
+      "/health/target-heart-rate/",
+      "/health/running-calorie-calculator/",
+      "/health/walking-calorie-calculator/",
+      "/health/cycling-calorie-calculator/",
+      "/health/daily-steps-calculator/",
+    ]),
+  },
+  {
+    title: "Sleep and daily planning",
+    description: "Use these tools for sleep timing, daily routines, and general wellness planning.",
+    tools: pickTools([
+      "/health/sleep-calculator/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Health Calculators — MinimalDev"
-  description="Free health calculators for BMI, BMR, calorie needs, hydration, heart rate, pace, sleep cycles, and body measurements."
+  description="Free health calculators for BMI, BMR, calorie needs, hydration, heart rate, pace, sleep, body metrics, and activity estimates."
   canonicalPath="/health/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Health Calculators</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category provides simple health-related calculators for everyday tracking and planning.
-        You can use these tools to estimate values such as body metrics, calorie needs, hydration,
-        activity pace, sleep timing, and other basic wellness indicators.
+        Estimate common health-related values such as BMI, BMR, calorie needs, hydration,
+        heart-rate ranges, pace, sleep timing, and body metrics.
       </p>
       <p class="lead" style="margin:0;">
-        These tools are designed for quick reference and general awareness. They help you understand
-        approximate ranges and patterns, but they are not intended to replace professional evaluation
-        or personalized medical guidance.
+        These calculators are for quick reference and general awareness only. They are not a substitute
+        for medical advice, diagnosis, treatment, or personalized evaluation from a qualified professional.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common health calculators</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular health tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Health calculators by purpose</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -48,33 +143,33 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Daily tracking</h2>
           <p>
-            Use these calculators to monitor simple metrics such as BMI, calorie needs,
-            hydration targets, or sleep timing in a consistent and easy way.
+            Use these calculators to estimate simple metrics such as BMI, calorie needs,
+            hydration targets, body measurements, or sleep timing.
           </p>
         </section>
 
         <section class="card">
           <h2>Planning and awareness</h2>
           <p>
-            These tools can help you estimate ranges and compare scenarios,
-            such as different activity levels, intake amounts, or timing adjustments.
+            Compare scenarios such as different activity levels, intake amounts,
+            heart-rate ranges, or pace targets.
           </p>
         </section>
 
         <section class="card">
           <h2>Quick reference</h2>
           <p>
-            Instead of manually calculating values, you can use these pages
-            to get fast results for common health-related formulas and approximations.
+            Use focused calculators to get fast results for common health-related formulas
+            and approximations without doing the math manually.
           </p>
         </section>
       </div>
     </section>
 
     <section class="section">
-      <h2>Browse health tools</h2>
+      <h2>Browse all health tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available health calculators below if you already know the metric or estimate you need.
+        Search all available health calculators below if you already know the metric or estimate you need.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -114,12 +209,13 @@ const tools: ToolMeta[] = modules
       <h2>How to choose the right calculator</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          If you are checking body-related metrics, use tools like BMI or body measurement calculators.
-          If your focus is nutrition or intake, choose calorie or hydration-related tools.
-          For activity and performance, select pace or heart-rate-related calculators.
+          If you are checking body-related metrics, start with BMI, BMR, body composition,
+          or body measurement calculators. If your focus is nutrition or intake, use calorie,
+          macro, protein, or hydration tools. For activity and performance, choose pace,
+          heart-rate, step, or calorie-burn calculators.
         </p>
         <p style="margin-bottom:0;">
-          Each tool is designed for a single purpose so that results are easier to understand
+          Each calculator is focused on one type of estimate so that the result is easier to understand
           and not mixed with unrelated assumptions.
         </p>
       </div>
@@ -129,17 +225,18 @@ const tools: ToolMeta[] = modules
       <h2>Important limitations</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          These calculators provide general estimates based on common formulas.
-          Results may vary depending on individual health conditions, measurement accuracy,
-          and real-world factors that are not included in simple calculations.
+          These calculators provide general estimates based on common formulas and simplified inputs.
+          Results may vary depending on health conditions, measurement accuracy, age, activity level,
+          body composition, medication, and other factors that simple calculators cannot fully account for.
         </p>
         <p style="margin-bottom:0;">
           This content is for informational purposes only and should not be considered medical advice.
-          For diagnosis or treatment decisions, consult a qualified healthcare professional.
+          For diagnosis, treatment, or personal health decisions, consult a qualified healthcare professional.
         </p>
       </div>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

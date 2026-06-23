@@ -52,14 +52,11 @@ const faqs = [
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
   <div slot="tool" data-tool="area-converter">
-    <div
-      style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:16px;"
-      class="note"
-    >
-      <strong>Privacy First:</strong> All conversions run locally in your browser.
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
       <strong>Your input values are never sent to any server.</strong>
     </div>
-    <div class="form" role="form" aria-describedby="ac_hint ac_privacy">
+    <div class="form" role="form" aria-describedby="ac_hint">
       <div class="field">
         <label for="ac_value">Value</label>
         <input id="ac_value" type="number" inputmode="decimal" placeholder="e.g., 100" />
@@ -136,9 +133,6 @@ const faqs = [
         </table>
       </div>
 
-      <p class="note" id="ac_privacy" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No inputs are stored or transmitted.
-      </p>
     </div>
   </div>
 

@@ -17,11 +17,59 @@ const tools: ToolMeta[] = modules
   .filter((t): t is ToolMeta => !!t && !!t.href && !!t.title)
   .filter((t) => t.href.startsWith(CATEGORY) && t.href !== CATEGORY)
   .sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title));
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/image-tools/image-compressor/",
+  "/image-tools/image-resizer/",
+  "/image-tools/image-cropper/",
+  "/image-tools/image-size-calculator/",
+  "/image-tools/image-dpi-converter/",
+  "/image-tools/image-to-base64/",
+  "/image-tools/base64-to-image/",
+  "/image-tools/jpg-to-webp/",
+]);
+
+const toolGroups = [
+  {
+    title: "Resize, crop, and optimize",
+    description: "Prepare images for websites, apps, uploads, documents, or sharing by adjusting size and dimensions.",
+    tools: pickTools([
+      "/image-tools/image-resizer/",
+      "/image-tools/image-cropper/",
+      "/image-tools/image-compressor/",
+      "/image-tools/image-size-calculator/",
+      "/image-tools/image-aspect-ratio-calculator/",
+    ]),
+  },
+  {
+    title: "Format conversion",
+    description: "Convert images between common formats when compatibility, file size, or publishing requirements matter.",
+    tools: pickTools([
+      "/image-tools/jpg-to-png/",
+      "/image-tools/png-to-jpg/",
+      "/image-tools/jpg-to-webp/",
+      "/image-tools/webp-to-jpg/",
+    ]),
+  },
+  {
+    title: "Base64 and metadata",
+    description: "Use these tools for embedded image data, image metadata, privacy cleanup, or technical inspection.",
+    tools: pickTools([
+      "/image-tools/image-to-base64/",
+      "/image-tools/base64-to-image/",
+      "/utility/exif-remover/",
+      "/utility/image-metadata-viewer/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Image Tools — MinimalDev"
-  description="Free online image tools including resizer, compressor, cropper, converter, and metadata utilities. Works locally in your browser."
+  description="Free browser-based image tools for resizing, compression, cropping, format conversion, Base64 conversion, metadata checks, and image optimization."
   canonicalPath="/image-tools/"
 >
   <div class="container">
@@ -29,49 +77,56 @@ const tools: ToolMeta[] = modules
       <h1 class="page-title" style="margin:0 0 8px;">Image Tools</h1>
 
       <p class="lead" style="margin:0 0 10px;">
-        This category provides browser-based tools for common image editing and processing tasks
-        such as resizing, compression, cropping, format conversion, and metadata handling.
+        Edit, convert, inspect, and optimize images directly in your browser. This category includes tools
+        for resizing, compression, cropping, format conversion, image size checks, Base64 conversion,
+        and metadata-related tasks.
       </p>
 
       <p class="lead" style="margin:0;">
-        These tools are designed for quick adjustments and simple workflows where opening a full
-        image editor is unnecessary. You can make changes directly in your browser with immediate results.
+        Start with a task group if you are preparing images for a website, app, document, upload,
+        or technical workflow.
       </p>
     </section>
 
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common image tools</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular image tool</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Image tools by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
     <section class="section">
-      <h2>What these tools are useful for</h2>
-      <div class="grid">
-        <section class="card">
-          <h2>Quick editing tasks</h2>
-          <p>
-            Resize, crop, or convert images when preparing assets for websites, apps,
-            documents, or sharing platforms.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>File size optimization</h2>
-          <p>
-            Compression tools help reduce file size for faster loading,
-            smaller uploads, and better performance in web environments.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Format and metadata handling</h2>
-          <p>
-            Convert between formats or remove metadata such as EXIF data
-            when you need cleaner files or better compatibility.
-          </p>
-        </section>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Browse image tools</h2>
+      <h2>Browse all image tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available tools below if you already know the type of image task you want to perform.
+        Search all available image tools below if you already know the exact image task you want to perform.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -95,7 +150,7 @@ const tools: ToolMeta[] = modules
         <div class="grid" data-search-grid>
           {tools.map((t) => (
             <section class="card">
-              <span class="badge">Tool</span>
+              <span class="badge">Image Tool</span>
               <h2>{t.title}</h2>
               <p>{t.description}</p>
               <a class="btn" href={t.href}>Open</a>
@@ -108,20 +163,10 @@ const tools: ToolMeta[] = modules
     </section>
 
     <section class="section">
-      <h2>What you can do</h2>
-      <ul>
-        <li>Resize images to exact dimensions</li>
-        <li>Compress images to reduce file size</li>
-        <li>Crop and adjust images visually</li>
-        <li>Convert between formats (PNG, JPG, WebP)</li>
-        <li>Remove metadata (EXIF)</li>
-      </ul>
-    </section>
-
-    <section class="section">
-      <h2>Image Guides</h2>
+      <h2>Image guides</h2>
       <p class="note">
-        Learn how to choose the right format, reduce image size, and optimize images for better performance.
+        These guides explain common image decisions such as format choice, image size reduction,
+        WebP usage, cropping, and web optimization.
       </p>
 
       <ul>
@@ -141,10 +186,12 @@ const tools: ToolMeta[] = modules
     <section class="section">
       <h2>Privacy</h2>
       <p class="note">
-        All tools run locally in your browser. No images are uploaded or stored.
+        Image tools are designed to run locally in your browser when possible. For ordinary use,
+        your selected images are processed in the browser and are not uploaded to MinimalDev servers.
       </p>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

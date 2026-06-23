@@ -20,25 +20,120 @@ const tools: ToolMeta[] = modules
     (a, b) =>
       (a.order ?? 9999) - (b.order ?? 9999) || a.title.localeCompare(b.title)
   );
+
+const getTool = (href: string) => tools.find((tool) => tool.href === href);
+const pickTools = (hrefs: string[]) => hrefs.map(getTool).filter((tool): tool is ToolMeta => !!tool);
+
+const popularTools = pickTools([
+  "/utility/json-formatter/",
+  "/utility/base64/",
+  "/utility/qr-generator/",
+  "/utility/password-generator/",
+  "/utility/password-strength-checker/",
+  "/utility/word-counter/",
+  "/utility/character-counter/",
+  "/utility/file-size-calculator/",
+]);
+
+const toolGroups = [
+  {
+    title: "Formatting and encoding",
+    description: "Use these tools to format structured content, encode or decode values, and prepare text-based data.",
+    tools: pickTools([
+      "/utility/json-formatter/",
+      "/utility/base64/",
+      "/utility/url-encoder-decoder/",
+      "/utility/lorem-ipsum-generator/",
+    ]),
+  },
+  {
+    title: "Passwords and identifiers",
+    description: "Generate or check values used for accounts, IDs, random strings, and quick security-related tasks.",
+    tools: pickTools([
+      "/utility/password-generator/",
+      "/utility/password-strength-checker/",
+      "/utility/password-entropy-calculator/",
+      "/utility/uuid-generator/",
+      "/utility/random-string-generator/",
+      "/utility/random-number-generator/",
+    ]),
+  },
+  {
+    title: "Text and content helpers",
+    description: "Count, inspect, or prepare text and content for writing, editing, publishing, or simple review.",
+    tools: pickTools([
+      "/utility/word-counter/",
+      "/utility/character-counter/",
+      "/utility/qr-generator/",
+    ]),
+  },
+  {
+    title: "Files and image metadata",
+    description: "Work with file sizes, image metadata, EXIF data, GIFs, and practical file-related checks.",
+    tools: pickTools([
+      "/utility/file-size-calculator/",
+      "/utility/file-size-converter/",
+      "/utility/exif-remover/",
+      "/utility/image-metadata-viewer/",
+      "/utility/gif-maker/",
+      "/utility/gif-splitter/",
+    ]),
+  },
+].filter((group) => group.tools.length);
 ---
 
 <BaseLayout
   title="Utility Tools — MinimalDev"
-  description="Free online utility tools including password generators, QR generators, Base64 tools, JSON formatters, random generators, and quick helpers."
+  description="Free online utility tools for JSON formatting, Base64, QR codes, passwords, file sizes, counters, random values, and quick browser helpers."
   canonicalPath="/utility/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">Utility Tools</h1>
       <p class="lead" style="margin:0 0 10px;">
-        This category collects general-purpose browser tools for common everyday tasks such as text formatting,
-        quick generation, encoding, counting, and other lightweight utility workflows.
+        Use general-purpose browser tools for formatting, encoding, generating, counting,
+        checking, and file-related tasks that do not fit neatly into one specialized category.
       </p>
       <p class="lead" style="margin:0;">
-        Utility tools are useful when a task is too small to justify installing software but still benefits from a
-        focused page that gives a quick result with simple inputs.
+        This category is organized around small repeat workflows such as formatting JSON,
+        generating passwords, creating QR codes, checking file sizes, and counting text.
       </p>
     </section>
+
+    {popularTools.length ? (
+      <section class="section">
+        <h2>Start with common utility tools</h2>
+        <div class="grid">
+          {popularTools.map((t) => (
+            <section class="card">
+              <span class="badge">Popular utility</span>
+              <h2>{t.title}</h2>
+              <p>{t.description}</p>
+              <a class="btn" href={t.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {toolGroups.length ? (
+      <section class="section">
+        <h2>Utility tools by task</h2>
+        <div class="grid">
+          {toolGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.tools.map((t) => (
+                  <li><a href={t.href}>{t.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>What these tools are useful for</h2>
@@ -46,8 +141,8 @@ const tools: ToolMeta[] = modules
         <section class="card">
           <h2>Quick everyday helpers</h2>
           <p>
-            Use these tools for simple browser-based tasks such as generating passwords,
-            creating QR codes, counting text, formatting JSON, or working with encoded content.
+            Use these tools for simple browser-based tasks such as formatting JSON,
+            generating passwords, creating QR codes, counting text, or working with encoded content.
           </p>
         </section>
 
@@ -55,14 +150,14 @@ const tools: ToolMeta[] = modules
           <h2>Small repeat workflows</h2>
           <p>
             Many utility pages solve tasks that come up repeatedly in study, work, content editing,
-            setup, and light technical use, where speed and convenience matter more than complexity.
+            setup, and light technical use.
           </p>
         </section>
 
         <section class="card">
           <h2>General browser convenience</h2>
           <p>
-            This category exists for tools that are practical and useful but do not fit neatly into
+            This category exists for practical tools that are useful but do not fit neatly into
             one narrow subject area such as finance, health, math, or design.
           </p>
         </section>
@@ -70,9 +165,9 @@ const tools: ToolMeta[] = modules
     </section>
 
     <section class="section">
-      <h2>Browse utility tools</h2>
+      <h2>Browse all utility tools</h2>
       <p class="lead" style="margin-top:0;">
-        Search the available tools below if you already know the kind of helper you need.
+        Search all available utility tools below if you already know the kind of helper you need.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
@@ -112,9 +207,9 @@ const tools: ToolMeta[] = modules
       <h2>How to choose the right tool</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          If your task is about creating or generating something, start with a generator.
-          If it is about formatting or transforming content, choose a formatter or encoder/decoder.
-          If it is about quick checking or measurement, use counters, validators, or similar helper pages.
+          If your task is about creating something, start with a generator.
+          If it is about formatting or transforming content, choose a formatter, encoder, or decoder.
+          If it is about checking or measuring, use counters, file-size tools, validators, or similar helpers.
         </p>
         <p style="margin-bottom:0;">
           Keeping these tasks on separate pages makes each result easier to understand and helps avoid turning one
@@ -127,16 +222,17 @@ const tools: ToolMeta[] = modules
       <h2>Privacy and local use</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          Most utility tools in this category are designed to run directly in your browser for speed and convenience.
-          Individual tool pages may explain their own behavior more specifically where needed.
+          Many utility tools are designed to run directly in your browser for speed and convenience.
+          Individual tool pages may explain their own processing behavior more specifically where needed.
         </p>
         <p style="margin-bottom:0;">
-          This category page is intended to help you quickly find the right helper without sign-ups, unnecessary steps,
+          This category page helps you find the right helper without sign-ups, unnecessary steps,
           or unrelated features.
         </p>
       </div>
     </section>
   </div>
+
   <script>
     const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
     const grid = document.querySelector("[data-search-grid]");

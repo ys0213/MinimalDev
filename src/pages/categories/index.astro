@@ -1,15 +1,41 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const categories = [
+type Category = {
+  title: string;
+  description: string;
+  href: string;
+};
+
+const categories: Category[] = [
   {
     title: "Converters",
-    description: "Unit converters for length, weight, temperature, time, speed, area, volume, and more.",
+    description: "Unit converters for length, weight, temperature, time, speed, area, volume, and data size.",
     href: "/converter/",
   },
   {
+    title: "Developer Tools",
+    description: "Validators, formatters, encoders, decoders, parsers, metadata tools, and debugging helpers.",
+    href: "/developer-tools/",
+  },
+  {
+    title: "Image Tools",
+    description: "Resize, compress, crop, convert, inspect, and process images directly in your browser.",
+    href: "/image-tools/",
+  },
+  {
+    title: "Text Tools",
+    description: "Clean, count, compare, sort, transform, and analyze text for writing or data preparation.",
+    href: "/text-tools/",
+  },
+  {
+    title: "Date & Time",
+    description: "Date differences, business days, timestamps, ages, countdowns, and time duration tools.",
+    href: "/date-time/",
+  },
+  {
     title: "Math",
-    description: "Calculators for percentages, algebra, geometry, roots, ratios, probability, and more.",
+    description: "Calculators for percentages, algebra, geometry, statistics, roots, ratios, and formulas.",
     href: "/math/",
   },
   {
@@ -18,85 +44,131 @@ const categories = [
     href: "/finance/",
   },
   {
-    title: "Date & Time",
-    description: "Date difference, business days, timestamps, age, countdown, and time-based tools.",
-    href: "/date-time/",
-  },
-  {
     title: "Health",
     description: "BMI, BMR, hydration, calorie, sleep, body metrics, and activity-related calculators.",
     href: "/health/",
   },
   {
     title: "Utilities",
-    description: "General-purpose utility tools including counters, generators, formatters, and helpers.",
+    description: "General-purpose helpers including counters, generators, formatters, QR tools, and quick utilities.",
     href: "/utility/",
   },
   {
-    title: "Developer Tools",
-    description: "Tools for developers such as validators, formatters, encoders, decoders, and debugging helpers.",
-    href: "/developer-tools/",
-  },
-  {
-    title: "Text Tools",
-    description: "Text formatting, cleanup, counting, transformation, and analysis tools.",
-    href: "/text-tools/",
-  },
-  {
     title: "Generators",
-    description: "Generate IDs, names, text, placeholders, passwords, slugs, and other useful content.",
+    description: "Generate names, emails, domains, sample text, placeholders, random values, and mock data.",
     href: "/generators/",
   },
   {
-    title: "Image Tools",
-    description: "Resize, compress, crop, convert, and process images directly in your browser.",
-    href: "/image-tools/",
-  },
-  {
     title: "Design Tools",
-    description: "Color, gradient, spacing, sizing, and other visual design helper tools.",
+    description: "Color, contrast, gradient, palette, shadow, border radius, layout, and CSS design helpers.",
     href: "/design-tools/",
   },
 ];
+
+const getCategory = (href: string) => categories.find((category) => category.href === href);
+const pickCategories = (hrefs: string[]) => hrefs.map(getCategory).filter((category): category is Category => !!category);
+
+const popularCategories = pickCategories([
+  "/converter/",
+  "/developer-tools/",
+  "/image-tools/",
+  "/text-tools/",
+  "/date-time/",
+  "/finance/",
+]);
+
+const categoryGroups = [
+  {
+    title: "Calculate and convert values",
+    description: "Use these categories when you need numeric results, unit changes, dates, money estimates, or formulas.",
+    categories: pickCategories([
+      "/converter/",
+      "/math/",
+      "/finance/",
+      "/date-time/",
+      "/health/",
+    ]),
+  },
+  {
+    title: "Work with files, images, and text",
+    description: "Use these categories for browser-based editing, cleanup, formatting, inspection, and content preparation.",
+    categories: pickCategories([
+      "/image-tools/",
+      "/text-tools/",
+      "/utility/",
+      "/design-tools/",
+    ]),
+  },
+  {
+    title: "Developer and test data workflows",
+    description: "Use these categories for validation, encoding, parsing, mock data, placeholders, and technical checks.",
+    categories: pickCategories([
+      "/developer-tools/",
+      "/generators/",
+      "/utility/",
+    ]),
+  },
+].filter((group) => group.categories.length);
 ---
 
 <BaseLayout
   title="All Categories — MinimalDev"
-  description="Browse all tool categories on MinimalDev, including converters, math, finance, health, utilities, developer tools, generators, image tools, text tools, and design tools."
+  description="Browse MinimalDev tool categories including converters, developer tools, image tools, text tools, date and time tools, math, finance, health, utilities, generators, and design tools."
   canonicalPath="/categories/"
 >
   <div class="container">
     <section class="card" style="padding:18px;">
       <h1 class="page-title" style="margin:0 0 8px;">All Categories</h1>
-      <p class="lead" style="margin:0 0 10px;">
-        Browse all tool categories available on MinimalDev. This page is the main starting point if you want to explore the site by task type instead of opening one tool directly.
-      </p>
       <p class="lead" style="margin:0;">
-        Each category groups together tools with a similar purpose, such as conversions, calculations, formatting, generation, or image processing. If you are not sure which exact tool you need yet, starting from a category is usually the fastest way to find it.
+        Browse MinimalDev by task type. Start with a category when you know the kind of work you need to do,
+        but not the exact tool name.
       </p>
     </section>
 
-    <section class="section">
-      <h2>How to use this page</h2>
-      <div class="card" style="padding:18px;">
-        <p style="margin-top:0;">
-          Choose the category that best matches your task first. For example, use <strong>Converters</strong> for unit changes, <strong>Math</strong> for percentages and formulas, <strong>Finance</strong> for money-related estimates, and <strong>Developer Tools</strong> for validation, formatting, and encoding tasks.
-        </p>
-        <p style="margin-bottom:0;">
-          If you already know the category name or only remember part of it, use the search box below to narrow the visible category cards more quickly.
-        </p>
-      </div>
-    </section>
+    {popularCategories.length ? (
+      <section class="section">
+        <h2>Start here</h2>
+        <div class="grid">
+          {popularCategories.map((category) => (
+            <section class="card">
+              <span class="badge">Category</span>
+              <h2>{category.title}</h2>
+              <p>{category.description}</p>
+              <a class="btn" href={category.href}>Open</a>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
+    {categoryGroups.length ? (
+      <section class="section">
+        <h2>Categories by task</h2>
+        <div class="grid">
+          {categoryGroups.map((group) => (
+            <section class="card">
+              <h2>{group.title}</h2>
+              <p>{group.description}</p>
+              <ul>
+                {group.categories.map((category) => (
+                  <li><a href={category.href}>{category.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </section>
+    ) : null}
 
     <section class="section">
       <h2>Find a category</h2>
       <p class="lead" style="margin-top:0;">
-        Search by category name or description to narrow the list.
+        Search by category name, purpose, or description.
       </p>
 
       <div class="tool-search" style="margin-bottom:16px;">
         <input
-          id="toolSearch"
+          id="categorySearch"
           type="search"
           placeholder="Search categories..."
           aria-label="Search categories"
@@ -111,127 +183,45 @@ const categories = [
         />
       </div>
 
-      <div class="grid">
-        {categories.map((c) => (
+      <div class="grid" data-category-grid>
+        {categories.map((category) => (
           <section class="card">
             <span class="badge">Category</span>
-            <h2>{c.title}</h2>
-            <p>{c.description}</p>
-            <a class="btn" href={c.href}>Open</a>
+            <h2>{category.title}</h2>
+            <p>{category.description}</p>
+            <a class="btn" href={category.href}>Open</a>
           </section>
         ))}
       </div>
     </section>
 
     <section class="section">
-      <h2>Category overview</h2>
-      <div class="grid">
-        <section class="card">
-          <h2>Converters</h2>
-          <p>
-            Best for switching values between units such as distance, weight, temperature, area, volume, time, and data size.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Math</h2>
-          <p>
-            Best for percentages, number relationships, formulas, and other general calculation tasks used in school, work, and daily life.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Finance</h2>
-          <p>
-            Best for payment planning, interest estimates, savings calculations, salary breakdowns, and basic budgeting tasks.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Date & Time</h2>
-          <p>
-            Best for date differences, age checks, working day calculations, timestamps, countdowns, and time interval questions.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Health</h2>
-          <p>
-            Best for body metrics, calorie-related estimates, hydration checks, sleep-related helpers, and other simple health calculations.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Utilities</h2>
-          <p>
-            Best for general-purpose helpers that do not fit one narrow subject area, including generators, counters, and quick tools.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Developer Tools</h2>
-          <p>
-            Best for programmers and technical users who need validators, parsers, encoders, decoders, and formatting helpers.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Text Tools</h2>
-          <p>
-            Best for cleaning, transforming, counting, comparing, or analyzing text content for writing and editing workflows.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Generators</h2>
-          <p>
-            Best for creating names, IDs, placeholders, slugs, passwords, random values, and other generated content.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Image Tools</h2>
-          <p>
-            Best for browser-based image resizing, conversion, cropping, compression, and other practical image editing tasks.
-          </p>
-        </section>
-
-        <section class="card">
-          <h2>Design Tools</h2>
-          <p>
-            Best for visual helper tasks such as colors, gradients, spacing, sizing, and other design-related utilities.
-          </p>
-        </section>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Why categories matter</h2>
+      <h2>How to choose a category</h2>
       <div class="card" style="padding:18px;">
         <p style="margin-top:0;">
-          Category pages are useful because many visitors know the kind of task they need to complete, but not always the exact tool name. Organizing tools by subject makes the site easier to explore and reduces the time needed to find the right page.
+          Choose the category that matches your task first. Use <strong>Converters</strong> for unit changes,
+          <strong>Developer Tools</strong> for validation and formatting, <strong>Image Tools</strong> for visual files,
+          and <strong>Finance</strong> for money-related estimates.
         </p>
         <p style="margin-bottom:0;">
-          This also helps separate different workflows. A visitor looking for a loan estimate, for example, should not have to sift through text utilities or developer encoders to find the correct page.
+          If you are unsure, start with a broad category and then use the category search or tool search on that page
+          to narrow the list.
         </p>
       </div>
     </section>
   </div>
+
   <script>
-    const searchInput = document.getElementById("toolSearch") as HTMLInputElement | null;
+    const searchInput = document.getElementById("categorySearch") as HTMLInputElement | null;
+    const grid = document.querySelector("[data-category-grid]");
 
-    if (searchInput) {
-      const cards = Array.from(document.querySelectorAll(".grid .card")) as HTMLElement[];
-
-      const categoryCards = cards.filter((card) => {
-        const badge = card.querySelector(".badge");
-        return badge && badge.textContent?.trim() === "Category";
-      });
+    if (searchInput && grid) {
+      const cards = Array.from(grid.querySelectorAll(".card")) as HTMLElement[];
 
       searchInput.addEventListener("input", () => {
         const query = searchInput.value.trim().toLowerCase();
 
-        categoryCards.forEach((card) => {
+        cards.forEach((card) => {
           const text = card.textContent?.toLowerCase() || "";
           card.style.display = text.includes(query) ? "" : "none";
         });

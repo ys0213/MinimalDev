@@ -52,11 +52,11 @@ const faqs = [
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   })} />
 
-    <div slot="tool" data-tool="compound-interest-calculator">
-     <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-bottom: 24px;">
-       <strong>Privacy First:</strong> This calculator runs entirely locally in your browser.
-       <strong>Your financial inputs are never stored or sent to our servers.</strong>
-     </div>
+  <div slot="tool" data-tool="compound-interest-calculator">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
 
     <div class="form">
       <div class="field">
@@ -81,7 +81,9 @@ const faqs = [
         <button id="ci_clear" class="btn secondary" type="button">Clear</button>
       </div>
 
-      <div id="ci_summary" class="result" style="margin-top:20px; padding:15px; background:#f9fafb;">Result will appear here.</div>
+      <div id="ci_summary" class="result" style="margin-top:20px; padding:15px;">
+        Result will appear here.
+      </div>
 
       <div style="margin-top:20px; overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:right;">
