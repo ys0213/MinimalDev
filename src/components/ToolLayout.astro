@@ -1,7 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 
-type FAQItem = { q: string; a: string };
+type FAQItem = {
+  q: string;
+  a: string;
+};
 
 type Props = {
   title: string;
@@ -11,7 +14,6 @@ type Props = {
   intro: string;
   faq?: FAQItem[];
   priceCurrency?: string;
-  showAds?: boolean;
   categoryName?: string;
 };
 
@@ -23,18 +25,20 @@ const {
   intro,
   faq = [],
   priceCurrency = "USD",
-  showAds = false,
   categoryName = "",
 } = Astro.props as Props;
 
-function getCategory(path: string | undefined): string {
+function getApplicationCategory(path: string | undefined): string {
   if (!path) return "UtilitiesApplication";
   if (path.startsWith("/health/")) return "HealthApplication";
   if (path.startsWith("/math/")) return "EducationalApplication";
+  if (path.startsWith("/finance/")) return "FinanceApplication";
+  if (path.startsWith("/developer-tools/")) return "DeveloperApplication";
+  if (path.startsWith("/image-tools/")) return "UtilitiesApplication";
+  if (path.startsWith("/text-tools/")) return "UtilitiesApplication";
   if (path.startsWith("/converter/")) return "UtilitiesApplication";
   if (path.startsWith("/utility/")) return "UtilitiesApplication";
   if (path.startsWith("/date-time/")) return "UtilitiesApplication";
-  if (path.startsWith("/finance/")) return "FinanceApplication";
   return "UtilitiesApplication";
 }
 
@@ -45,106 +49,133 @@ function getCategoryPath(path: string | undefined): string {
   return `/${parts[0]}/`;
 }
 
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+const normalizedFaq = Array.isArray(faq)
+  ? faq.filter((item) => item?.q?.trim() && item?.a?.trim())
+  : [];
+
+const hasFaq = normalizedFaq.length > 0;
+const hasCategory = Boolean(categoryName && canonicalPath);
+const categoryPath = getCategoryPath(canonicalPath);
+
+const hasHow = Astro.slots.has("how");
+const hasExamples = Astro.slots.has("examples");
+const hasWhen = Astro.slots.has("when");
+const hasDetails = Astro.slots.has("details");
+const hasRelated = Astro.slots.has("related");
+
 const webAppSchema = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": h1,
-  "url": `https://minimaldev.dev${canonicalPath}`,
-  "description": description,
-  "applicationCategory": getCategory(canonicalPath),
-  "operatingSystem": "Web",
-  "offers": {
+  name: h1,
+  url: `https://minimaldev.dev${canonicalPath}`,
+  description,
+  applicationCategory: getApplicationCategory(canonicalPath),
+  operatingSystem: "Web",
+  offers: {
     "@type": "Offer",
-    "price": "0",
-    "priceCurrency": priceCurrency,
+    price: "0",
+    priceCurrency,
   },
 };
-
-const hasFaq = Array.isArray(faq) && faq.length > 0;
 
 const faqSchema = hasFaq
   ? {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "mainEntity": faq.map((item) => ({
+      mainEntity: normalizedFaq.map((item) => ({
         "@type": "Question",
-        "name": item.q,
-        "acceptedAnswer": {
+        name: item.q,
+        acceptedAnswer: {
           "@type": "Answer",
-          "text": item.a,
+          text: item.a,
         },
       })),
     }
   : null;
 
-const breadcrumbSchema =
-  categoryName && canonicalPath
-    ? {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": "https://minimaldev.dev/",
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": categoryName,
-            "item": `https://minimaldev.dev${getCategoryPath(canonicalPath)}`,
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "name": h1,
-            "item": `https://minimaldev.dev${canonicalPath}`,
-          },
-        ],
-      }
-    : null;
-
-
+const breadcrumbSchema = hasCategory
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: "https://minimaldev.dev/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: categoryName,
+          item: `https://minimaldev.dev${categoryPath}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: h1,
+          item: `https://minimaldev.dev${canonicalPath}`,
+        },
+      ],
+    }
+  : null;
 ---
 
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath}>
-  <script slot="head" type="application/ld+json" set:html={JSON.stringify(webAppSchema)}></script>
+  <script slot="head" type="application/ld+json" set:html={safeJsonLd(webAppSchema)}></script>
 
-  {hasFaq && (
-    <script slot="head" type="application/ld+json" set:html={JSON.stringify(faqSchema)}></script>
+  {hasFaq && faqSchema && (
+    <script slot="head" type="application/ld+json" set:html={safeJsonLd(faqSchema)}></script>
   )}
 
-  {breadcrumbSchema && (
-    <script slot="head" type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
+  {hasCategory && breadcrumbSchema && (
+    <script slot="head" type="application/ld+json" set:html={safeJsonLd(breadcrumbSchema)}></script>
   )}
 
   <div class="container">
+    {hasCategory && (
+      <nav class="tool-breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Home</a></li>
+          <li><a href={categoryPath}>{categoryName}</a></li>
+          <li aria-current="page">{h1}</li>
+        </ol>
+      </nav>
+    )}
+
     <h1 class="page-title">{h1}</h1>
     <p class="lead">{intro}</p>
 
-    <section class="card">
+    <section class="card tool-card" aria-labelledby="tool-heading">
+      <h2 id="tool-heading" class="sr-only">{h1} tool</h2>
       <slot name="tool" />
     </section>
 
-    <section class="section">
-      <h2>How it works</h2>
-      <slot name="how" />
-    </section>
+    {hasHow && (
+      <section class="section">
+        <slot name="how" />
+      </section>
+    )}
 
-    <section class="section">
-      <h2>Examples</h2>
-      <slot name="examples" />
-    </section>
+    {hasExamples && (
+      <section class="section">
+        <h2>Examples</h2>
+        <slot name="examples" />
+      </section>
+    )}
 
-    {Astro.slots.has("when") && (
+    {hasWhen && (
       <section class="section">
         <h2>When to use this tool</h2>
         <slot name="when" />
       </section>
     )}
 
-    {Astro.slots.has("details") && (
+    {hasDetails && (
       <section class="section">
         <h2>Detailed guide</h2>
         <slot name="details" />
@@ -154,8 +185,8 @@ const breadcrumbSchema =
     {hasFaq && (
       <section class="section">
         <h2>FAQ</h2>
-        <ul>
-          {faq.map((item) => (
+        <ul class="faq-list">
+          {normalizedFaq.map((item) => (
             <li>
               <strong>{item.q}</strong>
               <p>{item.a}</p>
@@ -165,9 +196,81 @@ const breadcrumbSchema =
       </section>
     )}
 
-    <section class="section">
-      <h2>Related tools</h2>
-      <slot name="related" />
-    </section>
+    {hasRelated && (
+      <section class="section">
+        <h2>Related tools</h2>
+        <slot name="related" />
+      </section>
+    )}
   </div>
 </BaseLayout>
+
+<style>
+  .tool-breadcrumbs{
+    margin: 4px 0 12px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .tool-breadcrumbs ol{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tool-breadcrumbs li{
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .tool-breadcrumbs li + li::before{
+    content: "/";
+    margin-right: 6px;
+    color: var(--muted);
+  }
+
+  .tool-breadcrumbs a{
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .tool-breadcrumbs a:hover{
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .tool-breadcrumbs [aria-current="page"]{
+    color: var(--text);
+    font-weight: 650;
+  }
+
+  .tool-card{
+    margin-top: 14px;
+  }
+
+  .faq-list{
+    display: grid;
+    gap: 10px;
+  }
+
+  .faq-list li p{
+    margin-top: 4px;
+  }
+
+  .sr-only{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
