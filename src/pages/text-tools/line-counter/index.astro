@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Line Counter",
   description:
-    "Count the number of lines in pasted or typed text.",
+    "Count lines, empty lines, words, characters, and paragraphs in pasted text.",
   href: "/text-tools/line-counter/",
   order: 50,
 };
@@ -15,19 +15,27 @@ const CANONICAL_PATH = "/text-tools/line-counter/";
 const faqs = [
   {
     q: "What does this line counter do?",
-    a: "It counts lines, non-empty lines, empty lines, words, characters, and paragraphs in your text.",
+    a: "It counts total lines, non-empty lines, empty lines, words, characters, characters without spaces, and paragraphs.",
+  },
+  {
+    q: "How are empty lines counted?",
+    a: "A line is counted as empty when it contains no visible characters after trimming whitespace.",
   },
   {
     q: "How are paragraphs counted?",
     a: "Paragraphs are counted by splitting text blocks on one or more blank lines.",
   },
   {
-    q: "Does it count spaces as characters?",
-    a: "Yes. Total character count includes spaces and line breaks. It also shows a count without spaces.",
+    q: "Does character count include spaces?",
+    a: "Yes. The total character count includes spaces and line breaks. The tool also shows a separate count without spaces.",
+  },
+  {
+    q: "Can I use this for code or logs?",
+    a: "Yes. It can count lines in plain text, code snippets, logs, CSV-like text, lists, and drafts.",
   },
   {
     q: "Is my text stored?",
-    a: "No. Counting runs locally in your browser and no text is stored or transmitted.",
+    a: "No. Counting runs locally in your browser and your text is not sent to a server.",
   },
 ];
 
@@ -35,10 +43,10 @@ const faqs = [
 
 <ToolLayout
   title={`Line Counter — ${SITE_NAME}`}
-  description="Count lines in text for documents, code snippets, lists, logs, data files, and content preparation workflows."
+  description="Count lines, non-empty lines, blank lines, words, characters, and paragraphs for text drafts, code snippets, logs, lists, and data cleanup."
   canonicalPath={CANONICAL_PATH}
   h1="Line Counter"
-  intro="Count lines and related text metrics such as words, characters, empty lines, and paragraphs."
+  intro="Count lines and related text metrics such as words, characters, empty lines, non-empty lines, and paragraphs. Useful for documents, code snippets, logs, lists, and text cleanup."
   faq={faqs}
   categoryName="Text Tools"
 >
@@ -48,26 +56,31 @@ const faqs = [
         width: 100%;
         min-width: 0;
       }
+
       .lc-cards-grid {
         display: grid;
         grid-template-columns: 1fr;
         gap: 10px;
         margin-top: 12px;
       }
+
       .lc-card {
         border: 1px solid rgba(255,255,255,0.15);
         border-radius: 12px;
         padding: 12px;
         min-width: 0;
       }
+
       .lc-card strong {
         display: block;
       }
+
       .lc-card .big {
         font-size: 28px;
         font-weight: 900;
         margin-top: 6px;
       }
+
       @media (min-width: 760px) {
         .lc-cards-grid {
           grid-template-columns: 1fr 1fr 1fr;
@@ -75,14 +88,19 @@ const faqs = [
       }
     </style>
 
-    <div class="form" role="form" aria-describedby="lc_help lc_privacy">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="lc_help">
       <div class="field">
         <label for="lc_input">Input text</label>
         <textarea id="lc_input" rows="14" spellcheck="false" placeholder="Paste or type text here..."></textarea>
       </div>
 
       <p class="note" id="lc_help" style="margin-top:6px;">
-        Counts update when you click the button below. This tool is useful for text cleanup, formatting review, and basic writing metrics.
+        Count lines in drafts, logs, code snippets, lists, CSV-like text, or any plain text block.
       </p>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -97,36 +115,54 @@ const faqs = [
 
       <div style="margin-top:16px; overflow:auto;">
         <table style="width:100%; border-collapse:collapse;">
-          <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
           <tbody id="lc_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" id="lc_privacy" style="margin-top:10px;">
-        Privacy: counting runs locally in your browser. No text is stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How line counting works</h2>
+
     <p class="note">
-      Paste text into the input area, count it once, and review totals for lines, words, characters, blank lines, and paragraphs.
+      This tool treats line breaks as line separators, then calculates several related text metrics. It is useful when you need more than a simple character or word count.
+    </p>
+
+    <ul>
+      <li><strong>Total lines:</strong> every line separated by a line break, including empty lines</li>
+      <li><strong>Non-empty lines:</strong> lines that contain visible text after trimming whitespace</li>
+      <li><strong>Empty lines:</strong> lines with no visible characters</li>
+      <li><strong>Words:</strong> text groups separated by whitespace</li>
+      <li><strong>Paragraphs:</strong> text blocks separated by one or more blank lines</li>
+    </ul>
+
+    <p class="note">
+      For code or logs, total and non-empty line counts are usually the most useful. For writing drafts, words, paragraphs, and characters may be more useful.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>Count total and non-empty lines in logs or CSV-like text</li>
-      <li>Review paragraph and word counts in writing drafts</li>
-      <li>Measure characters with and without spaces</li>
+      <li><strong>Logs:</strong> count total and non-empty lines in copied log output</li>
+      <li><strong>Code snippets:</strong> check how many lines a small function or pasted block contains</li>
+      <li><strong>Lists:</strong> count one item per line after cleaning a list</li>
+      <li><strong>Writing drafts:</strong> review words, characters, and paragraph count</li>
+      <li><strong>Data cleanup:</strong> find whether blank lines are included in pasted text</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
+      <li><a href="/text-tools/word-counter/">Word Counter</a></li>
+      <li><a href="/text-tools/character-counter/">Character Counter</a></li>
       <li><a href="/text-tools/sentence-counter/">Sentence Counter</a></li>
-      <li><a href="/text-tools/reading-time-calculator/">Reading Time Calculator</a></li>
-      <li><a href="/text-tools/text-cleaner/">Text Cleaner</a></li>
+      <li><a href="/text-tools/remove-duplicate-lines/">Remove Duplicate Lines</a></li>
       <li><a href="/text-tools/">All Text Tools</a></li>
     </ul>
   </div>
@@ -144,33 +180,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!inputEl || !countBtn || !clearBtn || !errEl || !resultEl || !cardsEl || !tbodyEl) return;
 
-  function clearError(){ errEl.style.display="none"; errEl.textContent=""; }
-  function showError(msg){ errEl.style.display="block"; errEl.textContent=msg; }
-  function resetOutput(){
+  function clearError() {
+    errEl.style.display = "none";
+    errEl.textContent = "";
+  }
+
+  function showError(msg) {
+    errEl.style.display = "block";
+    errEl.textContent = msg;
+  }
+
+  function resetOutput() {
     clearError();
     resultEl.textContent = "Result will appear here.";
     cardsEl.style.display = "none";
     cardsEl.innerHTML = "";
     tbodyEl.innerHTML = "";
   }
-  function fillTable(rows){
+
+  function fillTable(rows) {
     tbodyEl.innerHTML = "";
-    rows.forEach(function(row){
-      const tr=document.createElement("tr");
-      const td1=document.createElement("td");
-      const td2=document.createElement("td");
-      td1.textContent=row[0];
-      td2.textContent=row[1];
-      tr.appendChild(td1); tr.appendChild(td2);
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      const td2 = document.createElement("td");
+      td1.textContent = row[0];
+      td2.textContent = row[1];
+      tr.appendChild(td1);
+      tr.appendChild(td2);
       tbodyEl.appendChild(tr);
     });
   }
-  function card(title, value, note){
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function card(title, value, note) {
     return (
       '<div class="lc-card">' +
-        '<strong>' + title + '</strong>' +
-        '<div class="big">' + value + '</div>' +
-        '<div class="note" style="margin-top:4px;">' + note + '</div>' +
+        '<strong>' + escapeHtml(title) + '</strong>' +
+        '<div class="big">' + escapeHtml(value) + '</div>' +
+        '<div class="note" style="margin-top:4px;">' + escapeHtml(note) + '</div>' +
       '</div>'
     );
   }
@@ -185,7 +240,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const lines = raw.split(/\r?\n/);
-    const nonEmptyLines = lines.filter(line => line.trim() !== "").length;
+    const nonEmptyLines = lines.filter(function (line) {
+      return line.trim() !== "";
+    }).length;
     const emptyLines = lines.length - nonEmptyLines;
     const words = raw.trim() ? raw.trim().split(/\s+/).length : 0;
     const chars = raw.length;
@@ -218,5 +275,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   countBtn.addEventListener("click", countText);
   clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") countText();
+  });
 });
 </script>

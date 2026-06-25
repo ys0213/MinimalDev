@@ -2,9 +2,9 @@
 import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
-  title: "C to F",
+  title: "C to F Converter",
   description:
-    "Convert Celsius to Fahrenheit for weather, cooking, and temperature checks.",
+    "Convert Celsius to Fahrenheit for weather, cooking, science, and everyday temperature checks.",
   href: "/converter/c-to-f/",
   order: 240,
 };
@@ -15,19 +15,23 @@ const CANONICAL_PATH = "/converter/c-to-f/";
 const faqs = [
   {
     q: "What is the formula for converting °C to °F?",
-    a: "°F = (°C × 9/5) + 32.",
+    a: "The formula is °F = (°C × 9/5) + 32. Multiply Celsius by 9/5, then add 32.",
   },
   {
     q: "Can Celsius values be negative?",
-    a: "Yes. Celsius can be below 0 (e.g., −10°C). The converter supports negative values.",
+    a: "Yes. Celsius can be below 0, such as −10°C for cold weather. This converter supports negative temperatures.",
   },
   {
-    q: "Is there a minimum possible temperature?",
-    a: "Yes. Absolute zero is −273.15°C. Values below that are not physically meaningful; this tool flags them as invalid.",
+    q: "What is absolute zero in Celsius?",
+    a: "Absolute zero is −273.15°C. Values below that are not physically meaningful, so this tool marks them as invalid.",
   },
   {
-    q: "Are my inputs stored?",
-    a: "No. All calculations run locally in your browser.",
+    q: "Why does 0°C equal 32°F?",
+    a: "Celsius and Fahrenheit use different zero points and scale sizes. Water freezes at 0°C, which is 32°F.",
+  },
+  {
+    q: "Does this converter store my temperature input?",
+    a: "No. The conversion runs locally in your browser and your input is not sent to a server.",
   },
 ];
 
@@ -35,15 +39,20 @@ const faqs = [
 
 <ToolLayout
   title={`C to F Converter — ${SITE_NAME}`}
-  description="Convert Celsius temperatures to Fahrenheit with a simple formula-based result for everyday temperature reference."
+  description="Convert Celsius to Fahrenheit for weather, cooking, body temperature references, science classes, and international temperature comparisons."
   canonicalPath={CANONICAL_PATH}
   h1="C to F Converter"
-  intro="Convert Celsius (°C) to Fahrenheit (°F). Includes rounding controls, common temperature references, and input validation."
+  intro="Convert Celsius (°C) to Fahrenheit (°F) for weather, cooking, travel, and quick temperature checks. You can also swap direction to convert Fahrenheit back to Celsius."
   faq={faqs}
   categoryName="Converters"
 >
   <div slot="tool" data-tool="c-to-f">
-    <div class="form" role="form" aria-describedby="c2f_help c2f_privacy">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="c2f_help">
       <div class="field">
         <label for="c2f_c">Temperature (°C)</label>
         <input
@@ -54,7 +63,7 @@ const faqs = [
           aria-describedby="c2f_help"
         />
         <p class="note" id="c2f_help" style="margin-top:6px;">
-          Enter °C then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd>.
+          Enter a temperature, then convert. Press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd> as a shortcut.
         </p>
       </div>
 
@@ -94,25 +103,33 @@ const faqs = [
           <tbody id="c2f_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" id="c2f_privacy" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No inputs are stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How Celsius to Fahrenheit conversion works</h2>
+
     <p class="note">
-      <strong>°F = (°C × 9/5) + 32</strong><br/>
-      Reverse: <strong>°C = (°F − 32) × 5/9</strong>
+      Celsius and Fahrenheit use different scale sizes and different zero points. To convert Celsius to Fahrenheit, multiply by 9/5 and then add 32.
+    </p>
+
+    <ul>
+      <li><strong>°F = (°C × 9/5) + 32</strong></li>
+      <li><strong>Reverse:</strong> °C = (°F − 32) × 5/9</li>
+      <li><strong>Validation:</strong> the tool blocks values below absolute zero, which is −273.15°C</li>
+    </ul>
+
+    <p class="note">
+      Use Celsius for many international weather and science contexts. Use Fahrenheit for everyday weather references in countries that commonly use °F.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>0°C</strong> = <strong>32°F</strong></li>
-      <li><strong>25°C</strong> = <strong>77°F</strong></li>
-      <li><strong>100°C</strong> = <strong>212°F</strong></li>
+      <li><strong>0°C</strong> = <strong>32°F</strong> — freezing point of water</li>
+      <li><strong>20°C</strong> = <strong>68°F</strong> — common room temperature reference</li>
+      <li><strong>25°C</strong> = <strong>77°F</strong> — warm weather reference</li>
+      <li><strong>100°C</strong> = <strong>212°F</strong> — boiling point of water</li>
     </ul>
   </div>
 
@@ -120,7 +137,7 @@ const faqs = [
     <ul>
       <li><a href="/converter/f-to-c/">F to C</a></li>
       <li><a href="/converter/temperature-converter/">Temperature Converter</a></li>
-      <li><a href="/converter/weight-converter/">Weight Converter</a></li>
+      <li><a href="/converter/celsius-to-kelvin/">Celsius to Kelvin</a></li>
       <li><a href="/converter/">All Converters</a></li>
     </ul>
   </div>
@@ -140,10 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!inEl || !roundEl || !convertBtn || !swapBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
 
-  // Physical limit (Celsius)
   const ABS_ZERO_C = -273.15;
-
-  // Mode true: C -> F, false: F -> C
   let modeCtoF = true;
 
   function toNum(v) {
@@ -180,7 +194,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function classifyByC(c) {
-    // Simple, non-medical, non-claimy labels
     if (!Number.isFinite(c)) return "—";
     if (c < -10) return "Very cold";
     if (c < 5) return "Cold";
@@ -221,11 +234,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const refs = [
       { name: "Freezing point of water", c: 0 },
       { name: "Room temperature (approx.)", c: 20 },
-      { name: "Body temperature (approx.)", c: 37 },
+      { name: "Warm weather", c: 25 },
       { name: "Boiling point of water", c: 100 },
     ];
 
-    // Add current input as a row if valid
     if (Number.isFinite(inputValue)) {
       const cVal = modeCtoF ? inputValue : fToC(inputValue);
       if (Number.isFinite(cVal)) refs.push({ name: "Your input", c: cVal, highlight: true });
@@ -262,7 +274,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Clamp extremely large values (avoid UI nonsense / float quirks)
     const value = Math.max(Math.min(raw, 1e9), -1e9);
     if (value !== raw) showError("Value is extremely large; output may be rounded due to floating-point limits.");
 

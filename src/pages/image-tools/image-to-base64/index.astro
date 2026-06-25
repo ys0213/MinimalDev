@@ -3,7 +3,8 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
   title: "Image to Base64",
-  description: "Convert image files into Base64 text for development and embedding.",
+  description:
+    "Convert image files into Base64 text or Data URLs for web development, testing, and embedding.",
   href: "/image-tools/image-to-base64/",
   order: 10,
 };
@@ -14,27 +15,27 @@ const CANONICAL_PATH = "/image-tools/image-to-base64/";
 const faqs = [
   {
     q: "What is Base64?",
-    a: "Base64 is a text-based encoding format that converts binary file data into plain text characters. It is often used when binary files must be embedded inside text-based formats.",
+    a: "Base64 is a text encoding format that represents binary file data using plain text characters. It is commonly used when binary data needs to fit inside text-based formats.",
   },
   {
     q: "What is the difference between raw Base64 and a Data URL?",
-    a: "Raw Base64 contains only the encoded data. A Data URL adds a prefix such as data:image/png;base64, which makes it directly usable in HTML, CSS, and some APIs.",
+    a: "Raw Base64 contains only the encoded data. A Data URL includes a prefix such as data:image/png;base64, so it can be pasted directly into HTML, CSS, or some API fields.",
   },
   {
     q: "Is my image uploaded?",
-    a: "No. Everything runs locally in your browser and the image is not uploaded or stored by this tool.",
+    a: "No. The image is read and converted locally in your browser. It is not uploaded or stored by this tool.",
   },
   {
-    q: "Why would I use Base64?",
-    a: "Base64 is useful for embedding small images into HTML, CSS, JSON payloads, emails, test data, or prototypes where a text representation is more convenient than a separate file.",
+    q: "Does Base64 make image files smaller?",
+    a: "No. Base64 usually increases the text size compared with the original binary file. It is useful for embedding and transport, not compression.",
   },
   {
-    q: "Does Base64 make files smaller?",
-    a: "No. Base64 usually makes data larger than the original binary file because it adds encoding overhead.",
+    q: "When should I use a Data URL?",
+    a: "Use a Data URL when you want a self-contained string for an img src, CSS url(), HTML prototype, or small inline asset.",
   },
   {
-    q: "When should I include the Data URL prefix?",
-    a: "Include it when you want to paste the output directly into an img src, CSS url(), or another place that expects a self-contained image string.",
+    q: "Should I Base64 encode large images?",
+    a: "Usually no. Large Base64 strings can make HTML, CSS, JSON, or API payloads harder to manage. For production websites, separate optimized image files are often better.",
   },
 ];
 
@@ -42,316 +43,336 @@ const faqs = [
 
 <ToolLayout
   title={`Image to Base64 — ${SITE_NAME}`}
-  description="Convert images to Base64 strings for inline assets, testing, previews, data URIs, and front-end development workflows."
+  description="Convert images to Base64 or Data URLs for inline assets, previews, API testing, HTML examples, CSS snippets, and front-end development."
   canonicalPath={CANONICAL_PATH}
   h1="Image to Base64"
-  intro="Convert images into Base64 text instantly. You can generate either raw Base64 or a full Data URL, preview the uploaded image, copy the result, and download it as a text file."
+  intro="Convert image files into Base64 text directly in your browser. Generate raw Base64 or a full Data URL, preview the image, copy the result, or download it as a text file."
   faq={faqs}
   categoryName="Image Tools"
 >
-<div slot="tool" data-tool="image-to-base64">
+  <div slot="tool" data-tool="image-to-base64">
+    <style is:inline>
+      #output {
+        width: 100%;
+        min-height: 140px;
+      }
 
-<style is:inline>
-  textarea {
-    width: 100%;
-    min-height: 140px;
-  }
-  img {
-    max-width: 100%;
-    border-radius: 10px;
-    display: block;
-  }
-  .itb-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .itb-card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 10px;
-  }
-  .itb-card {
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 12px;
-    padding: 12px;
-    min-width: 0;
-  }
-  .itb-big {
-    font-size: 24px;
-    font-weight: 900;
-    margin-top: 6px;
-    line-height: 1.1;
-    word-break: break-word;
-  }
-  .itb-preview-wrap {
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 14px;
-    padding: 12px;
-    background: rgba(255,255,255,.03);
-  }
-  .itb-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  @media (min-width: 900px) {
-    .itb-grid {
-      grid-template-columns: 1fr 320px;
-      align-items: start;
-    }
-  }
-</style>
+      .itb-preview-img {
+        max-width: 100%;
+        border-radius: 10px;
+        display: block;
+      }
 
-<div class="form" role="form" aria-describedby="itb_help itb_privacy">
-  <div class="field">
-    <label for="file">Image file</label>
-    <input type="file" id="file" accept="image/*"/>
-  </div>
+      .itb-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
 
-  <div class="itb-grid">
-    <div>
-      <div class="itb-preview-wrap">
-        <strong>Image preview</strong>
-        <div id="preview" style="margin-top:10px;"></div>
+      .itb-card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px;
+      }
+
+      .itb-card {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 0;
+      }
+
+      .itb-big {
+        font-size: 24px;
+        font-weight: 900;
+        margin-top: 6px;
+        line-height: 1.1;
+        word-break: break-word;
+      }
+
+      .itb-preview-wrap {
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255,255,255,.03);
+      }
+
+      .itb-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      @media (min-width: 900px) {
+        .itb-grid {
+          grid-template-columns: 1fr 320px;
+          align-items: start;
+        }
+      }
+    </style>
+
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="itb_help">
+      <div class="field">
+        <label for="file">Image file</label>
+        <input type="file" id="file" accept="image/*"/>
+      </div>
+
+      <div class="itb-grid">
+        <div>
+          <div class="itb-preview-wrap">
+            <strong>Image preview</strong>
+            <div id="preview" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="itb-card-grid">
+            <div class="itb-card">
+              <strong>Output type</strong>
+              <div class="itb-big" id="outputType">Data URL</div>
+              <div class="note" style="margin-top:4px;">Current conversion mode</div>
+            </div>
+
+            <div class="itb-card">
+              <strong>Character length</strong>
+              <div class="itb-big" id="charLength">—</div>
+              <div class="note" style="margin-top:4px;">Result text length</div>
+            </div>
+          </div>
+
+          <label style="display:block; margin-top:12px;">
+            <input type="checkbox" id="dataUrl" checked/>
+            Include Data URL prefix
+          </label>
+
+          <p class="note" id="itb_help" style="margin-top:8px;">
+            Enable the prefix for a self-contained string such as <code>data:image/png;base64,...</code>. Disable it when you only need the raw Base64 portion.
+          </p>
+        </div>
+      </div>
+
+      <div id="error" class="result" style="display:none; margin-top:12px;" role="alert"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label for="output">Base64 output</label>
+        <textarea id="output" placeholder="Base64 result"></textarea>
+      </div>
+
+      <div class="itb-row">
+        <button class="btn" id="convert" type="button">Convert</button>
+        <button class="btn secondary" id="copy" type="button">Copy</button>
+        <button class="btn secondary" id="download" type="button">Download TXT</button>
+        <button class="btn secondary" id="clear" type="button">Clear</button>
+      </div>
+
+      <div id="result" class="result" style="margin-top:12px;" role="status">
+        Upload an image to start.
       </div>
     </div>
 
-    <div>
-      <div class="itb-card-grid">
-        <div class="itb-card">
-          <strong>Output type</strong>
-          <div class="itb-big" id="outputType">Data URL</div>
-          <div class="note" style="margin-top:4px;">Current conversion mode</div>
-        </div>
-
-        <div class="itb-card">
-          <strong>Character length</strong>
-          <div class="itb-big" id="charLength">—</div>
-          <div class="note" style="margin-top:4px;">Result text length</div>
-        </div>
-      </div>
-
-      <label style="display:block; margin-top:12px;">
-        <input type="checkbox" id="dataUrl" checked/>
-        Include Data URL prefix
-      </label>
-
-      <p class="note" id="itb_help" style="margin-top:8px;">
-        Enable the prefix when you want a self-contained string such as <code>data:image/png;base64,...</code>. Disable it when you need only the raw Base64 portion.
+    <section class="section">
+      <h2>Learn more about images</h2>
+      <p class="note">
+        Image format and optimization choices affect file size, quality, loading speed, and whether Base64 is the right approach.
       </p>
-    </div>
+
+      <ul>
+        <li><a href="/guides/image-format-comparison/">PNG vs JPG vs WebP</a></li>
+        <li><a href="/guides/reduce-image-size/">Reduce Image Size</a></li>
+        <li><a href="/guides/why-use-webp/">Why WebP</a></li>
+        <li><a href="/guides/image-optimization-for-web/">Image Optimization</a></li>
+      </ul>
+    </section>
   </div>
 
-  <div id="error" class="result" style="display:none; margin-top:12px;" role="alert"></div>
+  <div slot="how">
+    <h2>How image to Base64 conversion works</h2>
 
-  <div class="field" style="margin-top:12px;">
-    <label for="output">Base64 output</label>
-    <textarea id="output" placeholder="Base64 result"></textarea>
+    <p class="note">
+      This tool reads the selected image locally with the browser FileReader API and converts it into a Base64 string. You can keep the full Data URL prefix or output only the raw Base64 data.
+    </p>
+
+    <ul>
+      <li><strong>Raw Base64:</strong> useful when another system expects only encoded file content</li>
+      <li><strong>Data URL:</strong> useful when pasting the result directly into HTML, CSS, previews, or small prototypes</li>
+      <li><strong>Size note:</strong> Base64 text is usually larger than the original image file</li>
+      <li><strong>Best use case:</strong> small images, test payloads, inline examples, and quick development snippets</li>
+    </ul>
+
+    <p class="note">
+      For production websites, use Base64 carefully. Large inline image strings can make pages harder to maintain and may increase document size.
+    </p>
   </div>
 
-  <div class="itb-row">
-    <button class="btn" id="convert" type="button">Convert</button>
-    <button class="btn secondary" id="copy" type="button">Copy</button>
-    <button class="btn secondary" id="download" type="button">Download TXT</button>
-    <button class="btn secondary" id="clear" type="button">Clear</button>
+  <div slot="examples">
+    <ul>
+      <li><strong>HTML embedding:</strong> generate a Data URL and place it in an <code>img src</code> attribute</li>
+      <li><strong>CSS usage:</strong> use a small Data URL inside <code>background-image: url(...)</code></li>
+      <li><strong>API testing:</strong> send raw Base64 in a JSON request when testing upload endpoints</li>
+      <li><strong>Documentation:</strong> include a small sample image inside a technical note or example payload</li>
+    </ul>
   </div>
 
-  <div id="result" class="result" style="margin-top:12px;" role="status">
-    Upload an image to start.
+  <div slot="related">
+    <ul>
+      <li><a href="/image-tools/base64-to-image/">Base64 to Image</a></li>
+      <li><a href="/utility/base64/">Base64 Encoder/Decoder</a></li>
+      <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
+      <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
+      <li><a href="/image-tools/">All Image Tools</a></li>
+    </ul>
   </div>
-
-  <p class="note" id="itb_privacy" style="margin-top:10px;">
-    Privacy: conversion runs locally in your browser. No image data is uploaded, stored, or transmitted.
-  </p>
-</div>
-
-<section class="section">
-  <h2>Learn more about images</h2>
-  <p class="note">
-    Understanding formats and optimization helps you get better results when converting or editing images.
-  </p>
-
-  <ul>
-    <li><a href="/guides/image-format-comparison/">PNG vs JPG vs WebP</a></li>
-    <li><a href="/guides/reduce-image-size/">Reduce Image Size</a></li>
-    <li><a href="/guides/why-use-webp/">Why WebP</a></li>
-    <li><a href="/guides/image-optimization-for-web/">Image Optimization</a></li>
-  </ul>
-</section>
-</div>
-
-<div slot="how">
-  <p class="note">
-    This tool reads the uploaded image locally with the browser FileReader API and converts it into a Base64 string. You can output the full Data URL or strip the prefix to keep only the raw Base64 data.
-  </p>
-  <ul>
-    <li><strong>Raw Base64:</strong> useful when another system expects only the encoded content</li>
-    <li><strong>Data URL:</strong> useful when you want to paste the result directly into HTML or CSS</li>
-    <li><strong>Result interpretation:</strong> longer output means more text to store or transmit, and Base64 is usually larger than the original binary file</li>
-    <li><strong>Best use case:</strong> small images, prototypes, inline assets, test payloads, and quick conversions</li>
-  </ul>
-</div>
-
-<div slot="examples">
-  <ul>
-    <li><strong>HTML embedding:</strong> generate a Data URL and place it in an <code>img src</code> attribute</li>
-    <li><strong>CSS usage:</strong> use a Data URL inside <code>background-image: url(...)</code> for a very small asset</li>
-    <li><strong>API testing:</strong> send raw Base64 in a JSON request when testing upload endpoints</li>
-    <li><strong>Documentation:</strong> keep an example image inline inside sample payloads or technical notes</li>
-  </ul>
-</div>
-
-<div slot="related">
-  <ul>
-    <li><a href="/image-tools/base64-to-image/">Base64 to Image</a></li>
-    <li><a href="/image-tools/image-compressor/">Image Compressor</a></li>
-    <li><a href="/image-tools/image-resizer/">Image Resizer</a></li>
-    <li><a href="/image-tools/image-palette-generator/">Image Palette Generator</a></li>
-    <li><a href="/image-tools/">All Image Tools</a></li>
-  </ul>
-</div>
 </ToolLayout>
 
 <script is:inline>
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", function () {
+  const file = document.getElementById("file");
+  const output = document.getElementById("output");
+  const preview = document.getElementById("preview");
+  const result = document.getElementById("result");
+  const error = document.getElementById("error");
+  const dataUrlCheckbox = document.getElementById("dataUrl");
+  const outputType = document.getElementById("outputType");
+  const charLength = document.getElementById("charLength");
+  const clearBtn = document.getElementById("clear");
+  const convertBtn = document.getElementById("convert");
+  const copyBtn = document.getElementById("copy");
+  const downloadBtn = document.getElementById("download");
 
-const file=document.getElementById("file");
-const output=document.getElementById("output");
-const preview=document.getElementById("preview");
-const result=document.getElementById("result");
-const error=document.getElementById("error");
-const dataUrlCheckbox=document.getElementById("dataUrl");
-const outputType=document.getElementById("outputType");
-const charLength=document.getElementById("charLength");
-const clearBtn=document.getElementById("clear");
+  if (!file || !output || !preview || !result || !error || !dataUrlCheckbox || !outputType || !charLength || !clearBtn || !convertBtn || !copyBtn || !downloadBtn) return;
 
-let fileData=null;
-let currentFileName="";
+  let fileData = null;
+  let currentFileName = "";
 
-function showError(msg){
-  error.style.display="block";
-  error.textContent=msg;
-}
-
-function clearError(){
-  error.style.display="none";
-  error.textContent="";
-}
-
-function updateModeUi() {
-  outputType.textContent = dataUrlCheckbox.checked ? "Data URL" : "Raw Base64";
-}
-
-function resetAll() {
-  file.value = "";
-  output.value = "";
-  preview.innerHTML = "";
-  result.textContent = "Upload an image to start.";
-  fileData = null;
-  currentFileName = "";
-  charLength.textContent = "—";
-  updateModeUi();
-  clearError();
-}
-
-file.onchange=e=>{
-  clearError();
-  const f=e.target.files[0];
-  if(!f) return;
-
-  if(!f.type || !f.type.startsWith("image/")){
-    showError("Only image files are allowed.");
-    return;
+  function showError(msg) {
+    error.style.display = "block";
+    error.textContent = msg;
   }
 
-  currentFileName = f.name || "image";
+  function clearError() {
+    error.style.display = "none";
+    error.textContent = "";
+  }
 
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    fileData=ev.target.result;
-    preview.innerHTML=`<img src="${fileData}" alt="Uploaded image preview"/>`;
+  function updateModeUi() {
+    outputType.textContent = dataUrlCheckbox.checked ? "Data URL" : "Raw Base64";
+  }
+
+  function resetAll() {
+    file.value = "";
+    output.value = "";
+    preview.innerHTML = "";
+    result.textContent = "Upload an image to start.";
+    fileData = null;
+    currentFileName = "";
+    charLength.textContent = "—";
+    updateModeUi();
+    clearError();
+  }
+
+  file.addEventListener("change", function (e) {
+    clearError();
+
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+
+    if (!f.type || !f.type.startsWith("image/")) {
+      showError("Only image files are allowed.");
+      return;
+    }
+
+    currentFileName = f.name || "image";
+
+    const reader = new FileReader();
+
+    reader.onload = function (ev) {
+      fileData = ev.target.result;
+      preview.innerHTML = `<img class="itb-preview-img" src="${fileData}" alt="Uploaded image preview"/>`;
+      result.innerHTML =
+        "<strong>Image loaded.</strong><br>" +
+        "Choose whether to include the Data URL prefix, then click Convert.";
+    };
+
+    reader.onerror = function () {
+      showError("Could not read the selected file.");
+    };
+
+    reader.readAsDataURL(f);
+  });
+
+  dataUrlCheckbox.addEventListener("change", function () {
+    updateModeUi();
+    if (output.value) {
+      result.innerHTML =
+        "<strong>Mode updated.</strong><br>" +
+        "Click Convert again if you want to regenerate the output in the newly selected format.";
+    }
+  });
+
+  convertBtn.addEventListener("click", function () {
+    clearError();
+
+    if (!fileData) {
+      showError("Upload an image first.");
+      return;
+    }
+
+    let base64 = fileData;
+
+    if (!dataUrlCheckbox.checked) {
+      base64 = String(base64).split(",")[1] || "";
+    }
+
+    output.value = base64;
+    charLength.textContent = base64.length.toLocaleString();
+    updateModeUi();
+
     result.innerHTML =
-      "<strong>Image loaded.</strong><br>" +
-      "Choose whether to include the Data URL prefix, then click Convert.";
-  };
-  reader.onerror=()=>{
-    showError("Could not read the selected file.");
-  };
-  reader.readAsDataURL(f);
-};
+      `Length: ${base64.length.toLocaleString()} characters<br>` +
+      `Type: ${dataUrlCheckbox.checked ? "Data URL" : "Raw Base64"}<br>` +
+      "Note: Base64 text is usually larger than the original binary file.";
+  });
 
-dataUrlCheckbox.onchange=()=>{
+  copyBtn.addEventListener("click", async function () {
+    clearError();
+
+    if (!output.value) {
+      showError("Nothing to copy yet. Convert an image first.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(output.value);
+      result.innerHTML = "<strong>Copied to clipboard.</strong><br>The current Base64 output is now in your clipboard.";
+    } catch (_) {
+      showError("Clipboard failed.");
+    }
+  });
+
+  downloadBtn.addEventListener("click", function () {
+    clearError();
+
+    if (!output.value) {
+      showError("Nothing to download yet. Convert an image first.");
+      return;
+    }
+
+    const blob = new Blob([output.value], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const base = currentFileName ? currentFileName.replace(/\.[^.]+$/, "") : "base64";
+    a.download = base + "-base64.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  clearBtn.addEventListener("click", resetAll);
+
   updateModeUi();
-  if(output.value){
-    result.innerHTML =
-      "<strong>Mode updated.</strong><br>" +
-      "Click Convert again if you want to regenerate the output in the newly selected format.";
-  }
-};
-
-document.getElementById("convert").onclick=()=>{
-  clearError();
-
-  if(!fileData){
-    showError("Upload an image first.");
-    return;
-  }
-
-  let base64=fileData;
-
-  if(!dataUrlCheckbox.checked){
-    base64=base64.split(",")[1];
-  }
-
-  output.value=base64;
-  charLength.textContent = base64.length.toLocaleString();
-  updateModeUi();
-
-  result.innerHTML =
-  `Length: ${base64.length.toLocaleString()} characters<br>
-   Type: ${dataUrlCheckbox.checked ? "Data URL" : "Raw Base64"}<br>
-   Note: Base64 text is usually larger than the original binary file.`;
-};
-
-document.getElementById("copy").onclick=async()=>{
-  clearError();
-
-  if(!output.value){
-    showError("Nothing to copy yet. Convert an image first.");
-    return;
-  }
-
-  try{
-    await navigator.clipboard.writeText(output.value);
-    result.innerHTML="<strong>Copied to clipboard.</strong><br>The current Base64 output is now in your clipboard.";
-  }catch{
-    showError("Clipboard failed.");
-  }
-};
-
-document.getElementById("download").onclick=()=>{
-  clearError();
-
-  if(!output.value){
-    showError("Nothing to download yet. Convert an image first.");
-    return;
-  }
-
-  const blob=new Blob([output.value],{type:"text/plain;charset=utf-8"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  const base = currentFileName ? currentFileName.replace(/\.[^.]+$/, "") : "base64";
-  a.download= base + "-base64.txt";
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-
-clearBtn.onclick=()=>{
-  resetAll();
-};
-
-updateModeUi();
-
 });
 </script>

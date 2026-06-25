@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JWT Decoder",
   description:
-    "Decode JWT headers and payloads for inspection.",
+    "Decode JWT headers and payloads locally for authentication debugging and token inspection.",
   href: "/developer-tools/jwt-decoder/",
   order: 50,
 };
@@ -15,19 +15,23 @@ const CANONICAL_PATH = "/developer-tools/jwt-decoder/";
 const faqs = [
   {
     q: "What does this JWT decoder do?",
-    a: "It decodes the header and payload parts of a JWT and shows them as JSON for inspection.",
+    a: "It decodes the header and payload parts of a JSON Web Token and displays them as readable JSON for inspection.",
   },
   {
-    q: "Does this tool verify the signature?",
-    a: "No. This decoder only parses and displays the token structure. It does not verify authenticity.",
+    q: "Does this tool verify the JWT signature?",
+    a: "No. This decoder only parses and displays the token structure. It does not verify whether the token is authentic or trusted.",
   },
   {
     q: "Can it show expiration timestamps?",
-    a: "Yes. Standard time-based claims such as exp, iat, and nbf are shown in both raw and readable form when present.",
+    a: "Yes. If claims such as exp, iat, or nbf are present, the tool shows their raw values and readable UTC timestamps.",
+  },
+  {
+    q: "Why should I not paste sensitive production tokens?",
+    a: "The tool runs locally in your browser, but access tokens may contain sensitive claims. Avoid sharing or saving real production tokens unless you understand the risk.",
   },
   {
     q: "Is my token sent anywhere?",
-    a: "No. Decoding runs locally in your browser and is not stored or transmitted.",
+    a: "No. Decoding runs locally in your browser and the token is not sent to a server.",
   },
 ];
 
@@ -35,14 +39,13 @@ const faqs = [
 
 <ToolLayout
   title={`JWT Decoder — ${SITE_NAME}`}
-  description="Decode JSON Web Tokens to inspect header and payload data for authentication debugging, API testing, and token review."
+  description="Decode JSON Web Tokens locally to inspect header, payload, claims, expiration time, issuer, audience, and authentication debugging data."
   canonicalPath={CANONICAL_PATH}
   h1="JWT Decoder"
-  intro="Decode a JWT token locally to inspect its header, payload, and common time-based claims."
+  intro="Decode a JWT token locally to inspect its header, payload, and common claims such as exp, iat, nbf, iss, aud, and sub. This tool is for inspection, not signature verification."
   faq={faqs}
   categoryName="Developer Tools"
 >
-
   <div slot="tool" data-tool="jwt-decoder">
     <style is:inline>
       .jd-grid-2 {
@@ -50,15 +53,18 @@ const faqs = [
         grid-template-columns: 1fr;
         gap: 10px;
       }
+
       .jd-grid-2 > * {
         min-width: 0;
       }
+
       #jd_input,
       #jd_header,
       #jd_payload {
         width: 100%;
         min-width: 0;
       }
+
       @media (min-width: 760px) {
         .jd-grid-2 {
           grid-template-columns: 1fr 1fr;
@@ -66,14 +72,19 @@ const faqs = [
       }
     </style>
 
-    <div class="form" role="form" aria-describedby="jd_help jd_privacy">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="jd_help">
       <div class="field">
         <label for="jd_input">JWT token</label>
         <textarea id="jd_input" rows="7" spellcheck="false" placeholder="Paste a JWT token here."></textarea>
       </div>
 
       <p class="note" id="jd_help" style="margin-top:6px;">
-        JWT format is typically header.payload.signature. This tool decodes but does not verify the signature.
+        JWT format is usually <code>header.payload.signature</code>. This tool decodes the readable parts but does not verify the signature.
       </p>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -101,31 +112,41 @@ const faqs = [
         <table style="width:100%; border-collapse:collapse;">
           <thead>
             <tr>
-              <th scope="col">Metric</th>
+              <th scope="col">Claim / Field</th>
               <th scope="col">Value</th>
             </tr>
           </thead>
           <tbody id="jd_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" id="jd_privacy" style="margin-top:10px;">
-        Privacy: decoding runs locally in your browser. No token data is stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How JWT decoding works</h2>
+
     <p class="note">
-      Paste a JWT token, decode its base64url-encoded header and payload, and inspect the resulting JSON plus time-related claims such as exp, iat, and nbf.
+      A JWT is usually made of three dot-separated parts: header, payload, and signature. The first two parts are base64url-encoded JSON, which means they can be decoded and inspected without a secret key.
+    </p>
+
+    <ul>
+      <li><strong>Header:</strong> usually contains metadata such as the algorithm (<code>alg</code>) and token type (<code>typ</code>)</li>
+      <li><strong>Payload:</strong> contains claims such as subject, issuer, audience, issued-at time, and expiration time</li>
+      <li><strong>Signature:</strong> is used to verify authenticity, but this tool does not verify it</li>
+      <li><strong>Important:</strong> decoding a JWT is not the same as trusting it</li>
+    </ul>
+
+    <p class="note">
+      Use this page for debugging token structure, checking expiration claims, reviewing API authentication data, or confirming that a token contains the expected fields.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li>JWT tokens usually have <strong>3 parts</strong> separated by dots</li>
-      <li>The first two parts are base64url-encoded JSON</li>
-      <li>The third part is the signature and is not decoded into JSON</li>
+      <li><strong>Header check:</strong> inspect whether a token uses an expected <code>alg</code> value such as HS256 or RS256</li>
+      <li><strong>Expiration check:</strong> decode <code>exp</code> to see when a token expires</li>
+      <li><strong>Issuer check:</strong> inspect <code>iss</code> and <code>aud</code> claims when debugging API authentication</li>
+      <li><strong>Payload review:</strong> view custom claims in readable JSON format</li>
     </ul>
   </div>
 
@@ -133,6 +154,7 @@ const faqs = [
     <ul>
       <li><a href="/developer-tools/jwt-encoder/">JWT Encoder</a></li>
       <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
+      <li><a href="/utility/base64/">Base64 Encoder/Decoder</a></li>
       <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
       <li><a href="/developer-tools/">All Developer Tools</a></li>
     </ul>
@@ -173,8 +195,13 @@ document.addEventListener("DOMContentLoaded", function () {
     tbodyEl.innerHTML = "";
   }
 
-  function badge(text) {
-    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:900;">' + text + '</span>';
+  function badge(text, kind) {
+    const border = kind === "warn"
+      ? "rgba(251,146,60,0.55)"
+      : kind === "good"
+      ? "rgba(34,197,94,0.55)"
+      : "rgba(255,255,255,0.2)";
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid ' + border + ';font-size:12px;font-weight:900;">' + text + '</span>';
   }
 
   function fillTable(rows) {
@@ -192,16 +219,26 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function decodeBase64Url(str) {
-    const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = String(str).replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64 + "===".slice((base64.length + 3) % 4);
     const binary = atob(padded);
-    const bytes = Uint8Array.from(binary, function (c) { return c.charCodeAt(0); });
+    const bytes = Uint8Array.from(binary, function (c) {
+      return c.charCodeAt(0);
+    });
     return new TextDecoder().decode(bytes);
   }
 
-  function humanTime(v) {
-    if (!Number.isFinite(v)) return "—";
-    return new Date(v * 1000).toISOString();
+  function toNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function humanTime(value) {
+    const n = toNumber(value);
+    if (!Number.isFinite(n)) return "—";
+    const d = new Date(n * 1000);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toISOString();
   }
 
   function decodeJwt() {
@@ -219,12 +256,14 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    let headerObj, payloadObj;
+    let headerObj;
+    let payloadObj;
+
     try {
       headerObj = JSON.parse(decodeBase64Url(parts[0]));
       payloadObj = JSON.parse(decodeBase64Url(parts[1]));
-    } catch (e) {
-      showError("Could not decode JWT header or payload.");
+    } catch (_) {
+      showError("Could not decode JWT header or payload. Check that the token is correctly formatted.");
       return;
     }
 
@@ -232,25 +271,30 @@ document.addEventListener("DOMContentLoaded", function () {
     payloadEl.value = JSON.stringify(payloadObj, null, 2);
 
     const hasSig = parts.length >= 3 && parts[2] !== "";
+    const exp = toNumber(payloadObj.exp);
+    const nowSec = Math.floor(Date.now() / 1000);
+    const isExpired = Number.isFinite(exp) ? exp < nowSec : false;
+
     resultEl.innerHTML = "<strong>JWT decoded.</strong>";
 
     cardsEl.style.display = "block";
     cardsEl.innerHTML =
       '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-      badge("Parts: " + parts.length) +
-      badge(hasSig ? "Signature present" : "No signature part") +
-      badge("Decoded locally") +
+      badge("Parts: " + parts.length, "neutral") +
+      badge(hasSig ? "Signature present" : "No signature part", hasSig ? "good" : "warn") +
+      badge(isExpired ? "Expired" : "Decoded locally", isExpired ? "warn" : "good") +
       "</div>";
 
     fillTable([
-      ["Algorithm", headerObj.alg || "—"],
-      ["Type", headerObj.typ || "—"],
-      ["Subject", payloadObj.sub || "—"],
-      ["Issuer", payloadObj.iss || "—"],
-      ["Audience", Array.isArray(payloadObj.aud) ? payloadObj.aud.join(", ") : (payloadObj.aud || "—")],
-      ["Issued at (iat)", Number.isFinite(payloadObj.iat) ? humanTime(payloadObj.iat) : "—"],
-      ["Not before (nbf)", Number.isFinite(payloadObj.nbf) ? humanTime(payloadObj.nbf) : "—"],
-      ["Expires (exp)", Number.isFinite(payloadObj.exp) ? humanTime(payloadObj.exp) : "—"],
+      ["Algorithm (alg)", headerObj.alg || "—"],
+      ["Type (typ)", headerObj.typ || "—"],
+      ["Subject (sub)", payloadObj.sub || "—"],
+      ["Issuer (iss)", payloadObj.iss || "—"],
+      ["Audience (aud)", Array.isArray(payloadObj.aud) ? payloadObj.aud.join(", ") : (payloadObj.aud || "—")],
+      ["Issued at (iat)", humanTime(payloadObj.iat)],
+      ["Not before (nbf)", humanTime(payloadObj.nbf)],
+      ["Expires (exp)", humanTime(payloadObj.exp)],
+      ["Expiration status", Number.isFinite(exp) ? (isExpired ? "Expired" : "Not expired based on this device clock") : "—"],
     ]);
   }
 
@@ -262,5 +306,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   decodeBtn.addEventListener("click", decodeJwt);
   clearBtn.addEventListener("click", clearAll);
+
+  inputEl.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") decodeJwt();
+  });
 });
 </script>

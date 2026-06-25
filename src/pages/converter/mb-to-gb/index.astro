@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "MB to GB Converter",
   description:
-    "Convert megabytes to gigabytes for storage and file size estimates.",
+    "Convert megabytes to gigabytes for storage, file sizes, downloads, and device capacity.",
   href: "/converter/mb-to-gb/",
   order: 150,
 };
@@ -15,19 +15,23 @@ const CANONICAL_PATH = "/converter/mb-to-gb/";
 const faqs = [
   {
     q: "Is 1 GB equal to 1000 MB or 1024 MB?",
-    a: "Both are used. Decimal storage units use 1 GB = 1000 MB. Binary units use 1 GiB = 1024 MiB. This tool can show both.",
+    a: "Both are used in different contexts. Decimal storage units use 1 GB = 1000 MB. Binary units use 1 GiB = 1024 MiB. This converter can show decimal GB and binary-equivalent GiB.",
   },
   {
     q: "Which setting should I use for file sizes?",
-    a: "Manufacturers and network speeds often use decimal (GB). Many operating systems display binary (GiB). If you are matching what a device shows, try the binary option.",
+    a: "Use decimal GB when matching storage labels, download sizes, or manufacturer capacity. Use the binary-equivalent GiB view when comparing with operating system storage displays.",
   },
   {
-    q: "Can I enter decimals (e.g., 12.5 MB)?",
-    a: "Yes. Decimals are supported.",
+    q: "Why does my computer show less space than the drive label?",
+    a: "One common reason is unit display. A drive sold using decimal GB may be shown by an operating system using binary-style units, which makes the displayed number look smaller.",
   },
   {
-    q: "Are my inputs stored?",
-    a: "No. This converter runs locally in your browser.",
+    q: "Can I enter decimal MB values?",
+    a: "Yes. You can enter values like 12.5 MB, 1500.75 MB, or other decimal file sizes.",
+  },
+  {
+    q: "Does this converter upload my data?",
+    a: "No. The calculation runs locally in your browser and your input is not sent to a server.",
   },
 ];
 
@@ -35,20 +39,25 @@ const faqs = [
 
 <ToolLayout
   title={`MB to GB Converter — ${SITE_NAME}`}
-  description="Convert MB to GB to understand file sizes, storage usage, download sizes, and device capacity."
+  description="Convert MB to GB for file sizes, storage usage, download sizes, and device capacity. Compare decimal GB and binary-equivalent GiB."
   canonicalPath={CANONICAL_PATH}
   h1="MB to GB Converter"
-  intro="Convert megabytes (MB) to gigabytes (GB). Choose decimal or binary interpretation to match how storage is labeled or displayed."
+  intro="Convert megabytes (MB) to gigabytes (GB) for storage, downloads, backups, and file size checks. Choose decimal GB or binary-equivalent GiB depending on the context."
   faq={faqs}
   categoryName="Converters"
 >
   <div slot="tool" data-tool="mb-to-gb">
-    <div class="form" role="form" aria-describedby="m2g_hint m2g_privacy">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="m2g_hint">
       <div class="field">
         <label for="m2g_mb">Megabytes</label>
         <input id="m2g_mb" type="number" inputmode="decimal" placeholder="e.g., 1500" />
         <p class="note" id="m2g_hint" style="margin-top:6px;">
-          Enter MB, then choose decimal vs binary to match your context.
+          Enter a size in MB, then choose whether you want decimal GB, binary-equivalent GiB, or both.
         </p>
       </div>
 
@@ -56,7 +65,7 @@ const faqs = [
         <label for="m2g_mode">Conversion standard</label>
         <select id="m2g_mode">
           <option value="decimal" selected>Decimal (GB): 1 GB = 1000 MB</option>
-          <option value="binary">Binary (GiB): 1 GiB = 1024 MiB</option>
+          <option value="binary">Binary-equivalent (GiB)</option>
           <option value="both">Show both</option>
         </select>
       </div>
@@ -95,34 +104,42 @@ const faqs = [
           <tbody id="m2g_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" id="m2g_privacy" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No inputs are stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How MB to GB conversion works</h2>
+
     <p class="note">
-      <strong>Decimal:</strong> GB = MB ÷ 1000<br/>
-      <strong>Binary display equivalent:</strong> GiB = MiB ÷ 1024. If your input is labeled “MB” but you want the
-      OS-style binary display, convert MB → bytes (×1,000,000) then bytes → GiB (÷1,073,741,824).
+      MB to GB conversion depends on whether you are using decimal storage units or binary-style display units. Storage labels, download sizes, and network-related file sizes usually use decimal units, while some operating systems display storage using binary units.
+    </p>
+
+    <ul>
+      <li><strong>Decimal:</strong> GB = MB ÷ 1000</li>
+      <li><strong>Binary-equivalent:</strong> GiB is based on powers of 1024</li>
+      <li><strong>Practical rule:</strong> use decimal GB for product labels and download sizes; use binary-equivalent values when comparing with OS storage displays</li>
+    </ul>
+
+    <p class="note">
+      This page treats the input as decimal MB. For binary comparison, it converts MB to bytes first, then displays the binary-equivalent GiB value.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>1500 MB</strong> → <strong>1.5 GB</strong> (decimal)</li>
-      <li><strong>1500 MB</strong> → about <strong>1.397 GiB</strong> (binary-equivalent)</li>
-      <li><strong>500 MB</strong> → <strong>0.5 GB</strong> (decimal)</li>
+      <li><strong>500 MB</strong> → <strong>0.5 GB</strong> decimal</li>
+      <li><strong>1500 MB</strong> → <strong>1.5 GB</strong> decimal, about <strong>1.397 GiB</strong> binary-equivalent</li>
+      <li><strong>2048 MB</strong> → <strong>2.048 GB</strong> decimal, about <strong>1.907 GiB</strong> binary-equivalent</li>
+      <li><strong>10000 MB</strong> → <strong>10 GB</strong> decimal</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
       <li><a href="/converter/gb-to-mb/">GB to MB</a></li>
-      <li><a href="/converter/bytes-converter/">Bytes Converter</a></li>
       <li><a href="/converter/kb-to-mb/">KB to MB</a></li>
+      <li><a href="/converter/bytes-converter/">Bytes Converter</a></li>
+      <li><a href="/utility/base64/">Base64 Encoder/Decoder</a></li>
       <li><a href="/converter/">All Converters</a></li>
     </ul>
   </div>
@@ -142,9 +159,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!mbEl || !modeEl || !roundEl || !calcBtn || !clearBtn || !errEl || !outEl || !cardsEl || !tbodyEl) return;
 
-  const BYTES_PER_MB_DEC = 1e6;                 // 1 MB (decimal) = 1,000,000 bytes
-  const BYTES_PER_GB_DEC = 1e9;                 // 1 GB (decimal) = 1,000,000,000 bytes
-  const BYTES_PER_GIB_BIN = 1024 * 1024 * 1024; // 1 GiB (binary) = 1,073,741,824 bytes
+  const BYTES_PER_MB_DEC = 1e6;
+  const BYTES_PER_GIB_BIN = 1024 * 1024 * 1024;
 
   function toNum(v) {
     const x = parseFloat(String(v));
@@ -216,17 +232,12 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Guard against extreme values that will lose precision in display.
     const mb = Math.min(raw, 1e18);
     if (mb !== raw) showError("Value is very large; output may be rounded due to floating-point limits.");
 
     const mode = String(modeEl.value);
 
-    // Decimal MB -> Decimal GB
     const gbDec = mb / 1000;
-
-    // “Binary-equivalent” from decimal MB:
-    // MB -> bytes (decimal) -> GiB (binary)
     const bytes = mb * BYTES_PER_MB_DEC;
     const gib = bytes / BYTES_PER_GIB_BIN;
 
@@ -256,14 +267,13 @@ document.addEventListener("DOMContentLoaded", function () {
         ${badge("MB→bytes uses decimal", "warn")}
       </div>
       <div class="note" style="margin-top:8px;">
-        Assumptions: 1 MB = 1,000,000 bytes · 1 GB = 1,000,000,000 bytes · 1 GiB = 1,073,741,824 bytes
+        Assumptions: 1 MB = 1,000,000 bytes · 1 GB = 1,000 MB · 1 GiB = 1,073,741,824 bytes
       </div>
     `;
 
     if (showDec) setRow("GB (decimal)", `${fmt(gbDec)} GB`);
     if (showBin) setRow("GiB (binary-equivalent)", `${fmt(gib)} GiB`);
 
-    // Helpful extra rows
     const mib = bytes / (1024 * 1024);
     setRow("Bytes (from MB)", `${fmtSmart(bytes)} B`);
     setRow("MiB (binary-equivalent)", `${fmt(mib)} MiB`);

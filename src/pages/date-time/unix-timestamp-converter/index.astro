@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "Unix Timestamp Converter",
   description:
-    "Convert Unix timestamps into readable dates and times.",
+    "Convert Unix timestamps to readable dates, or convert dates into Unix time for development and logging.",
   href: "/date-time/unix-timestamp-converter/",
   order: 140,
 };
@@ -15,23 +15,27 @@ const CANONICAL_PATH = "/date-time/unix-timestamp-converter/";
 const faqs = [
   {
     q: "What is a Unix timestamp?",
-    a: "A Unix timestamp is the number of seconds (or milliseconds) elapsed since 1970-01-01 00:00:00 UTC (the Unix epoch).",
+    a: "A Unix timestamp is the number of seconds or milliseconds elapsed since 1970-01-01 00:00:00 UTC, also known as the Unix epoch.",
   },
   {
-    q: "Seconds vs milliseconds: what’s the difference?",
-    a: "Seconds timestamps are 10 digits for modern dates (e.g., 1700000000). Milliseconds timestamps are 13 digits (e.g., 1700000000000). This tool supports both.",
+    q: "Seconds vs milliseconds: what is the difference?",
+    a: "Seconds timestamps are often 10 digits for modern dates. Milliseconds timestamps are often 13 digits. This tool can auto-detect or let you choose the unit.",
   },
   {
     q: "Does this show UTC or local time?",
-    a: "You can choose. UTC is consistent across time zones; local time uses your device/browser time zone.",
+    a: "You can choose either UTC or local time. UTC is consistent across time zones, while local time uses your device or browser timezone.",
   },
   {
     q: "Why is my converted date different from another site?",
-    a: "Differences usually come from timezone selection (UTC vs local), or whether the timestamp is interpreted as seconds or milliseconds.",
+    a: "The most common reasons are timezone selection and whether the timestamp is interpreted as seconds or milliseconds.",
+  },
+  {
+    q: "Can this convert dates back into Unix timestamps?",
+    a: "Yes. Use Date/Time → Timestamp mode to generate Unix seconds or Unix milliseconds from a selected date and time.",
   },
   {
     q: "Are my inputs stored?",
-    a: "No. All calculations run locally in your browser. No data is stored or transmitted.",
+    a: "No. The conversion runs locally in your browser and your input is not sent to a server.",
   },
 ];
 
@@ -39,16 +43,20 @@ const faqs = [
 
 <ToolLayout
   title={`Unix Timestamp Converter — ${SITE_NAME}`}
-  description="Convert Unix timestamps to readable date and time values, or convert dates into Unix time for development and logging workflows."
+  description="Convert Unix timestamps to readable UTC or local dates, and convert date/time values back into Unix seconds or milliseconds."
   canonicalPath={CANONICAL_PATH}
   h1="Unix Timestamp Converter"
-  intro="Convert Unix time ↔ date/time. Paste a timestamp (seconds or milliseconds) to decode it, or enter a date/time to generate Unix seconds/ms."
+  intro="Convert Unix time to readable dates, or convert dates back into Unix timestamps. Supports seconds, milliseconds, UTC display, and local time display."
   faq={faqs}
   categoryName="Date & Time"
 >
-
   <div slot="tool" data-tool="unix-timestamp-converter">
-    <div class="form" role="form" aria-describedby="utc_hint privacy_hint">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="utc_hint">
       <div class="field">
         <label for="utc_mode">Mode</label>
         <select id="utc_mode">
@@ -64,7 +72,7 @@ const faqs = [
           <option value="utc">UTC</option>
         </select>
         <p class="note" id="utc_hint" style="margin-top:6px;">
-          Tip: If results look “off by hours”, check UTC vs Local.
+          If results look off by several hours, check whether you are viewing UTC or local time.
         </p>
       </div>
 
@@ -137,34 +145,43 @@ const faqs = [
           <tbody id="utc_table"></tbody>
         </table>
       </div>
-
-      <p class="note" id="privacy_hint" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No inputs are stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How Unix timestamp conversion works</h2>
+
     <p class="note">
-      <strong>Timestamp → Date:</strong> interpret as seconds or milliseconds since 1970-01-01 00:00:00 UTC, then display as UTC or local time.
-      <br />
-      <strong>Date → Timestamp:</strong> build a date/time in UTC or local time, convert to milliseconds since epoch, then output seconds or milliseconds.
+      Unix time counts elapsed time from the Unix epoch: 1970-01-01 00:00:00 UTC. Many APIs, logs, databases, and event systems store time as Unix seconds or Unix milliseconds.
+    </p>
+
+    <ul>
+      <li><strong>Timestamp → Date:</strong> interpret the value as seconds or milliseconds since the Unix epoch</li>
+      <li><strong>Date → Timestamp:</strong> build a date and time, then convert it into Unix seconds or milliseconds</li>
+      <li><strong>UTC vs Local:</strong> UTC is timezone-independent; local time depends on your browser or device settings</li>
+      <li><strong>Common mistake:</strong> treating a 13-digit millisecond timestamp as seconds, or a 10-digit seconds timestamp as milliseconds</li>
+    </ul>
+
+    <p class="note">
+      If a converted date looks far in the future or near 1970 unexpectedly, the timestamp unit is probably wrong.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>1700000000</strong> (seconds) → date/time</li>
-      <li><strong>1700000000000</strong> (milliseconds) → date/time</li>
-      <li>Convert <strong>2026-01-01 00:00:00</strong> to Unix seconds</li>
+      <li><strong>1700000000</strong> → interpreted as Unix seconds when auto-detected</li>
+      <li><strong>1700000000000</strong> → interpreted as Unix milliseconds when auto-detected</li>
+      <li><strong>2026-01-01 00:00:00</strong> → convert a date/time into Unix seconds or milliseconds</li>
+      <li><strong>UTC vs Local:</strong> compare the same timestamp in a fixed UTC view and your local timezone</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
-      <li><a href="/date-time/countdown-timer/">Countdown Timer</a></li>
       <li><a href="/date-time/days-between-dates/">Days Between Dates</a></li>
+      <li><a href="/date-time/date-difference/">Date Difference Calculator</a></li>
       <li><a href="/converter/time-converter/">Time Converter</a></li>
+      <li><a href="/developer-tools/json-validator/">JSON Validator</a></li>
       <li><a href="/date-time/">All Date & Time Tools</a></li>
     </ul>
   </div>
@@ -200,6 +217,7 @@ document.addEventListener("DOMContentLoaded", function () {
     errEl.style.display = "none";
     errEl.textContent = "";
   }
+
   function showError(msg) {
     errEl.style.display = "block";
     errEl.textContent = msg;
@@ -239,10 +257,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function detectUnit(tsDigits) {
-    // Heuristic:
-    // - 13+ digits => ms
-    // - 10 digits  => s
-    // - 11-12 digits could be seconds (far future) or ms (early epoch); default to ms if 12+, else s
     const len = tsDigits.length;
     if (len >= 13) return "ms";
     if (len <= 10) return "s";
@@ -253,15 +267,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const raw = normalizeDigits(tsEl.value);
     if (!raw) return { ok: false, msg: "Please enter a Unix timestamp." };
 
-    // allow leading minus for dates before 1970
     const isNeg = raw.startsWith("-");
     const digits = isNeg ? raw.slice(1) : raw;
 
     if (!/^\d+$/.test(digits)) {
-      return { ok: false, msg: "Timestamp must contain only digits (optionally a leading minus sign)." };
+      return { ok: false, msg: "Timestamp must contain only digits, optionally with a leading minus sign." };
     }
 
-    // Guardrail: very long values become imprecise in JS Date
     if (digits.length > 16) {
       return { ok: false, msg: "Timestamp is too long for reliable conversion in the browser." };
     }
@@ -270,7 +282,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const auto = !!autoEl.checked;
     if (unit === "auto" || auto) unit = detectUnit(digits);
 
-    // Convert to milliseconds as Number
     const n = Number(raw);
     if (!Number.isFinite(n)) return { ok: false, msg: "Timestamp is not a valid number." };
 
@@ -280,7 +291,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return { ok: true, ms, unit };
   }
 
-  function pad2(x) { return String(x).padStart(2, "0"); }
+  function pad2(x) {
+    return String(x).padStart(2, "0");
+  }
 
   function formatLocal(d) {
     const yyyy = d.getFullYear();
@@ -303,7 +316,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function isoUTC(d) {
-    // ISO string is always UTC
     return d.toISOString();
   }
 
@@ -341,7 +353,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const shown = tz === "utc" ? formatUTC(d) : formatLocal(d);
 
-    // Provide both seconds and milliseconds for convenience
     const ms = Math.trunc(parsed.ms);
     const s = Math.trunc(parsed.ms / 1000);
 
@@ -371,21 +382,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const dStr = String(dateEl.value || "").trim();
     if (!dStr) return { ok: false, msg: "Please choose a date." };
 
-    // time may be empty; use 00:00:00
     const tStr = String(timeEl.value || "").trim();
-    const parts = tStr ? tStr.split(":") : ["0","0","0"];
+    const parts = tStr ? tStr.split(":") : ["0", "0", "0"];
 
     const hh = parseInt(parts[0] || "0", 10);
     const mi = parseInt(parts[1] || "0", 10);
     const ss = parseInt(parts[2] || "0", 10);
 
-    if (![hh,mi,ss].every(Number.isFinite)) return { ok: false, msg: "Time is invalid." };
+    if (![hh, mi, ss].every(Number.isFinite)) return { ok: false, msg: "Time is invalid." };
     if (hh < 0 || hh > 23 || mi < 0 || mi > 59 || ss < 0 || ss > 59) return { ok: false, msg: "Time must be within 00:00:00 to 23:59:59." };
 
-    const [Y, M, D] = dStr.split("-").map(x => parseInt(x, 10));
-    if (![Y,M,D].every(Number.isFinite)) return { ok: false, msg: "Date is invalid." };
+    const [Y, M, D] = dStr.split("-").map((x) => parseInt(x, 10));
+    if (![Y, M, D].every(Number.isFinite)) return { ok: false, msg: "Date is invalid." };
 
-    // Build Date depending on timezone selection
     let dt;
     if (tz === "utc") {
       dt = new Date(Date.UTC(Y, (M - 1), D, hh, mi, ss, 0));
@@ -455,16 +464,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const tz = String(tzEl.value);
 
     if (String(modeEl.value) === "ts_to_date") {
-      // Fill timestamp in ms (easy, unambiguous)
       tsEl.value = String(now.getTime());
       unitEl.value = "ms";
       autoEl.checked = false;
+      unitEl.disabled = false;
       compute();
       return;
     }
 
-    // Fill date/time fields from selected TZ
-    let yyyy, mm, dd, hh, mi, ss;
+    let yyyy;
+    let mm;
+    let dd;
+    let hh;
+    let mi;
+    let ss;
+
     if (tz === "utc") {
       yyyy = now.getUTCFullYear();
       mm = now.getUTCMonth() + 1;
@@ -480,11 +494,9 @@ document.addEventListener("DOMContentLoaded", function () {
       mi = now.getMinutes();
       ss = now.getSeconds();
     }
-    const dStr = `${yyyy}-${pad2(mm)}-${pad2(dd)}`;
-    const tStr = `${pad2(hh)}:${pad2(mi)}:${pad2(ss)}`;
 
-    dateEl.value = dStr;
-    timeEl.value = tStr;
+    dateEl.value = `${yyyy}-${pad2(mm)}-${pad2(dd)}`;
+    timeEl.value = `${pad2(hh)}:${pad2(mi)}:${pad2(ss)}`;
     compute();
   }
 
@@ -493,6 +505,7 @@ document.addEventListener("DOMContentLoaded", function () {
     tsEl.value = "";
     autoEl.checked = true;
     unitEl.value = "auto";
+    unitEl.disabled = true;
 
     dateEl.value = "";
     timeEl.value = "";
@@ -504,10 +517,9 @@ document.addEventListener("DOMContentLoaded", function () {
     tbodyEl.innerHTML = "";
   }
 
-  // Events
   modeEl.addEventListener("change", setModeUI);
+
   tzEl.addEventListener("change", function () {
-    // If there is an existing result, recompute
     const m = String(modeEl.value);
     if (m === "ts_to_date" && String(tsEl.value || "").trim()) compute();
     if (m === "date_to_ts" && String(dateEl.value || "").trim()) compute();
@@ -522,15 +534,14 @@ document.addEventListener("DOMContentLoaded", function () {
   nowBtn.addEventListener("click", useNow);
   clearBtn.addEventListener("click", reset);
 
-  // Ctrl/Cmd+Enter to convert (both modes)
   const keyHandler = function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
   };
+
   tsEl.addEventListener("keydown", keyHandler);
   dateEl.addEventListener("keydown", keyHandler);
   timeEl.addEventListener("keydown", keyHandler);
 
-  // Initialize
   unitEl.disabled = !!autoEl.checked;
   setModeUI();
 });

@@ -4,7 +4,7 @@ import ToolLayout from "../../../components/ToolLayout.astro";
 export const tool = {
   title: "JSON Validator",
   description:
-    "Validate JSON syntax and find common formatting errors.",
+    "Validate JSON syntax, find parsing errors, and format JSON for API and configuration debugging.",
   href: "/developer-tools/json-validator/",
   order: 20,
 };
@@ -15,19 +15,23 @@ const CANONICAL_PATH = "/developer-tools/json-validator/";
 const faqs = [
   {
     q: "What does this JSON validator do?",
-    a: "It checks whether your JSON is valid, and can also pretty-print or minify valid JSON.",
+    a: "It checks whether your JSON is valid, shows parsing errors for invalid input, and can pretty-print or minify valid JSON.",
   },
   {
     q: "Does it support arrays and nested objects?",
-    a: "Yes. It validates standard JSON including nested arrays and objects.",
+    a: "Yes. It validates standard JSON including arrays, nested objects, strings, numbers, booleans, and null values.",
   },
   {
-    q: "What happens if the JSON is invalid?",
-    a: "The tool shows a parse error and does not transform the content until the JSON is valid.",
+    q: "Why is my JSON invalid?",
+    a: "Common causes include trailing commas, comments, single quotes around keys, missing quotes, unescaped characters, or invalid values such as NaN and undefined.",
   },
   {
-    q: "Is my JSON stored?",
-    a: "No. Validation runs locally in your browser and is not stored or transmitted.",
+    q: "Is JSON with comments valid?",
+    a: "No. Standard JSON does not allow comments. Some configuration formats look similar to JSON but are not valid JSON.",
+  },
+  {
+    q: "Is my JSON uploaded or stored?",
+    a: "No. Validation runs locally in your browser and your JSON is not sent to a server.",
   },
 ];
 
@@ -35,14 +39,13 @@ const faqs = [
 
 <ToolLayout
   title={`JSON Validator — ${SITE_NAME}`}
-  description="Validate JSON syntax, identify parsing errors, and review structured data for APIs, configuration files, and debugging workflows."
+  description="Validate JSON syntax, identify parse errors, and format JSON for API responses, config files, logs, and debugging workflows."
   canonicalPath={CANONICAL_PATH}
   h1="JSON Validator"
-  intro="Validate JSON input, pretty-print it for readability, or minify it for compact output."
+  intro="Validate JSON input, find syntax errors, pretty-print readable JSON, or minify JSON for compact output. Useful for API debugging, configuration files, and developer workflows."
   faq={faqs}
   categoryName="Developer Tools"
 >
-
   <div slot="tool" data-tool="json-validator">
     <style is:inline>
       #jv_input,
@@ -51,6 +54,7 @@ const faqs = [
         width: 100%;
         min-width: 0;
       }
+
       .jv-output {
         white-space: pre-wrap;
         word-break: break-word;
@@ -59,7 +63,12 @@ const faqs = [
       }
     </style>
 
-    <div class="form" role="form" aria-describedby="jv_help jv_privacy">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="jv_help">
       <div class="field">
         <label for="jv_input">JSON input</label>
         <textarea id="jv_input" rows="12" spellcheck="false" placeholder='e.g. {"name":"Alex","age":30}'></textarea>
@@ -74,7 +83,7 @@ const faqs = [
       </div>
 
       <p class="note" id="jv_help" style="margin-top:6px;">
-        Standard JSON only. Trailing commas, comments, and single-quoted keys are not valid JSON.
+        Standard JSON only. Trailing commas, comments, single-quoted keys, NaN, and undefined are not valid JSON.
       </p>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -103,32 +112,44 @@ const faqs = [
           <tbody id="jv_tbody"></tbody>
         </table>
       </div>
-
-      <p class="note" id="jv_privacy" style="margin-top:10px;">
-        Privacy: validation runs locally in your browser. No JSON data is stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How JSON validation works</h2>
+
     <p class="note">
-      Paste JSON into the input area, validate it, and choose whether the output should be formatted for readability or minified for compact use.
+      JSON validation checks whether the input follows the official JSON syntax rules. This tool parses your input as JSON, then returns either a valid formatted result or a parsing error.
+    </p>
+
+    <ul>
+      <li><strong>Validate:</strong> checks whether the JSON can be parsed</li>
+      <li><strong>Pretty print:</strong> adds indentation for easier reading</li>
+      <li><strong>Minify:</strong> removes unnecessary whitespace for compact output</li>
+      <li><strong>Common mistakes:</strong> trailing commas, comments, missing quotes, and JavaScript-only values</li>
+    </ul>
+
+    <p class="note">
+      JSON is often used in API responses, configuration files, package metadata, logs, and data exchange. Validating before saving or sending JSON helps catch small syntax errors early.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-        <li><strong>{'{"name":"Alex","age":30}'}</strong> → valid object JSON</li>
-        <li><strong>{'[1,2,3]'}</strong> → valid array JSON</li>
-        <li><strong>{'{"a":1,}'}</strong> → invalid because of a trailing comma</li>
+      <li><strong>{'{"name":"Alex","age":30}'}</strong> → valid JSON object</li>
+      <li><strong>{'[1,2,3]'}</strong> → valid JSON array</li>
+      <li><strong>{'{"enabled":true,"items":null}'}</strong> → valid boolean and null values</li>
+      <li><strong>{'{"a":1,}'}</strong> → invalid because of a trailing comma</li>
+      <li><strong>{'{name:"Alex"}'}</strong> → invalid because the key is not in double quotes</li>
     </ul>
   </div>
 
   <div slot="related">
     <ul>
+      <li><a href="/utility/json-formatter/">JSON Formatter</a></li>
       <li><a href="/developer-tools/json-to-csv/">JSON to CSV</a></li>
       <li><a href="/developer-tools/csv-to-json/">CSV to JSON</a></li>
-      <li><a href="/developer-tools/http-header-parser/">HTTP Header Parser</a></li>
+      <li><a href="/developer-tools/jwt-decoder/">JWT Decoder</a></li>
       <li><a href="/developer-tools/">All Developer Tools</a></li>
     </ul>
   </div>

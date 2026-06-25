@@ -2,9 +2,9 @@
 import ToolLayout from "../../../components/ToolLayout.astro";
 
 export const tool = {
-  title: "miles to km",
+  title: "Miles to Km Converter",
   description:
-    "Convert miles to kilometers for travel, driving, and distance planning.",
+    "Convert miles to kilometers for travel, driving, running, cycling, and distance planning.",
   href: "/converter/miles-to-km/",
   order: 60,
 };
@@ -15,36 +15,44 @@ const CANONICAL_PATH = "/converter/miles-to-km/";
 const faqs = [
   {
     q: "What is the miles to km formula?",
-    a: "kilometers = miles × 1.609344. (Because 1 mile = 1.609344 km exactly.)",
+    a: "The formula is kilometers = miles × 1.609344. The relationship 1 mile = 1.609344 kilometers is exact.",
   },
   {
     q: "Is this conversion exact?",
-    a: "The base relationship 1 mile = 1.609344 km is exact. Displayed results may be rounded.",
+    a: "The base conversion factor is exact, but displayed results may be rounded depending on the rounding option you choose.",
   },
   {
     q: "Can I convert kilometers to miles here?",
-    a: "Yes. Switch the direction to “Kilometers → Miles”.",
+    a: "Yes. Use the direction selector or the Swap button to convert kilometers back to miles.",
   },
   {
-    q: "Are my inputs stored?",
-    a: "No. All calculations run locally in your browser.",
+    q: "Why are race distances like 5K and marathon shown here?",
+    a: "Miles and kilometers are often compared for running, cycling, travel, and mapping. Common race distances are useful reference points.",
+  },
+  {
+    q: "Does this converter store my distance input?",
+    a: "No. The conversion runs locally in your browser and your input is not sent to a server.",
   },
 ];
 
 ---
 
 <ToolLayout
-  title={`miles to km Converter — ${SITE_NAME}`}
-  description="Convert miles to kilometers with clear results for road trips, maps, fitness tracking, and international distance reference."
+  title={`Miles to Km Converter — ${SITE_NAME}`}
+  description="Convert miles to kilometers for road trips, maps, running distances, cycling routes, and international distance reference."
   canonicalPath={CANONICAL_PATH}
-  h1="miles to km Converter"
-  intro="Convert miles to kilometers (and kilometers to miles) using standard distance conversions."
+  h1="Miles to Km Converter"
+  intro="Convert miles to kilometers or kilometers back to miles. Useful for road trips, maps, running distances, cycling routes, and international distance comparisons."
   faq={faqs}
   categoryName="Converters"
 >
-
   <div slot="tool" data-tool="miles-to-km">
-    <div class="form" role="form" aria-describedby="m2k_privacy m2k_help">
+    <div class="privacy-note">
+      <strong>Privacy First:</strong> This tool runs locally in your browser.
+      <strong>Your input values are never sent to any server.</strong>
+    </div>
+
+    <div class="form" role="form" aria-describedby="m2k_help">
       <div class="field">
         <label for="m2k_value">Value</label>
         <input
@@ -55,7 +63,7 @@ const faqs = [
           aria-describedby="m2k_help"
         />
         <p class="note" id="m2k_help" style="margin-top:6px;">
-          Reference: <strong>1 mi = 1.609344 km</strong> (exact).
+          Reference: <strong>1 mile = 1.609344 km</strong>. Use Swap to reverse the direction.
         </p>
       </div>
 
@@ -102,25 +110,33 @@ const faqs = [
           <tbody id="m2k_table"></tbody>
         </table>
       </div>
-
-      <p class="note" id="m2k_privacy" style="margin-top:10px;">
-        Privacy: runs locally in your browser. No inputs are stored or transmitted.
-      </p>
     </div>
   </div>
 
   <div slot="how">
+    <h2>How miles to kilometers conversion works</h2>
+
     <p class="note">
-      <strong>mi → km:</strong> kilometers = miles × 1.609344<br/>
-      <strong>km → mi:</strong> miles = kilometers ÷ 1.609344
+      Miles and kilometers are both distance units. Miles are commonly used in the United States and the United Kingdom, while kilometers are used in most metric contexts.
+    </p>
+
+    <ul>
+      <li><strong>Miles to kilometers:</strong> kilometers = miles × 1.609344</li>
+      <li><strong>Kilometers to miles:</strong> miles = kilometers ÷ 1.609344</li>
+      <li><strong>Rounding note:</strong> travel and route planning usually only need 1–3 decimals, while technical comparisons may need more</li>
+    </ul>
+
+    <p class="note">
+      For common running distances, 5 km is about 3.1 miles, 10 km is about 6.2 miles, and a marathon is about 26.2 miles or 42.195 km.
     </p>
   </div>
 
   <div slot="examples">
     <ul>
-      <li><strong>3.1 mi</strong> → <strong>4.989 km</strong> (approx.)</li>
-      <li><strong>6.2 mi</strong> → <strong>9.978 km</strong> (approx.)</li>
-      <li><strong>26.2 mi</strong> → <strong>42.195 km</strong> (marathon distance, approx. display)</li>
+      <li><strong>1 mi</strong> → <strong>1.609 km</strong></li>
+      <li><strong>3.1 mi</strong> → <strong>4.989 km</strong> — close to a 5K distance</li>
+      <li><strong>6.2 mi</strong> → <strong>9.978 km</strong> — close to a 10K distance</li>
+      <li><strong>26.2 mi</strong> → <strong>42.195 km</strong> — marathon distance reference</li>
     </ul>
   </div>
 
@@ -129,6 +145,7 @@ const faqs = [
       <li><a href="/converter/km-to-miles/">km to miles</a></li>
       <li><a href="/converter/length/">Length Converter</a></li>
       <li><a href="/converter/speed-converter/">Speed Converter</a></li>
+      <li><a href="/converter/feet-to-meters/">Feet to Meters</a></li>
       <li><a href="/converter/">All Converters</a></li>
     </ul>
   </div>
@@ -149,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (!valueEl || !modeEl || !roundEl || !calcBtn || !swapBtn || !clearBtn || !errEl || !resEl || !cardsEl || !tbodyEl) return;
 
-  const MI_IN_KM = 1.609344; // exact
+  const MI_IN_KM = 1.609344;
 
   function toNum(v) {
     const x = parseFloat(String(v));
